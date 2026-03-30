@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "biomejs.biome",
+    "yoavbls.pretty-ts-errors",
+    "highagency.pencildev",
+    "bradlc.vscode-tailwindcss",
+    "vitest.explorer"
+  ]
+}
