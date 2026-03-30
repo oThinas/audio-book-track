@@ -1,36 +1,39 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.0.0 → 1.1.0 (MINOR: new Engineering Standards section + Self-Review section added)
+Version change: 1.1.0 → 2.0.0 (MAJOR: chapter lifecycle completely redefined — 6 new statuses
+replacing 4 old ones; backward incompatible redefinition of Principle III)
 
 Modified principles:
-  - Princípio V (TDD): title unchanged, content unchanged
-  - Development Workflow: no changes
-  - Governance: updated to reference Principles I–XII
+  - Princípio I: "gravadores" replaced by "narradores" throughout
+  - Princípio III: Ciclo de Vida rewritten — new 6-state machine
+    (pendente → em edição → em revisão ⇄ edição retake → concluído → pago)
+    replacing prior 4-state machine
+  - Princípio XIII (NEW): Métricas e KPIs de Produção — pages per chapter + avg page duration KPI
+  - Princípio XIV (NEW): Visualização de PDF do Livro
+  - Domain Model Constraints: updated statuses, added num_paginas to Capítulo, added pdf_url to
+    Livro, replaced "responsável_gravação" with "narrador", aligned roles with new lifecycle
+  - Self-Review Checklist: added KPI + PDF checks (XIII, XIV)
 
 Added sections:
-  - VI. Arquitetura Limpa no Backend
-  - VII. Frontend: Composição e Atomicidade
-  - VIII. Performance em Primeiro Lugar
-  - IX. Design Tokens para Tudo
-  - X. Padrões de API REST
-  - XI. PostgreSQL e Banco de Dados
-  - XII. Anti-Padrões Proibidos
-  - Self-Review Obrigatório (ao final)
+  - XIII. Métricas e KPIs de Produção
+  - XIV. Visualização de PDF do Livro
 
-Removed sections: N/A
+Removed sections:
+  - N/A (no sections removed; statuses and roles renamed)
 
 Templates requiring updates:
-  ✅ .specify/templates/plan-template.md — Constitution Check section generic; now includes
-     reference to Principles I–XII; no structural change required
-  ✅ .specify/templates/spec-template.md — compatible as-is; success criteria can now
-     reference <1s load target
-  ✅ .specify/templates/tasks-template.md — task categories compatible with new principles;
-     design token and clean architecture tasks may now appear in Phase 2 (Foundational)
-  ✅ .specify/templates/constitution-template.md — source template; no update needed
+  ✅ .specify/memory/constitution.md — this file (overwritten now)
+  ⚠ CLAUDE.md — inline status list (não iniciado / em andamento / pagamento pendente / pago)
+    must be updated to reflect new lifecycle; flagged for manual follow-up
+  ✅ .specify/templates/plan-template.md — compatible; no structural change required
+  ✅ .specify/templates/spec-template.md — compatible; success criteria unchanged
+  ✅ .specify/templates/tasks-template.md — compatible; new KPI and PDF tasks will appear in
+    Phase 2/3 of any relevant feature plan
 
 Follow-up TODOs:
-  - None. All placeholders resolved.
+  - Update CLAUDE.md inline status list to match new 6-state lifecycle.
+  - Database migration required: rename status values and add num_paginas, pdf_url columns.
 -->
 
 # AudioBook Track Constitution
@@ -43,10 +46,10 @@ O capítulo é a unidade fundamental de produção e pagamento neste sistema.
 Toda atribuição de responsabilidade, cálculo de ganho e rastreamento de status
 DEVE ser feito no nível do capítulo.
 
-- Cada capítulo DEVE ter exatamente um responsável pela gravação e um
-  responsável pela edição em qualquer ponto do seu ciclo de vida.
+- Cada capítulo DEVE ter exatamente um narrador responsável pela gravação e,
+  a partir do status `em edição`, um editor responsável pela edição.
 - Horas editadas são registradas por capítulo — não por livro ou estúdio.
-- Nenhum pagamento pode ser calculado sem um responsável definido.
+- Nenhum pagamento pode ser calculado sem um responsável de edição definido.
 
 **Rationale**: O fluxo de trabalho real divide-se em capítulos. Tratar o livro
 como unidade de pagamento mascararia a contribuição individual de cada editor.
@@ -56,8 +59,9 @@ como unidade de pagamento mascararia a contribuição individual de cada editor.
 Todo cálculo de ganho DEVE ser determinístico, rastreável e baseado em dados
 persistidos — nunca derivado dinamicamente de valores que podem mudar.
 
-- O preço/hora DEVE ser vinculado ao **livro**, não ao estúdio. Isso garante
-  que alterações futuras no preço do estúdio não reescrevam o histórico.
+- O preço/hora DEVE ser vinculado ao **livro**, não ao estúdio. Ele é editável
+  enquanto o livro não estiver `pago`. Uma vez que o livro atinge o status
+  `pago`, o preço torna-se imutável para preservar o histórico financeiro.
 - A fórmula de ganho é: `horas_editadas × preço_hora_do_livro`.
 - Ganhos calculados DEVEM ser auditáveis: todas as entradas do cálculo
   (horas, preço, responsável, data) DEVEM estar disponíveis para consulta.
@@ -70,17 +74,38 @@ Imutabilidade do preço histórico é obrigatória para confiabilidade do sistem
 ### III. Integridade do Ciclo de Vida do Capítulo
 
 Transições de status de capítulo DEVEM ser explícitas e validadas.
-Não é permitido pular etapas do ciclo de vida.
+Não é permitido pular etapas obrigatórias do ciclo de vida.
 
-- Estados válidos (em ordem): `não iniciado` → `em andamento` →
-  `pagamento pendente` → `pago`.
+**Estados válidos e transições permitidas:**
+
+```
+pendente → em edição → em revisão → concluído → pago
+                            ↕
+                      edição retake   (opcional: revisão reprovada → nova edição → em revisão)
+```
+
+| Status | Descrição | Pré-condição para entrar |
+|---|---|---|
+| `pendente` | Gravação não iniciada | — |
+| `em edição` | Gravação finalizada, edição pendente | narrador atribuído |
+| `em revisão` | Edição finalizada, revisão pendente | editor + horas_editadas registrados |
+| `edição retake` | Revisão reprovada, nova edição necessária | revisão explicitamente reprovada |
+| `concluído` | Revisão aprovada, aguarda decisão do estúdio | revisão aprovada (de `em revisão`) |
+| `pago` | Histórico imutável, edição do livro desabilitada | aprovação do estúdio |
+
+**Transições válidas:**
+
+- `pendente` → `em edição`
+- `em edição` → `em revisão`
+- `em revisão` → `edição retake` (reprovação) ou `concluído` (aprovação)
+- `edição retake` → `em revisão` (após nova edição concluída)
+- `concluído` → `pago`
+
 - Toda transição DEVE registrar data e responsável no momento da mudança.
-- Um capítulo NÃO PODE entrar em `em andamento` sem responsável de edição
-  atribuído.
-- Um capítulo NÃO PODE entrar em `pagamento pendente` sem horas editadas
-  registradas.
+- `edição retake` é um estado opcional: somente ativado se a revisão for
+  explicitamente reprovada a partir de `em revisão`.
 - Um capítulo marcado como `pago` NÃO PODE ter seus dados financeiros
-  alterados retroativamente.
+  alterados retroativamente — edição do livro associado DEVE ser desabilitada.
 
 **Rationale**: O status do capítulo é a fonte de verdade do progresso de
 produção e do fluxo de pagamento. Transições inválidas corrompem relatórios
@@ -309,20 +334,89 @@ Os seguintes padrões são **explicitamente proibidos** neste projeto:
 **Rationale**: Anti-padrões documentados explicitamente são mais fáceis de
 detectar em code review do que princípios positivos vagos.
 
+### XIII. Métricas e KPIs de Produção
+
+O sistema DEVE expor métricas e gráficos de produção no dashboard para
+apoiar decisões do estúdio. Todos os dados DEVEM ser calculados no servidor.
+
+#### KPIs do Dashboard (versão inicial)
+
+| # | KPI | Definição |
+|---|---|---|
+| 1 | **Ganho do período** | Soma de `horas_editadas × preço_hora_livro` dos capítulos com status `pago` no intervalo selecionado |
+| 2 | **Capítulos concluídos do período** | Contagem de capítulos que atingiram `concluído` ou `pago` no intervalo selecionado |
+| 3 | **Livros em andamento** | Contagem de livros com ao menos 1 capítulo em status diferente de `pendente` e diferente de `pago`, agrupados também por número de estúdios distintos |
+| 4 | **Média de duração por página** | `SUM(horas_editadas) ÷ SUM(num_paginas)` dos capítulos com status ≥ `em revisão` e `num_paginas > 0` |
+| 5 | **Previsão de receita a receber** | Soma de `(horas_editadas × preço_hora_livro)` dos capítulos com status entre `em edição` e `concluído` (não `pago`) — receita pendente caso todos sejam concluídos |
+
+**Regras dos KPIs:**
+- KPI 1 e 2: filtráveis por intervalo de datas (padrão: mês corrente).
+- KPI 3: exibe `N livros em andamento de M estúdio(s)`.
+- KPI 4: `num_paginas = 0` ou nulo são excluídos do denominador para evitar
+  divisão por zero. Exibido também na página individual do livro.
+- KPI 5: exclui capítulos `pago` e `pendente`; considera apenas capítulos
+  com editor atribuído e `horas_editadas > 0`.
+
+#### Gráficos do Dashboard (versão inicial)
+
+| # | Gráfico | Tipo | Eixos / Agrupamento |
+|---|---|---|---|
+| 1 | **Ganho do período** | Linha ou Barras | Eixo X: data (agrupável por semana ou mês); Eixo Y: valor em R$ |
+| 2 | **Ganho por estúdio do período** | Barras empilhadas ou agrupadas | Eixo X: estúdio; Eixo Y: valor em R$; filtro de período |
+| 3 | **Ganho por editor** | Barras horizontais | Eixo X: valor em R$; Eixo Y: nome do editor; filtro de período |
+
+**Regras dos gráficos:**
+- Todos os gráficos consideram apenas capítulos com status `pago` no período.
+- Gráfico 1: agrupamento padrão por semana; opção de alternar para mês.
+- Gráfico 2: período sincronizado com o filtro global do dashboard.
+- Gráfico 3: ordenado por ganho decrescente.
+- Dados dos gráficos DEVEM ser servidos via API route dedicada com
+  paginação/agregação no banco — nunca carregar todos os registros no cliente.
+
+#### Campo `num_paginas`
+
+- Cada capítulo DEVE ter um campo `num_paginas` (inteiro, configurável na
+  criação ou edição do capítulo enquanto não estiver `pago`).
+
+**Rationale**: KPIs e gráficos bem definidos permitem ao estúdio tomar
+decisões baseadas em dados reais de produção e previsibilidade financeira.
+
+### XIV. Visualização de PDF do Livro
+
+Cada livro PODE ter um PDF associado para consulta digital do conteúdo
+original. O PDF viewer é uma funcionalidade de leitura — não de edição.
+
+- O campo `pdf_url` no livro armazena a URL do arquivo PDF (armazenamento
+  externo: S3, Cloudflare R2, ou similar). Livros sem PDF são válidos.
+- O PDF viewer DEVE ser carregado com lazy loading (`React.lazy` + `Suspense`)
+  — nunca incluído no bundle inicial.
+- A URL do PDF DEVE ser validada no upload (tipo MIME `application/pdf`).
+- Acesso ao PDF DEVE respeitar as mesmas permissões de acesso ao livro.
+- O viewer DEVE suportar navegação por página e zoom básico.
+- Dados do PDF (metadados, número de páginas) NÃO devem sobrescrever
+  configurações manuais do capítulo (`num_paginas`).
+
+**Rationale**: O PDF serve como referência para narradores e revisores
+sem necessidade de arquivos externos ao sistema.
+
 ## Domain Model Constraints
 
 Restrições que se aplicam ao modelo de dados e às entidades do sistema:
 
 - **Estúdio**: entidade mestre com nome e lista de livros. Estúdios não são
   frequentemente criados — o foco do sistema não é gestão de estúdios.
-- **Livro**: pertence a um estúdio; carrega o `preço_por_hora` vigente no
-  momento da criação (imutável após definição para preservar histórico).
-  O número de capítulos é definido na criação do livro.
-- **Capítulo**: pertence a um livro; tem `status`, `responsável_gravação`,
-  `responsável_edição` e `horas_editadas`. É a entidade central do sistema.
-  Status possíveis: `não iniciado`, `em andamento`, `pagamento pendente`, `pago`.
-- **Responsável/Editor**: identificado pelo nome; recebe pagamentos baseados
-  em horas editadas em capítulos atribuídos a ele.
+- **Livro**: pertence a um estúdio; carrega o `preço_por_hora` (editável até
+  o livro atingir o status `pago`, imutável a partir daí para preservar
+  histórico financeiro). O número de capítulos é definido na criação do livro.
+  Pode ter um `pdf_url` associado (opcional).
+- **Capítulo**: pertence a um livro; tem `status`, `narrador` (responsável
+  pela gravação), `editor` (responsável pela edição), `horas_editadas` e
+  `num_paginas`. É a entidade central do sistema.
+  Status possíveis: `pendente`, `em edição`, `em revisão`, `edição retake`,
+  `concluído`, `pago`.
+- **Narrador**: responsável pela gravação dos capítulos.
+- **Editor**: identificado pelo nome; recebe pagamentos baseados em horas
+  editadas em capítulos atribuídos a ele.
 - Relacionamentos: Estúdio 1→N Livros; Livro 1→N Capítulos.
 - Nenhuma entidade órfã é permitida (capítulo sem livro, livro sem estúdio).
 
@@ -334,7 +428,7 @@ Processo de desenvolvimento que DEVE ser seguido em todas as features:
 2. **Plano técnico**: `plan.md` com decisões de arquitetura antes de codar.
 3. **TDD**: Testes escritos e falhando antes da implementação (ver Princípio V).
 4. **Code Review**: Revisão obrigatória antes de merge. Verificar
-   conformidade com os Princípios I–XII.
+   conformidade com os Princípios I–XIV.
 5. **Commits convencionais**: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`.
 
 Qualquer mudança no modelo financeiro (preço, horas, responsáveis) DEVE
@@ -350,7 +444,7 @@ em caso de conflito.
   - MAJOR: remoção ou redefinição incompatível de princípio existente.
   - MINOR: novo princípio ou seção adicionada.
   - PATCH: esclarecimentos, correções de redação, refinamentos não semânticos.
-- Todo PR DEVE verificar conformidade com os Princípios I–XII antes do merge.
+- Todo PR DEVE verificar conformidade com os Princípios I–XIV antes do merge.
 - Complexidade adicionada DEVE ser justificada explicitamente no PR.
 - A Seção de Constraints de Domínio é atualizada sempre que novas entidades
   forem introduzidas.
@@ -369,25 +463,30 @@ submeter para review ou merge:
 ## Self-Review Checklist
 
 ### Domínio e Negócio
-- [ ] I. Operações ocorrem no nível do capítulo (não livro/estúdio)?
-- [ ] II. Cálculos financeiros são determinísticos e auditáveis?
+- [ ] I.   Operações ocorrem no nível do capítulo (não livro/estúdio)?
+- [ ] II.  Cálculos financeiros são determinísticos e auditáveis?
 - [ ] III. Transições de status são validadas e registram data/responsável?
-- [ ] IV. Existe complexidade que não é exigida pelo requisito atual?
-- [ ] V. Testes foram escritos ANTES da implementação e a cobertura é ≥ 80%?
+- [ ] III. Transições inválidas (pular estado, retroceder sem reprovação) são bloqueadas?
+- [ ] IV.  Existe complexidade que não é exigida pelo requisito atual?
+- [ ] V.   Testes foram escritos ANTES da implementação e a cobertura é ≥ 80%?
 
 ### Arquitetura e Código
-- [ ] VI. Lógica de negócio está no Service/Domain, não no Controller?
-- [ ] VI. Dependências apontam de fora para dentro (Controller→Service→Repo→Domain)?
-- [ ] VII. Componentes UI são puramente visuais (sem fetch/useState de negócio)?
-- [ ] VII. Data fetching usa Server Components quando possível?
+- [ ] VI.   Lógica de negócio está no Service/Domain, não no Controller?
+- [ ] VI.   Dependências apontam de fora para dentro (Controller→Service→Repo→Domain)?
+- [ ] VII.  Componentes UI são puramente visuais (sem fetch/useState de negócio)?
+- [ ] VII.  Data fetching usa Server Components quando possível?
 - [ ] VIII. A mudança não adiciona peso desnecessário ao bundle do cliente?
 - [ ] VIII. Listas longas usam virtualização?
-- [ ] IX. Todos os valores visuais usam design tokens (sem hardcode)?
-- [ ] X. Endpoints seguem convenção REST (URL, método, status code, envelope)?
-- [ ] X. Input validado com Zod? Erros não expõem detalhes internos?
-- [ ] XI. Queries selecionam apenas colunas necessárias (sem SELECT *)?
-- [ ] XI. Novos foreign keys têm índice?
-- [ ] XI. Valores monetários usam `numeric`, não `float`?
+- [ ] IX.   Todos os valores visuais usam design tokens (sem hardcode)?
+- [ ] X.    Endpoints seguem convenção REST (URL, método, status code, envelope)?
+- [ ] X.    Input validado com Zod? Erros não expõem detalhes internos?
+- [ ] XI.   Queries selecionam apenas colunas necessárias (sem SELECT *)?
+- [ ] XI.   Novos foreign keys têm índice?
+- [ ] XI.   Valores monetários usam `numeric`, não `float`?
+- [ ] XIII. KPIs calculados no servidor? Divisão por zero (num_paginas) prevenida?
+- [ ] XIII. Gráficos servidos via API route com agregação no banco (não no cliente)?
+- [ ] XIII. KPI 5 (previsão) exclui capítulos `pago` e `pendente`?
+- [ ] XIV.  PDF viewer carregado via lazy loading? URL validada no upload?
 
 ### Anti-Padrões
 - [ ] Nenhum `any` sem justificativa?
@@ -402,4 +501,4 @@ submeter para review ou merge:
 revisar por outros e cria responsabilidade pessoal com os padrões
 definidos nesta constituição.
 
-**Version**: 1.1.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-03-30
+**Version**: 2.0.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-03-30
