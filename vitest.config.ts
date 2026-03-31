@@ -1,8 +1,9 @@
-import react from "@vitejs/plugin-react";
 import path from "node:path";
+import react from "@vitejs/plugin-react";
+import { loadEnv } from "vite";
 import { defineConfig } from "vitest/config";
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react()],
   resolve: {
     alias: {
@@ -12,6 +13,7 @@ export default defineConfig({
   test: {
     environment: "node",
     globals: true,
+    env: loadEnv(mode, process.cwd(), ""),
     include: ["__tests__/**/*.test.ts", "__tests__/**/*.test.tsx"],
     exclude: ["node_modules", ".next"],
     coverage: {
@@ -21,4 +23,4 @@ export default defineConfig({
       exclude: ["src/**/index.ts", "node_modules", ".next"],
     },
   },
-});
+}));

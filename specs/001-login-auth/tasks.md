@@ -110,12 +110,12 @@
 
 > **TDD: Escrever estes testes PRIMEIRO, verificar que FALHAM antes da implementação**
 
-- [ ] T030 [US3] Write integration test for session persistence (login → verify session expiresAt is 7 days from now, verify cookie maxAge = 604800, verify session stored in database with correct expiration) in `__tests__/integration/auth/session.test.ts`
+- [x] T030 [US3] Write integration test for session persistence (login → verify session expiresAt is 7 days from now, verify cookie maxAge = 604800, verify session stored in database with correct expiration) in `__tests__/integration/auth/session.test.ts`
 
 ### Implementation for User Story 3
 
-- [ ] T031 [US3] Verify better-auth session config in `lib/auth/server.ts` has `expiresIn: 604800`, `updateAge: 86400`, and `cookieCache: { enabled: true, maxAge: 300 }` — adjust if tests fail
-- [ ] T032 [US3] Verify all US3 tests pass: `bun run test __tests__/integration/auth/session.test.ts`
+- [x] T031 [US3] Verify better-auth session config in `lib/auth/server.ts` has `expiresIn: 604800`, `updateAge: 86400`, and `cookieCache: { enabled: true, maxAge: 300 }` — adjust if tests fail
+- [x] T032 [US3] Verify all US3 tests pass: `bun run test __tests__/integration/auth/session.test.ts`
 
 **Checkpoint**: Sessões persistem por 7 dias. Cookie configurado corretamente.
 
