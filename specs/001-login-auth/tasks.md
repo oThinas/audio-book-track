@@ -89,12 +89,12 @@
 
 > **TDD: Escrever estes testes PRIMEIRO, verificar que FALHAM antes da implementação**
 
-- [ ] T027 [P] [US2] Write e2e tests for route protection (unauthenticated → redirect to /login, authenticated → access dashboard, authenticated → /login redirects to /dashboard) in `__tests__/e2e/auth/login.test.ts`
+- [x] T027 [P] [US2] Write e2e tests for route protection (unauthenticated → redirect to /login, authenticated → access dashboard, authenticated → /login redirects to /dashboard) in `__tests__/e2e/auth/login.test.ts`
 
 ### Implementation for User Story 2
 
-- [ ] T028 [US2] Create Next.js middleware in `middleware.ts` using `getSessionCookie` from `better-auth/cookies`: redirect unauthenticated users to `/login` for all routes except `/login` and `/api/auth/*`; redirect authenticated users from `/login` to `/dashboard` (FR-005, FR-011)
-- [ ] T029 [US2] Verify all US2 tests pass: `bun run test __tests__/e2e/auth/`
+- [x] T028 [US2] Create Next.js middleware in `middleware.ts` using `getSessionCookie` from `better-auth/cookies`: redirect unauthenticated users to `/login` for all routes except `/login` and `/api/auth/*`; redirect authenticated users from `/login` to `/dashboard` (FR-005, FR-011)
+- [x] T029 [US2] Verify all US2 tests pass: `bun run test __tests__/e2e/auth/`
 
 **Checkpoint**: Todas as rotas protegidas. Redirecionamentos funcionando corretamente.
 
