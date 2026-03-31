@@ -64,16 +64,16 @@
 
 > **TDD: Escrever estes testes PRIMEIRO, verificar que FALHAM antes da implementação**
 
-- [ ] T020 [P] [US1] Write unit tests for loginSchema validation (valid username, invalid chars, too short, too long, empty password, short password) in `__tests__/unit/validations/auth.test.ts`
-- [ ] T021 [P] [US1] Write integration tests for sign-in flow (correct credentials → 200 + session cookie, wrong password → 401 generic error, nonexistent username → 401 generic error, empty fields → validation error, verify password in DB is hashed and not plaintext — FR-010) in `__tests__/integration/auth/auth.test.ts`
+- [x] T020 [P] [US1] Write unit tests for loginSchema validation (valid username, invalid chars, too short, too long, empty password, short password) in `__tests__/unit/schemas/auth.test.ts`
+- [x] T021 [P] [US1] Write integration tests for sign-in flow (correct credentials → 200 + session cookie, wrong password → 401 generic error, nonexistent username → 401 generic error, empty fields → validation error, verify password in DB is hashed and not plaintext — FR-010) in `__tests__/integration/auth/auth.test.ts`
 
 ### Implementation for User Story 1
 
-- [ ] T022 [P] [US1] Create login form component in `components/features/auth/login-form.tsx` — `use client` with react-hook-form + zod resolver, username and password fields using shadcn Input/Label/Button, onError shows toast via sonner, onSuccess redirects to `/dashboard`
-- [ ] T023 [US1] Create login page in `app/(auth)/login/page.tsx` — Server Component rendering LoginForm inside shadcn Card, centered layout, app title
-- [ ] T024 [US1] Create dashboard placeholder page in `app/(authenticated)/dashboard/page.tsx` — Server Component with welcome message and placeholder areas for future KPIs/gráficos (FR-013)
-- [ ] T025 [US1] Run seed (`bun run db:seed`) and verify login flow end-to-end: login → session cookie set → redirect to dashboard
-- [ ] T026 [US1] Verify all US1 tests pass: `bun run test __tests__/unit/validations/` and `bun run test __tests__/integration/auth/`
+- [x] T022 [P] [US1] Create login form component in `components/features/auth/login-form.tsx` — `use client` with react-hook-form + zod resolver, username and password fields using shadcn Input/Label/Button, onError shows toast via sonner, onSuccess redirects to `/dashboard`
+- [x] T023 [US1] Create login page in `app/(auth)/login/page.tsx` — Server Component rendering LoginForm inside shadcn Card, centered layout, app title
+- [x] T024 [US1] Create dashboard placeholder page in `app/(authenticated)/dashboard/page.tsx` — Server Component with welcome message and placeholder areas for future KPIs/gráficos (FR-013)
+- [x] T025 [US1] Run seed (`bun run db:seed`) and verify login flow end-to-end: login → session cookie set → redirect to dashboard
+- [x] T026 [US1] Verify all US1 tests pass: `bun run test __tests__/unit/schemas/` and `bun run test __tests__/integration/auth/`
 
 **Checkpoint**: Login funcional com username e senha. Usuário autenticado vê o dashboard. Testes passando.
 
