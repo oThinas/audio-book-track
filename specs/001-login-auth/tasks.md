@@ -19,15 +19,15 @@
 
 **Purpose**: Inicializar o projeto Next.js com todas as dependências e ferramentas configuradas.
 
-- [ ] T001 Initialize Next.js project with Bun and TypeScript in project root (`bunx create-next-app@latest . --typescript --tailwind --eslint=false --app --src-dir=true --import-alias="@/*"`)
-- [ ] T002 Install core dependencies: better-auth, drizzle-orm, drizzle-kit, pg, @neondatabase/serverless, zod, react-hook-form, @hookform/resolvers, lucide-react
-- [ ] T003 Install dev dependencies: vitest, @vitejs/plugin-react, supertest, @faker-js/faker, @types/pg, @types/supertest
-- [ ] T004 [P] Remove ESLint config and install Biome; create `biome.json` with formatter and linter rules
-- [ ] T005 [P] Create `.env.example` with DATABASE_URL, BETTER_AUTH_SECRET, BETTER_AUTH_URL, NODE_ENV
-- [ ] T006 [P] Create `drizzle.config.ts` with PostgreSQL connection and schema path pointing to `lib/db/schema.ts`
-- [ ] T007 [P] Configure Vitest in `vitest.config.ts` with path aliases matching `tsconfig.json`
-- [ ] T008 Initialize shadcn/ui (`bunx shadcn@latest init`) and add components: button, input, card, label, sonner
-- [ ] T009 [P] Update `package.json` scripts: `db:migrate`, `db:seed`, `db:studio`, `test`, `test:e2e`, `lint`, `lint:fix`
+- [x] T001 Initialize Next.js project with Bun and TypeScript in project root (`bunx create-next-app@latest . --typescript --tailwind --eslint=false --app --src-dir=true --import-alias="@/*"`)
+- [x] T002 Install core dependencies: better-auth, drizzle-orm, drizzle-kit, pg, @neondatabase/serverless, zod, react-hook-form, @hookform/resolvers, lucide-react
+- [x] T003 Install dev dependencies: vitest, @vitejs/plugin-react, supertest, @faker-js/faker, @types/pg, @types/supertest
+- [x] T004 [P] Remove ESLint config and install Biome; create `biome.json` with formatter and linter rules
+- [x] T005 [P] Create `.env.example` with DATABASE_URL, BETTER_AUTH_SECRET, BETTER_AUTH_URL, NODE_ENV
+- [x] T006 [P] Create `drizzle.config.ts` with PostgreSQL connection and schema path pointing to `lib/db/schema.ts`
+- [x] T007 [P] Configure Vitest in `vitest.config.ts` with path aliases matching `tsconfig.json`
+- [x] T008 Initialize shadcn/ui (`bunx shadcn@latest init`) and add components: button, input, card, label, sonner
+- [x] T009 [P] Update `package.json` scripts: `db:migrate`, `db:seed`, `db:studio`, `test`, `test:e2e`, `lint`, `lint:fix`
 
 **Checkpoint**: Projeto inicializado, dependências instaladas, ferramentas configuradas. `bun run dev` funciona com página padrão do Next.js.
 
