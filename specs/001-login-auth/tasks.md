@@ -39,16 +39,16 @@
 
 **⚠️ CRITICAL**: Nenhum trabalho de user story pode começar até esta fase estar completa.
 
-- [ ] T010 Create Drizzle database instance with pg pool connection in `lib/db/index.ts`
-- [ ] T011 Create auth database schema (user, session, account, verification tables) in `lib/db/schema.ts` following data-model.md — include username field from better-auth username plugin, timestamptz for dates, indices on FKs
-- [ ] T012 Create better-auth server configuration in `lib/auth/server.ts`: drizzleAdapter with provider "pg", username plugin (minLength: 3, maxLength: 30), emailAndPassword enabled with disableSignUp: true, session expiresIn: 604800 and updateAge: 86400, rate limiting (window: 60, max: 3), cookie config (httpOnly, secure, sameSite: "lax")
-- [ ] T013 Create better-auth client in `lib/auth/client.ts` using `createAuthClient` with username plugin for browser usage
-- [ ] T014 [P] Create Zod validation schemas in `lib/validations/auth.ts`: loginSchema with username (regex `/^[a-zA-Z0-9_]{3,30}$/`) and password (min 6 chars)
-- [ ] T015 Create catch-all auth route handler in `app/api/auth/[...all]/route.ts` that delegates to better-auth `auth.handler`
-- [ ] T016 Create database migration script in `lib/db/migrate.ts` using drizzle-kit migrate
-- [ ] T017 Create seed script in `lib/db/seed.ts` that inserts a test user (username: "admin", password: "admin123", name: "Administrador", email: "admin@audiobook.local") — usar `auth.api.signUpEmail` server-side (bypassa `disableSignUp` quando chamado via `auth.api` no servidor) para garantir hashing correto da senha. Se a API interna não suportar, usar o CLI `npx @better-auth/cli` ou hash manual com a mesma lib usada pelo better-auth (bcrypt/argon2)
-- [ ] T018 Run initial migration to create auth tables (`bun run db:migrate`)
-- [ ] T019 Create root layout in `app/layout.tsx` with fonts (next/font), Tailwind globals, Toaster provider (sonner)
+- [x] T010 Create Drizzle database instance with pg pool connection in `lib/db/index.ts`
+- [x] T011 Create auth database schema (user, session, account, verification tables) in `lib/db/schema.ts` following data-model.md — include username field from better-auth username plugin, timestamptz for dates, indices on FKs
+- [x] T012 Create better-auth server configuration in `lib/auth/server.ts`: drizzleAdapter with provider "pg", username plugin (minLength: 3, maxLength: 30), emailAndPassword enabled with disableSignUp: true, session expiresIn: 604800 and updateAge: 86400, rate limiting (window: 60, max: 3), cookie config (httpOnly, secure, sameSite: "lax")
+- [x] T013 Create better-auth client in `lib/auth/client.ts` using `createAuthClient` with username plugin for browser usage
+- [x] T014 [P] Create Zod validation schemas in `lib/schemas/auth.ts`: loginSchema with username (regex `/^[a-zA-Z0-9_]{3,30}$/`) and password (min 6 chars)
+- [x] T015 Create catch-all auth route handler in `app/api/auth/[...all]/route.ts` that delegates to better-auth `auth.handler`
+- [x] T016 Create database migration script in `lib/db/migrate.ts` using drizzle-kit migrate
+- [x] T017 Create seed script in `lib/db/seed.ts` that inserts a test user (username: "admin", password: "admin123", name: "Administrador", email: "admin@audiobook.local") — seed usa instância separada do better-auth com disableSignUp: false para bypass
+- [x] T018 Run initial migration to create auth tables (`bun run db:migrate`)
+- [x] T019 Create root layout in `app/layout.tsx` with fonts (next/font), Tailwind globals, Toaster provider (sonner)
 
 **Checkpoint**: Banco de dados com schema criado, auth configurado, seed executável. Rotas de API do better-auth respondem.
 
