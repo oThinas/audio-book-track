@@ -131,13 +131,13 @@
 
 > **TDD: Escrever estes testes PRIMEIRO, verificar que FALHAM antes da implementação**
 
-- [ ] T033 [P] [US4] Write integration test for logout (authenticated user → sign-out → session invalidated → redirect to login, verify cookie cleared) in `__tests__/integration/auth/logout.test.ts`
+- [x] T033 [P] [US4] Write integration test for logout (authenticated user → sign-out → session invalidated → redirect to login, verify cookie cleared) in `__tests__/integration/auth/logout.test.ts`
 
 ### Implementation for User Story 4
 
-- [ ] T034 [US4] Create sidebar component in `components/layout/sidebar.tsx` — Server Component com nav link para Dashboard (Lucide Home icon) e nome do usuário. Extrair botão de logout em componente `use client` separado (`components/features/auth/logout-button.tsx`) que chama `authClient.signOut()` e redireciona para `/login` (FR-012). Justificar `use client` no componente conforme Princípio XII.
-- [ ] T035 [US4] Create authenticated layout in `app/(authenticated)/layout.tsx` — Server Component that renders sidebar + main content area via `children` prop
-- [ ] T036 [US4] Verify all US4 tests pass: `bun run test __tests__/integration/auth/logout.test.ts`
+- [x] T034 [US4] Create sidebar component in `components/layout/sidebar.tsx` — Server Component com nav link para Dashboard (Lucide Home icon) e nome do usuário. Extrair botão de logout em componente `use client` separado (`components/features/auth/logout-button.tsx`) que chama `authClient.signOut()` e redireciona para `/login` (FR-012). Justificar `use client` no componente conforme Princípio XII.
+- [x] T035 [US4] Create authenticated layout in `app/(authenticated)/layout.tsx` — Server Component that renders sidebar + main content area via `children` prop
+- [x] T036 [US4] Verify all US4 tests pass: `bun run test __tests__/integration/auth/logout.test.ts`
 
 **Checkpoint**: Sidebar funcional com Dashboard link, nome do usuário e logout. Logout encerra sessão corretamente.
 

@@ -1,9 +1,9 @@
+import { createGetSessionRequest, createSignInRequest } from "@tests/helpers/auth";
 import { Pool } from "pg";
 import { afterAll, describe, expect, it } from "vitest";
 
 import { auth } from "@/lib/auth/server";
 
-const BASE_URL = "http://localhost:3000";
 const SEVEN_DAYS_IN_SECONDS = 604800;
 
 const pool = new Pool({
@@ -14,30 +14,19 @@ afterAll(async () => {
   await pool.end();
 });
 
-function signInRequest(username: string, password: string): Request {
-  return new Request(`${BASE_URL}/api/auth/sign-in/username`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password }),
-  });
-}
-
 describe("Session Persistence (US3)", () => {
   it("should create session with expiresAt 7 days from now", async () => {
     const now = Date.now();
 
-    const response = await auth.handler(signInRequest("admin", "admin123"));
+    const response = await auth.handler(createSignInRequest());
 
     expect(response.status).toBe(200);
 
-    // Get session via get-session endpoint using the cookie
     const cookie = response.headers.get("set-cookie") ?? "";
     expect(cookie).toBeTruthy();
 
     const sessionResponse = await auth.handler(
-      new Request(`${BASE_URL}/api/auth/get-session`, {
-        headers: { Cookie: cookie },
-      }),
+      createGetSessionRequest(cookie),
     );
 
     const data = await sessionResponse.json();
@@ -54,7 +43,7 @@ describe("Session Persistence (US3)", () => {
   });
 
   it("should set session cookie with maxAge of 7 days (604800s)", async () => {
-    const response = await auth.handler(signInRequest("admin", "admin123"));
+    const response = await auth.handler(createSignInRequest());
 
     expect(response.status).toBe(200);
 
@@ -67,17 +56,13 @@ describe("Session Persistence (US3)", () => {
   });
 
   it("should persist session in database and return it via get-session", async () => {
-    // Sign in to create a session
-    const signInResponse = await auth.handler(signInRequest("admin", "admin123"));
+    const signInResponse = await auth.handler(createSignInRequest());
 
     const cookie = signInResponse.headers.get("set-cookie") ?? "";
     expect(cookie).toBeTruthy();
 
-    // Use the session cookie to fetch the session
     const sessionResponse = await auth.handler(
-      new Request("http://localhost:3000/api/auth/get-session", {
-        headers: { Cookie: cookie },
-      }),
+      createGetSessionRequest(cookie),
     );
 
     expect(sessionResponse.status).toBe(200);
