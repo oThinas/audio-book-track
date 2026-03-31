@@ -1,39 +1,31 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.1.0 → 2.0.0 (MAJOR: chapter lifecycle completely redefined — 6 new statuses
-replacing 4 old ones; backward incompatible redefinition of Principle III)
+Version change: 2.0.0 → 2.1.0 (MINOR: added shadcn/ui component preference to Principle VII)
 
 Modified principles:
-  - Princípio I: "gravadores" replaced by "narradores" throughout
-  - Princípio III: Ciclo de Vida rewritten — new 6-state machine
-    (pendente → em edição → em revisão ⇄ edição retake → concluído → pago)
-    replacing prior 4-state machine
-  - Princípio XIII (NEW): Métricas e KPIs de Produção — pages per chapter + avg page duration KPI
-  - Princípio XIV (NEW): Visualização de PDF do Livro
-  - Domain Model Constraints: updated statuses, added num_paginas to Capítulo, added pdf_url to
-    Livro, replaced "responsável_gravação" with "narrador", aligned roles with new lifecycle
-  - Self-Review Checklist: added KPI + PDF checks (XIII, XIV)
+  - Princípio VII: Frontend — added shadcn/ui as the default component library;
+    components/ui/ now maps to shadcn/ui primitives; building custom primitives
+    from scratch is prohibited when a shadcn/ui equivalent exists.
+  - Self-Review Checklist: added shadcn/ui check under Arquitetura e Código (VII).
+  - Anti-Padrões (XII): added "construir componente primitivo do zero quando
+    shadcn/ui oferece equivalente" to Frontend anti-patterns.
 
 Added sections:
-  - XIII. Métricas e KPIs de Produção
-  - XIV. Visualização de PDF do Livro
+  - N/A (guidance added within existing sections)
 
 Removed sections:
-  - N/A (no sections removed; statuses and roles renamed)
+  - N/A
 
 Templates requiring updates:
   ✅ .specify/memory/constitution.md — this file (overwritten now)
-  ⚠ CLAUDE.md — inline status list (não iniciado / em andamento / pagamento pendente / pago)
-    must be updated to reflect new lifecycle; flagged for manual follow-up
   ✅ .specify/templates/plan-template.md — compatible; no structural change required
-  ✅ .specify/templates/spec-template.md — compatible; success criteria unchanged
-  ✅ .specify/templates/tasks-template.md — compatible; new KPI and PDF tasks will appear in
-    Phase 2/3 of any relevant feature plan
+  ✅ .specify/templates/spec-template.md — compatible; no structural change required
+  ✅ .specify/templates/tasks-template.md — compatible; no structural change required
+  ✅ CLAUDE.md — no update needed (shadcn/ui guidance is in constitution)
 
 Follow-up TODOs:
-  - Update CLAUDE.md inline status list to match new 6-state lifecycle.
-  - Database migration required: rename status values and add num_paginas, pdf_url columns.
+  - None.
 -->
 
 # AudioBook Track Constitution
@@ -172,11 +164,25 @@ e que mudanças de storage não afetem a lógica de domínio.
 O frontend DEVE separar lógica de renderização e seguir composição sobre
 herança. Componentes DEVEM ser atômicos e independentes.
 
+**shadcn/ui como biblioteca de componentes padrão:**
+
+- **shadcn/ui** é a biblioteca de componentes UI oficial deste projeto.
+- Antes de criar qualquer componente primitivo (Button, Input, Dialog,
+  Select, Table, Badge, Card, etc.), DEVE-se verificar se existe um
+  equivalente no shadcn/ui e usá-lo.
+- Construir componentes primitivos do zero quando shadcn/ui oferece
+  equivalente é **proibido** — usar `npx shadcn@latest add <component>`.
+- Componentes shadcn/ui podem ser customizados via props, className
+  (Tailwind) e design tokens — não via fork ou reescrita.
+- Componentes compostos específicos do domínio (ex: ChapterRow,
+  PaymentSummary) DEVEM ser construídos **compondo** componentes
+  shadcn/ui, não substituindo-os.
+
 **Estrutura de componentes:**
 
 ```
-components/ui/        → Átomos: Button, Input, Badge, Card (sem lógica de negócio)
-components/features/  → Moléculas: ChapterRow, PaymentSummary (lógica de domínio)
+components/ui/        → shadcn/ui primitivos (Button, Input, Badge, Card, etc.)
+components/features/  → Moléculas: ChapterRow, PaymentSummary (composição de ui/ + lógica de domínio)
 app/                  → Pages/Layouts (Next.js App Router, SSR por padrão)
 hooks/                → Custom hooks isolam lógica de estado e side effects
 ```
@@ -319,6 +325,8 @@ Os seguintes padrões são **explicitamente proibidos** neste projeto:
 - `use client` sem justificativa explícita em comentário.
 - Componentes com mais de 200 linhas — extrair lógica em hooks ou
   sub-componentes.
+- Construir componente primitivo do zero (Button, Input, Dialog, Select,
+  Table, etc.) quando shadcn/ui oferece equivalente — usar shadcn/ui.
 
 **Banco de dados:**
 - `float` ou `double` para valores financeiros.
@@ -474,6 +482,7 @@ submeter para review ou merge:
 - [ ] VI.   Lógica de negócio está no Service/Domain, não no Controller?
 - [ ] VI.   Dependências apontam de fora para dentro (Controller→Service→Repo→Domain)?
 - [ ] VII.  Componentes UI são puramente visuais (sem fetch/useState de negócio)?
+- [ ] VII.  Componentes primitivos usam shadcn/ui (não construídos do zero)?
 - [ ] VII.  Data fetching usa Server Components quando possível?
 - [ ] VIII. A mudança não adiciona peso desnecessário ao bundle do cliente?
 - [ ] VIII. Listas longas usam virtualização?
@@ -501,4 +510,4 @@ submeter para review ou merge:
 revisar por outros e cria responsabilidade pessoal com os padrões
 definidos nesta constituição.
 
-**Version**: 2.0.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-03-30
+**Version**: 2.1.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-03-31

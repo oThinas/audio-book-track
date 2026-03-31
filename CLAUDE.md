@@ -31,7 +31,8 @@
   lib/domain/       → Entidades e regras puras (sem imports de framework)
   ```
 - **Injeção de dependência via construtor** — nunca instanciar dependências dentro de uma classe.
-- **Componentes UI (`components/ui/`)** são puramente visuais: sem `useState` de negócio, sem `fetch`.
+- **shadcn/ui é a biblioteca de componentes padrão** — usar `npx shadcn@latest add <component>` antes de construir primitivos do zero.
+- **Componentes UI (`components/ui/`)** são shadcn/ui primitivos, puramente visuais: sem `useState` de negócio, sem `fetch`.
 - **`use client` exige comentário justificando** o motivo; Server Components são o padrão.
 - **Data fetching** usa Server Components com `async/await`; `useEffect` para fetch é proibido.
 
