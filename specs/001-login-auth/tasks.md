@@ -19,7 +19,7 @@
 
 **Purpose**: Inicializar o projeto Next.js com todas as dependências e ferramentas configuradas.
 
-- [ ] T001 Initialize Next.js project with Bun and TypeScript in project root (`bunx create-next-app@latest . --typescript --tailwind --eslint=false --app --src-dir=false --import-alias="@/*"`)
+- [ ] T001 Initialize Next.js project with Bun and TypeScript in project root (`bunx create-next-app@latest . --typescript --tailwind --eslint=false --app --src-dir=true --import-alias="@/*"`)
 - [ ] T002 Install core dependencies: better-auth, drizzle-orm, drizzle-kit, pg, @neondatabase/serverless, zod, react-hook-form, @hookform/resolvers, lucide-react
 - [ ] T003 Install dev dependencies: vitest, @vitejs/plugin-react, supertest, @faker-js/faker, @types/pg, @types/supertest
 - [ ] T004 [P] Remove ESLint config and install Biome; create `biome.json` with formatter and linter rules
