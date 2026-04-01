@@ -13,7 +13,8 @@
     "test:watch": "vitest",
     "test:e2e": "vitest run --config vitest.config.ts __tests__/e2e/",
     "lint": "bunx biome check .",
-    "lint:fix": "bunx biome check --write ."
+    "lint:fix": "bunx biome check --write .",
+    "prepare": "husky"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -50,6 +51,8 @@
     "@vitejs/plugin-react": "^6.0.1",
     "@vitest/coverage-v8": "^4.1.2",
     "babel-plugin-react-compiler": "1.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "supertest": "^7.2.2",
     "tailwindcss": "^4",
     "typescript": "^5",

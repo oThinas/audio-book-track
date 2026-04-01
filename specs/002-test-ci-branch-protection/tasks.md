@@ -19,9 +19,9 @@
 
 **Purpose**: Install dependencies and initialize tooling needed by all stories
 
-- [ ] T001 Install husky and lint-staged as dev dependencies via `bun add -d husky lint-staged`
-- [ ] T002 Initialize husky with `bunx husky init` to create .husky/ directory
-- [ ] T003 Create .github/workflows/ directory structure
+- [x] T001 Install husky and lint-staged as dev dependencies via `bun add -d husky lint-staged`
+- [x] T002 Initialize husky with `bunx husky init` to create .husky/ directory
+- [x] T003 Create .github/workflows/ directory structure
 
 **Checkpoint**: Tooling installed, ready for configuration
 
