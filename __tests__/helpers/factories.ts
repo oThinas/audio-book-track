@@ -1,0 +1,89 @@
+import { randomUUID } from "node:crypto";
+import { hashPassword } from "better-auth/crypto";
+import { account, session, user } from "@/lib/db/schema";
+import type { TestDb } from "./db";
+
+interface CreateTestUserOptions {
+  readonly name?: string;
+  readonly email?: string;
+  readonly username?: string;
+  readonly password?: string;
+}
+
+interface CreateTestUserResult {
+  readonly user: typeof user.$inferSelect;
+  readonly account: typeof account.$inferSelect;
+}
+
+export async function createTestUser(
+  db: TestDb,
+  overrides: CreateTestUserOptions = {},
+): Promise<CreateTestUserResult> {
+  const suffix = randomUUID().slice(0, 8);
+  const userId = randomUUID();
+  const accountId = randomUUID();
+
+  const rawPassword = overrides.password ?? "password123";
+  const hashedPassword = await hashPassword(rawPassword);
+
+  const [createdUser] = await db
+    .insert(user)
+    .values({
+      id: userId,
+      name: overrides.name ?? "Test User",
+      email: overrides.email ?? `test-${suffix}@test.local`,
+      emailVerified: false,
+      username: overrides.username ?? `testuser-${suffix}`,
+      displayUsername: overrides.username ?? `testuser-${suffix}`,
+    })
+    .returning();
+
+  const [createdAccount] = await db
+    .insert(account)
+    .values({
+      id: accountId,
+      accountId: userId,
+      providerId: "credential",
+      userId,
+      password: hashedPassword,
+    })
+    .returning();
+
+  return { user: createdUser, account: createdAccount };
+}
+
+interface CreateTestSessionOptions {
+  readonly token?: string;
+  readonly expiresAt?: Date;
+  readonly ipAddress?: string;
+  readonly userAgent?: string;
+}
+
+interface CreateTestSessionResult {
+  readonly session: typeof session.$inferSelect;
+}
+
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+
+export async function createTestSession(
+  db: TestDb,
+  userId: string,
+  overrides: CreateTestSessionOptions = {},
+): Promise<CreateTestSessionResult> {
+  const suffix = randomUUID().slice(0, 8);
+  const sessionId = randomUUID();
+
+  const [createdSession] = await db
+    .insert(session)
+    .values({
+      id: sessionId,
+      token: overrides.token ?? `session-${suffix}`,
+      expiresAt: overrides.expiresAt ?? new Date(Date.now() + SEVEN_DAYS_MS),
+      userId,
+      ipAddress: overrides.ipAddress ?? null,
+      userAgent: overrides.userAgent ?? null,
+    })
+    .returning();
+
+  return { session: createdSession };
+}

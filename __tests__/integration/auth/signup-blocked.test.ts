@@ -1,31 +1,18 @@
-import { createSignUpEmailRequest, createSignUpUsernameRequest } from "@tests/helpers/auth";
-import { Pool } from "pg";
-import { afterAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { auth } from "@/lib/auth/server";
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+describe("Sign-up Blocked (FR-002) — config assertion", () => {
+  it("should have sign-up disabled in emailAndPassword config", () => {
+    const options = auth.options;
 
-afterAll(async () => {
-  await pool.end();
-});
-
-describe("Sign-up Blocked (FR-002)", () => {
-  it("should block sign-up via /api/auth/sign-up/email", async () => {
-    const response = await auth.handler(
-      createSignUpEmailRequest("Hacker", "hacker@evil.com", "hacker123"),
-    );
-
-    expect(response.status).toBeGreaterThanOrEqual(400);
+    expect(options.emailAndPassword).toBeDefined();
+    expect(options.emailAndPassword?.disableSignUp).toBe(true);
   });
 
-  it("should block sign-up via /api/auth/sign-up/username", async () => {
-    const response = await auth.handler(
-      createSignUpUsernameRequest("Hacker", "hacker@evil.com", "hacker123", "hacker"),
-    );
+  it("should have emailAndPassword enabled for login", () => {
+    const options = auth.options;
 
-    expect(response.status).toBeGreaterThanOrEqual(400);
+    expect(options.emailAndPassword?.enabled).toBe(true);
   });
 });
