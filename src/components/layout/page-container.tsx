@@ -12,8 +12,14 @@ function PageTitle({ children, className }: { children: React.ReactNode; classNa
   return <h1 className={cn("text-3xl font-bold tracking-tight", className)}>{children}</h1>;
 }
 
-function PageDescription({ children, className }: { children: React.ReactNode; className?: string }) {
+function PageDescription({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   return <p className={cn("text-muted-foreground mt-1", className)}>{children}</p>;
 }
 
-export { PageContainer, PageHeader, PageTitle, PageDescription };
+export { PageContainer, PageDescription, PageHeader, PageTitle };

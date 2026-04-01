@@ -6,12 +6,11 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-
-import { authClient } from "@/lib/auth/client";
-import { loginSchema, type LoginInput } from "@/lib/schemas/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { authClient } from "@/lib/auth/client";
+import { type LoginInput, loginSchema } from "@/lib/schemas/auth";
 
 export function LoginForm() {
   const router = useRouter();
@@ -55,9 +54,7 @@ export function LoginForm() {
           disabled={isLoading}
           {...register("username")}
         />
-        {errors.username && (
-          <p className="text-sm text-destructive">{errors.username.message}</p>
-        )}
+        {errors.username && <p className="text-sm text-destructive">{errors.username.message}</p>}
       </div>
 
       <div className="space-y-2">
@@ -70,9 +67,7 @@ export function LoginForm() {
           disabled={isLoading}
           {...register("password")}
         />
-        {errors.password && (
-          <p className="text-sm text-destructive">{errors.password.message}</p>
-        )}
+        {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
       </div>
 
       <Button type="submit" className="w-full" disabled={isLoading}>
