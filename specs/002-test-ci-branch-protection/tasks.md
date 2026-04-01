@@ -85,7 +85,7 @@
 
 **Independent Test**: Open a PR to main, verify integration and e2e tests run and report status.
 
-- [ ] T011 [US3] Create GitHub Actions workflow .github/workflows/pr-checks.yml triggered on pull_request targeting main with PostgreSQL 16 service container, jobs named exactly `integration-tests` (bun run test:integration) and `e2e-tests` (bun run test:e2e). Job names must match T014 branch protection check names.
+- [x] T011 [US3] Create GitHub Actions workflow .github/workflows/pr-checks.yml triggered on pull_request targeting main with PostgreSQL 16 service container, jobs named exactly `integration-tests` (bun run test:integration) and `e2e-tests` (bun run test:e2e). Job names must match T014 branch protection check names.
 
 **Checkpoint**: Every PR to main triggers integration + e2e tests
 
@@ -97,7 +97,7 @@
 
 **Independent Test**: Open a PR with a build-breaking change, verify the build check fails and blocks merge.
 
-- [ ] T012 [US5] Add build verification job named exactly `build` to .github/workflows/pr-checks.yml running `bun run build`. Job name must match T014 branch protection check names.
+- [x] T012 [US5] Add build verification job named exactly `build` to .github/workflows/pr-checks.yml running `bun run build`. Job name must match T014 branch protection check names.
 - [ ] T013 [US5] Verify PR pipeline end-to-end: open a PR to main and confirm integration tests, e2e tests, and build all run and report status
 
 **Checkpoint**: Every PR to main also verifies build
