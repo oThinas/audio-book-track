@@ -121,6 +121,8 @@ Qualquer mudança no modelo financeiro (preço, horas, responsáveis) requer **r
 ## Active Technologies
 - TypeScript 5.x, Bun como runtime + Next.js (latest), better-auth, Drizzle ORM, shadcn/ui, Tailwind CSS, Lucide React, Zod (001-login-auth)
 - PostgreSQL 16 (Docker) (001-login-auth)
+- TypeScript 5.x + Next.js (latest), Vitest 4.x, Biome 2.x, Bun (002-test-ci-branch-protection)
+- PostgreSQL 16 (Docker — needed for integration tests in CI) (002-test-ci-branch-protection)
 
 ## Recent Changes
 - 001-login-auth: Added TypeScript 5.x, Bun como runtime + Next.js (latest), better-auth, Drizzle ORM, shadcn/ui, Tailwind CSS, Lucide React, Zod
