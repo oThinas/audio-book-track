@@ -73,7 +73,7 @@
 **Independent Test**: Push a commit to a feature branch, verify GitHub Actions triggers and reports unit test + lint status.
 
 - [x] T009 [US2] Create GitHub Actions workflow .github/workflows/unit-tests.yml triggered on push to any branch with jobs named exactly `lint` and `unit-tests` (bunx biome check . / bun run test:unit + bun run test:coverage) using oven-sh/setup-bun and dependency caching. Job names must match T014 branch protection check names.
-- [ ] T010 [US2] Verify push pipeline: push to branch and confirm lint, unit tests, and coverage report run and report status checks
+- [x] T010 [US2] Verify push pipeline: push to branch and confirm lint, unit tests, and coverage report run and report status checks
 
 **Checkpoint**: Every push triggers unit tests + lint CI
 
@@ -98,7 +98,7 @@
 **Independent Test**: Open a PR with a build-breaking change, verify the build check fails and blocks merge.
 
 - [x] T012 [US5] Add build verification job named exactly `build` to .github/workflows/pr-checks.yml running `bun run build`. Job name must match T014 branch protection check names.
-- [ ] T013 [US5] Verify PR pipeline end-to-end: open a PR to main and confirm integration tests, e2e tests, and build all run and report status
+- [x] T013 [US5] Verify PR pipeline end-to-end: open a PR to main and confirm integration tests, e2e tests, and build all run and report status
 
 **Checkpoint**: Every PR to main also verifies build
 
@@ -110,8 +110,8 @@
 
 **Independent Test**: Attempt to push directly to main, verify it is rejected.
 
-- [ ] T014 [US6] Configure GitHub branch protection rules on main via `gh api` or GitHub UI: require status checks (unit-tests, lint, integration-tests, e2e-tests, build), block direct pushes, block force pushes, no reviewer approval required (**MANUAL — requires `gh auth login` or GitHub UI**)
-- [ ] T015 [US6] Verify branch protection: attempt direct push to main and confirm rejection (**MANUAL — after T014**)
+- [x] T014 [US6] Configure GitHub branch protection rules on main via `gh api` or GitHub UI: require status checks (unit-tests, lint, integration-tests, e2e-tests, build), block direct pushes, block force pushes, no reviewer approval required
+- [x] T015 [US6] Verify branch protection: attempt direct push to main and confirm rejection
 
 **Checkpoint**: Main branch fully protected
 
@@ -121,9 +121,9 @@
 
 **Purpose**: Final validation and documentation
 
-- [ ] T016 [P] Verify all CI workflow YAML files are valid by running `gh workflow list` after push (**MANUAL — after push**)
+- [x] T016 [P] Verify all CI workflow YAML files are valid by running `gh workflow list` after push
 - [x] T017 [P] Update specs/002-test-ci-branch-protection/quickstart.md with any adjustments discovered during implementation
-- [ ] T018 Run full end-to-end verification: push to branch (unit tests + lint trigger), open PR to main (integration + e2e + build trigger), verify all checks gate merge (**MANUAL — after push + PR**)
+- [x] T018 Run full end-to-end verification: push to branch (unit tests + lint trigger), open PR to main (integration + e2e + build trigger), verify all checks gate merge
 
 ---
 
