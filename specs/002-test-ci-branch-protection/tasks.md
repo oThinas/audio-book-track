@@ -33,8 +33,8 @@
 
 **WARNING**: No user story work can begin until this phase is complete
 
-- [ ] T004 Update test scripts in package.json: replace existing `test`, `test:watch`, `test:e2e` scripts and add `test:unit`, `test:integration`, `test:coverage` commands targeting `__tests__/unit/`, `__tests__/integration/`, `__tests__/e2e/` directories respectively
-- [ ] T005 Verify all test commands execute correctly: `bun run test:unit`, `bun run test:integration`, `bun run test:e2e`, `bun run test`, `bun run test:coverage`
+- [x] T004 Update test scripts in package.json: replace existing `test`, `test:watch`, `test:e2e` scripts and add `test:unit`, `test:integration`, `test:coverage` commands targeting `__tests__/unit/`, `__tests__/integration/`, `__tests__/e2e/` directories respectively
+- [x] T005 Verify all test commands execute correctly: `bun run test:unit`, `bun run test:integration`, `bun run test:e2e`, `bun run test`, `bun run test:coverage`
 
 **Checkpoint**: All four test commands work locally, running only their respective test categories
 

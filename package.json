@@ -10,8 +10,11 @@
     "db:seed": "bun run src/lib/db/seed.ts",
     "db:studio": "bunx drizzle-kit studio",
     "test": "vitest run",
+    "test:unit": "vitest run __tests__/unit/",
+    "test:integration": "vitest run __tests__/integration/",
+    "test:e2e": "vitest run __tests__/e2e/",
+    "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
-    "test:e2e": "vitest run --config vitest.config.ts __tests__/e2e/",
     "lint": "bunx biome check .",
     "lint:fix": "bunx biome check --write .",
     "prepare": "husky"
