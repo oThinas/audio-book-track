@@ -68,5 +68,8 @@
   "trustedDependencies": [
     "sharp",
     "unrs-resolver"
-  ]
+  ],
+  "lint-staged": {
+    "*.{ts,tsx,json}": "bunx biome check --write"
+  }
 }

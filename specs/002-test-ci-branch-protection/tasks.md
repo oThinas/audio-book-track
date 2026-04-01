@@ -58,9 +58,9 @@
 
 **Independent Test**: Stage a file with lint violations, commit, and verify Biome auto-fixes the file and the commit succeeds with clean code.
 
-- [ ] T006 [US4] Add lint-staged configuration to package.json with rule `"*.{ts,tsx,json}": "bunx biome check --write"` targeting staged files
-- [ ] T007 [US4] Configure .husky/pre-commit hook to run `bunx lint-staged` on commit
-- [ ] T008 [US4] Verify pre-commit hook: stage a file with lint violations, commit, and confirm auto-fix runs and commit succeeds
+- [x] T006 [US4] Add lint-staged configuration to package.json with rule `"*.{ts,tsx,json}": "bunx biome check --write"` targeting staged files
+- [x] T007 [US4] Configure .husky/pre-commit hook to run `bunx lint-staged` on commit
+- [x] T008 [US4] Verify pre-commit hook: stage a file with lint violations, commit, and confirm auto-fix runs and commit succeeds
 
 **Checkpoint**: Pre-commit lint auto-fix works locally
 
