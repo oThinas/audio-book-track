@@ -72,7 +72,7 @@
 
 **Independent Test**: Push a commit to a feature branch, verify GitHub Actions triggers and reports unit test + lint status.
 
-- [ ] T009 [US2] Create GitHub Actions workflow .github/workflows/unit-tests.yml triggered on push to any branch with jobs named exactly `lint` and `unit-tests` (bunx biome check . / bun run test:unit + bun run test:coverage) using oven-sh/setup-bun and dependency caching. Job names must match T014 branch protection check names.
+- [x] T009 [US2] Create GitHub Actions workflow .github/workflows/unit-tests.yml triggered on push to any branch with jobs named exactly `lint` and `unit-tests` (bunx biome check . / bun run test:unit + bun run test:coverage) using oven-sh/setup-bun and dependency caching. Job names must match T014 branch protection check names.
 - [ ] T010 [US2] Verify push pipeline: push to branch and confirm lint, unit tests, and coverage report run and report status checks
 
 **Checkpoint**: Every push triggers unit tests + lint CI
