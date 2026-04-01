@@ -7,7 +7,7 @@ vi.mock("better-auth/cookies", () => ({
 
 import { getSessionCookie } from "better-auth/cookies";
 
-import { middleware } from "@/middleware";
+import { proxy } from "@/proxy";
 
 const mockedGetSessionCookie = vi.mocked(getSessionCookie);
 
@@ -23,7 +23,7 @@ describe("Route Protection (US2)", () => {
   it("should redirect unauthenticated user from /dashboard to /login", () => {
     mockedGetSessionCookie.mockReturnValue(null);
 
-    const response = middleware(createRequest("/dashboard"));
+    const response = proxy(createRequest("/dashboard"));
 
     expect(response.status).toBe(307);
     const loginLocation = response.headers.get("location") ?? "";
@@ -33,7 +33,7 @@ describe("Route Protection (US2)", () => {
   it("should allow authenticated user to access /dashboard", () => {
     mockedGetSessionCookie.mockReturnValue("session-token-value");
 
-    const response = middleware(createRequest("/dashboard"));
+    const response = proxy(createRequest("/dashboard"));
 
     expect(response.status).toBe(200);
     expect(response.headers.get("location")).toBeNull();
@@ -42,7 +42,7 @@ describe("Route Protection (US2)", () => {
   it("should redirect authenticated user from /login to /dashboard", () => {
     mockedGetSessionCookie.mockReturnValue("session-token-value");
 
-    const response = middleware(createRequest("/login"));
+    const response = proxy(createRequest("/login"));
 
     expect(response.status).toBe(307);
     const dashboardLocation = response.headers.get("location") ?? "";
@@ -52,7 +52,7 @@ describe("Route Protection (US2)", () => {
   it("should allow unauthenticated user to access /login", () => {
     mockedGetSessionCookie.mockReturnValue(null);
 
-    const response = middleware(createRequest("/login"));
+    const response = proxy(createRequest("/login"));
 
     expect(response.status).toBe(200);
     expect(response.headers.get("location")).toBeNull();
@@ -61,7 +61,7 @@ describe("Route Protection (US2)", () => {
   it("should not block /api/auth/* routes for unauthenticated users", () => {
     mockedGetSessionCookie.mockReturnValue(null);
 
-    const response = middleware(createRequest("/api/auth/get-session"));
+    const response = proxy(createRequest("/api/auth/get-session"));
 
     expect(response.status).toBe(200);
     expect(response.headers.get("location")).toBeNull();

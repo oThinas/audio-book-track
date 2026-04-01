@@ -9,7 +9,7 @@ function isPublicRoute(pathname: string): boolean {
 
 // Optimistic cookie check for UX redirects only.
 // Each protected page/layout must validate the session server-side.
-export function middleware(request: NextRequest): NextResponse {
+export function proxy(request: NextRequest): NextResponse {
   const sessionCookie = getSessionCookie(request);
   const { pathname } = request.nextUrl;
 
