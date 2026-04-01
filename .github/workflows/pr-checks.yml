@@ -4,7 +4,6 @@ on:
   pull_request:
     branches:
       - main
-      - 001-login-auth
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref }}
