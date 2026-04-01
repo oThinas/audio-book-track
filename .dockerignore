@@ -1,0 +1,14 @@
+node_modules/
+.next/
+.git/
+.env*
+!.env.example
+coverage/
+__tests__/
+*.log
+.DS_Store
+.vscode/
+.idea/
+specs/
+.specify/
+futuras-features.md

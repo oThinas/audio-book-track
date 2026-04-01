@@ -26,6 +26,16 @@ const seedAuth = betterAuth({
 async function main() {
   console.info("Seeding database...");
 
+  const existing = await db.query.user.findFirst({
+    where: (user, { eq }) => eq(user.email, "admin@audiobook.local"),
+    columns: { id: true },
+  });
+
+  if (existing) {
+    console.info("Seed user already exists, skipping.");
+    process.exit(0);
+  }
+
   const result = await seedAuth.api.signUpEmail({
     body: {
       name: "Administrador",

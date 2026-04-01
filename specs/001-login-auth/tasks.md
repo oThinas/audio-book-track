@@ -151,10 +151,10 @@
 
 ### Implementation for User Story 5
 
-- [ ] T037 [P] [US5] Create `docker-compose.yml` with services: `db` (PostgreSQL 16, volume persistente, port 5432, env vars) and `app` (build from Dockerfile, port 3000, depends_on db, env vars from .env)
-- [ ] T038 [P] [US5] Create `Dockerfile` with multi-stage build: base (bun), deps (install), build (next build), runner (production image with minimal footprint)
-- [ ] T039 [US5] Create startup script or docker-compose command that runs migrations and seed on first boot
-- [ ] T040 [US5] Verify full environment: `docker compose up -d`, wait for healthy, access `http://localhost:3000`, verify login page displays
+- [x] T037 [P] [US5] Create `docker-compose.yml` with services: `db` (PostgreSQL 16, volume persistente, port 5432, env vars) and `app` (build from Dockerfile, port 3000, depends_on db, env vars from .env)
+- [x] T038 [P] [US5] Create `Dockerfile` with multi-stage build: base (bun), deps (install), build (next build), runner (production image with minimal footprint)
+- [x] T039 [US5] Create startup script or docker-compose command that runs migrations and seed on first boot
+- [x] T040 [US5] Verify full environment: `docker compose up -d`, wait for healthy, access `http://localhost:3000`, verify login page displays
 
 **Checkpoint**: Ambiente de desenvolvimento completo com um comando. PostgreSQL + App funcionando.
 
