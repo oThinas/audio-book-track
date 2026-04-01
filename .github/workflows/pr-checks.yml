@@ -29,6 +29,8 @@ jobs:
           --health-retries=5
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/audio_book_track_test
+      BETTER_AUTH_SECRET: ci-test-secret-do-not-use-in-production
+      BETTER_AUTH_URL: http://localhost:3000
     steps:
       - uses: actions/checkout@v4
 
@@ -76,6 +78,10 @@ jobs:
   build:
     name: build
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/placeholder
+      BETTER_AUTH_SECRET: ci-build-secret-do-not-use-in-production
+      BETTER_AUTH_URL: http://localhost:3000
     steps:
       - uses: actions/checkout@v4
 
