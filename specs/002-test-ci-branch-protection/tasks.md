@@ -110,8 +110,8 @@
 
 **Independent Test**: Attempt to push directly to main, verify it is rejected.
 
-- [ ] T014 [US6] Configure GitHub branch protection rules on main via `gh api` or GitHub UI: require status checks (unit-tests, lint, integration-tests, e2e-tests, build), block direct pushes, block force pushes, no reviewer approval required
-- [ ] T015 [US6] Verify branch protection: attempt direct push to main and confirm rejection
+- [ ] T014 [US6] Configure GitHub branch protection rules on main via `gh api` or GitHub UI: require status checks (unit-tests, lint, integration-tests, e2e-tests, build), block direct pushes, block force pushes, no reviewer approval required (**MANUAL — requires `gh auth login` or GitHub UI**)
+- [ ] T015 [US6] Verify branch protection: attempt direct push to main and confirm rejection (**MANUAL — after T014**)
 
 **Checkpoint**: Main branch fully protected
 
@@ -121,9 +121,9 @@
 
 **Purpose**: Final validation and documentation
 
-- [ ] T016 [P] Verify all CI workflow YAML files are valid by running `gh workflow list` after push
-- [ ] T017 [P] Update specs/002-test-ci-branch-protection/quickstart.md with any adjustments discovered during implementation
-- [ ] T018 Run full end-to-end verification: push to branch (unit tests + lint trigger), open PR to main (integration + e2e + build trigger), verify all checks gate merge
+- [ ] T016 [P] Verify all CI workflow YAML files are valid by running `gh workflow list` after push (**MANUAL — after push**)
+- [x] T017 [P] Update specs/002-test-ci-branch-protection/quickstart.md with any adjustments discovered during implementation
+- [ ] T018 Run full end-to-end verification: push to branch (unit tests + lint trigger), open PR to main (integration + e2e + build trigger), verify all checks gate merge (**MANUAL — after push + PR**)
 
 ---
 

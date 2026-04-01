@@ -46,42 +46,52 @@ echo "bunx lint-staged" > .husky/pre-commit
   "test:unit": "vitest run __tests__/unit/",
   "test:integration": "vitest run __tests__/integration/",
   "test:e2e": "vitest run __tests__/e2e/",
-  "test:watch": "vitest",
-  "test:coverage": "vitest run --coverage"
+  "test:coverage": "vitest run --coverage",
+  "test:watch": "vitest"
 }
 ```
 
 ### 6. Create GitHub Actions workflows
 
-- `.github/workflows/unit-tests.yml` — triggers on push
-- `.github/workflows/pr-checks.yml` — triggers on pull_request to main
+- `.github/workflows/unit-tests.yml` — triggers on push to any branch (jobs: `lint`, `unit-tests`)
+- `.github/workflows/pr-checks.yml` — triggers on pull_request to main (jobs: `integration-tests`, `e2e-tests`, `build`)
 
 ### 7. Configure branch protection
 
-Via GitHub UI or CLI:
+Via GitHub CLI (requires `gh auth login` first):
+
 ```bash
-gh api repos/{owner}/{repo}/branches/main/protection \
+gh api repos/oThinas/audio-book-track/branches/main/protection \
   -X PUT \
-  -f required_status_checks='{"strict":true,"contexts":["unit-tests","lint","integration-tests","e2e-tests","build"]}' \
-  -f enforce_admins=true \
-  -f required_pull_request_reviews=null \
-  -f restrictions=null \
-  -F allow_force_pushes=false \
-  -F allow_deletions=false
+  --input - << 'EOF'
+{
+  "required_status_checks": {
+    "strict": true,
+    "contexts": ["unit-tests", "lint", "integration-tests", "e2e-tests", "build"]
+  },
+  "enforce_admins": true,
+  "required_pull_request_reviews": null,
+  "restrictions": null,
+  "allow_force_pushes": false,
+  "allow_deletions": false
+}
+EOF
 ```
+
+Or via GitHub UI: Settings > Branches > Add branch protection rule for `main`.
 
 ## Verification
 
 ```bash
 # Test commands work
 bun run test:unit
-bun run test:integration
+bun run test:integration  # requires Docker PostgreSQL
 bun run test:e2e
 
 # Pre-commit hook works
-echo "const   x=1" > /tmp/test.ts && git add /tmp/test.ts && git commit -m "test"
-# Should auto-fix formatting
+# Stage a file with lint violations, commit, verify auto-fix
 
-# CI triggers (push to branch, open PR)
+# CI triggers
 git push origin 002-test-ci-branch-protection
+# Open PR to main — integration, e2e, build checks trigger
 ```
