@@ -50,6 +50,9 @@ jobs:
       - name: Run database migrations
         run: bun run db:migrate
 
+      - name: Seed database
+        run: bun run db:seed
+
       - name: Run integration tests
         run: bun run test:integration
 
