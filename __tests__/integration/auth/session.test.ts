@@ -25,9 +25,7 @@ describe("Session Persistence (US3)", () => {
     const cookie = response.headers.get("set-cookie") ?? "";
     expect(cookie).toBeTruthy();
 
-    const sessionResponse = await auth.handler(
-      createGetSessionRequest(cookie),
-    );
+    const sessionResponse = await auth.handler(createGetSessionRequest(cookie));
 
     const data = await sessionResponse.json();
     expect(data.session).toBeDefined();
@@ -61,9 +59,7 @@ describe("Session Persistence (US3)", () => {
     const cookie = signInResponse.headers.get("set-cookie") ?? "";
     expect(cookie).toBeTruthy();
 
-    const sessionResponse = await auth.handler(
-      createGetSessionRequest(cookie),
-    );
+    const sessionResponse = await auth.handler(createGetSessionRequest(cookie));
 
     expect(sessionResponse.status).toBe(200);
 

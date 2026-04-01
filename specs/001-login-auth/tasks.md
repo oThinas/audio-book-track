@@ -164,13 +164,13 @@
 
 **Purpose**: Verificação final, cobertura de testes e edge cases.
 
-- [ ] T041 [P] Write unit test for rate limiting: verify 429 response after 3 failed attempts in 1 minute in `__tests__/integration/auth/rate-limit.test.ts` (FR-009)
-- [ ] T042 [P] Write integration test for sign-up blocked: verify POST to `/api/auth/sign-up/email` and `/api/auth/sign-up/username` return error in `__tests__/integration/auth/signup-blocked.test.ts` (FR-002)
-- [ ] T043 Verify error messages are generic (no username existence leak, no SQL details) across all auth error responses (FR-008, SC-005)
-- [ ] T044 Run full test suite and verify coverage >= 80% overall with 100% on `lib/validations/auth.ts`: `bun run test --coverage`
-- [ ] T045 Run Biome lint and fix any issues: `bun run lint:fix`
-- [ ] T046 Validate quickstart.md: follow all steps on a clean environment and verify the complete flow works
-- [ ] T047 Final self-review checklist per constitution (Princípios I–XII)
+- [x] T041 [P] Write unit test for rate limiting: verify 429 response after 3 failed attempts in 1 minute in `__tests__/integration/auth/rate-limit.test.ts` (FR-009)
+- [x] T042 [P] Write integration test for sign-up blocked: verify POST to `/api/auth/sign-up/email` and `/api/auth/sign-up/username` return error in `__tests__/integration/auth/signup-blocked.test.ts` (FR-002)
+- [x] T043 Verify error messages are generic (no username existence leak, no SQL details) across all auth error responses (FR-008, SC-005)
+- [x] T044 Run full test suite and verify coverage >= 80% overall with 100% on `lib/validations/auth.ts`: `bun run test --coverage`
+- [x] T045 Run Biome lint and fix any issues: `bun run lint:fix`
+- [x] T046 Validate quickstart.md: follow all steps on a clean environment and verify the complete flow works
+- [x] T047 Final self-review checklist per constitution (Princípios I–XII)
 
 ---
 
