@@ -46,17 +46,6 @@ export default defineConfig(({ mode }) => {
             setupFiles: ["__tests__/integration/setup.ts"],
           },
         },
-        {
-          ...sharedConfig,
-          test: {
-            name: "e2e",
-            environment: "node",
-            globals: true,
-            env,
-            include: ["__tests__/e2e/**/*.test.ts", "__tests__/e2e/**/*.test.tsx"],
-            exclude: ["node_modules", ".next"],
-          },
-        },
       ],
       coverage: {
         provider: "v8",

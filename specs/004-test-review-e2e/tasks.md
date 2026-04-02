@@ -24,10 +24,10 @@
 
 **Purpose**: Update existing test infrastructure so unit/integration/e2e suites are correctly separated
 
-- [ ] T004 Remove `e2e` project from `vitest.config.ts` (Vitest keeps only `unit` and `integration` projects)
-- [ ] T005 [P] Update `test:e2e` script in `package.json` from `vitest run __tests__/e2e/` to `bunx playwright test`
-- [ ] T006 [P] Update `test` script in `package.json` to run all 3 suites: `vitest run && bunx playwright test`
-- [ ] T007 [P] Add `.gitignore` entries for Playwright artifacts: `test-results/`, `playwright-report/`, `blob-report/`
+- [x] T004 Remove `e2e` project from `vitest.config.ts` (Vitest keeps only `unit` and `integration` projects)
+- [x] T005 [P] Update `test:e2e` script in `package.json` from `vitest run __tests__/e2e/` to `bunx playwright test`
+- [x] T006 [P] Update `test` script in `package.json` to run all 3 suites: `vitest run && bunx playwright test`
+- [x] T007 [P] Add `.gitignore` entries for Playwright artifacts: `test-results/`, `playwright-report/`, `blob-report/`
 
 **Checkpoint**: `bun run test:unit` and `bun run test:integration` pass. `bun run test:e2e` runs Playwright (no tests yet).
 
