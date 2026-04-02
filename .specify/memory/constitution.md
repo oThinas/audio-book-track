@@ -1,28 +1,27 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 2.2.0 → 2.2.1 (PATCH: clarified shadcn CLI invocation with Bun runtime)
+Version change: 2.2.1 → 2.3.0 (MINOR: added mobile-first mandate to Principle VII)
 
 Modified principles:
-  - Princípio VII: Frontend: Composição e Atomicidade — added mandatory
-    `--bun` flag rule for shadcn CLI when using Bun runtime. Changed
-    `npx shadcn@latest` to `bunx --bun shadcn@latest` in examples.
+  - Princípio VII: Frontend: Composição, Atomicidade e Mobile First — added
+    mandatory mobile-first development approach. All screens must be styled
+    for mobile first, using progressive Tailwind breakpoints (sm:, md:, lg:, xl:).
+    Renamed principle title to include "Mobile First".
 
 Added sections:
-  - N/A (inline clarification within existing Principle VII)
+  - "Mobile First (obrigatório)" subsection inside Principle VII
+  - Self-Review checklist item for mobile-first layout
 
 Removed sections:
   - N/A
 
 Templates requiring updates:
-  ✅ .specify/memory/constitution.md — this file (overwritten now)
-  ✅ .specify/templates/plan-template.md — compatible; no shadcn references
-  ✅ .specify/templates/spec-template.md — compatible; no shadcn references
-  ✅ .specify/templates/tasks-template.md — compatible; no shadcn references
-  ✅ CLAUDE.md — updated: `npx shadcn@latest` → `bunx --bun shadcn@latest`
+  ✅ .specify/memory/constitution.md — this file (updated now)
+  ⚠️ CLAUDE.md — needs update to reflect new principle title and mobile-first rule
 
 Follow-up TODOs:
-  - None.
+  - Update CLAUDE.md to mention mobile-first requirement.
 -->
 
 # AudioBook Track Constitution
@@ -216,10 +215,22 @@ lib/domain/       → Entities, value objects, regras de negócio puras
 infraestrutura garante que os cálculos sejam testáveis sem banco de dados
 e que mudanças de storage não afetem a lógica de domínio.
 
-### VII. Frontend: Composição e Atomicidade
+### VII. Frontend: Composição, Atomicidade e Mobile First
 
 O frontend DEVE separar lógica de renderização e seguir composição sobre
 herança. Componentes DEVEM ser atômicos e independentes.
+
+**Mobile First (obrigatório):**
+
+- Todas as telas DEVEM ser desenvolvidas com abordagem mobile first:
+  estilizar primeiro para telas pequenas e usar breakpoints progressivos
+  (`sm:`, `md:`, `lg:`, `xl:`) para adaptar a telas maiores.
+- Esta prática é nativa do Tailwind CSS (utility-first, mobile-first por
+  padrão) e DEVE ser seguida em todos os componentes e layouts.
+- Layouts responsivos DEVEM ser testados em pelo menos 3 breakpoints:
+  mobile (< 640px), tablet (640–1024px) e desktop (> 1024px).
+- Componentes que não se adaptam a telas menores DEVEM ser justificados
+  explicitamente (ex: dashboards complexos com fallback mobile).
 
 **shadcn/ui como biblioteca de componentes padrão:**
 
@@ -545,6 +556,7 @@ submeter para review ou merge:
 - [ ] VII.  Componentes UI são puramente visuais (sem fetch/useState de negócio)?
 - [ ] VII.  Componentes primitivos usam shadcn/ui (não construídos do zero)?
 - [ ] VII.  Data fetching usa Server Components quando possível?
+- [ ] VII.  Layout segue abordagem mobile first (estilos base para mobile, breakpoints progressivos)?
 - [ ] VIII. A mudança não adiciona peso desnecessário ao bundle do cliente?
 - [ ] VIII. Listas longas usam virtualização?
 - [ ] IX.   Todos os valores visuais usam design tokens (sem hardcode)?
@@ -571,4 +583,4 @@ submeter para review ou merge:
 revisar por outros e cria responsabilidade pessoal com os padrões
 definidos nesta constituição.
 
-**Version**: 2.2.1 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-04-01
+**Version**: 2.3.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-04-01
