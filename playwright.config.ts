@@ -4,6 +4,7 @@ const E2E_PORT = 3100;
 const E2E_BASE_URL = `http://localhost:${E2E_PORT}`;
 
 export default defineConfig({
+  globalSetup: "./__tests__/e2e/global-setup.ts",
   testDir: "./__tests__/e2e",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
