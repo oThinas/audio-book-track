@@ -41,11 +41,11 @@
 
 ### Audit for User Story 1
 
-- [ ] T008 [P] [US1] Audit `__tests__/unit/` — verify all tests use mocks or test pure functions (no DB connections)
-- [ ] T009 [P] [US1] Audit `__tests__/integration/` — verify all tests use real DB via `getTestDb()` and `setup.ts`
-- [ ] T010 [P] [US1] Verify `__tests__/e2e/` is empty (ready for Playwright tests in US2)
-- [ ] T011 [US1] Write integration test for rate limiting behavior at `__tests__/integration/auth/rate-limit.test.ts` — send 4+ login attempts to real auth API and verify the 4th is blocked (429 or error response)
-- [ ] T012 [US1] Run `bun run test:unit` and `bun run test:integration` — confirm all pass with correct classification
+- [x] T008 [P] [US1] Audit `__tests__/unit/` — verify all tests use mocks or test pure functions (no DB connections)
+- [x] T009 [P] [US1] Audit `__tests__/integration/` — verify all tests use real DB via `getTestDb()` and `setup.ts`
+- [x] T010 [P] [US1] Verify `__tests__/e2e/` is empty (ready for Playwright tests in US2)
+- [x] T011 [US1] Write integration test for rate limiting behavior at `__tests__/integration/auth/rate-limit.test.ts` — send 4+ login attempts to real auth API and verify the 4th is blocked (429 or error response)
+- [x] T012 [US1] Run `bun run test:unit` and `bun run test:integration` — confirm all pass with correct classification
 
 **Checkpoint**: All existing tests classified correctly. Rate limit behavior validated. Unit: 19 pass. Integration: 15+ pass.
 
