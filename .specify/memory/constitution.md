@@ -1,29 +1,25 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 2.1.0 → 2.2.0 (MINOR: added test classification rules to Principle V)
+Version change: 2.2.0 → 2.2.1 (PATCH: clarified shadcn CLI invocation with Bun runtime)
 
 Modified principles:
-  - Princípio V: Desenvolvimento Orientado a Testes — added "Regras de
-    Classificação de Testes" subsection defining what belongs in unit,
-    integration, and E2E test categories with concrete criteria.
-  - Self-Review Checklist: added test classification check under
-    Domínio e Negócio (V).
+  - Princípio VII: Frontend: Composição e Atomicidade — added mandatory
+    `--bun` flag rule for shadcn CLI when using Bun runtime. Changed
+    `npx shadcn@latest` to `bunx --bun shadcn@latest` in examples.
 
 Added sections:
-  - Principle V subsection: "Regras de Classificação de Testes"
-    (unit / integration / e2e classification criteria and decision tree)
+  - N/A (inline clarification within existing Principle VII)
 
 Removed sections:
   - N/A
 
 Templates requiring updates:
   ✅ .specify/memory/constitution.md — this file (overwritten now)
-  ✅ .specify/templates/plan-template.md — compatible; no structural change
-  ✅ .specify/templates/spec-template.md — compatible; no structural change
-  ✅ .specify/templates/tasks-template.md — compatible; test task descriptions
-     already allow for unit/integration/e2e distinction
-  ✅ CLAUDE.md — already updated with the same rules (source of this amendment)
+  ✅ .specify/templates/plan-template.md — compatible; no shadcn references
+  ✅ .specify/templates/spec-template.md — compatible; no shadcn references
+  ✅ .specify/templates/tasks-template.md — compatible; no shadcn references
+  ✅ CLAUDE.md — updated: `npx shadcn@latest` → `bunx --bun shadcn@latest`
 
 Follow-up TODOs:
   - None.
@@ -232,7 +228,10 @@ herança. Componentes DEVEM ser atômicos e independentes.
   Select, Table, Badge, Card, etc.), DEVE-se verificar se existe um
   equivalente no shadcn/ui e usá-lo.
 - Construir componentes primitivos do zero quando shadcn/ui oferece
-  equivalente é **proibido** — usar `npx shadcn@latest add <component>`.
+  equivalente é **proibido** — usar
+  `bunx --bun shadcn@latest add <component>`.
+- A flag `--bun` é **obrigatória** ao executar o CLI do shadcn com Bun
+  como runtime. Exemplo: `bunx --bun shadcn@latest add accordion`.
 - Componentes shadcn/ui podem ser customizados via props, className
   (Tailwind) e design tokens — não via fork ou reescrita.
 - Componentes compostos específicos do domínio (ex: ChapterRow,
@@ -572,4 +571,4 @@ submeter para review ou merge:
 revisar por outros e cria responsabilidade pessoal com os padrões
 definidos nesta constituição.
 
-**Version**: 2.2.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-04-01
+**Version**: 2.2.1 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-04-01
