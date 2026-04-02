@@ -70,7 +70,7 @@ export function LoginForm() {
         {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
       </div>
 
-      <Button type="submit" className="w-full" disabled={isLoading}>
+      <Button id="login-submit" type="submit" className="w-full" disabled={isLoading}>
         {isLoading ? (
           <>
             <Loader2 className="mr-2 animate-spin" />

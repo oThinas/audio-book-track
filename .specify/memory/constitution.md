@@ -1,28 +1,29 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 2.0.0 → 2.1.0 (MINOR: added shadcn/ui component preference to Principle VII)
+Version change: 2.1.0 → 2.2.0 (MINOR: added test classification rules to Principle V)
 
 Modified principles:
-  - Princípio VII: Frontend — added shadcn/ui as the default component library;
-    components/ui/ now maps to shadcn/ui primitives; building custom primitives
-    from scratch is prohibited when a shadcn/ui equivalent exists.
-  - Self-Review Checklist: added shadcn/ui check under Arquitetura e Código (VII).
-  - Anti-Padrões (XII): added "construir componente primitivo do zero quando
-    shadcn/ui oferece equivalente" to Frontend anti-patterns.
+  - Princípio V: Desenvolvimento Orientado a Testes — added "Regras de
+    Classificação de Testes" subsection defining what belongs in unit,
+    integration, and E2E test categories with concrete criteria.
+  - Self-Review Checklist: added test classification check under
+    Domínio e Negócio (V).
 
 Added sections:
-  - N/A (guidance added within existing sections)
+  - Principle V subsection: "Regras de Classificação de Testes"
+    (unit / integration / e2e classification criteria and decision tree)
 
 Removed sections:
   - N/A
 
 Templates requiring updates:
   ✅ .specify/memory/constitution.md — this file (overwritten now)
-  ✅ .specify/templates/plan-template.md — compatible; no structural change required
-  ✅ .specify/templates/spec-template.md — compatible; no structural change required
-  ✅ .specify/templates/tasks-template.md — compatible; no structural change required
-  ✅ CLAUDE.md — no update needed (shadcn/ui guidance is in constitution)
+  ✅ .specify/templates/plan-template.md — compatible; no structural change
+  ✅ .specify/templates/spec-template.md — compatible; no structural change
+  ✅ .specify/templates/tasks-template.md — compatible; test task descriptions
+     already allow for unit/integration/e2e distinction
+  ✅ CLAUDE.md — already updated with the same rules (source of this amendment)
 
 Follow-up TODOs:
   - None.
@@ -127,8 +128,68 @@ financeiros. O ciclo Red → Green → Refactor DEVE ser seguido.
 - Cobertura mínima geral: 80%.
 - Testes são escritos ANTES da implementação — sem exceções.
 
+#### Regras de Classificação de Testes
+
+Todo teste DEVE ser classificado corretamente na categoria correspondente.
+Testes fora da categoria correta DEVEM ser movidos antes do merge.
+
+**Unit (`__tests__/unit/`)**
+
+Testa uma única unidade (função, classe, módulo) isolada de dependências
+externas.
+
+| Critério | Regra |
+|----------|-------|
+| Dependências externas | Todas mockadas (DB, HTTP, filesystem, crypto) |
+| Banco de dados | Proibido — nenhuma conexão real |
+| Setup file | Nenhum (não usa `setup.ts` de integration) |
+| Velocidade | < 50ms por teste |
+| O que testar | Schemas Zod, funções puras, validações, state machines, config assertions, middleware com deps mockadas |
+
+Regra de ouro: se o teste usa `vi.mock()` para isolar a unidade → unit test.
+
+**Integration (`__tests__/integration/`)**
+
+Testa a interação entre 2+ componentes reais, especialmente com banco de
+dados.
+
+| Critério | Regra |
+|----------|-------|
+| Dependências externas | Pelo menos uma real (DB, crypto lib, auth lib) |
+| Banco de dados | Real (PostgreSQL via transaction rollback) |
+| Setup file | Usa `__tests__/integration/setup.ts` |
+| Isolamento | Transaction rollback automático entre testes |
+| O que testar | CRUD no banco, password hashing + persistência, sessões reais, regras de negócio que tocam o DB, cascade deletes, constraints |
+
+Regra de ouro: se o teste precisa de DB real ou integra múltiplos módulos
+sem mock → integration test.
+
+**E2E (`__tests__/e2e/`)**
+
+Testa fluxos completos do usuário pela interface, sem mocks.
+
+| Critério | Regra |
+|----------|-------|
+| Ferramenta | Playwright (browser real) |
+| Mocks | Nenhum — tudo real (app rodando, DB, auth) |
+| Servidor | App Next.js rodando (dev ou build) |
+| O que testar | Login completo no browser, navegação protegida, formulários, feedback visual, fluxos críticos ponta-a-ponta |
+
+Regra de ouro: se o teste simula ações de um usuário real no browser →
+E2E test.
+
+**Árvore de decisão rápida:**
+
+```
+O teste usa vi.mock() ou testa função pura?     → Unit
+O teste conecta no banco ou integra módulos?     → Integration
+O teste abre browser e simula usuário?           → E2E
+```
+
 **Rationale**: A confiabilidade dos cálculos financeiros depende de testes
 abrangentes. Defeitos em pagamentos impactam diretamente pessoas reais.
+Classificação correta dos testes garante que cada tipo execute no ambiente
+apropriado e que a pirâmide de testes seja respeitada.
 
 ## Engineering Standards
 
@@ -477,6 +538,7 @@ submeter para review ou merge:
 - [ ] III. Transições inválidas (pular estado, retroceder sem reprovação) são bloqueadas?
 - [ ] IV.  Existe complexidade que não é exigida pelo requisito atual?
 - [ ] V.   Testes foram escritos ANTES da implementação e a cobertura é ≥ 80%?
+- [ ] V.   Testes estão classificados corretamente (unit/integration/e2e por critério definido)?
 
 ### Arquitetura e Código
 - [ ] VI.   Lógica de negócio está no Service/Domain, não no Controller?
@@ -510,4 +572,4 @@ submeter para review ou merge:
 revisar por outros e cria responsabilidade pessoal com os padrões
 definidos nesta constituição.
 
-**Version**: 2.1.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-03-31
+**Version**: 2.2.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-04-01

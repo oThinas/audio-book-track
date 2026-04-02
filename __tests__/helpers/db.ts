@@ -1,5 +1,4 @@
 import type { drizzle } from "drizzle-orm/node-postgres";
-import type { PoolClient } from "pg";
 import { Pool } from "pg";
 
 import type * as schema from "@/lib/db/schema";

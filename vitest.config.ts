@@ -32,6 +32,7 @@ export default defineConfig(({ mode }) => {
             env,
             include: ["__tests__/unit/**/*.test.ts", "__tests__/unit/**/*.test.tsx"],
             exclude: ["node_modules", ".next"],
+            setupFiles: ["__tests__/unit/setup.ts"],
           },
         },
         {
@@ -44,17 +45,6 @@ export default defineConfig(({ mode }) => {
             include: ["__tests__/integration/**/*.test.ts"],
             exclude: ["node_modules", ".next"],
             setupFiles: ["__tests__/integration/setup.ts"],
-          },
-        },
-        {
-          ...sharedConfig,
-          test: {
-            name: "e2e",
-            environment: "node",
-            globals: true,
-            env,
-            include: ["__tests__/e2e/**/*.test.ts", "__tests__/e2e/**/*.test.tsx"],
-            exclude: ["node_modules", ".next"],
           },
         },
       ],

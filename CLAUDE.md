@@ -75,6 +75,59 @@
 
 ---
 
+## Regras de Classificação de Testes
+
+### Unit (`__tests__/unit/`)
+
+Testa **uma única unidade** (função, classe, módulo) **isolada** de dependências externas.
+
+| Critério | Regra |
+|----------|-------|
+| Dependências externas | **Todas mockadas** (DB, HTTP, filesystem, crypto) |
+| Banco de dados | **Proibido** — nenhuma conexão real |
+| Setup file | Nenhum (não usa `setup.ts` de integration) |
+| Velocidade | < 50ms por teste |
+| O que testar | Schemas Zod, funções puras, validações, state machines, config assertions, middleware com deps mockadas |
+
+**Regra de ouro:** Se o teste usa `vi.mock()` para isolar a unidade → é unit test.
+
+### Integration (`__tests__/integration/`)
+
+Testa a **interação entre 2+ componentes reais**, especialmente com banco de dados.
+
+| Critério | Regra |
+|----------|-------|
+| Dependências externas | **Pelo menos uma real** (DB, crypto lib, auth lib) |
+| Banco de dados | **Real** (PostgreSQL via transaction rollback) |
+| Setup file | Usa `__tests__/integration/setup.ts` |
+| Isolamento | Transaction rollback automático entre testes |
+| O que testar | CRUD no banco, password hashing + persistência, sessões reais, regras de negócio que tocam o DB, cascade deletes, constraints |
+
+**Regra de ouro:** Se o teste precisa de DB real ou integra múltiplos módulos sem mock → é integration test.
+
+### E2E (`__tests__/e2e/`)
+
+Testa **fluxos completos do usuário** pela interface, sem mocks.
+
+| Critério | Regra |
+|----------|-------|
+| Ferramenta | **Playwright** (browser real) |
+| Mocks | **Nenhum** — tudo real (app rodando, DB, auth) |
+| Servidor | App Next.js rodando (dev ou build) |
+| O que testar | Login completo no browser, navegação protegida, formulários, feedback visual, fluxos críticos ponta-a-ponta |
+
+**Regra de ouro:** Se o teste simula ações de um usuário real no browser → é E2E test.
+
+### Decisão rápida
+
+```
+O teste usa vi.mock() ou testa função pura?     → Unit
+O teste conecta no banco ou integra módulos?     → Integration
+O teste abre browser e simula usuário?           → E2E
+```
+
+---
+
 ## Self-Review antes de qualquer entrega
 
 ```
@@ -118,11 +171,11 @@ Sem entidades órfãs: capítulo sem livro ou livro sem estúdio são inválidos
 
 Qualquer mudança no modelo financeiro (preço, horas, responsáveis) requer **revisão dupla** antes do merge.
 
-## Active Technologies
-- TypeScript 5.x, Bun como runtime + Next.js (latest), better-auth, Drizzle ORM, shadcn/ui, Tailwind CSS, Lucide React, Zod (001-login-auth)
-- PostgreSQL 16 (Docker) (001-login-auth)
-- TypeScript 5.x + Next.js (latest), Vitest 4.x, Biome 2.x, Bun (002-test-ci-branch-protection)
-- PostgreSQL 16 (Docker — needed for integration tests in CI) (002-test-ci-branch-protection)
 
 ## Recent Changes
+- 004-test-review-e2e: Added TypeScript 5.9 (Bun runtime) + Next.js 16.2, better-auth 1.5, Drizzle ORM, Playwright (novo)
 - 001-login-auth: Added TypeScript 5.x, Bun como runtime + Next.js (latest), better-auth, Drizzle ORM, shadcn/ui, Tailwind CSS, Lucide React, Zod
+
+## Active Technologies
+- TypeScript 5.9 (Bun runtime) + Next.js 16.2, better-auth 1.5, Drizzle ORM, Playwright (novo) (004-test-review-e2e)
+- PostgreSQL (via pg driver) (004-test-review-e2e)

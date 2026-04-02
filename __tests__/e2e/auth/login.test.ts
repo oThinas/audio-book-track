@@ -1,69 +1,33 @@
-import { NextRequest } from "next/server";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { expect, test } from "@playwright/test";
 
-vi.mock("better-auth/cookies", () => ({
-  getSessionCookie: vi.fn(),
-}));
+test.describe("Login Flow (US2)", () => {
+  test("should redirect unauthenticated user from /dashboard to /login", async ({ page }) => {
+    await page.goto("/dashboard");
 
-import { getSessionCookie } from "better-auth/cookies";
-
-import { proxy } from "@/proxy";
-
-const mockedGetSessionCookie = vi.mocked(getSessionCookie);
-
-function createRequest(path: string): NextRequest {
-  return new NextRequest(new URL(path, "http://localhost:3000"));
-}
-
-describe("Route Protection (US2)", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
+    await expect(page).toHaveURL(/\/login/);
   });
 
-  it("should redirect unauthenticated user from /dashboard to /login", () => {
-    mockedGetSessionCookie.mockReturnValue(null);
+  test("should login with valid credentials and redirect to /dashboard", async ({ page }) => {
+    await page.goto("/login");
 
-    const response = proxy(createRequest("/dashboard"));
+    await page.locator("#username").fill("admin");
+    await page.locator("#password").fill("admin123");
+    await page.locator("#login-submit").click();
 
-    expect(response.status).toBe(307);
-    const loginLocation = response.headers.get("location") ?? "";
-    expect(new URL(loginLocation).pathname).toBe("/login");
+    await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });
   });
 
-  it("should allow authenticated user to access /dashboard", () => {
-    mockedGetSessionCookie.mockReturnValue("session-token-value");
+  test("should show error toast on invalid credentials and stay on /login", async ({ page }) => {
+    await page.goto("/login");
 
-    const response = proxy(createRequest("/dashboard"));
+    await page.locator("#username").fill("admin");
+    await page.locator("#password").fill("wrongpassword");
+    await page.locator("#login-submit").click();
 
-    expect(response.status).toBe(200);
-    expect(response.headers.get("location")).toBeNull();
-  });
+    const toast = page.locator("[data-sonner-toast]");
+    await expect(toast).toBeVisible({ timeout: 10000 });
+    await expect(toast).toContainText("Credenciais inválidas");
 
-  it("should redirect authenticated user from /login to /dashboard", () => {
-    mockedGetSessionCookie.mockReturnValue("session-token-value");
-
-    const response = proxy(createRequest("/login"));
-
-    expect(response.status).toBe(307);
-    const dashboardLocation = response.headers.get("location") ?? "";
-    expect(new URL(dashboardLocation).pathname).toBe("/dashboard");
-  });
-
-  it("should allow unauthenticated user to access /login", () => {
-    mockedGetSessionCookie.mockReturnValue(null);
-
-    const response = proxy(createRequest("/login"));
-
-    expect(response.status).toBe(200);
-    expect(response.headers.get("location")).toBeNull();
-  });
-
-  it("should not block /api/auth/* routes for unauthenticated users", () => {
-    mockedGetSessionCookie.mockReturnValue(null);
-
-    const response = proxy(createRequest("/api/auth/get-session"));
-
-    expect(response.status).toBe(200);
-    expect(response.headers.get("location")).toBeNull();
+    await expect(page).toHaveURL(/\/login/);
   });
 });
