@@ -31,7 +31,7 @@
   lib/domain/       → Entidades e regras puras (sem imports de framework)
   ```
 - **Injeção de dependência via construtor** — nunca instanciar dependências dentro de uma classe.
-- **shadcn/ui é a biblioteca de componentes padrão** — usar `npx shadcn@latest add <component>` antes de construir primitivos do zero.
+- **shadcn/ui é a biblioteca de componentes padrão** — usar `bunx --bun shadcn@latest add <component>` antes de construir primitivos do zero. A flag `--bun` é obrigatória com Bun runtime.
 - **Componentes UI (`components/ui/`)** são shadcn/ui primitivos, puramente visuais: sem `useState` de negócio, sem `fetch`.
 - **`use client` exige comentário justificando** o motivo; Server Components são o padrão.
 - **Data fetching** usa Server Components com `async/await`; `useEffect` para fetch é proibido.
@@ -173,9 +173,10 @@ Qualquer mudança no modelo financeiro (preço, horas, responsáveis) requer **r
 
 
 ## Recent Changes
+- 005-shadcn-base-ui: Added TypeScript 5.9 (Bun runtime) + Next.js 16.2, React 19.2, shadcn v4.1.2, radix-ui v1.4.3 (a ser substituido por @base-ui-components/react)
 - 004-test-review-e2e: Added TypeScript 5.9 (Bun runtime) + Next.js 16.2, better-auth 1.5, Drizzle ORM, Playwright (novo)
 - 001-login-auth: Added TypeScript 5.x, Bun como runtime + Next.js (latest), better-auth, Drizzle ORM, shadcn/ui, Tailwind CSS, Lucide React, Zod
 
 ## Active Technologies
-- TypeScript 5.9 (Bun runtime) + Next.js 16.2, better-auth 1.5, Drizzle ORM, Playwright (novo) (004-test-review-e2e)
-- PostgreSQL (via pg driver) (004-test-review-e2e)
+- TypeScript 5.9 (Bun runtime) + Next.js 16.2, React 19.2, shadcn v4.1.2, radix-ui v1.4.3 (a ser substituido por @base-ui-components/react) (005-shadcn-base-ui)
+- PostgreSQL (nao afetado por esta feature) (005-shadcn-base-ui)
