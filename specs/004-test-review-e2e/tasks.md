@@ -74,9 +74,9 @@
 
 **Purpose**: Final validation across all suites
 
-- [ ] T019 Run all 3 suites independently: `bun run test:unit`, `bun run test:integration`, `bun run test:e2e`
-- [ ] T020 Verify no test takes longer than 10 seconds (SC-005)
-- [ ] T021 Update `specs/004-test-review-e2e/tasks.md` — mark all tasks as completed
+- [x] T019 Run all 3 suites independently: `bun run test:unit`, `bun run test:integration`, `bun run test:e2e`
+- [x] T020 Verify no test takes longer than 10 seconds (SC-005)
+- [x] T021 Update `specs/004-test-review-e2e/tasks.md` — mark all tasks as completed
 
 ---
 
