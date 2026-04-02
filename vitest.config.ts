@@ -32,6 +32,7 @@ export default defineConfig(({ mode }) => {
             env,
             include: ["__tests__/unit/**/*.test.ts", "__tests__/unit/**/*.test.tsx"],
             exclude: ["node_modules", ".next"],
+            setupFiles: ["__tests__/unit/setup.ts"],
           },
         },
         {
