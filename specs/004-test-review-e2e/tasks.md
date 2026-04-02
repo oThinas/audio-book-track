@@ -59,12 +59,12 @@
 
 ### Implementation for User Story 2
 
-- [ ] T013 [US2] Ensure seed user exists: run `bun run db:seed` (creates `admin` / `admin123` if not present)
-- [ ] T014 [US2] Create E2E test file at `__tests__/e2e/auth/login.test.ts` with Playwright test structure
-- [ ] T015 [US2] Write test: unauthenticated user accessing `/dashboard` is redirected to `/login`
-- [ ] T016 [US2] Write test: login with valid credentials (`admin` / `admin123`) redirects to `/dashboard`
-- [ ] T017 [US2] Write test: login with invalid credentials shows error toast and stays on `/login`
-- [ ] T018 [US2] Run `bun run test:e2e` — all E2E tests pass in headless chromium
+- [x] T013 [US2] Ensure seed user exists: run `bun run db:seed` (creates `admin` / `admin123` if not present)
+- [x] T014 [US2] Create E2E test file at `__tests__/e2e/auth/login.test.ts` with Playwright test structure
+- [x] T015 [US2] Write test: unauthenticated user accessing `/dashboard` is redirected to `/login`
+- [x] T016 [US2] Write test: login with valid credentials (`admin` / `admin123`) redirects to `/dashboard`
+- [x] T017 [US2] Write test: login with invalid credentials shows error toast and stays on `/login`
+- [x] T018 [US2] Run `bun run test:e2e` — all E2E tests pass in headless chromium
 
 **Checkpoint**: E2E login flow fully validated. 3 test cases pass in real browser.
 
