@@ -1,29 +1,25 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 2.4.0 → 2.5.0 (MINOR: added factory pattern and shared API
-response helpers to Principle VI)
+Version change: 2.5.0 → 2.5.1 (PATCH: relaxed use client comment requirement)
 
 Modified principles:
-  - Princípio VI: Arquitetura Limpa no Backend:
-    1. Added lib/factories/ to mandatory layers as Composition Root.
-    2. Controllers MUST use factories — never instantiate repos/services.
-    3. Error responses MUST use shared helpers from lib/api/responses.ts.
-    4. Added "Factories (Composition Root)" subsection with naming rules.
-    5. Updated layers diagram to include factories and clarify domain scope.
+  - Princípio VII (Frontend): removed mandatory justification comment for
+    `use client`. Directive is still only for components requiring client-side
+    interactivity, but no comment is needed.
+  - Princípio XII (Anti-Padrões): updated `use client` anti-pattern from
+    "sem justificativa em comentário" to "em componentes que não requerem
+    interatividade client-side".
+  - Self-Review checklist: updated `use client` check accordingly.
 
-Added sections:
-  - "Factories (Composition Root)" subsection inside Principle VI
-
-Removed sections:
-  - N/A
+Added sections: N/A
+Removed sections: N/A
 
 Templates requiring updates:
   ✅ .specify/memory/constitution.md — this file (updated now)
-  ⚠️ CLAUDE.md — needs update to reflect factory pattern and API helpers
+  ✅ CLAUDE.md — updated below
 
-Follow-up TODOs:
-  - Update CLAUDE.md to mention factory pattern and lib/api/responses.ts.
+Follow-up TODOs: N/A
 -->
 
 # AudioBook Track Constitution
@@ -305,7 +301,7 @@ isoladamente e facilita SSR sem hidratação desnecessária no cliente.
 O tempo de carregamento inicial (LCP) DEVE ser inferior a 1 segundo.
 Toda decisão técnica DEVE considerar impacto na performance.
 
-- Server Components são o padrão; `use client` é exceção justificada.
+- Server Components são o padrão; `use client` apenas quando necessário.
 - Imagens DEVEM usar `<Image>` do Next.js com `priority` nas above-the-fold.
 - Fontes DEVEM usar `next/font` com `display: swap`.
 - Listas longas (> 50 itens) DEVEM usar virtualização
@@ -420,7 +416,7 @@ Os seguintes padrões são **explicitamente proibidos** neste projeto:
 - Props booleanas que alteram estrutura de renderização
   (`isLarge`, `showHeader`) — usar composição.
 - Valores visuais hardcoded (cores, espaçamentos) fora de design tokens.
-- `use client` sem justificativa explícita em comentário.
+- `use client` em componentes que não requerem interatividade client-side.
 - Componentes com mais de 200 linhas — extrair lógica em hooks ou
   sub-componentes.
 - Construir componente primitivo do zero (Button, Input, Dialog, Select,
@@ -602,7 +598,7 @@ submeter para review ou merge:
 - [ ] Nenhum segredo hardcoded?
 - [ ] Nenhum `useEffect` para derivar estado (usar `useMemo`)?
 - [ ] Nenhum valor visual hardcoded fora de design tokens?
-- [ ] Nenhum `use client` sem comentário justificando?
+- [ ] Nenhum `use client` desnecessário (componente poderia ser Server Component)?
 - [ ] Erros são tratados explicitamente (sem `catch (e) {}`)?
 ```
 
@@ -610,4 +606,4 @@ submeter para review ou merge:
 revisar por outros e cria responsabilidade pessoal com os padrões
 definidos nesta constituição.
 
-**Version**: 2.5.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-04-07
+**Version**: 2.5.1 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-04-07

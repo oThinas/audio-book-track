@@ -62,12 +62,12 @@
 
 ### Tests (RED)
 
-- [ ] T015 [US1] Write E2E test for login page visual structure (two-panel desktop, single-panel mobile, design token compliance) in `__tests__/e2e/login-styling.spec.ts`
+- [x] T015 [US1] Write E2E test for login page visual structure (two-panel desktop, single-panel mobile, design token compliance) in `__tests__/e2e/login-styling.spec.ts`
 
 ### Implementation (GREEN)
 
-- [ ] T016 [US1] Restyle login page in `src/app/(auth)/login/page.tsx` — two-panel flex layout: left panel (sidebar-bg, branding with headphones icon, title "AudioBook Track", subtitle), right panel (bg-page, centered card with form). Mobile first: `hidden md:flex` on left panel
-- [ ] T017 [US1] Update `src/components/features/auth/login-form.tsx` — after successful login, fetch user's favorite page from `/api/v1/user-preferences` and redirect to it (or `/dashboard` as default) instead of hardcoded `/dashboard`
+- [x] T016 [US1] Restyle login page in `src/app/(auth)/login/page.tsx` — two-panel flex layout: left panel (sidebar-bg, branding with headphones icon, title "AudioBook Track", subtitle), right panel (bg-page, centered card with form). Mobile first: `hidden md:flex` on left panel
+- [x] T017 [US1] Update `src/components/features/auth/login-form.tsx` — after successful login, fetch user's favorite page from `/api/v1/user-preferences` and redirect to it (or `/dashboard` as default) instead of hardcoded `/dashboard`
 
 **Checkpoint**: Login page matches design. Post-login redirects to favorite page. E2E test GREEN.
 
