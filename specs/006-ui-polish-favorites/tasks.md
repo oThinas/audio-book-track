@@ -19,13 +19,13 @@
 
 **Purpose**: Design tokens, DB schema, and shared types that multiple stories depend on.
 
-- [ ] T001 Add primary color palettes (blue, orange, green, red, amber) as CSS variable sets in `src/app/globals.css` with light + dark variants, activated via `[data-primary-color]` attribute
-- [ ] T002 Add font size CSS variables (`--font-size-base`) for small (14px), medium (16px), large (18px) in `src/app/globals.css`
-- [ ] T003 Add `user_preference` table to Drizzle schema in `src/lib/db/schema.ts` with columns: id, user_id (FK unique), theme, font_size, primary_color, favorite_page, created_at, updated_at — with index on user_id
-- [ ] T004 Generate and apply Drizzle migration for `user_preference` table via `bunx drizzle-kit generate` and `bunx drizzle-kit push`
-- [ ] T005 [P] Install shadcn/ui Select and RadioGroup components via `bunx --bun shadcn@latest add select radio-group` — creates `src/components/ui/select.tsx` and `src/components/ui/radio-group.tsx`
-- [ ] T006 [P] Create domain types, defaults, and Zod validation schemas in `src/lib/domain/user-preference.ts` (Theme, FontSize, PrimaryColor, FavoritePage enums + defaults + partial update schema)
-- [ ] T008 [P] Create navigable pages constant map (slug → URL) in `src/lib/domain/navigable-pages.ts`
+- [x] T001 Add primary color palettes (blue, orange, green, red, amber) as CSS variable sets in `src/app/globals.css` with light + dark variants, activated via `[data-primary-color]` attribute
+- [x] T002 Add font size CSS variables (`--font-size-base`) for small (14px), medium (16px), large (18px) in `src/app/globals.css`
+- [x] T003 Add `user_preference` table to Drizzle schema in `src/lib/db/schema.ts` with columns: id, user_id (FK unique), theme, font_size, primary_color, favorite_page, created_at, updated_at — with index on user_id
+- [x] T004 Generate and apply Drizzle migration for `user_preference` table via `bunx drizzle-kit generate` and `bunx drizzle-kit push`
+- [x] T005 [P] Install shadcn/ui Select and RadioGroup components via `bunx --bun shadcn@latest add select radio-group` — creates `src/components/ui/select.tsx` and `src/components/ui/radio-group.tsx`
+- [x] T006 [P] Create domain types, defaults, and Zod validation schemas in `src/lib/domain/user-preference.ts` (Theme, FontSize, PrimaryColor, FavoritePage enums + defaults + partial update schema)
+- [x] T008 [P] Create navigable pages constant map (slug → URL) in `src/lib/domain/navigable-pages.ts`
 
 **Checkpoint**: Schema migrated, CSS tokens ready, domain types defined.
 
