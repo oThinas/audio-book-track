@@ -39,16 +39,16 @@
 
 ### Tests (RED)
 
-- [ ] T008 [P] Write unit tests for `UserPreferenceService` (getOrDefault, update with upsert, validation) in `__tests__/unit/user-preference-service.test.ts` — mock repository
-- [ ] T009 [P] Write unit tests for domain types and Zod schemas (valid/invalid values, defaults, partial update) in `__tests__/unit/user-preference-domain.test.ts`
-- [ ] T010 Write integration tests for `UserPreferenceRepository` (create, read, update, upsert, cascade delete) in `__tests__/integration/user-preference-repo.test.ts`
+- [x] T008 [P] Write unit tests for `UserPreferenceService` (getOrDefault, update with upsert, validation) in `__tests__/unit/user-preference-service.test.ts` — mock repository
+- [x] T009 [P] Write unit tests for domain types and Zod schemas (valid/invalid values, defaults, partial update) in `__tests__/unit/user-preference-domain.test.ts`
+- [x] T010 Write integration tests for `UserPreferenceRepository` (create, read, update, upsert, cascade delete) in `__tests__/integration/user-preference-repo.test.ts`
 
 ### Implementation (GREEN)
 
-- [ ] T011 Implement `UserPreferenceRepository` in `src/lib/repositories/user-preference-repository.ts` (findByUserId, upsert — select only needed columns, no SELECT *)
-- [ ] T012 Implement `UserPreferenceService` in `src/lib/services/user-preference-service.ts` (getOrDefault, updatePreference — constructor injection of repository)
-- [ ] T013 Create `GET /api/v1/user-preferences` route in `src/app/api/v1/user-preferences/route.ts` — auth check, delegate to service, return preferences or defaults
-- [ ] T014 Create `PATCH /api/v1/user-preferences` route in `src/app/api/v1/user-preferences/route.ts` — auth check, Zod validation (partial, at least 1 field), delegate to service, return 200/401/422
+- [x] T011 Implement `DrizzleUserPreferenceRepository` in `src/lib/repositories/user-preference-repository.ts` (findByUserId, upsert — select only needed columns, no SELECT *)
+- [x] T012 Implement `UserPreferenceService` in `src/lib/services/user-preference-service.ts` (getOrDefault, updatePreference — constructor injection of repository)
+- [x] T013 Create `GET /api/v1/user-preferences` route in `src/app/api/v1/user-preferences/route.ts` — auth check, delegate to service, return preferences or defaults
+- [x] T014 Create `PATCH /api/v1/user-preferences` route in `src/app/api/v1/user-preferences/route.ts` — auth check, Zod validation (partial, at least 1 field), delegate to service, return 200/401/422
 
 **Checkpoint**: Foundation ready — preferences API functional. Run `T008–T010` tests to verify GREEN.
 
