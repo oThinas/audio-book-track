@@ -1,27 +1,29 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 2.2.1 → 2.3.0 (MINOR: added mobile-first mandate to Principle VII)
+Version change: 2.4.0 → 2.5.0 (MINOR: added factory pattern and shared API
+response helpers to Principle VI)
 
 Modified principles:
-  - Princípio VII: Frontend: Composição, Atomicidade e Mobile First — added
-    mandatory mobile-first development approach. All screens must be styled
-    for mobile first, using progressive Tailwind breakpoints (sm:, md:, lg:, xl:).
-    Renamed principle title to include "Mobile First".
+  - Princípio VI: Arquitetura Limpa no Backend:
+    1. Added lib/factories/ to mandatory layers as Composition Root.
+    2. Controllers MUST use factories — never instantiate repos/services.
+    3. Error responses MUST use shared helpers from lib/api/responses.ts.
+    4. Added "Factories (Composition Root)" subsection with naming rules.
+    5. Updated layers diagram to include factories and clarify domain scope.
 
 Added sections:
-  - "Mobile First (obrigatório)" subsection inside Principle VII
-  - Self-Review checklist item for mobile-first layout
+  - "Factories (Composition Root)" subsection inside Principle VI
 
 Removed sections:
   - N/A
 
 Templates requiring updates:
   ✅ .specify/memory/constitution.md — this file (updated now)
-  ⚠️ CLAUDE.md — needs update to reflect new principle title and mobile-first rule
+  ⚠️ CLAUDE.md — needs update to reflect factory pattern and API helpers
 
 Follow-up TODOs:
-  - Update CLAUDE.md to mention mobile-first requirement.
+  - Update CLAUDE.md to mention factory pattern and lib/api/responses.ts.
 -->
 
 # AudioBook Track Constitution
@@ -197,19 +199,44 @@ Dependências apontam sempre de fora para dentro — nunca o contrário.
 
 ```
 app/api/          → Controllers/Route Handlers (HTTP, entrada/saída)
+lib/factories/    → Composition Root (instanciam services com dependências concretas)
 lib/services/     → Use Cases / Application Services (orquestração)
-lib/repositories/ → Repository interfaces + implementações (dados)
-lib/domain/       → Entities, value objects, regras de negócio puras
+lib/repositories/ → Implementações concretas de repositories (dados)
+lib/domain/       → Entities, value objects, regras de negócio puras, interfaces de repositories
 ```
 
-- Controllers DEVEM ser finos: validam input, chamam um serviço, retornam
-  resposta. Nenhuma lógica de negócio nos controllers.
+- Controllers DEVEM ser finos: validam input, chamam uma factory para obter
+  o service, e retornam resposta. Nenhuma lógica de negócio nos controllers.
+- Respostas de erro padronizadas (401, 422, etc.) DEVEM usar helpers
+  reutilizáveis de `lib/api/responses.ts` — nunca construir o envelope de
+  erro inline no controller.
 - Services contêm toda a orquestração: não conhecem HTTP nem SQL diretamente.
 - Repositories encapsulam todo acesso a dados; a interface DEVE ser definida
   no domínio e implementada fora dele.
 - Entities do domínio são POJOs puros — sem imports de framework.
 - Injeção de dependência via construtor; nunca instanciar dependências dentro
   de uma classe.
+
+**Factories (Composition Root):**
+
+- Controllers NUNCA instanciam repositories ou services diretamente — DEVEM
+  usar factories de `lib/factories/` para obter services prontos.
+- Factories são o único lugar que conhece as implementações concretas
+  (ex: `DrizzleUserPreferenceRepository`) e as conecta aos services.
+- Cada domínio DEVE ter sua factory em arquivo próprio
+  (ex: `lib/factories/user-preference.ts`).
+- Factories DEVEM expor funções nomeadas `create<Service>()` (ex:
+  `createUserPreferenceService()`).
+
+**Convenções de Nomeação:**
+
+- Interfaces DEVEM ser definidas em arquivos separados — nunca co-localizadas
+  com implementações ou com tipos de domínio no mesmo arquivo.
+- Interfaces NÃO DEVEM usar o prefixo `I`. Exemplo correto:
+  `UserPreferenceRepository` (interface), não `IUserPreferenceRepository`.
+- Implementações concretas de repositories DEVEM ser prefixadas com o nome
+  do adaptador/driver. Exemplo: `DrizzleUserPreferenceRepository` implementa
+  `UserPreferenceRepository`.
 
 **Rationale**: Em um sistema financeiro, separar regras de negócio da
 infraestrutura garante que os cálculos sejam testáveis sem banco de dados
@@ -583,4 +610,4 @@ submeter para review ou merge:
 revisar por outros e cria responsabilidade pessoal com os padrões
 definidos nesta constituição.
 
-**Version**: 2.3.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-04-01
+**Version**: 2.5.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-04-07

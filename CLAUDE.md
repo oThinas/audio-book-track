@@ -26,11 +26,18 @@
 - **Camadas obrigatórias** (dependências de fora para dentro):
   ```
   app/api/          → Controllers (HTTP apenas, sem lógica de negócio)
+  lib/factories/    → Composition Root (instanciam services com deps concretas)
   lib/services/     → Use Cases (orquestração, sem SQL/HTTP direto)
-  lib/repositories/ → Acesso a dados (interface no domínio)
-  lib/domain/       → Entidades e regras puras (sem imports de framework)
+  lib/repositories/ → Implementações concretas de repositories (dados)
+  lib/domain/       → Entidades, regras puras e interfaces de repositories
+  lib/api/          → Helpers de resposta HTTP reutilizáveis (responses.ts)
   ```
 - **Injeção de dependência via construtor** — nunca instanciar dependências dentro de uma classe.
+- **Factories obrigatórias** — controllers NUNCA instanciam repos/services diretamente; usam `lib/factories/` com funções `create<Service>()`.
+- **Respostas de erro padronizadas** — usar helpers de `lib/api/responses.ts` (ex: `unauthorizedResponse`, `validationErrorResponse`).
+- **Interfaces em arquivos separados** — nunca co-localizadas com implementações ou tipos de domínio.
+- **Sem prefixo `I` em interfaces** — usar `UserPreferenceRepository`, não `IUserPreferenceRepository`.
+- **Repositories concretos prefixados com o adaptador** — ex: `DrizzleUserPreferenceRepository` implementa `UserPreferenceRepository`.
 - **shadcn/ui é a biblioteca de componentes padrão** — usar `bunx --bun shadcn@latest add <component>` antes de construir primitivos do zero. A flag `--bun` é obrigatória com Bun runtime.
 - **Componentes UI (`components/ui/`)** são shadcn/ui primitivos, puramente visuais: sem `useState` de negócio, sem `fetch`.
 - **`use client` exige comentário justificando** o motivo; Server Components são o padrão.
