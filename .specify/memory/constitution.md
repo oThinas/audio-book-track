@@ -1,7 +1,7 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 2.5.0 → 2.5.1 (PATCH: relaxed use client comment requirement)
+Version change: 2.5.1 → 2.6.0 (MINOR: added Drizzle migration workflow rule)
 
 Modified principles:
   - Princípio VII (Frontend): removed mandatory justification comment for
@@ -392,8 +392,12 @@ pelo Repository Pattern definido no Princípio VI.
   em código de produção.
 - N+1 queries são proibidas: usar batch fetch ou JOINs.
 - Paginação por cursor preferida a OFFSET para listas grandes.
-- Migrations DEVEM ser reversíveis e aplicadas via ferramenta de migração
-  (ex: Drizzle, Prisma Migrate).
+- Migrations DEVEM ser reversíveis e aplicadas via ferramenta de migração.
+- **Drizzle ORM**: usar exclusivamente `drizzle-kit generate` (para gerar
+  SQL de migração) e `drizzle-kit migrate` (para aplicar). O comando
+  `drizzle-kit push` é **proibido** — ele aplica mudanças direto no banco
+  sem gerar arquivos de migração, causando dessincronização entre o estado
+  do banco e o journal de migrações.
 
 **Rationale**: Valores financeiros em `float` introduzem erros de ponto
 flutuante. Índices inadequados causam degradação sob volume real de dados.
@@ -427,6 +431,7 @@ Os seguintes padrões são **explicitamente proibidos** neste projeto:
 - `SELECT *` em queries de produção.
 - Foreign keys sem índice.
 - Migrations irreversíveis sem aprovação explícita.
+- `drizzle-kit push` — usar `generate` + `migrate` para manter journal sincronizado.
 
 **Geral:**
 - Swallow silencioso de erros (`catch (e) {}`).
@@ -606,4 +611,4 @@ submeter para review ou merge:
 revisar por outros e cria responsabilidade pessoal com os padrões
 definidos nesta constituição.
 
-**Version**: 2.5.1 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-04-07
+**Version**: 2.6.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-04-07

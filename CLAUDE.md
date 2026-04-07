@@ -50,6 +50,7 @@
 - **`SELECT *` é proibido** em código de produção.
 - **Transações obrigatórias** para operações que afetam múltiplas tabelas.
 - **Migrations devem ser reversíveis.**
+- **Drizzle ORM**: usar `generate` + `migrate` — `drizzle-kit push` é proibido.
 
 ### API REST
 
@@ -70,6 +71,7 @@
 - SQL direto fora de repositories.
 - Swallow silencioso de erros: `catch (e) {}`.
 - Mutação de objetos recebidos como parâmetro — sempre retornar novo objeto.
+- `drizzle-kit push` — usar `generate` + `migrate` para manter journal sincronizado.
 
 ---
 
