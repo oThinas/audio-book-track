@@ -146,14 +146,14 @@
 
 ### Tests (RED)
 
-- [ ] T035 [US5] Write E2E test for favorite page selector (select option, verify auto-save) appended to `__tests__/e2e/settings-preferences.spec.ts`
-- [ ] T036 [P] [US5] Write E2E test for root redirect (authenticated → favorite page, unauthenticated → /login, fallback to /dashboard) in `__tests__/e2e/redirect.spec.ts`
+- [x] T035 [US5] Write E2E test for favorite page selector (select option, verify auto-save) appended to `__tests__/e2e/settings-preferences.spec.ts`
+- [x] T036 [P] [US5] Write E2E test for root redirect (authenticated → favorite page, unauthenticated → /login, fallback to /dashboard) in `__tests__/e2e/redirect.spec.ts`
 
 ### Implementation (GREEN)
 
-- [ ] T037 [P] [US5] Create `FavoritePageSelector` component in `src/components/features/settings/favorite-page-selector.tsx` — `use client`, shadcn Select dropdown with navigable pages, `useAutoSavePreference`
-- [ ] T038 [US5] Integrate `FavoritePageSelector` into settings page `src/app/(authenticated)/settings/page.tsx` — in the Navegação card, pass current favoritePage as initial value
-- [ ] T039 [US5] Replace `src/app/page.tsx` with server-side redirect — check auth session, if authenticated fetch favorite page and `redirect()`, if not `redirect('/login')`. Fallback to `/dashboard` if favorite route invalid
+- [x] T037 [P] [US5] Create `FavoritePageSelector` component — shadcn Select dropdown with navigable pages, auto-save
+- [x] T038 [US5] Integrate `FavoritePageSelector` into settings page — replace placeholder with selector
+- [x] T039 [US5] Replace `src/app/page.tsx` with server-side redirect — auth check → favorite page → fallback /dashboard
 
 **Checkpoint**: Root redirect works. Favorite page selectable and persisted. E2E tests GREEN.
 

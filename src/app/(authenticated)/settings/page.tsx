@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import { FavoritePageSelector } from "@/components/features/settings/favorite-page-selector";
 import { FontSizeSelector } from "@/components/features/settings/font-size-selector";
 import { PrimaryColorSelector } from "@/components/features/settings/primary-color-selector";
 import { ThemeSelector } from "@/components/features/settings/theme-selector";
@@ -63,7 +64,7 @@ export default async function SettingsPage() {
 
           <Separator className="bg-slate-100" />
 
-          {/* Favorite page — placeholder until Phase 7 */}
+          {/* Favorite page */}
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-1">
               <span className="text-sm font-medium text-slate-800">Página favorita</span>
@@ -71,7 +72,7 @@ export default async function SettingsPage() {
                 Escolha a página exibida ao fazer login
               </span>
             </div>
-            <div className="text-sm text-slate-400">{preferences.favoritePage}</div>
+            <FavoritePageSelector initialValue={preferences.favoritePage} />
           </div>
 
           <Separator className="bg-slate-100" />

@@ -1,31 +1,25 @@
 "use client";
 
-import {
-  BookOpen,
-  Building2,
-  Headphones,
-  LayoutDashboard,
-  LogOut,
-  Mic,
-  Pencil,
-  Settings,
-} from "lucide-react";
+import { Headphones, LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth/client";
+import { PAGE_ICONS } from "@/lib/ui/page-icons";
 import { cn } from "@/lib/utils";
 import { SidebarToggle } from "./sidebar-toggle";
 
 const NAV_ITEMS = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/books", label: "Livros", icon: BookOpen },
-  { href: "/studios", label: "Estúdios", icon: Building2 },
-  { href: "/editors", label: "Editores", icon: Pencil },
-  { href: "/narrators", label: "Gravadores", icon: Mic },
+  { href: "/dashboard", label: "Dashboard", icon: PAGE_ICONS.dashboard },
+  { href: "/books", label: "Livros", icon: PAGE_ICONS.books },
+  { href: "/studios", label: "Estúdios", icon: PAGE_ICONS.studios },
+  { href: "/editors", label: "Editores", icon: PAGE_ICONS.editors },
+  { href: "/narrators", label: "Gravadores", icon: PAGE_ICONS.narrators },
 ] as const;
 
-const BOTTOM_ITEMS = [{ href: "/settings", label: "Configurações", icon: Settings }] as const;
+const BOTTOM_ITEMS = [
+  { href: "/settings", label: "Configurações", icon: PAGE_ICONS.settings },
+] as const;
 
 interface SidebarProps {
   readonly collapsed: boolean;

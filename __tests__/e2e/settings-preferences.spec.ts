@@ -58,6 +58,20 @@ test.describe("Settings Preferences (US4)", () => {
     });
   });
 
+  test.describe("Favorite Page Selector", () => {
+    test("should display favorite page select dropdown", async ({ page }) => {
+      await expect(page.getByTestId("favorite-page-select")).toBeVisible();
+    });
+
+    test("should change favorite page and auto-save", async ({ page }) => {
+      await page.getByTestId("favorite-page-select").click();
+      await page.getByRole("option", { name: "Livros" }).click();
+      await page.waitForTimeout(500);
+      await page.reload();
+      await expect(page.getByTestId("favorite-page-select")).toContainText("Livros");
+    });
+  });
+
   test.describe("Auto-save", () => {
     test("should persist theme preference after page reload", async ({ page }) => {
       await page.getByRole("radio", { name: "Escuro" }).click();
