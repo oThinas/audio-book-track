@@ -81,15 +81,15 @@
 
 ### Tests (RED)
 
-- [ ] T018 [P] [US2] Write unit test for `useSidebar` hook (toggle, read from cookie, default state) in `__tests__/unit/use-sidebar.test.ts`
-- [ ] T019 [P] [US2] Write E2E test for sidebar toggle (expand/collapse, animation, persistence across navigation, mobile drawer behavior) in `__tests__/e2e/sidebar-toggle.spec.ts`
+- [x] T018 [P] [US2] Write unit test for `useSidebar` hook (toggle, read from cookie, default state) in `__tests__/unit/use-sidebar.test.ts`
+- [x] T019 [P] [US2] Write E2E test for sidebar toggle (expand/collapse, animation, persistence across navigation, mobile drawer behavior) in `__tests__/e2e/sidebar-toggle.spec.ts`
 
 ### Implementation (GREEN)
 
-- [ ] T020 [US2] Create `useSidebar` hook in `src/lib/hooks/use-sidebar.ts` — manage collapsed state via cookie (`sidebar-collapsed`), provide toggle function, read initial state from cookie
-- [ ] T021 [US2] Create `SidebarToggle` button component in `src/components/layout/sidebar-toggle.tsx` — icon button (ChevronLeft/ChevronRight from lucide) that calls toggle
-- [ ] T022 [US2] Refactor `src/components/layout/sidebar.tsx` — accept `collapsed` prop, animate width transition (w-64 ↔ w-16, duration-300), show/hide labels with opacity transition, center icons when collapsed. Mobile: overlay/drawer behavior with backdrop
-- [ ] T023 [US2] Update `src/app/(authenticated)/layout.tsx` — read `sidebar-collapsed` cookie server-side via `cookies()`, pass to Sidebar, wire SidebarToggle
+- [x] T020 [US2] Create `useSidebar` hook in `src/lib/hooks/use-sidebar.ts` — manage collapsed state via cookie (`sidebar-collapsed`), provide toggle function, read initial state from cookie
+- [x] T021 [US2] Create `SidebarToggle` button component in `src/components/layout/sidebar-toggle.tsx` — icon button (PanelLeftClose/PanelLeftOpen from lucide) that calls toggle
+- [x] T022 [US2] Refactor `src/components/layout/sidebar.tsx` — accept `collapsed` prop, animate width transition (w-60 ↔ w-16, duration-100), show/hide labels, center icons when collapsed
+- [x] T023 [US2] Update `src/app/(authenticated)/layout.tsx` — read `sidebar-collapsed` cookie server-side via `cookies()`, pass to Sidebar via client layout wrapper
 
 **Checkpoint**: Sidebar toggles smoothly. State persists across pages. Mobile shows drawer. E2E test GREEN.
 

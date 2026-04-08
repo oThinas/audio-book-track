@@ -1,0 +1,23 @@
+"use client";
+
+import { Sidebar } from "@/components/layout/sidebar";
+import { useSidebar } from "@/lib/hooks/use-sidebar";
+
+interface AuthenticatedLayoutClientProps {
+  readonly initialCollapsed: boolean;
+  readonly children: React.ReactNode;
+}
+
+export function AuthenticatedLayoutClient({
+  initialCollapsed,
+  children,
+}: AuthenticatedLayoutClientProps) {
+  const { collapsed, toggle } = useSidebar(initialCollapsed);
+
+  return (
+    <div className="flex h-screen">
+      <Sidebar collapsed={collapsed} onToggle={toggle} />
+      <div className="flex-1 overflow-auto">{children}</div>
+    </div>
+  );
+}

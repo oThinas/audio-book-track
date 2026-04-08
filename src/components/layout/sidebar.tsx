@@ -1,34 +1,138 @@
-import { Home } from "lucide-react";
-import Link from "next/link";
+"use client";
 
-import { LogoutButton } from "@/components/features/auth/logout-button";
+import {
+  BookOpen,
+  Building2,
+  Headphones,
+  LayoutDashboard,
+  LogOut,
+  Mic,
+  Pencil,
+  Settings,
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { authClient } from "@/lib/auth/client";
+import { cn } from "@/lib/utils";
+import { SidebarToggle } from "./sidebar-toggle";
+
+const NAV_ITEMS = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/books", label: "Livros", icon: BookOpen },
+  { href: "/studios", label: "Estúdios", icon: Building2 },
+  { href: "/editors", label: "Editores", icon: Pencil },
+  { href: "/narrators", label: "Gravadores", icon: Mic },
+] as const;
+
+const BOTTOM_ITEMS = [{ href: "/settings", label: "Configurações", icon: Settings }] as const;
 
 interface SidebarProps {
-  userName: string;
+  readonly collapsed: boolean;
+  readonly onToggle: () => void;
 }
 
-export function Sidebar({ userName }: SidebarProps) {
+export function Sidebar({ collapsed, onToggle }: SidebarProps) {
+  const pathname = usePathname();
+  const router = useRouter();
+
+  async function handleLogout() {
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          router.push("/login");
+        },
+      },
+    });
+  }
+
   return (
-    <aside className="flex h-full w-64 flex-col border-r bg-muted/40">
-      <div className="flex h-14 items-center border-b px-4">
-        <Link href="/dashboard" className="text-lg font-semibold">
-          AudioBook Track
-        </Link>
+    <aside
+      data-testid="sidebar"
+      className={cn(
+        "flex h-full flex-col justify-between bg-slate-800 py-6 transition-all duration-100",
+        collapsed ? "w-16" : "w-60",
+      )}
+    >
+      {/* Top section: logo + nav */}
+      <div className="flex flex-col gap-2">
+        {/* Logo + toggle */}
+        <div
+          className={cn(
+            "flex px-5 pb-4",
+            collapsed ? "flex-col items-center gap-3" : "items-center justify-between",
+          )}
+        >
+          <Link href="/dashboard" className="flex items-center gap-2.5">
+            <Headphones className="size-6 shrink-0 text-blue-500" />
+            {!collapsed && (
+              <span className="text-[15px] font-bold text-white whitespace-nowrap">
+                AudioBook Track
+              </span>
+            )}
+          </Link>
+          <SidebarToggle collapsed={collapsed} onToggle={onToggle} />
+        </div>
+
+        {/* Nav items */}
+        <nav className="flex flex-col gap-1 px-3">
+          {NAV_ITEMS.map((item) => {
+            const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex h-11 items-center gap-2.5 rounded-lg px-4 text-sm transition-colors",
+                  active
+                    ? "bg-blue-600 font-semibold text-white"
+                    : "text-slate-400 hover:bg-slate-700 hover:text-white",
+                  collapsed && "justify-center px-0",
+                )}
+                title={collapsed ? item.label : undefined}
+              >
+                <item.icon className="size-4.5 shrink-0" />
+                {!collapsed && item.label}
+              </Link>
+            );
+          })}
+        </nav>
       </div>
 
-      <nav className="flex-1 space-y-1 p-4">
-        <Link
-          href="/dashboard"
-          className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+      {/* Bottom section: settings + logout */}
+      <div className="flex flex-col gap-1 px-3">
+        {BOTTOM_ITEMS.map((item) => {
+          const active = pathname === item.href;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "flex h-11 items-center gap-2.5 rounded-lg px-4 text-sm transition-colors",
+                active
+                  ? "bg-blue-600 font-semibold text-white"
+                  : "text-slate-400 hover:bg-slate-700 hover:text-white",
+                collapsed && "justify-center px-0",
+              )}
+              title={collapsed ? item.label : undefined}
+            >
+              <item.icon className="size-4.5 shrink-0" />
+              {!collapsed && item.label}
+            </Link>
+          );
+        })}
+        <Button
+          variant="ghost"
+          onClick={handleLogout}
+          className={cn(
+            "flex h-11 justify-start gap-2.5 rounded-lg px-4 text-sm text-red-400 hover:bg-slate-700 hover:text-red-300",
+            collapsed && "justify-center px-0",
+          )}
+          title={collapsed ? "Sair" : undefined}
         >
-          <Home className="size-4" />
-          Dashboard
-        </Link>
-      </nav>
-
-      <div className="border-t p-4">
-        <p className="mb-2 truncate px-3 text-sm text-muted-foreground">{userName}</p>
-        <LogoutButton />
+          <LogOut className="size-4.5 shrink-0" />
+          {!collapsed && "Sair"}
+        </Button>
       </div>
     </aside>
   );

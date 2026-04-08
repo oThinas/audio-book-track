@@ -7465,15 +7465,43 @@
                   "type": "frame",
                   "id": "ISUSJ",
                   "width": "fill_container",
-                  "height": 44,
-                  "padding": [
-                    0,
-                    0,
-                    12,
-                    0
-                  ],
+                  "layout": "vertical",
+                  "gap": 8,
                   "justifyContent": "center",
-                  "alignItems": "center"
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "Yw48o",
+                      "name": "logo",
+                      "width": 24,
+                      "height": 24,
+                      "iconFontName": "headphones",
+                      "iconFontFamily": "lucide",
+                      "fill": "$color/icon-brand"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "r7hFP",
+                      "name": "sctoggle",
+                      "width": "fill_container",
+                      "height": 44,
+                      "cornerRadius": 8,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "zD22Q",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "panel-left-open",
+                          "iconFontFamily": "lucide",
+                          "fill": "#475569"
+                        }
+                      ]
+                    }
+                  ]
                 },
                 {
                   "type": "frame",
@@ -7594,27 +7622,6 @@
               "children": [
                 {
                   "type": "frame",
-                  "id": "ytXQF",
-                  "name": "scexp",
-                  "width": "fill_container",
-                  "height": 44,
-                  "cornerRadius": 8,
-                  "justifyContent": "center",
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "icon_font",
-                      "id": "XO5L4",
-                      "width": 18,
-                      "height": 18,
-                      "iconFontName": "panel-left-open",
-                      "iconFontFamily": "lucide",
-                      "fill": "$color/icon-subtle"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
                   "id": "omRo2",
                   "name": "sccfg",
                   "width": "fill_container",
@@ -7658,18 +7665,6 @@
               ]
             }
           ]
-        },
-        {
-          "type": "icon_font",
-          "id": "I0AXW",
-          "layoutPosition": "absolute",
-          "x": 44,
-          "y": 83,
-          "width": 24,
-          "height": 24,
-          "iconFontName": "headphones",
-          "iconFontFamily": "lucide",
-          "fill": "$color/icon-brand"
         }
       ]
     },

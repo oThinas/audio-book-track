@@ -1,7 +1,8 @@
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { Sidebar } from "@/components/layout/sidebar";
 import { auth } from "@/lib/auth/server";
+import { getSidebarCollapsed, SIDEBAR_COOKIE_NAME } from "@/lib/hooks/sidebar-constants";
+import { AuthenticatedLayoutClient } from "./layout-client";
 
 export default async function AuthenticatedLayout({
   children,
@@ -16,10 +17,13 @@ export default async function AuthenticatedLayout({
     redirect("/login");
   }
 
+  const cookieStore = await cookies();
+  const sidebarCookie = cookieStore.get(SIDEBAR_COOKIE_NAME)?.value;
+  const initialCollapsed = getSidebarCollapsed(sidebarCookie);
+
   return (
-    <div className="flex h-screen">
-      <Sidebar userName={session.user.name} />
-      <div className="flex-1 overflow-auto">{children}</div>
-    </div>
+    <AuthenticatedLayoutClient initialCollapsed={initialCollapsed}>
+      {children}
+    </AuthenticatedLayoutClient>
   );
 }
