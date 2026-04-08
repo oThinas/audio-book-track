@@ -122,17 +122,17 @@
 
 ### Tests (RED)
 
-- [ ] T027 [US4] Write E2E tests for all preference selectors (theme: light/dark/system with CSS class check + OS preference toggle; font size: small/medium/large with html font-size check; primary color: each color with CSS variable check; all with auto-save persistence) in `__tests__/e2e/settings-preferences.spec.ts`
+- [x] T027 [US4] Write E2E tests for all preference selectors (theme: light/dark/system with CSS class check + OS preference toggle; font size: small/medium/large with html font-size check; primary color: each color with CSS variable check; all with auto-save persistence) in `__tests__/e2e/settings-preferences.spec.ts`
 
 ### Implementation (GREEN)
 
-- [ ] T028 [US4] Create shared `useAutoSavePreference` hook in `src/lib/hooks/use-auto-save-preference.ts` — `use client`, accepts preference key + value, debounces PATCH to `/api/v1/user-preferences` (300ms), returns save status for inline feedback (toast/checkmark)
-- [ ] T029 [US4] Wire `next-themes` ThemeProvider in `src/app/layout.tsx` — wrap children with `<ThemeProvider attribute="class" defaultTheme="system" enableSystem>`, add `suppressHydrationWarning` to `<html>`
-- [ ] T030 [P] [US4] Create `ThemeSelector` component in `src/components/features/settings/theme-selector.tsx` — `use client`, shadcn RadioGroup (Claro/Escuro/Sistema), calls `setTheme()` from next-themes + `useAutoSavePreference`
-- [ ] T031 [P] [US4] Create `FontSizeSelector` component in `src/components/features/settings/font-size-selector.tsx` — `use client`, shadcn RadioGroup (Pequena/Média/Grande), sets `--font-size-base` on `<html>` + `useAutoSavePreference`
-- [ ] T032 [P] [US4] Create `PrimaryColorSelector` component in `src/components/features/settings/primary-color-selector.tsx` — `use client`, color swatches (5 options), sets `data-primary-color` on `<html>` + `useAutoSavePreference`
-- [ ] T033 [US4] Update `src/app/layout.tsx` — read user preferences server-side (if authenticated), set initial `data-primary-color` and `style={{ fontSize }}` on `<html>` to prevent flash
-- [ ] T034 [US4] Integrate selectors into settings page `src/app/(authenticated)/settings/page.tsx` — pass current preferences as initial values to each selector component in the Aparência card
+- [x] T028 [US4] Create shared `useAutoSavePreference` hook in `src/lib/hooks/use-auto-save-preference.ts` — debounced PATCH (300ms) to preferences API
+- [x] T029 [US4] Wire `next-themes` ThemeProvider in `src/app/layout.tsx` with `suppressHydrationWarning` on `<html>`
+- [x] T030 [P] [US4] Create `ThemeSelector` component — RadioGroup (Claro/Escuro/Sistema) with next-themes + auto-save
+- [x] T031 [P] [US4] Create `FontSizeSelector` component — RadioGroup (Pequeno/Médio/Grande) with html fontSize + auto-save
+- [x] T032 [P] [US4] Create `PrimaryColorSelector` component — color swatches (5 options) with data-primary-color + auto-save
+- [x] T033 [US4] Add `PreferenceInitializer` client component in authenticated layout — sets fontSize and primaryColor on `<html>` on mount
+- [x] T034 [US4] Integrate selectors into settings page — pass current preferences as initial values to each selector
 
 **Checkpoint**: Theme/font/color changes apply immediately. Auto-save works. Preferences persist across login sessions. E2E tests GREEN.
 

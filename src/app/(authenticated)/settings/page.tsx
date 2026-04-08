@@ -1,4 +1,7 @@
 import { headers } from "next/headers";
+import { FontSizeSelector } from "@/components/features/settings/font-size-selector";
+import { PrimaryColorSelector } from "@/components/features/settings/primary-color-selector";
+import { ThemeSelector } from "@/components/features/settings/theme-selector";
 import { PageContainer, PageHeader, PageTitle } from "@/components/layout/page-container";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -42,8 +45,7 @@ export default async function SettingsPage() {
                 Escolha entre tema claro, escuro ou do sistema
               </span>
             </div>
-            {/* Placeholder — will be replaced by ThemeSelector in Phase 6 */}
-            <div className="text-sm text-slate-400">{preferences.theme}</div>
+            <ThemeSelector initialValue={preferences.theme} />
           </div>
 
           <Separator className="bg-slate-100" />
@@ -56,12 +58,12 @@ export default async function SettingsPage() {
                 Ajuste o tamanho do texto na interface
               </span>
             </div>
-            <div className="text-sm text-slate-400">{preferences.fontSize}</div>
+            <FontSizeSelector initialValue={preferences.fontSize} />
           </div>
 
           <Separator className="bg-slate-100" />
 
-          {/* Favorite page */}
+          {/* Favorite page — placeholder until Phase 7 */}
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-1">
               <span className="text-sm font-medium text-slate-800">Página favorita</span>
@@ -82,7 +84,7 @@ export default async function SettingsPage() {
                 Define a cor de destaque em toda a interface
               </span>
             </div>
-            <div className="text-sm text-slate-400">{preferences.primaryColor}</div>
+            <PrimaryColorSelector initialValue={preferences.primaryColor} />
           </div>
         </CardContent>
       </Card>
