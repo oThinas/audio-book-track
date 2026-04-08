@@ -103,12 +103,12 @@
 
 ### Tests (RED)
 
-- [ ] T024 [US3] Write E2E test for settings page layout (title, cards structure, responsive stacking on mobile) in `__tests__/e2e/settings-page.spec.ts`
+- [x] T024 [US3] Write E2E test for settings page layout (title, cards structure, responsive stacking on mobile) in `__tests__/e2e/settings-page.spec.ts`
 
 ### Implementation (GREEN)
 
-- [ ] T025 [US3] Create settings page in `src/app/(authenticated)/settings/page.tsx` — Server Component that fetches user preferences, renders title "Configurações" and card sections (Aparência, Navegação) per design
-- [ ] T026 [US3] Add "Configurações" nav item to sidebar in `src/components/layout/sidebar.tsx` — Settings icon from lucide, route to `/settings`, highlight active state
+- [x] T025 [US3] Create settings page in `src/app/(authenticated)/settings/page.tsx` — Server Component that fetches user preferences, renders title "Configurações" and card with preference rows (Aparência section) per design
+- [x] T026 [US3] Add "Configurações" nav item to sidebar in `src/components/layout/sidebar.tsx` — Settings icon from lucide, route to `/settings`, highlight active state (already implemented in Phase 4)
 
 **Checkpoint**: Settings page matches design. Navigation works from sidebar. E2E test GREEN.
 

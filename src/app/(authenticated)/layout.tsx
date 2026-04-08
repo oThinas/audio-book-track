@@ -14,6 +14,8 @@ export default async function AuthenticatedLayout({
   });
 
   if (!session) {
+    const cookieStore = await cookies();
+    cookieStore.delete("better-auth.session_token");
     redirect("/login");
   }
 

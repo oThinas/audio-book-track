@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 function PageContainer({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <main className={cn("flex-1 p-6", className)}>{children}</main>;
+  return <main className={cn("flex-1 p-8", className)}>{children}</main>;
 }
 
 function PageHeader({ children, className }: { children: React.ReactNode; className?: string }) {
