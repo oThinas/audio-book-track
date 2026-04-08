@@ -1,28 +1,25 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 2.2.0 → 2.2.1 (PATCH: clarified shadcn CLI invocation with Bun runtime)
+Version change: 2.5.1 → 2.6.0 (MINOR: added Drizzle migration workflow rule)
 
 Modified principles:
-  - Princípio VII: Frontend: Composição e Atomicidade — added mandatory
-    `--bun` flag rule for shadcn CLI when using Bun runtime. Changed
-    `npx shadcn@latest` to `bunx --bun shadcn@latest` in examples.
+  - Princípio VII (Frontend): removed mandatory justification comment for
+    `use client`. Directive is still only for components requiring client-side
+    interactivity, but no comment is needed.
+  - Princípio XII (Anti-Padrões): updated `use client` anti-pattern from
+    "sem justificativa em comentário" to "em componentes que não requerem
+    interatividade client-side".
+  - Self-Review checklist: updated `use client` check accordingly.
 
-Added sections:
-  - N/A (inline clarification within existing Principle VII)
-
-Removed sections:
-  - N/A
+Added sections: N/A
+Removed sections: N/A
 
 Templates requiring updates:
-  ✅ .specify/memory/constitution.md — this file (overwritten now)
-  ✅ .specify/templates/plan-template.md — compatible; no shadcn references
-  ✅ .specify/templates/spec-template.md — compatible; no shadcn references
-  ✅ .specify/templates/tasks-template.md — compatible; no shadcn references
-  ✅ CLAUDE.md — updated: `npx shadcn@latest` → `bunx --bun shadcn@latest`
+  ✅ .specify/memory/constitution.md — this file (updated now)
+  ✅ CLAUDE.md — updated below
 
-Follow-up TODOs:
-  - None.
+Follow-up TODOs: N/A
 -->
 
 # AudioBook Track Constitution
@@ -198,13 +195,17 @@ Dependências apontam sempre de fora para dentro — nunca o contrário.
 
 ```
 app/api/          → Controllers/Route Handlers (HTTP, entrada/saída)
+lib/factories/    → Composition Root (instanciam services com dependências concretas)
 lib/services/     → Use Cases / Application Services (orquestração)
-lib/repositories/ → Repository interfaces + implementações (dados)
-lib/domain/       → Entities, value objects, regras de negócio puras
+lib/repositories/ → Implementações concretas de repositories (dados)
+lib/domain/       → Entities, value objects, regras de negócio puras, interfaces de repositories
 ```
 
-- Controllers DEVEM ser finos: validam input, chamam um serviço, retornam
-  resposta. Nenhuma lógica de negócio nos controllers.
+- Controllers DEVEM ser finos: validam input, chamam uma factory para obter
+  o service, e retornam resposta. Nenhuma lógica de negócio nos controllers.
+- Respostas de erro padronizadas (401, 422, etc.) DEVEM usar helpers
+  reutilizáveis de `lib/api/responses.ts` — nunca construir o envelope de
+  erro inline no controller.
 - Services contêm toda a orquestração: não conhecem HTTP nem SQL diretamente.
 - Repositories encapsulam todo acesso a dados; a interface DEVE ser definida
   no domínio e implementada fora dele.
@@ -212,14 +213,47 @@ lib/domain/       → Entities, value objects, regras de negócio puras
 - Injeção de dependência via construtor; nunca instanciar dependências dentro
   de uma classe.
 
+**Factories (Composition Root):**
+
+- Controllers NUNCA instanciam repositories ou services diretamente — DEVEM
+  usar factories de `lib/factories/` para obter services prontos.
+- Factories são o único lugar que conhece as implementações concretas
+  (ex: `DrizzleUserPreferenceRepository`) e as conecta aos services.
+- Cada domínio DEVE ter sua factory em arquivo próprio
+  (ex: `lib/factories/user-preference.ts`).
+- Factories DEVEM expor funções nomeadas `create<Service>()` (ex:
+  `createUserPreferenceService()`).
+
+**Convenções de Nomeação:**
+
+- Interfaces DEVEM ser definidas em arquivos separados — nunca co-localizadas
+  com implementações ou com tipos de domínio no mesmo arquivo.
+- Interfaces NÃO DEVEM usar o prefixo `I`. Exemplo correto:
+  `UserPreferenceRepository` (interface), não `IUserPreferenceRepository`.
+- Implementações concretas de repositories DEVEM ser prefixadas com o nome
+  do adaptador/driver. Exemplo: `DrizzleUserPreferenceRepository` implementa
+  `UserPreferenceRepository`.
+
 **Rationale**: Em um sistema financeiro, separar regras de negócio da
 infraestrutura garante que os cálculos sejam testáveis sem banco de dados
 e que mudanças de storage não afetem a lógica de domínio.
 
-### VII. Frontend: Composição e Atomicidade
+### VII. Frontend: Composição, Atomicidade e Mobile First
 
 O frontend DEVE separar lógica de renderização e seguir composição sobre
 herança. Componentes DEVEM ser atômicos e independentes.
+
+**Mobile First (obrigatório):**
+
+- Todas as telas DEVEM ser desenvolvidas com abordagem mobile first:
+  estilizar primeiro para telas pequenas e usar breakpoints progressivos
+  (`sm:`, `md:`, `lg:`, `xl:`) para adaptar a telas maiores.
+- Esta prática é nativa do Tailwind CSS (utility-first, mobile-first por
+  padrão) e DEVE ser seguida em todos os componentes e layouts.
+- Layouts responsivos DEVEM ser testados em pelo menos 3 breakpoints:
+  mobile (< 640px), tablet (640–1024px) e desktop (> 1024px).
+- Componentes que não se adaptam a telas menores DEVEM ser justificados
+  explicitamente (ex: dashboards complexos com fallback mobile).
 
 **shadcn/ui como biblioteca de componentes padrão:**
 
@@ -267,7 +301,7 @@ isoladamente e facilita SSR sem hidratação desnecessária no cliente.
 O tempo de carregamento inicial (LCP) DEVE ser inferior a 1 segundo.
 Toda decisão técnica DEVE considerar impacto na performance.
 
-- Server Components são o padrão; `use client` é exceção justificada.
+- Server Components são o padrão; `use client` apenas quando necessário.
 - Imagens DEVEM usar `<Image>` do Next.js com `priority` nas above-the-fold.
 - Fontes DEVEM usar `next/font` com `display: swap`.
 - Listas longas (> 50 itens) DEVEM usar virtualização
@@ -358,8 +392,12 @@ pelo Repository Pattern definido no Princípio VI.
   em código de produção.
 - N+1 queries são proibidas: usar batch fetch ou JOINs.
 - Paginação por cursor preferida a OFFSET para listas grandes.
-- Migrations DEVEM ser reversíveis e aplicadas via ferramenta de migração
-  (ex: Drizzle, Prisma Migrate).
+- Migrations DEVEM ser reversíveis e aplicadas via ferramenta de migração.
+- **Drizzle ORM**: usar exclusivamente `drizzle-kit generate` (para gerar
+  SQL de migração) e `drizzle-kit migrate` (para aplicar). O comando
+  `drizzle-kit push` é **proibido** — ele aplica mudanças direto no banco
+  sem gerar arquivos de migração, causando dessincronização entre o estado
+  do banco e o journal de migrações.
 
 **Rationale**: Valores financeiros em `float` introduzem erros de ponto
 flutuante. Índices inadequados causam degradação sob volume real de dados.
@@ -382,7 +420,7 @@ Os seguintes padrões são **explicitamente proibidos** neste projeto:
 - Props booleanas que alteram estrutura de renderização
   (`isLarge`, `showHeader`) — usar composição.
 - Valores visuais hardcoded (cores, espaçamentos) fora de design tokens.
-- `use client` sem justificativa explícita em comentário.
+- `use client` em componentes que não requerem interatividade client-side.
 - Componentes com mais de 200 linhas — extrair lógica em hooks ou
   sub-componentes.
 - Construir componente primitivo do zero (Button, Input, Dialog, Select,
@@ -393,6 +431,7 @@ Os seguintes padrões são **explicitamente proibidos** neste projeto:
 - `SELECT *` em queries de produção.
 - Foreign keys sem índice.
 - Migrations irreversíveis sem aprovação explícita.
+- `drizzle-kit push` — usar `generate` + `migrate` para manter journal sincronizado.
 
 **Geral:**
 - Swallow silencioso de erros (`catch (e) {}`).
@@ -545,6 +584,7 @@ submeter para review ou merge:
 - [ ] VII.  Componentes UI são puramente visuais (sem fetch/useState de negócio)?
 - [ ] VII.  Componentes primitivos usam shadcn/ui (não construídos do zero)?
 - [ ] VII.  Data fetching usa Server Components quando possível?
+- [ ] VII.  Layout segue abordagem mobile first (estilos base para mobile, breakpoints progressivos)?
 - [ ] VIII. A mudança não adiciona peso desnecessário ao bundle do cliente?
 - [ ] VIII. Listas longas usam virtualização?
 - [ ] IX.   Todos os valores visuais usam design tokens (sem hardcode)?
@@ -563,7 +603,7 @@ submeter para review ou merge:
 - [ ] Nenhum segredo hardcoded?
 - [ ] Nenhum `useEffect` para derivar estado (usar `useMemo`)?
 - [ ] Nenhum valor visual hardcoded fora de design tokens?
-- [ ] Nenhum `use client` sem comentário justificando?
+- [ ] Nenhum `use client` desnecessário (componente poderia ser Server Component)?
 - [ ] Erros são tratados explicitamente (sem `catch (e) {}`)?
 ```
 
@@ -571,4 +611,4 @@ submeter para review ou merge:
 revisar por outros e cria responsabilidade pessoal com os padrões
 definidos nesta constituição.
 
-**Version**: 2.2.1 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-04-01
+**Version**: 2.6.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-04-07

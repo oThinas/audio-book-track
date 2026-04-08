@@ -1,9 +1,9 @@
-import type { drizzle } from "drizzle-orm/node-postgres";
+import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 
 import type * as schema from "@/lib/db/schema";
 
-export type TestDb = ReturnType<typeof drizzle<typeof schema>>;
+export type TestDb = NodePgDatabase<typeof schema>;
 
 let pool: Pool | undefined;
 let currentDb: TestDb | undefined;

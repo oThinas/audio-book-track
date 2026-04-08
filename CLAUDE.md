@@ -26,14 +26,21 @@
 - **Camadas obrigatórias** (dependências de fora para dentro):
   ```
   app/api/          → Controllers (HTTP apenas, sem lógica de negócio)
+  lib/factories/    → Composition Root (instanciam services com deps concretas)
   lib/services/     → Use Cases (orquestração, sem SQL/HTTP direto)
-  lib/repositories/ → Acesso a dados (interface no domínio)
-  lib/domain/       → Entidades e regras puras (sem imports de framework)
+  lib/repositories/ → Implementações concretas de repositories (dados)
+  lib/domain/       → Entidades, regras puras e interfaces de repositories
+  lib/api/          → Helpers de resposta HTTP reutilizáveis (responses.ts)
   ```
 - **Injeção de dependência via construtor** — nunca instanciar dependências dentro de uma classe.
+- **Factories obrigatórias** — controllers NUNCA instanciam repos/services diretamente; usam `lib/factories/` com funções `create<Service>()`.
+- **Respostas de erro padronizadas** — usar helpers de `lib/api/responses.ts` (ex: `unauthorizedResponse`, `validationErrorResponse`).
+- **Interfaces em arquivos separados** — nunca co-localizadas com implementações ou tipos de domínio.
+- **Sem prefixo `I` em interfaces** — usar `UserPreferenceRepository`, não `IUserPreferenceRepository`.
+- **Repositories concretos prefixados com o adaptador** — ex: `DrizzleUserPreferenceRepository` implementa `UserPreferenceRepository`.
 - **shadcn/ui é a biblioteca de componentes padrão** — usar `bunx --bun shadcn@latest add <component>` antes de construir primitivos do zero. A flag `--bun` é obrigatória com Bun runtime.
 - **Componentes UI (`components/ui/`)** são shadcn/ui primitivos, puramente visuais: sem `useState` de negócio, sem `fetch`.
-- **`use client` exige comentário justificando** o motivo; Server Components são o padrão.
+- **`use client` apenas quando necessário** — Server Components são o padrão.
 - **Data fetching** usa Server Components com `async/await`; `useEffect` para fetch é proibido.
 
 ### Banco de dados
@@ -43,6 +50,7 @@
 - **`SELECT *` é proibido** em código de produção.
 - **Transações obrigatórias** para operações que afetam múltiplas tabelas.
 - **Migrations devem ser reversíveis.**
+- **Drizzle ORM**: usar `generate` + `migrate` — `drizzle-kit push` é proibido.
 
 ### API REST
 
@@ -63,6 +71,7 @@
 - SQL direto fora de repositories.
 - Swallow silencioso de erros: `catch (e) {}`.
 - Mutação de objetos recebidos como parâmetro — sempre retornar novo objeto.
+- `drizzle-kit push` — usar `generate` + `migrate` para manter journal sincronizado.
 
 ---
 
@@ -173,10 +182,10 @@ Qualquer mudança no modelo financeiro (preço, horas, responsáveis) requer **r
 
 
 ## Recent Changes
+- 006-ui-polish-favorites: Added TypeScript 5.9, Bun runtime + Next.js 16.2, React 19.2, better-auth 1.5, @base-ui/react 1.3, next-themes 0.4, Tailwind CSS 4.2, Drizzle ORM 0.45, Zod 4.3, lucide-react 1.7
 - 005-shadcn-base-ui: Added TypeScript 5.9 (Bun runtime) + Next.js 16.2, React 19.2, shadcn v4.1.2, radix-ui v1.4.3 (a ser substituido por @base-ui-components/react)
 - 004-test-review-e2e: Added TypeScript 5.9 (Bun runtime) + Next.js 16.2, better-auth 1.5, Drizzle ORM, Playwright (novo)
-- 001-login-auth: Added TypeScript 5.x, Bun como runtime + Next.js (latest), better-auth, Drizzle ORM, shadcn/ui, Tailwind CSS, Lucide React, Zod
 
 ## Active Technologies
-- TypeScript 5.9 (Bun runtime) + Next.js 16.2, React 19.2, shadcn v4.1.2, radix-ui v1.4.3 (a ser substituido por @base-ui-components/react) (005-shadcn-base-ui)
-- PostgreSQL (nao afetado por esta feature) (005-shadcn-base-ui)
+- TypeScript 5.9, Bun runtime + Next.js 16.2, React 19.2, better-auth 1.5, @base-ui/react 1.3, next-themes 0.4, Tailwind CSS 4.2, Drizzle ORM 0.45, Zod 4.3, lucide-react 1.7 (006-ui-polish-favorites)
+- PostgreSQL (Neon serverless) via Drizzle ORM (006-ui-polish-favorites)

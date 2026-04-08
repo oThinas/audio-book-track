@@ -16,23 +16,5 @@ services:
       timeout: 5s
       retries: 5
 
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    env_file:
-      - .env
-    environment:
-      DATABASE_URL: postgresql://postgres:postgres@db:5432/audiobook_track
-    depends_on:
-      db:
-        condition: service_healthy
-    volumes:
-      - .:/app
-      - node_modules:/app/node_modules
-
 volumes:
   pgdata:
-  node_modules:

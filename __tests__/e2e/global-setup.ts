@@ -9,7 +9,13 @@ export default async function globalSetup() {
   const db = drizzle(pool);
 
   try {
-    await db.execute(sql`TRUNCATE TABLE session, account, verification, "user" CASCADE`);
+    const tables = await db.execute(sql`
+      SELECT tablename FROM pg_tables WHERE schemaname = 'public'
+    `);
+    const tableNames = tables.rows.map((r) => `"${r.tablename}"`).join(", ");
+    if (tableNames) {
+      await db.execute(sql.raw(`TRUNCATE TABLE ${tableNames} CASCADE`));
+    }
 
     execSync("bun run db:seed", { stdio: "pipe" });
   } finally {
