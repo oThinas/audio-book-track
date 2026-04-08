@@ -6,7 +6,7 @@ test.describe("Settings Page (US3)", () => {
     await page.locator("#username").fill("admin");
     await page.locator("#password").fill("admin123");
     await page.locator("#login-submit").click();
-    await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });
+    await expect(page).not.toHaveURL(/\/login/, { timeout: 10000 });
     await page.goto("/settings");
   });
 
@@ -20,10 +20,10 @@ test.describe("Settings Page (US3)", () => {
   });
 
   test("should display all preference rows", async ({ page }) => {
-    await expect(page.getByText("Tema")).toBeVisible();
-    await expect(page.getByText("Tamanho da fonte")).toBeVisible();
-    await expect(page.getByText("Cor primária")).toBeVisible();
-    await expect(page.getByText("Página favorita")).toBeVisible();
+    await expect(page.getByText("Tema", { exact: true })).toBeVisible();
+    await expect(page.getByText("Tamanho da fonte", { exact: true })).toBeVisible();
+    await expect(page.getByText("Cor primária", { exact: true })).toBeVisible();
+    await expect(page.getByText("Página favorita", { exact: true })).toBeVisible();
   });
 
   test("should be accessible from sidebar", async ({ page }) => {

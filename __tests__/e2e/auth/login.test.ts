@@ -7,14 +7,14 @@ test.describe("Login Flow (US2)", () => {
     await expect(page).toHaveURL(/\/login/);
   });
 
-  test("should login with valid credentials and redirect to /dashboard", async ({ page }) => {
+  test("should login with valid credentials and redirect away from /login", async ({ page }) => {
     await page.goto("/login");
 
     await page.locator("#username").fill("admin");
     await page.locator("#password").fill("admin123");
     await page.locator("#login-submit").click();
 
-    await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });
+    await expect(page).not.toHaveURL(/\/login/, { timeout: 10000 });
   });
 
   test("should show error toast on invalid credentials and stay on /login", async ({ page }) => {

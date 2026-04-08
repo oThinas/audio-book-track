@@ -15,7 +15,7 @@ export function SidebarToggle({ collapsed, onToggle }: SidebarToggleProps) {
       variant="ghost"
       size="icon"
       onClick={onToggle}
-      className="size-4.5 text-slate-400 hover:bg-transparent hover:text-white"
+      className="size-8 text-slate-400 hover:bg-transparent hover:text-white [&_svg]:size-4.5"
       aria-label={collapsed ? "Expandir sidebar" : "Recolher sidebar"}
     >
       {collapsed ? <PanelLeftOpen /> : <PanelLeftClose />}
