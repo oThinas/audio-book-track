@@ -227,10 +227,10 @@ Qualquer mudança no modelo financeiro (preço, horas, responsáveis) requer **r
 
 
 ## Recent Changes
+- 007-session-invalidation-tests: Added TypeScript 5.9 (Bun runtime) + Next.js 16.2, better-auth 1.5, Vitest, Playwrigh
 - 006-ui-polish-favorites: Added TypeScript 5.9, Bun runtime + Next.js 16.2, React 19.2, better-auth 1.5, @base-ui/react 1.3, next-themes 0.4, Tailwind CSS 4.2, Drizzle ORM 0.45, Zod 4.3, lucide-react 1.7
 - 005-shadcn-base-ui: Added TypeScript 5.9 (Bun runtime) + Next.js 16.2, React 19.2, shadcn v4.1.2, radix-ui v1.4.3 (a ser substituido por @base-ui-components/react)
-- 004-test-review-e2e: Added TypeScript 5.9 (Bun runtime) + Next.js 16.2, better-auth 1.5, Drizzle ORM, Playwright (novo)
 
 ## Active Technologies
-- TypeScript 5.9, Bun runtime + Next.js 16.2, React 19.2, better-auth 1.5, @base-ui/react 1.3, next-themes 0.4, Tailwind CSS 4.2, Drizzle ORM 0.45, Zod 4.3, lucide-react 1.7 (006-ui-polish-favorites)
-- PostgreSQL (Neon serverless) via Drizzle ORM (006-ui-polish-favorites)
+- TypeScript 5.9 (Bun runtime) + Next.js 16.2, better-auth 1.5, Vitest, Playwrigh (007-session-invalidation-tests)
+- PostgreSQL (Neon) via Drizzle ORM (apenas leitura nos testes existentes) (007-session-invalidation-tests)

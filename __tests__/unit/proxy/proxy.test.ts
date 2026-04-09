@@ -66,4 +66,51 @@ describe("Route Protection (US2)", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("location")).toBeNull();
   });
+
+  it("should redirect unauthenticated user from nested protected route (/dashboard/settings)", () => {
+    mockedGetSessionCookie.mockReturnValue(null);
+
+    const response = proxy(createRequest("/dashboard/settings"));
+
+    expect(response.status).toBe(307);
+    const location = response.headers.get("location") ?? "";
+    expect(new URL(location).pathname).toBe("/login");
+  });
+
+  it("should allow unauthenticated access to /api/auth/clear-session", () => {
+    mockedGetSessionCookie.mockReturnValue(null);
+
+    const response = proxy(createRequest("/api/auth/clear-session"));
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("location")).toBeNull();
+  });
+
+  it("should allow authenticated access to nested protected routes", () => {
+    mockedGetSessionCookie.mockReturnValue("session-token-value");
+
+    const response = proxy(createRequest("/dashboard/settings"));
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("location")).toBeNull();
+  });
+
+  it("should redirect unauthenticated user from protected API route (/api/v1/books)", () => {
+    mockedGetSessionCookie.mockReturnValue(null);
+
+    const response = proxy(createRequest("/api/v1/books"));
+
+    expect(response.status).toBe(307);
+    const location = response.headers.get("location") ?? "";
+    expect(new URL(location).pathname).toBe("/login");
+  });
+
+  it("should allow unauthenticated access to exact /api/auth route", () => {
+    mockedGetSessionCookie.mockReturnValue(null);
+
+    const response = proxy(createRequest("/api/auth"));
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("location")).toBeNull();
+  });
 });
