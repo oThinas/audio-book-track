@@ -1,23 +1,29 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 2.5.1 → 2.6.0 (MINOR: added Drizzle migration workflow rule)
+Version change: 2.6.0 → 2.7.0 (MINOR: added new sections and expanded
+existing principles with operational rules)
 
 Modified principles:
-  - Princípio VII (Frontend): removed mandatory justification comment for
-    `use client`. Directive is still only for components requiring client-side
-    interactivity, but no comment is needed.
-  - Princípio XII (Anti-Padrões): updated `use client` anti-pattern from
-    "sem justificativa em comentário" to "em componentes que não requerem
-    interatividade client-side".
-  - Self-Review checklist: updated `use client` check accordingly.
+  - Princípio VII (Frontend): added mandatory use of `components/ui/`
+    primitives (never raw HTML like <button>), added mandatory use of
+    `components/layout/` for page structure (PageContainer, PageHeader,
+    PageTitle, PageDescription), added mandatory dark mode consideration,
+    added design.pen as UI reference.
+  - Princípio XII (Anti-Padrões): added raw HTML elements when ui/
+    equivalent exists, added ignoring dark mode in new components.
 
-Added sections: N/A
+Added sections:
+  - XV. Ferramentas e Skills Obrigatórias
+  - XVI. Qualidade de Código e Verificação
+  - Development Workflow updated with lint/tsc verification gate
+
 Removed sections: N/A
 
 Templates requiring updates:
   ✅ .specify/memory/constitution.md — this file (updated now)
   ✅ CLAUDE.md — updated below
+  ✅ .specify/templates/tasks-template.md — checkpoint updated
 
 Follow-up TODOs: N/A
 -->
@@ -272,6 +278,47 @@ herança. Componentes DEVEM ser atômicos e independentes.
   PaymentSummary) DEVEM ser construídos **compondo** componentes
   shadcn/ui, não substituindo-os.
 
+**Uso obrigatório de componentes de `components/ui/` (NUNCA HTML cru):**
+
+- Elementos HTML primitivos (`<button>`, `<input>`, `<select>`,
+  `<textarea>`, `<label>`) são **proibidos** quando existe um
+  componente equivalente em `components/ui/`.
+- DEVE-se usar `<Button>`, `<Input>`, `<Select>`, `<Textarea>`,
+  `<Label>`, etc. importados de `@/components/ui/`.
+- Isto garante consistência visual, suporte a dark mode, e aderência
+  aos design tokens em todo o projeto.
+
+**Componentes de layout para consistência de páginas:**
+
+- Toda página autenticada DEVE usar os componentes de layout de
+  `components/layout/page-container.tsx`:
+  - `<PageContainer>` — wrapper principal da página.
+  - `<PageHeader>` — container do cabeçalho da página.
+  - `<PageTitle>` — título `<h1>` da página.
+  - `<PageDescription>` — subtítulo/descrição da página.
+- Componentes comuns entre páginas DEVEM ser componentizados para
+  manter consistência visual e comportamental.
+
+**Dark mode obrigatório:**
+
+- Todo componente e página DEVE funcionar corretamente em modo claro
+  e modo escuro.
+- Usar classes Tailwind com suporte a dark mode via `next-themes`
+  (ex: `bg-background`, `text-foreground`, tokens semânticos).
+- NUNCA usar cores hardcoded que não se adaptam ao tema.
+- Testar visualmente ambos os modos antes de considerar a
+  implementação concluída.
+
+**Arquivo de design como referência:**
+
+- O arquivo `design.pen` na raiz do projeto é a referência visual
+  para construção de telas.
+- Antes de construir qualquer tela nova, DEVE-se consultar
+  `design.pen` via Pencil MCP para entender o layout, espaçamentos,
+  cores e hierarquia visual pretendidos.
+- O design serve como guia — adaptações são permitidas quando
+  justificadas por limitações técnicas ou de acessibilidade.
+
 **Estrutura de componentes:**
 
 ```
@@ -425,6 +472,13 @@ Os seguintes padrões são **explicitamente proibidos** neste projeto:
   sub-componentes.
 - Construir componente primitivo do zero (Button, Input, Dialog, Select,
   Table, etc.) quando shadcn/ui oferece equivalente — usar shadcn/ui.
+- Usar elementos HTML crus (`<button>`, `<input>`, `<select>`, etc.)
+  quando existe componente equivalente em `components/ui/`.
+- Criar página autenticada sem usar `<PageContainer>` e componentes
+  de layout de `components/layout/`.
+- Ignorar dark mode — todo componente DEVE funcionar em ambos os temas.
+- Cores hardcoded que não se adaptam ao tema (ex: `text-gray-900`
+  sem equivalente dark).
 
 **Banco de dados:**
 - `float` ou `double` para valores financeiros.
@@ -506,6 +560,93 @@ original. O PDF viewer é uma funcionalidade de leitura — não de edição.
 **Rationale**: O PDF serve como referência para narradores e revisores
 sem necessidade de arquivos externos ao sistema.
 
+### XV. Ferramentas e Skills Obrigatórias
+
+O desenvolvimento DEVE utilizar as skills e ferramentas listadas abaixo
+para manter consistência, qualidade e aderência aos padrões do projeto.
+
+**Skills de workflow (usar nos momentos indicados):**
+
+| Skill | Quando usar |
+|---|---|
+| `/speckit.specify` | Criar especificação de nova feature |
+| `/speckit.plan` | Criar plano de implementação |
+| `/speckit.tasks` | Gerar lista de tarefas |
+| `/speckit.implement` | Executar implementação do plano |
+| `/speckit.analyze` | Verificar consistência entre artefatos |
+| `/conventional-commits` | Ao escrever mensagens de commit |
+| `/finish-task` | Ao finalizar feature (cria PR, verifica CI) |
+| `/tdd` | Ao iniciar implementação (TDD workflow) |
+| `/code-review` | Após escrever código (revisão de qualidade) |
+| `/simplify` | Após implementação (limpeza e refatoração) |
+| `/e2e` | Para gerar e rodar testes E2E com Playwright |
+
+**Skills de referência (consultar antes de implementar):**
+
+| Skill | Domínio |
+|---|---|
+| `/shadcn` | Componentes shadcn/ui (buscar, adicionar, debugar) |
+| `/docs` ou `/context7-mcp` | Documentação atualizada de libs via Context7 MCP |
+| `/api-design` | Padrões de API REST |
+| `/backend-patterns` | Arquitetura backend e otimização |
+| `/postgres-patterns` | Queries, schema design, indexação PostgreSQL |
+| `/frontend-patterns` | Padrões React, Next.js, state management |
+| `/frontend-design` | Design de interfaces com alta qualidade visual |
+| `/vercel-composition-patterns` | Composição de componentes React escaláveis |
+| `/ui-ux-pro-max` | Referência de design UI/UX (estilos, paletas, padrões) |
+
+**Context7 MCP (obrigatório para documentação de libs):**
+
+- Antes de usar qualquer API de biblioteca, framework ou ferramenta,
+  DEVE-se consultar a documentação atualizada via Context7 MCP
+  (`resolve-library-id` + `query-docs`).
+- Isto se aplica a: Next.js, React, Drizzle ORM, better-auth, Zod,
+  shadcn/ui, Tailwind CSS, Playwright, e qualquer outra dependência.
+- Não confiar em conhecimento do modelo para APIs que podem ter mudado
+  entre versões — sempre verificar via Context7.
+
+**Rationale**: Skills padronizadas garantem que o workflow seja
+reproduzível e que boas práticas sejam aplicadas consistentemente,
+independente de quem ou o que está executando a tarefa.
+
+### XVI. Qualidade de Código e Verificação
+
+Antes de marcar qualquer fase ou task como concluída, DEVEM ser
+executadas verificações de qualidade de código.
+
+**Verificações obrigatórias (usar scripts do `package.json`):**
+
+- `bun run lint` — verificar erros e warnings do Biome. Todos os
+  warnings e erros DEVEM ser resolvidos antes de prosseguir.
+- `bun run test:unit` — rodar testes unitários.
+- `bun run test:integration` — rodar testes de integração.
+- `bun run test:e2e` — rodar testes E2E (quando aplicável à mudança).
+- `bun run build` — verificar que o build de produção compila sem erros.
+
+**Regras de uso dos scripts:**
+
+- SEMPRE usar os scripts definidos no `package.json` em vez de chamar
+  ferramentas diretamente. Exemplo:
+  - CORRETO: `bun run test:unit`
+  - PROIBIDO: `bun vitest run __tests__/unit/`
+  - CORRETO: `bun run lint`
+  - PROIBIDO: `bunx biome check .`
+- Isto garante que configurações, flags e paths sejam consistentes
+  com o que o projeto espera.
+
+**Gate de qualidade por fase:**
+
+- Nenhuma fase de implementação pode ser marcada como concluída se
+  existirem erros ou warnings de lint não resolvidos.
+- Nenhuma fase pode ser marcada como concluída se testes existentes
+  estiverem falhando.
+- O build de produção (`bun run build`) DEVE passar sem erros antes
+  de criar PR ou marcar feature como concluída.
+
+**Rationale**: Erros e warnings ignorados acumulam débito técnico
+rapidamente. Verificar em cada fase é mais barato do que corrigir
+no final.
+
 ## Domain Model Constraints
 
 Restrições que se aplicam ao modelo de dados e às entidades do sistema:
@@ -531,12 +672,26 @@ Restrições que se aplicam ao modelo de dados e às entidades do sistema:
 
 Processo de desenvolvimento que DEVE ser seguido em todas as features:
 
-1. **Especificação primeiro**: Toda feature começa com `spec.md` aprovada.
-2. **Plano técnico**: `plan.md` com decisões de arquitetura antes de codar.
-3. **TDD**: Testes escritos e falhando antes da implementação (ver Princípio V).
-4. **Code Review**: Revisão obrigatória antes de merge. Verificar
-   conformidade com os Princípios I–XIV.
-5. **Commits convencionais**: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`.
+1. **Especificação primeiro**: Toda feature começa com `spec.md` aprovada
+   (usar `/speckit.specify`).
+2. **Plano técnico**: `plan.md` com decisões de arquitetura antes de codar
+   (usar `/speckit.plan`). Consultar `design.pen` via Pencil MCP para
+   referência visual de telas novas.
+3. **Documentação de libs**: Antes de implementar, consultar documentação
+   atualizada via Context7 MCP para todas as libs utilizadas.
+4. **TDD**: Testes escritos e falhando antes da implementação
+   (ver Princípio V, usar `/tdd`).
+5. **Verificação de qualidade**: Após cada fase, executar `bun run lint`,
+   `bun run test:unit`, `bun run test:integration` e `bun run build`.
+   Nenhuma fase avança com erros ou warnings (ver Princípio XVI).
+6. **Code Review**: Revisão obrigatória antes de merge. Verificar
+   conformidade com os Princípios I–XVI (usar `/code-review`).
+7. **Commits convencionais**: `feat:`, `fix:`, `refactor:`, `test:`,
+   `docs:` (usar `/conventional-commits`).
+8. **Finalização**: Usar `/finish-task` para criar PR contra `main`.
+
+**Branch principal**: `main`. Todos os PRs DEVEM ser abertos contra
+`main`.
 
 Qualquer mudança no modelo financeiro (preço, horas, responsáveis) DEVE
 passar por revisão dupla antes de ser mesclada.
@@ -551,7 +706,7 @@ em caso de conflito.
   - MAJOR: remoção ou redefinição incompatível de princípio existente.
   - MINOR: novo princípio ou seção adicionada.
   - PATCH: esclarecimentos, correções de redação, refinamentos não semânticos.
-- Todo PR DEVE verificar conformidade com os Princípios I–XIV antes do merge.
+- Todo PR DEVE verificar conformidade com os Princípios I–XVI antes do merge.
 - Complexidade adicionada DEVE ser justificada explicitamente no PR.
 - A Seção de Constraints de Domínio é atualizada sempre que novas entidades
   forem introduzidas.
@@ -598,12 +753,24 @@ submeter para review ou merge:
 - [ ] XIII. KPI 5 (previsão) exclui capítulos `pago` e `pendente`?
 - [ ] XIV.  PDF viewer carregado via lazy loading? URL validada no upload?
 
+### Ferramentas e Verificação
+- [ ] XV.  Skills apropriadas foram usadas no workflow (speckit, tdd, etc.)?
+- [ ] XV.  Documentação de libs consultada via Context7 MCP antes de implementar?
+- [ ] XV.  Arquivo `design.pen` consultado para telas novas?
+- [ ] XVI. `bun run lint` passa sem erros ou warnings?
+- [ ] XVI. `bun run test:unit` e `bun run test:integration` passam?
+- [ ] XVI. `bun run build` compila sem erros?
+- [ ] XVI. Scripts do `package.json` usados (não comandos diretos)?
+
 ### Anti-Padrões
 - [ ] Nenhum `any` sem justificativa?
 - [ ] Nenhum segredo hardcoded?
 - [ ] Nenhum `useEffect` para derivar estado (usar `useMemo`)?
 - [ ] Nenhum valor visual hardcoded fora de design tokens?
 - [ ] Nenhum `use client` desnecessário (componente poderia ser Server Component)?
+- [ ] Nenhum elemento HTML cru quando existe componente em `ui/`?
+- [ ] Nenhuma página sem `<PageContainer>` e componentes de layout?
+- [ ] Dark mode funciona corretamente em todos os componentes novos?
 - [ ] Erros são tratados explicitamente (sem `catch (e) {}`)?
 ```
 
@@ -611,4 +778,4 @@ submeter para review ou merge:
 revisar por outros e cria responsabilidade pessoal com os padrões
 definidos nesta constituição.
 
-**Version**: 2.6.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-04-07
+**Version**: 2.7.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-04-09
