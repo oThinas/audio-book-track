@@ -40,6 +40,10 @@
 - **Repositories concretos prefixados com o adaptador** — ex: `DrizzleUserPreferenceRepository` implementa `UserPreferenceRepository`.
 - **shadcn/ui é a biblioteca de componentes padrão** — usar `bunx --bun shadcn@latest add <component>` antes de construir primitivos do zero. A flag `--bun` é obrigatória com Bun runtime.
 - **Componentes UI (`components/ui/`)** são shadcn/ui primitivos, puramente visuais: sem `useState` de negócio, sem `fetch`.
+- **NUNCA usar elementos HTML crus** (`<button>`, `<input>`, `<select>`, etc.) quando existe componente equivalente em `components/ui/`. Usar `<Button>`, `<Input>`, `<Select>`, etc.
+- **Páginas autenticadas DEVEM usar componentes de layout** — `<PageContainer>`, `<PageHeader>`, `<PageTitle>`, `<PageDescription>` de `components/layout/page-container.tsx`.
+- **Dark mode obrigatório** — todo componente DEVE funcionar em modo claro e escuro. Usar tokens semânticos do Tailwind (`bg-background`, `text-foreground`). NUNCA cores hardcoded que não se adaptam ao tema.
+- **Arquivo `design.pen`** — consultar via Pencil MCP antes de construir qualquer tela nova como referência visual.
 - **`use client` apenas quando necessário** — Server Components são o padrão.
 - **Data fetching** usa Server Components com `async/await`; `useEffect` para fetch é proibido.
 
@@ -67,6 +71,9 @@
 - `console.log` em produção — usar structured logger.
 - `useEffect` para derivar estado — usar `useMemo`.
 - Valores visuais hardcoded (cores, espaçamentos) fora de design tokens.
+- Elementos HTML crus (`<button>`, `<input>`, etc.) quando existe componente em `components/ui/`.
+- Página autenticada sem `<PageContainer>` e componentes de layout.
+- Ignorar dark mode — cores que não se adaptam ao tema.
 - Lógica de negócio em controllers.
 - SQL direto fora de repositories.
 - Swallow silencioso de erros: `catch (e) {}`.
@@ -137,21 +144,56 @@ O teste abre browser e simula usuário?           → E2E
 
 ---
 
+## Skills obrigatórias
+
+**Workflow:** `/speckit.specify`, `/speckit.plan`, `/speckit.tasks`, `/speckit.implement`, `/speckit.analyze`, `/conventional-commits`, `/finish-task`, `/tdd`, `/code-review`, `/simplify`, `/e2e`
+
+**Referência:** `/shadcn`, `/docs` (Context7 MCP), `/api-design`, `/backend-patterns`, `/postgres-patterns`, `/frontend-patterns`, `/frontend-design`, `/vercel-composition-patterns`, `/ui-ux-pro-max`
+
+- **Context7 MCP obrigatório** — antes de usar qualquer API de lib (Next.js, React, Drizzle, Zod, shadcn, Tailwind, Playwright, etc.), consultar docs via Context7 (`resolve-library-id` + `query-docs`).
+
+---
+
+## Verificação de qualidade (obrigatório por fase)
+
+- **SEMPRE usar scripts do `package.json`**, nunca comandos diretos:
+  - `bun run lint` (não `bunx biome check .`)
+  - `bun run test:unit` (não `bun vitest run __tests__/unit/`)
+  - `bun run test:integration` (não `bun vitest run __tests__/integration/`)
+  - `bun run test:e2e` (não `bunx playwright test`)
+  - `bun run build` (não `next build`)
+- Nenhuma fase é concluída com erros ou warnings de lint.
+- Nenhuma fase é concluída com testes falhando.
+- Build DEVE passar antes de criar PR.
+
+---
+
+## Branch principal
+
+- A branch principal é `main`.
+- Todos os PRs DEVEM ser abertos contra `main`.
+
+---
+
 ## Self-Review antes de qualquer entrega
 
 ```
-- [ ] I.   Operações no nível do capítulo?
-- [ ] II.  Cálculos financeiros determinísticos e auditáveis?
-- [ ] III. Transições de status validadas, com data e responsável?
-- [ ] IV.  Complexidade justificada por requisito concreto?
-- [ ] V.   Testes escritos ANTES da implementação, cobertura ≥ 80%?
-- [ ] VI.  Lógica de negócio no Service/Domain, não no Controller?
-- [ ] VII. Componentes UI puramente visuais?
-- [ ] VIII.Sem peso desnecessário no bundle do cliente?
-- [ ] IX.  Valores visuais via design tokens (sem hardcode)?
-- [ ] X.   Endpoints REST corretos (URL, método, status, envelope, Zod)?
-- [ ] XI.  Sem SELECT *? Foreign keys com índice? Monetário em numeric?
-- [ ] XII. Nenhum anti-padrão proibido presente?
+- [ ] I.    Operações no nível do capítulo?
+- [ ] II.   Cálculos financeiros determinísticos e auditáveis?
+- [ ] III.  Transições de status validadas, com data e responsável?
+- [ ] IV.   Complexidade justificada por requisito concreto?
+- [ ] V.    Testes escritos ANTES da implementação, cobertura ≥ 80%?
+- [ ] VI.   Lógica de negócio no Service/Domain, não no Controller?
+- [ ] VII.  Componentes UI puramente visuais? Usando components/ui/ (não HTML cru)?
+- [ ] VII.  PageContainer e layout components em páginas autenticadas?
+- [ ] VII.  Dark mode funciona em todos os componentes novos?
+- [ ] VIII. Sem peso desnecessário no bundle do cliente?
+- [ ] IX.   Valores visuais via design tokens (sem hardcode)?
+- [ ] X.    Endpoints REST corretos (URL, método, status, envelope, Zod)?
+- [ ] XI.   Sem SELECT *? Foreign keys com índice? Monetário em numeric?
+- [ ] XII.  Nenhum anti-padrão proibido presente?
+- [ ] XV.   Context7 MCP consultado? design.pen referenciado para telas?
+- [ ] XVI.  bun run lint, testes e build passando sem erros/warnings?
 ```
 
 ---
@@ -172,11 +214,14 @@ Sem entidades órfãs: capítulo sem livro ou livro sem estúdio são inválidos
 
 ## Workflow de desenvolvimento
 
-1. Feature começa com `spec.md` aprovada.
-2. `plan.md` com decisões de arquitetura antes de codar.
-3. TDD (ver acima).
-4. Code review verificando conformidade com os Princípios I–XII.
-5. Commits convencionais: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`.
+1. Feature começa com `spec.md` aprovada (`/speckit.specify`).
+2. `plan.md` com decisões de arquitetura antes de codar (`/speckit.plan`). Consultar `design.pen` via Pencil MCP.
+3. Consultar docs de libs via Context7 MCP antes de implementar.
+4. TDD (ver acima) — usar `/tdd`.
+5. Verificação de qualidade após cada fase: `bun run lint`, `bun run test:unit`, `bun run build`.
+6. Code review verificando conformidade com os Princípios I–XVI (`/code-review`).
+7. Commits convencionais: `feat:`, `fix:`, `refactor:`, `test:`, `docs:` (`/conventional-commits`).
+8. Finalização: `/finish-task` para criar PR contra `main`.
 
 Qualquer mudança no modelo financeiro (preço, horas, responsáveis) requer **revisão dupla** antes do merge.
 
