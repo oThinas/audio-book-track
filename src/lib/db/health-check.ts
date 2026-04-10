@@ -18,20 +18,20 @@ const TIMEOUT_SENTINEL = Symbol("timeout");
 
 function categorizeError(error: unknown): string {
   if (error === TIMEOUT_SENTINEL) {
-    return "Timeout \u2014 o banco n\u00e3o respondeu a tempo";
+    return "Timeout — database did not respond in time";
   }
 
   const code = error instanceof Error ? (error as NodeJS.ErrnoException).code : undefined;
 
   if (code === "ECONNREFUSED") {
-    return "Conex\u00e3o recusada \u2014 verifique se o PostgreSQL est\u00e1 rodando";
+    return "Connection refused — check if PostgreSQL is running";
   }
 
   if (code === "28P01") {
-    return "Autentica\u00e7\u00e3o falhou \u2014 verifique credenciais";
+    return "Authentication failed — check credentials";
   }
 
-  return "Erro de conex\u00e3o \u2014 verifique a configura\u00e7\u00e3o do banco";
+  return "Connection error — check database configuration";
 }
 
 function withTimeout(ping: PingFn, timeoutMs: number): Promise<void> {

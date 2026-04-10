@@ -92,7 +92,7 @@ describe("checkDatabaseHealth", () => {
 
       expect(result.healthy).toBe(false);
       if (!result.healthy) {
-        expect(result.error).toMatch(/recusada/i);
+        expect(result.error).toMatch(/connection refused/i);
       }
     });
 
@@ -123,7 +123,7 @@ describe("checkDatabaseHealth", () => {
 
       expect(result.healthy).toBe(false);
       if (!result.healthy) {
-        expect(result.error).toMatch(/autentica/i);
+        expect(result.error).toMatch(/authentication failed/i);
       }
     });
 
@@ -139,7 +139,7 @@ describe("checkDatabaseHealth", () => {
 
       expect(result.healthy).toBe(false);
       if (!result.healthy) {
-        expect(result.error).toMatch(/configura/i);
+        expect(result.error).toMatch(/connection error/i);
       }
     });
 
