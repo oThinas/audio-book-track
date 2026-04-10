@@ -61,15 +61,15 @@
 
 > **NOTE: Escrever estes testes PRIMEIRO, garantir que FALHAM antes da implementação**
 
-- [ ] T009 [US1] Criar teste unitário para `register()` — cenário de sucesso (log de confirmação emitido) em `__tests__/unit/db/instrumentation.test.ts`
-- [ ] T010 [US2] Criar teste unitário para `register()` — cenário de falha (process.exit(1) chamado, mensagem de erro emitida) em `__tests__/unit/db/instrumentation.test.ts`
+- [x] T009 [US1] Criar teste unitário para `register()` — cenário de sucesso (log de confirmação emitido) em `__tests__/unit/db/instrumentation.test.ts`
+- [x] T010 [US2] Criar teste unitário para `register()` — cenário de falha (process.exit(1) chamado, mensagem de erro emitida) em `__tests__/unit/db/instrumentation.test.ts`
 
 ### Implementation for User Story 1+2
 
-- [ ] T011 [US1] Criar `src/instrumentation.ts` com função `register()` que cria `ping` via `createDatabasePing(db)` e chama `checkDatabaseHealth(ping)`
-- [ ] T012 [US1] Implementar log de confirmação no caminho de sucesso: `[health-check] Database connection verified successfully`
-- [ ] T013 [US2] Implementar log de erro e `process.exit(1)` no caminho de falha: `[health-check] Database health check failed after N attempts: <mensagem>`
-- [ ] T014 [US1] Verificar que todos os testes T009-T010 passam
+- [x] T011 [US1] Criar `src/instrumentation.ts` com função `register()` que cria `ping` via `createDatabasePing(db)` e chama `checkDatabaseHealth(ping)`
+- [x] T012 [US1] Implementar log de confirmação no caminho de sucesso: `[health-check] Database connection verified successfully`
+- [x] T013 [US2] Implementar log de erro e `process.exit(1)` no caminho de falha: `[health-check] Database health check failed after N attempts: <mensagem>`
+- [x] T014 [US1] Verificar que todos os testes T009-T010 passam
 
 **Checkpoint**: Aplicação verifica banco na inicialização. Sucesso loga confirmação. Falha encerra o processo com exit code 1 e mensagem clara.
 
