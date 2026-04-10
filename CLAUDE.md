@@ -146,7 +146,7 @@ O teste abre browser e simula usuário?           → E2E
 
 ## Skills obrigatórias
 
-**Workflow:** `/speckit.specify`, `/speckit.plan`, `/speckit.tasks`, `/speckit.implement`, `/speckit.analyze`, `/conventional-commits`, `/finish-task`, `/tdd`, `/code-review`, `/simplify`, `/e2e`
+**Workflow:** `/speckit-specify`, `/speckit-plan`, `/speckit-tasks`, `/speckit-implement`, `/speckit-analyze`, `/conventional-commits`, `/finish-task`, `/tdd`, `/code-review`, `/simplify`, `/e2e`
 
 **Referência:** `/shadcn`, `/docs` (Context7 MCP), `/api-design`, `/backend-patterns`, `/postgres-patterns`, `/frontend-patterns`, `/frontend-design`, `/vercel-composition-patterns`, `/ui-ux-pro-max`
 
@@ -214,8 +214,8 @@ Sem entidades órfãs: capítulo sem livro ou livro sem estúdio são inválidos
 
 ## Workflow de desenvolvimento
 
-1. Feature começa com `spec.md` aprovada (`/speckit.specify`).
-2. `plan.md` com decisões de arquitetura antes de codar (`/speckit.plan`). Consultar `design.pen` via Pencil MCP.
+1. Feature começa com `spec.md` aprovada (`/speckit-specify`).
+2. `plan.md` com decisões de arquitetura antes de codar (`/speckit-plan`). Consultar `design.pen` via Pencil MCP.
 3. Consultar docs de libs via Context7 MCP antes de implementar.
 4. TDD (ver acima) — usar `/tdd`.
 5. Verificação de qualidade após cada fase: `bun run lint`, `bun run test:unit`, `bun run build`.
