@@ -14,7 +14,7 @@
 
 **Purpose**: Nenhum setup de projeto necessario — todos os arquivos ja existem. Esta fase valida que a infraestrutura de theming esta funcional.
 
-- [ ] T001 Verificar que `src/app/globals.css` contem todos os tokens semanticos necessarios (`:root`, `.dark`, `[data-primary-color]` para as 5 cores) — somente leitura, sem alteracao
+- [x] T001 Verificar que `src/app/globals.css` contem todos os tokens semanticos necessarios (`:root`, `.dark`, `[data-primary-color]` para as 5 cores) — somente leitura, sem alteracao
 
 **Checkpoint**: Tokens confirmados, implementacao pode iniciar.
 
@@ -28,9 +28,9 @@
 
 **CRITICAL**: Nenhuma user story pode iniciar ate esta fase estar completa.
 
-- [ ] T002 Substituir classes hardcoded no layout autenticado em `src/app/(authenticated)/layout-client.tsx`: `bg-slate-50` → `bg-background`
-- [ ] T003 [P] Substituir classes hardcoded na sidebar em `src/components/layout/sidebar.tsx`: `bg-slate-800` → `bg-sidebar`, `text-blue-500` → `text-sidebar-primary`, `text-white` → `text-sidebar-foreground`, `bg-blue-600` → `bg-sidebar-primary`, `text-white` (sobre acento) → `text-sidebar-primary-foreground`, `text-slate-400` → `text-sidebar-foreground/70`, `hover:bg-slate-700` → `hover:bg-sidebar-accent`, `hover:text-white` → `hover:text-sidebar-accent-foreground`, `text-red-400` → `text-destructive`, `hover:text-red-300` → `hover:text-destructive/80`
-- [ ] T004 [P] Substituir classes hardcoded no sidebar toggle em `src/components/layout/sidebar-toggle.tsx`: `text-slate-400` → `text-sidebar-foreground/70`, `hover:text-white` → `hover:text-sidebar-accent-foreground`
+- [x] T002 Substituir classes hardcoded no layout autenticado em `src/app/(authenticated)/layout-client.tsx`: `bg-slate-50` → `bg-background`
+- [x] T003 [P] Substituir classes hardcoded na sidebar em `src/components/layout/sidebar.tsx`: `bg-slate-800` → `bg-sidebar`, `text-blue-500` → `text-sidebar-primary`, `text-white` → `text-sidebar-foreground`, `bg-blue-600` → `bg-sidebar-primary`, `text-white` (sobre acento) → `text-sidebar-primary-foreground`, `text-slate-400` → `text-sidebar-foreground/70`, `hover:bg-slate-700` → `hover:bg-sidebar-accent`, `hover:text-white` → `hover:text-sidebar-accent-foreground`, `text-red-400` → `text-destructive`, `hover:text-red-300` → `hover:text-destructive/80`
+- [x] T004 [P] Substituir classes hardcoded no sidebar toggle em `src/components/layout/sidebar-toggle.tsx`: `text-slate-400` → `text-sidebar-foreground/70`, `hover:text-white` → `hover:text-sidebar-accent-foreground`
 
 **Checkpoint**: Sidebar e layout autenticado adaptam-se corretamente a dark mode e primary color. Verificar visualmente alternando tema e cor primaria.
 
