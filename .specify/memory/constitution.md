@@ -691,21 +691,23 @@ passar por revisão dupla antes de ser mesclada.
 
 **Idioma dos artefatos de especificação:**
 
-- Todos os artefatos gerados pelo workflow do speckit DEVEM ser escritos
-  em **português brasileiro (pt-BR)**. Isso inclui:
-  - `spec.md` — user stories, requisitos, critérios de sucesso, premissas.
-  - `plan.md` — resumo, contexto técnico, decisões de arquitetura.
-  - `tasks.md` — descrições de tarefas, checkpoints, notas.
-  - `checklists/` — itens de verificação e notas.
-  - `research.md`, `data-model.md`, `contracts/` — conteúdo descritivo.
-- Termos técnicos em inglês (nomes de ferramentas, padrões, APIs) são mantidos sem tradução.
+- Nos artefatos gerados pelo workflow do speckit (`spec.md`, `plan.md`,
+  `tasks.md`, checklists, `research.md`, `data-model.md`), títulos e
+  textos em negrito originados dos templates (`.specify/templates/`)
+  DEVEM permanecer em **inglês**.
+- O **conteúdo descritivo** que preenche os placeholders dos templates
+  (user stories, descrições de requisitos, cenários, premissas, notas)
+  DEVE ser escrito em **português brasileiro (pt-BR)**.
+- Termos técnicos em inglês (nomes de ferramentas, padrões, APIs,
+  tokens CSS, classes Tailwind) podem ser mantidos sem tradução.
 - Commits e nomes de branch permanecem em inglês (padrão conventional
   commits).
 
 **Rationale**: O projeto é desenvolvido por um time que opera em
-português. Artefatos de especificação são documentos de comunicação e
-alinhamento — devem ser escritos no idioma em que o time pensa e
-discute.
+português. O conteúdo descritivo dos artefatos é documentação de
+comunicação e alinhamento — deve ser escrito no idioma nativo do
+time. Títulos e labels estruturais dos templates permanecem em inglês
+para manter compatibilidade com as ferramentas do speckit.
 
 ## Governance
 
