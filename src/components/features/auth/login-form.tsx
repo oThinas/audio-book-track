@@ -71,7 +71,7 @@ export function LoginForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="username" className="text-[13px] font-medium text-slate-700">
+        <Label htmlFor="username" className="text-[13px] font-medium text-foreground">
           Usuário
         </Label>
         <Input
@@ -87,7 +87,7 @@ export function LoginForm() {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="password" className="text-[13px] font-medium text-slate-700">
+        <Label htmlFor="password" className="text-[13px] font-medium text-foreground">
           Senha
         </Label>
         <InputGroup className="h-11 rounded-lg">

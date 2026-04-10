@@ -46,8 +46,8 @@
 
 ### Implementation for User Story 1 + User Story 4
 
-- [ ] T005 [P] [US1] Substituir classes hardcoded na pagina de login em `src/app/(auth)/login/page.tsx`: `bg-slate-800` → `bg-sidebar`, `text-blue-500` → `text-primary`, `text-white` (titulo) → `text-sidebar-foreground`, `bg-slate-50` → `bg-background`, `bg-white` → `bg-card`, `text-slate-800` → `text-foreground`, `text-slate-500` → `text-muted-foreground`
-- [ ] T006 [P] [US1] Substituir classes hardcoded no formulario de login em `src/components/features/auth/login-form.tsx`: `text-slate-700` → `text-foreground` (2 ocorrencias)
+- [x] T005 [P] [US1] Substituir classes hardcoded na pagina de login em `src/app/(auth)/login/page.tsx`: `bg-slate-800` → `bg-sidebar`, `text-blue-500` → `text-primary`, `text-white` (titulo) → `text-sidebar-foreground`, `bg-slate-50` → `bg-background`, `bg-white` → `bg-card`, `text-slate-800` → `text-foreground`, `text-slate-500` → `text-muted-foreground`
+- [x] T006 [P] [US1] Substituir classes hardcoded no formulario de login em `src/components/features/auth/login-form.tsx`: `text-slate-700` → `text-foreground` (2 ocorrencias)
 
 **Checkpoint**: Pagina de login e area autenticada funcionam corretamente em ambos os temas. Verificar visualmente em modo claro e escuro, incluindo com dark mode do SO.
 
