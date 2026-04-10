@@ -63,10 +63,10 @@
 
 ### Implementation for User Story 2 + User Story 3
 
-- [ ] T007 [US2+US3] Substituir classes hardcoded na pagina de settings em `src/app/(authenticated)/settings/page.tsx`: `bg-slate-100` → `bg-border` (4 separadores), `text-slate-800` → `text-foreground` (4 labels), `text-slate-500` → `text-muted-foreground` (4 descricoes)
-- [ ] T008 [P] [US2+US3] Substituir TODAS as classes hardcoded no seletor de tema em `src/components/features/settings/theme-selector.tsx`: `border-slate-200` → `border-border`, `text-slate-500` → `text-muted-foreground`, `has-checked:bg-blue-600` → `has-checked:bg-primary`, `has-checked:text-white` → `has-checked:text-primary-foreground`
-- [ ] T009 [P] [US2+US3] Substituir TODAS as classes hardcoded no seletor de tamanho de fonte em `src/components/features/settings/font-size-selector.tsx`: `border-slate-200` → `border-border`, `text-slate-500` → `text-muted-foreground`, `has-checked:bg-blue-600` → `has-checked:bg-primary`, `has-checked:text-white` → `has-checked:text-primary-foreground`
-- [ ] T010 [P] [US3] Substituir classes hardcoded no seletor de pagina favorita em `src/components/features/settings/favorite-page-selector.tsx`: `border-slate-200` → `border-border`, `bg-slate-50` → `bg-background`, `text-slate-400` → `text-muted-foreground` (2 ocorrencias)
+- [x] T007 [US2+US3] Substituir classes hardcoded na pagina de settings em `src/app/(authenticated)/settings/page.tsx`: `bg-slate-100` → `bg-border` (4 separadores), `text-slate-800` → `text-foreground` (4 labels), `text-slate-500` → `text-muted-foreground` (4 descricoes)
+- [x] T008 [P] [US2+US3] Substituir TODAS as classes hardcoded no seletor de tema em `src/components/features/settings/theme-selector.tsx`: `border-slate-200` → `border-border`, `text-slate-500` → `text-muted-foreground`, `has-checked:bg-blue-600` → `has-checked:bg-primary`, `has-checked:text-white` → `has-checked:text-primary-foreground`
+- [x] T009 [P] [US2+US3] Substituir TODAS as classes hardcoded no seletor de tamanho de fonte em `src/components/features/settings/font-size-selector.tsx`: `border-slate-200` → `border-border`, `text-slate-500` → `text-muted-foreground`, `has-checked:bg-blue-600` → `has-checked:bg-primary`, `has-checked:text-white` → `has-checked:text-primary-foreground`
+- [x] T010 [P] [US3] Substituir classes hardcoded no seletor de pagina favorita em `src/components/features/settings/favorite-page-selector.tsx`: `border-slate-200` → `border-border`, `bg-slate-50` → `bg-background`, `text-slate-400` → `text-muted-foreground` (2 ocorrencias)
 
 **Checkpoint**: Pagina de settings renderiza corretamente em ambos os temas. Ao selecionar cada cor primaria, todos os elementos de destaque mudam corretamente. Todos os controles sao legiveis e funcionais.
 

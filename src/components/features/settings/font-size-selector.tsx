@@ -32,14 +32,14 @@ export function FontSizeSelector({ initialValue }: FontSizeSelectorProps) {
     <RadioGroup
       defaultValue={initialValue}
       onValueChange={handleChange}
-      className="flex w-fit rounded-lg border border-slate-200"
+      className="flex w-fit rounded-lg border border-border"
     >
       {FONT_SIZE_OPTIONS.map((option, i) => (
         <Label
           key={option.value}
           style={{ fontSize: option.px }}
           className={cn(
-            "flex cursor-pointer items-center justify-center px-4 py-2.5 text-slate-500 transition-colors has-checked:bg-blue-600 has-checked:text-white",
+            "flex cursor-pointer items-center justify-center px-4 py-2.5 text-muted-foreground transition-colors has-checked:bg-primary has-checked:text-primary-foreground",
             i === 0 && "rounded-l-lg",
             i === FONT_SIZE_OPTIONS.length - 1 && "rounded-r-lg",
           )}
