@@ -1,31 +1,24 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 2.6.0 → 2.7.0 (MINOR: added new sections and expanded
-existing principles with operational rules)
+Version change: 2.7.0 → 2.8.0 (MINOR: added mandatory language rule
+for specification artifacts)
 
-Modified principles:
-  - Princípio VII (Frontend): added mandatory use of `components/ui/`
-    primitives (never raw HTML like <button>), added mandatory use of
-    `components/layout/` for page structure (PageContainer, PageHeader,
-    PageTitle, PageDescription), added mandatory dark mode consideration,
-    added design.pen as UI reference.
-  - Princípio XII (Anti-Padrões): added raw HTML elements when ui/
-    equivalent exists, added ignoring dark mode in new components.
+Modified principles: N/A
 
 Added sections:
-  - XV. Ferramentas e Skills Obrigatórias
-  - XVI. Qualidade de Código e Verificação
-  - Development Workflow updated with lint/tsc verification gate
+  - Development Workflow: added "Idioma dos artefatos" rule requiring
+    all speckit artifacts (spec.md, plan.md, tasks.md, checklists,
+    research.md, data-model.md) to be written in Brazilian Portuguese.
 
 Removed sections: N/A
 
 Templates requiring updates:
   ✅ .specify/memory/constitution.md — this file (updated now)
-  ✅ CLAUDE.md — updated below
-  ✅ .specify/templates/tasks-template.md — checkpoint updated
+  ⚠ CLAUDE.md — add language rule to Development Workflow summary
 
-Follow-up TODOs: N/A
+Follow-up TODOs:
+  - Update CLAUDE.md Development Workflow section to mention pt-BR rule
 -->
 
 # AudioBook Track Constitution
@@ -696,6 +689,26 @@ Processo de desenvolvimento que DEVE ser seguido em todas as features:
 Qualquer mudança no modelo financeiro (preço, horas, responsáveis) DEVE
 passar por revisão dupla antes de ser mesclada.
 
+**Idioma dos artefatos de especificação:**
+
+- Nos artefatos gerados pelo workflow do speckit (`spec.md`, `plan.md`,
+  `tasks.md`, checklists, `research.md`, `data-model.md`), títulos e
+  textos em negrito originados dos templates (`.specify/templates/`)
+  DEVEM permanecer em **inglês**.
+- O **conteúdo descritivo** que preenche os placeholders dos templates
+  (user stories, descrições de requisitos, cenários, premissas, notas)
+  DEVE ser escrito em **português brasileiro (pt-BR)**.
+- Termos técnicos em inglês (nomes de ferramentas, padrões, APIs,
+  tokens CSS, classes Tailwind) podem ser mantidos sem tradução.
+- Commits e nomes de branch permanecem em inglês (padrão conventional
+  commits).
+
+**Rationale**: O projeto é desenvolvido por um time que opera em
+português. O conteúdo descritivo dos artefatos é documentação de
+comunicação e alinhamento — deve ser escrito no idioma nativo do
+time. Títulos e labels estruturais dos templates permanecem em inglês
+para manter compatibilidade com as ferramentas do speckit.
+
 ## Governance
 
 Esta constituição **substitui** todas as outras práticas de desenvolvimento
@@ -778,4 +791,4 @@ submeter para review ou merge:
 revisar por outros e cria responsabilidade pessoal com os padrões
 definidos nesta constituição.
 
-**Version**: 2.7.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-04-09
+**Version**: 2.8.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-04-10

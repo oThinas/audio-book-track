@@ -44,7 +44,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     <aside
       data-testid="sidebar"
       className={cn(
-        "flex h-full flex-col justify-between bg-slate-800 py-6 transition-all duration-100",
+        "flex h-full flex-col justify-between bg-sidebar py-6 transition-all duration-100",
         collapsed ? "w-16" : "w-60",
       )}
     >
@@ -58,9 +58,9 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           )}
         >
           <Link href="/dashboard" className="flex items-center gap-2.5">
-            <Headphones className="size-6 shrink-0 text-blue-500" />
+            <Headphones className="size-6 shrink-0 text-sidebar-primary" />
             {!collapsed && (
-              <span className="text-[15px] font-bold text-white whitespace-nowrap">
+              <span className="text-[15px] font-bold text-sidebar-foreground whitespace-nowrap">
                 AudioBook Track
               </span>
             )}
@@ -79,8 +79,8 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 className={cn(
                   "flex h-11 items-center gap-2.5 rounded-lg px-4 text-sm transition-colors",
                   active
-                    ? "bg-blue-600 font-semibold text-white"
-                    : "text-slate-400 hover:bg-slate-700 hover:text-white",
+                    ? "bg-sidebar-primary font-semibold text-sidebar-primary-foreground"
+                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                   collapsed && "justify-center px-0",
                 )}
                 title={collapsed ? item.label : undefined}
@@ -104,8 +104,8 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
               className={cn(
                 "flex h-11 items-center gap-2.5 rounded-lg px-4 text-sm transition-colors",
                 active
-                  ? "bg-blue-600 font-semibold text-white"
-                  : "text-slate-400 hover:bg-slate-700 hover:text-white",
+                  ? "bg-sidebar-primary font-semibold text-sidebar-primary-foreground"
+                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                 collapsed && "justify-center px-0",
               )}
               title={collapsed ? item.label : undefined}
@@ -119,7 +119,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           variant="ghost"
           onClick={handleLogout}
           className={cn(
-            "flex h-11 justify-start gap-2.5 rounded-lg px-4 text-sm text-red-400 hover:bg-slate-700 hover:text-red-300",
+            "flex h-11 justify-start gap-2.5 rounded-lg px-4 text-sm text-destructive hover:bg-sidebar-accent hover:text-destructive/80",
             collapsed && "justify-center px-0",
           )}
           title={collapsed ? "Sair" : undefined}

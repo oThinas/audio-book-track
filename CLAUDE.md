@@ -225,12 +225,12 @@ Sem entidades órfãs: capítulo sem livro ou livro sem estúdio são inválidos
 
 Qualquer mudança no modelo financeiro (preço, horas, responsáveis) requer **revisão dupla** antes do merge.
 
+**Idioma dos artefatos**: Nos artefatos do speckit, títulos e textos em negrito dos templates permanecem em **inglês**; o conteúdo descritivo (placeholders preenchidos) DEVE ser em **português brasileiro**. Termos técnicos em inglês podem ser mantidos. Commits e branches permanecem em inglês.
+
 
 ## Recent Changes
+- 009-dark-mode-theming: CSS/Tailwind refactoring — replacing hardcoded color classes with semantic tokens for dark mode and primary color support
 - 007-session-invalidation-tests: Added TypeScript 5.9 (Bun runtime) + Next.js 16.2, better-auth 1.5, Vitest, Playwrigh
 - 006-ui-polish-favorites: Added TypeScript 5.9, Bun runtime + Next.js 16.2, React 19.2, better-auth 1.5, @base-ui/react 1.3, next-themes 0.4, Tailwind CSS 4.2, Drizzle ORM 0.45, Zod 4.3, lucide-react 1.7
-- 005-shadcn-base-ui: Added TypeScript 5.9 (Bun runtime) + Next.js 16.2, React 19.2, shadcn v4.1.2, radix-ui v1.4.3 (a ser substituido por @base-ui-components/react)
 
 ## Active Technologies
-- TypeScript 5.9 (Bun runtime) + Next.js 16.2, better-auth 1.5, Vitest, Playwrigh (007-session-invalidation-tests)
-- PostgreSQL (Neon) via Drizzle ORM (apenas leitura nos testes existentes) (007-session-invalidation-tests)

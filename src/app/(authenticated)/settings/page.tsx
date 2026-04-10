@@ -35,53 +35,53 @@ export default async function SettingsPage() {
           <CardDescription>Personalize como o sistema aparece para você</CardDescription>
         </CardHeader>
 
-        <Separator className="bg-slate-100" />
+        <Separator className="bg-border" />
 
         <CardContent className="flex flex-col gap-5 p-0">
           {/* Theme */}
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-slate-800">Tema</span>
-              <span className="text-[13px] text-slate-500">
+              <span className="text-sm font-medium text-foreground">Tema</span>
+              <span className="text-[13px] text-muted-foreground">
                 Escolha entre tema claro, escuro ou do sistema
               </span>
             </div>
             <ThemeSelector initialValue={preferences.theme} />
           </div>
 
-          <Separator className="bg-slate-100" />
+          <Separator className="bg-border" />
 
           {/* Font size */}
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-slate-800">Tamanho da fonte</span>
-              <span className="text-[13px] text-slate-500">
+              <span className="text-sm font-medium text-foreground">Tamanho da fonte</span>
+              <span className="text-[13px] text-muted-foreground">
                 Ajuste o tamanho do texto na interface
               </span>
             </div>
             <FontSizeSelector initialValue={preferences.fontSize} />
           </div>
 
-          <Separator className="bg-slate-100" />
+          <Separator className="bg-border" />
 
           {/* Favorite page */}
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-slate-800">Página favorita</span>
-              <span className="text-[13px] text-slate-500">
+              <span className="text-sm font-medium text-foreground">Página favorita</span>
+              <span className="text-[13px] text-muted-foreground">
                 Escolha a página exibida ao fazer login
               </span>
             </div>
             <FavoritePageSelector initialValue={preferences.favoritePage} />
           </div>
 
-          <Separator className="bg-slate-100" />
+          <Separator className="bg-border" />
 
           {/* Primary color */}
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-slate-800">Cor primária</span>
-              <span className="text-[13px] text-slate-500">
+              <span className="text-sm font-medium text-foreground">Cor primária</span>
+              <span className="text-[13px] text-muted-foreground">
                 Define a cor de destaque em toda a interface
               </span>
             </div>

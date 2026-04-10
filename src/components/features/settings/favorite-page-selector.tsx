@@ -34,9 +34,9 @@ export function FavoritePageSelector({ initialValue }: FavoritePageSelectorProps
     <Select value={value} onValueChange={handleChange}>
       <SelectTrigger
         data-testid="favorite-page-select"
-        className="data-[size=default]:h-10 w-50 gap-2 rounded-lg border-slate-200 bg-slate-50 px-4 capitalize"
+        className="data-[size=default]:h-10 w-50 gap-2 rounded-lg border-border bg-background px-4 capitalize"
       >
-        <Icon className="size-4 text-slate-400" />
+        <Icon className="size-4 text-muted-foreground" />
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
@@ -45,7 +45,7 @@ export function FavoritePageSelector({ initialValue }: FavoritePageSelectorProps
             const PageIcon = PAGE_ICONS[page.slug];
             return (
               <SelectItem key={page.slug} value={page.slug}>
-                <PageIcon className="size-4 text-slate-400" />
+                <PageIcon className="size-4 text-muted-foreground" />
                 {page.label}
               </SelectItem>
             );
