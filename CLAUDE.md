@@ -225,6 +225,8 @@ Sem entidades órfãs: capítulo sem livro ou livro sem estúdio são inválidos
 
 Qualquer mudança no modelo financeiro (preço, horas, responsáveis) requer **revisão dupla** antes do merge.
 
+**Idioma dos artefatos**: Todos os artefatos do speckit (`spec.md`, `plan.md`, `tasks.md`, checklists) DEVEM ser escritos em **português brasileiro**. Termos técnicos em inglês podem ser mantidos. Commits e branches permanecem em inglês.
+
 
 ## Recent Changes
 - 007-session-invalidation-tests: Added TypeScript 5.9 (Bun runtime) + Next.js 16.2, better-auth 1.5, Vitest, Playwrigh
