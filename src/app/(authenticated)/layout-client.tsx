@@ -1,17 +1,17 @@
 "use client";
 
+import type { PropsWithChildren } from "react";
 import { Sidebar } from "@/components/layout/sidebar";
 import { useSidebar } from "@/lib/hooks/use-sidebar";
 
 interface AuthenticatedLayoutClientProps {
   readonly initialCollapsed: boolean;
-  readonly children: React.ReactNode;
 }
 
 export function AuthenticatedLayoutClient({
   initialCollapsed,
   children,
-}: AuthenticatedLayoutClientProps) {
+}: PropsWithChildren<AuthenticatedLayoutClientProps>) {
   const { collapsed, toggle } = useSidebar(initialCollapsed);
 
   return (
