@@ -12,7 +12,7 @@ import { proxy } from "@/proxy";
 const mockedGetSessionCookie = vi.mocked(getSessionCookie);
 
 function createRequest(path: string): NextRequest {
-  return new NextRequest(new URL(path, "http://localhost:3000"));
+  return new NextRequest(new URL(path, "http://localhost:1197"));
 }
 
 describe("Route Protection (US2)", () => {
