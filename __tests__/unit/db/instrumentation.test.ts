@@ -18,6 +18,7 @@ describe("instrumentation register()", () => {
 
   beforeEach(async () => {
     vi.resetModules();
+    process.env.NEXT_RUNTIME = "nodejs";
 
     const healthModule = await import("@/lib/db/health-check");
     checkDatabaseHealth = healthModule.checkDatabaseHealth as Mock;
@@ -28,6 +29,7 @@ describe("instrumentation register()", () => {
   });
 
   afterEach(() => {
+    delete process.env.NEXT_RUNTIME;
     vi.restoreAllMocks();
   });
 
