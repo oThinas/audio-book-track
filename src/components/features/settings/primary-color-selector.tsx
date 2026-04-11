@@ -26,6 +26,9 @@ export function PrimaryColorSelector({ initialValue }: PrimaryColorSelectorProps
   function handleSelect(color: PrimaryColor) {
     setSelected(color);
     document.documentElement.setAttribute("data-primary-color", color);
+    try {
+      localStorage.setItem("primary-color", color);
+    } catch {}
     save({ primaryColor: color });
   }
 
