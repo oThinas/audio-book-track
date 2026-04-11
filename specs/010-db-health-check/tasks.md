@@ -87,15 +87,15 @@
 
 > **NOTE: Escrever estes testes PRIMEIRO, garantir que FALHAM antes da implementação**
 
-- [ ] T015 [US3] Criar teste unitário para o route handler — cenário saudável (200, JSON correto) em `__tests__/unit/api/health.test.ts`
-- [ ] T016 [US3] Criar teste unitário para o route handler — cenário não saudável (503, JSON correto) em `__tests__/unit/api/health.test.ts`
-- [ ] T017 [US3] Criar teste unitário verificando que a resposta não contém informações sensíveis em `__tests__/unit/api/health.test.ts`
+- [x] T015 [US3] Criar teste unitário para o route handler — cenário saudável (200, JSON correto) em `__tests__/unit/api/health.test.ts`
+- [x] T016 [US3] Criar teste unitário para o route handler — cenário não saudável (503, JSON correto) em `__tests__/unit/api/health.test.ts`
+- [x] T017 [US3] Criar teste unitário verificando que a resposta não contém informações sensíveis em `__tests__/unit/api/health.test.ts`
 
 ### Implementation for User Story 3
 
-- [ ] T018 [US3] Criar `src/app/api/health/route.ts` com handler GET que cria `ping` via `createDatabasePing(db)`, chama `checkDatabaseConnection(ping)` e retorna JSON conforme contrato
-- [ ] T019 [US3] Adicionar header `Cache-Control: no-store` na resposta do endpoint
-- [ ] T020 [US3] Verificar que todos os testes T015-T017 passam
+- [x] T018 [US3] Criar `src/app/api/health/route.ts` com handler GET que cria `ping` via `createDatabasePing(db)`, chama `checkDatabaseConnection(ping)` e retorna JSON conforme contrato
+- [x] T019 [US3] Adicionar header `Cache-Control: no-store` na resposta do endpoint
+- [x] T020 [US3] Verificar que todos os testes T015-T017 passam
 
 **Checkpoint**: Endpoint `/api/health` funcional. Retorna 200/503 com JSON minimalista. Sem informações sensíveis.
 
