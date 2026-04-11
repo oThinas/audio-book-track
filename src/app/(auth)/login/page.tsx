@@ -12,7 +12,7 @@ export default function LoginPage() {
           <Headphones data-testid="login-branding-icon" className="size-14 text-primary" />
           <h1 className="text-[28px] font-bold text-sidebar-foreground">AudioBook Track</h1>
         </div>
-        <p className="w-[360px] text-center text-base text-sidebar-foreground/70">
+        <p className="w-90 text-center text-base text-sidebar-foreground/70">
           Gerencie sua produção de audiolivros
           <br />
           com precisão e clareza
@@ -23,7 +23,7 @@ export default function LoginPage() {
         data-testid="login-form-panel"
         className="flex w-full items-center justify-center bg-background px-4 md:w-1/2"
       >
-        <div className="w-full max-w-[400px] rounded-2xl bg-card p-10 shadow-[0_4px_24px_rgba(30,41,59,0.09)]">
+        <div className="w-full max-w-100 rounded-2xl bg-card p-10 shadow-[0_4px_24px_rgba(30,41,59,0.09)]">
           <div className="flex flex-col gap-5">
             <div>
               <h2 className="text-2xl font-bold text-foreground">Entrar</h2>
