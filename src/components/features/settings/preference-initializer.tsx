@@ -13,6 +13,9 @@ export function PreferenceInitializer({ fontSize, primaryColor }: PreferenceInit
     const fontSizeMap = { small: "14px", medium: "16px", large: "18px" } as const;
     document.documentElement.style.fontSize = fontSizeMap[fontSize];
     document.documentElement.setAttribute("data-primary-color", primaryColor);
+    try {
+      localStorage.setItem("primary-color", primaryColor);
+    } catch {}
   }, [fontSize, primaryColor]);
 
   return null;
