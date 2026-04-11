@@ -7,9 +7,8 @@ import {
   SelectGroup,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
-import { NAVIGABLE_PAGES } from "@/lib/domain/navigable-pages";
+import { NAVIGABLE_PAGES, NAVIGABLE_PAGES_MAP } from "@/lib/domain/navigable-pages";
 import type { FavoritePage } from "@/lib/domain/user-preference";
 import { useAutoSavePreference } from "@/lib/hooks/use-auto-save-preference";
 import { PAGE_ICONS } from "@/lib/ui/page-icons";
@@ -34,10 +33,12 @@ export function FavoritePageSelector({ initialValue }: FavoritePageSelectorProps
     <Select value={value} onValueChange={handleChange}>
       <SelectTrigger
         data-testid="favorite-page-select"
-        className="data-[size=default]:h-10 w-50 gap-2 rounded-lg border-border bg-background px-4 capitalize"
+        className="data-[size=default]:h-10 w-50 gap-2 rounded-lg border-border bg-background px-4"
       >
-        <Icon className="size-4 text-muted-foreground" />
-        <SelectValue />
+        <div className="flex items-center gap-2">
+          <Icon className="size-4 text-muted-foreground" />
+          <span>{NAVIGABLE_PAGES_MAP.get(value)?.label}</span>
+        </div>
       </SelectTrigger>
       <SelectContent>
         <SelectGroup>
