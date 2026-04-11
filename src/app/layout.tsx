@@ -31,6 +31,15 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${plusJakartaSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        {/* Keep color list in sync with PRIMARY_COLORS from lib/domain/user-preference.ts */}
+        <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: Inline blocking script to apply primary color before first paint, preventing FOUC. Same pattern as next-themes.
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var c=localStorage.getItem("primary-color");if(c&&["blue","orange","green","red","amber"].indexOf(c)!==-1){document.documentElement.setAttribute("data-primary-color",c)}}catch(e){}})()`,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           {children}

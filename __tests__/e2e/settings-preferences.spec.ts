@@ -56,6 +56,20 @@ test.describe("Settings Preferences (US4)", () => {
       const attr = await page.locator("html").getAttribute("data-primary-color");
       expect(attr).toBe("green");
     });
+
+    test("should persist primary color to login page after logout", async ({ page }) => {
+      await page.getByTestId("color-swatch-green").click();
+
+      const stored = await page.evaluate(() => localStorage.getItem("primary-color"));
+      expect(stored).toBe("green");
+
+      await page.goto("/login");
+
+      const attr = await page.locator("html").getAttribute("data-primary-color");
+      expect(attr).toBe("green");
+
+      await page.evaluate(() => localStorage.setItem("primary-color", "blue"));
+    });
   });
 
   test.describe("Favorite Page Selector", () => {
