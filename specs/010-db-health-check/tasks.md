@@ -107,9 +107,9 @@
 
 **Purpose**: Validação final e verificações de qualidade.
 
-- [ ] T021 Executar validação completa do quickstart.md (verificar os 3 cenários: startup ok, startup fail, endpoint)
-- [ ] T022 Verificar que nenhuma informação sensível é exposta em logs ou respostas de erro (connection string, credenciais)
-- [ ] T023 Verificação final: `bun run lint` + `bun run test:unit` + `bun run test:integration` + `bun run build` sem erros ou warnings
+- [x] T021 Executar validação completa do quickstart.md (verificar os 3 cenários: startup ok, startup fail, endpoint)
+- [x] T022 Verificar que nenhuma informação sensível é exposta em logs ou respostas de erro (connection string, credenciais)
+- [x] T023 Verificação final: `bun run lint` + `bun run test:unit` + `bun run test:integration` + `bun run build` sem erros ou warnings
 
 ---
 
