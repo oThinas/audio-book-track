@@ -30,7 +30,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/audio_book_track_test
       BETTER_AUTH_SECRET: ci-test-secret-do-not-use-in-production
-      BETTER_AUTH_URL: http://localhost:3000
+      BETTER_AUTH_URL: http://localhost:1197
     steps:
       - uses: actions/checkout@v4
 
@@ -105,7 +105,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/placeholder
       BETTER_AUTH_SECRET: ci-build-secret-do-not-use-in-production
-      BETTER_AUTH_URL: http://localhost:3000
+      BETTER_AUTH_URL: http://localhost:1197
     steps:
       - uses: actions/checkout@v4
 

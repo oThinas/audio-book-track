@@ -5,7 +5,7 @@ vi.mock("@/lib/env", () => ({
   env: {
     DATABASE_URL: "postgresql://mock",
     BETTER_AUTH_SECRET: "mock-secret",
-    BETTER_AUTH_URL: "http://localhost:3000",
+    BETTER_AUTH_URL: "http://localhost:1197",
     NODE_ENV: "test",
   },
 }));
