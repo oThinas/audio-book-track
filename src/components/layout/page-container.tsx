@@ -1,35 +1,20 @@
 import type { PropsWithChildren } from "react";
 import { cn } from "@/lib/utils";
+import type { ClassNameProps } from "@/types/class-name-props";
 
-interface PageContainerProps {
-  readonly className?: string;
-}
-
-function PageContainer({ children, className }: PropsWithChildren<PageContainerProps>) {
+function PageContainer({ children, className }: PropsWithChildren<ClassNameProps>) {
   return <main className={cn("flex-1 p-8", className)}>{children}</main>;
 }
 
-interface PageHeaderProps {
-  readonly className?: string;
-}
-
-function PageHeader({ children, className }: PropsWithChildren<PageHeaderProps>) {
+function PageHeader({ children, className }: PropsWithChildren<ClassNameProps>) {
   return <div className={cn("mb-6", className)}>{children}</div>;
 }
 
-interface PageTitleProps {
-  readonly className?: string;
-}
-
-function PageTitle({ children, className }: PropsWithChildren<PageTitleProps>) {
+function PageTitle({ children, className }: PropsWithChildren<ClassNameProps>) {
   return <h1 className={cn("text-3xl font-bold tracking-tight", className)}>{children}</h1>;
 }
 
-interface PageDescriptionProps {
-  readonly className?: string;
-}
-
-function PageDescription({ children, className }: PropsWithChildren<PageDescriptionProps>) {
+function PageDescription({ children, className }: PropsWithChildren<ClassNameProps>) {
   return <p className={cn("text-muted-foreground mt-1", className)}>{children}</p>;
 }
 
