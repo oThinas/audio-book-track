@@ -4,6 +4,7 @@
     "yoavbls.pretty-ts-errors",
     "highagency.pencildev",
     "bradlc.vscode-tailwindcss",
-    "vitest.explorer"
+    "vitest.explorer",
+    "ms-playwright.playwright"
   ]
 }
