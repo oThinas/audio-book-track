@@ -61,14 +61,14 @@
 
 ### Implementation for User Story 1
 
-- [ ] T007 [US1] Criar `__tests__/e2e/accessibility.spec.ts` com `test.describe` para pagina de login — chama `checkAccessibility(page, 'login', { authenticated: false })` que itera internamente sobre 2 temas
-- [ ] T008 [US1] Adicionar `test.describe` para pagina de dashboard em `__tests__/e2e/accessibility.spec.ts` — chama `checkAccessibility(page, 'dashboard')` que itera internamente sobre 10 combinacoes, com login automatico no `beforeEach`
-- [ ] T009 [US1] Adicionar `test.describe` para pagina de settings em `__tests__/e2e/accessibility.spec.ts` — chama `checkAccessibility(page, 'settings')` que itera internamente sobre 10 combinacoes, com login automatico no `beforeEach`
-- [ ] T010 [US1] Rodar `bun run test:e2e` e capturar relatorio inicial de violacoes existentes (anotar em comentario no PR)
-- [ ] T011 [US1] Corrigir violacoes de acessibilidade critical/serious encontradas na pagina de login (HTML, ARIA, contraste)
-- [ ] T012 [US1] Corrigir violacoes de acessibilidade critical/serious encontradas na pagina de dashboard (HTML, ARIA, contraste)
-- [ ] T013 [US1] Corrigir violacoes de acessibilidade critical/serious encontradas na pagina de settings (HTML, ARIA, contraste)
-- [ ] T014 [US1] Para violacoes que nao podem ser corrigidas (componentes de terceiros), desabilitar regra especifica com comentario justificando em `__tests__/e2e/accessibility.spec.ts`
+- [x] T007 [US1] Criar `__tests__/e2e/accessibility.spec.ts` com `test.describe` para pagina de login — chama `checkAccessibility(page, 'login', { authenticated: false })` que itera internamente sobre 2 temas
+- [x] T008 [US1] Adicionar `test.describe` para pagina de dashboard em `__tests__/e2e/accessibility.spec.ts` — chama `checkAccessibility(page, 'dashboard')` que itera internamente sobre 10 combinacoes, com login automatico no `beforeEach`
+- [x] T009 [US1] Adicionar `test.describe` para pagina de settings em `__tests__/e2e/accessibility.spec.ts` — chama `checkAccessibility(page, 'settings')` que itera internamente sobre 10 combinacoes, com login automatico no `beforeEach`
+- [x] T010 [US1] Rodar `bun run test:e2e` e capturar relatorio inicial de violacoes existentes (anotar em comentario no PR)
+- [x] T011 [US1] Corrigir violacoes de acessibilidade critical/serious encontradas na pagina de login (HTML, ARIA, contraste)
+- [x] T012 [US1] Corrigir violacoes de acessibilidade critical/serious encontradas na pagina de dashboard (HTML, ARIA, contraste)
+- [x] T013 [US1] Corrigir violacoes de acessibilidade critical/serious encontradas na pagina de settings (HTML, ARIA, contraste)
+- [x] T014 [US1] Para violacoes que nao podem ser corrigidas (componentes de terceiros), desabilitar regra especifica com comentario justificando em `__tests__/e2e/accessibility.spec.ts`
 
 **Checkpoint**: Test file dedicado roda 22 checks em todas as combinacoes. Zero violacoes critical/serious (corrigidas ou justificadas).
 

@@ -33,6 +33,7 @@ export function FavoritePageSelector({ initialValue }: FavoritePageSelectorProps
     <Select value={value} onValueChange={handleChange}>
       <SelectTrigger
         data-testid="favorite-page-select"
+        aria-label="Página favorita"
         className="data-[size=default]:h-10 w-50 gap-2 rounded-lg border-border bg-background px-4"
       >
         <div className="flex items-center gap-2">
