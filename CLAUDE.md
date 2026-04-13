@@ -229,10 +229,10 @@ Qualquer mudança no modelo financeiro (preço, horas, responsáveis) requer **r
 
 
 ## Recent Changes
+- 011-e2e-accessibility: Added TypeScript 5.9.3 (Bun runtime) + Next.js 16.2.1, Playwright 1.59.1, @axe-core/playwright (nova dependencia)
 - 010-db-health-check: Added TypeScript ^5.9.3 + Next.js 16.2.1, pg ^8.20.0 (node-postgres Pool), Drizzle ORM ^0.45.2, Zod ^4.3.6
 - 009-dark-mode-theming: CSS/Tailwind refactoring — replacing hardcoded color classes with semantic tokens for dark mode and primary color support
-- 007-session-invalidation-tests: Added TypeScript 5.9 (Bun runtime) + Next.js 16.2, better-auth 1.5, Vitest, Playwrigh
 
 ## Active Technologies
-- TypeScript ^5.9.3 + Next.js 16.2.1, pg ^8.20.0 (node-postgres Pool), Drizzle ORM ^0.45.2, Zod ^4.3.6 (010-db-health-check)
-- PostgreSQL (via pg.Pool existente) (010-db-health-check)
+- TypeScript 5.9.3 (Bun runtime) + Next.js 16.2.1, Playwright 1.59.1, @axe-core/playwright (nova dependencia) (011-e2e-accessibility)
+- PostgreSQL (apenas para seeding de testes E2E existente — sem alteracoes) (011-e2e-accessibility)
