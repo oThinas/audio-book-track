@@ -36,16 +36,16 @@
 
 ### Tests (RED)
 
-- [ ] T003 [P] Criar unit test para separacao de violacoes por impacto (blocking vs warnings) em `__tests__/unit/accessibility-helper.test.ts`
-- [ ] T004 [P] Criar unit test para formatacao de output legivel de violacoes em `__tests__/unit/accessibility-helper.test.ts`
+- [x] T003 [P] Criar unit test para separacao de violacoes por impacto (blocking vs warnings) em `__tests__/unit/accessibility-helper.test.ts`
+- [x] T004 [P] Criar unit test para formatacao de output legivel de violacoes em `__tests__/unit/accessibility-helper.test.ts`
 
 ### Implementation (GREEN)
 
-- [ ] T005 Implementar funcao `checkAccessibility` em `__tests__/e2e/helpers/accessibility.ts` — AxeBuilder com tags WCAG 2.1 AA, iteracao interna sobre combinacoes tema/cor (10 para autenticadas, 2 para publicas), separacao de impacto, formatacao de output, screenshot em caso de violacao. Funcoes auxiliares `setTheme` e `setPrimaryColor` sao internas (nao exportadas).
+- [x] T005 Implementar funcao `checkAccessibility` em `__tests__/e2e/helpers/accessibility.ts` — AxeBuilder com tags WCAG 2.1 AA, iteracao interna sobre combinacoes tema/cor (10 para autenticadas, 2 para publicas), separacao de impacto, formatacao de output, screenshot em caso de violacao. Funcoes auxiliares `setTheme` e `setPrimaryColor` sao internas (nao exportadas).
 
 ### Verify (IMPROVE)
 
-- [ ] T006 Rodar `bun run test:unit` — testes de T003/T004 devem passar
+- [x] T006 Rodar `bun run test:unit` — testes de T003/T004 devem passar
 
 **Checkpoint**: Utility function completa, testada e pronta para uso.
 
