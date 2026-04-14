@@ -84,9 +84,9 @@
 
 ### Implementation for User Story 2
 
-- [ ] T015 [US2] Verificar que o comportamento de bloqueio funciona corretamente — violacoes critical/serious causam falha do teste via assertion em `__tests__/e2e/helpers/accessibility.ts`
-- [ ] T016 [US2] Verificar que violacoes moderate/minor sao logadas como warnings no console sem causar falha — revisar output em `__tests__/e2e/helpers/accessibility.ts`
-- [ ] T017 [US2] Verificar que screenshots sao capturados corretamente em caso de violacao com nome descritivo `a11y-{pagina}-{tema}-{cor}-violation.png`
+- [x] T015 [US2] Verificar que o comportamento de bloqueio funciona corretamente — violacoes critical/serious causam falha do teste via assertion em `__tests__/e2e/helpers/accessibility.ts`
+- [x] T016 [US2] Verificar que violacoes moderate/minor sao logadas como warnings no console sem causar falha — revisar output em `__tests__/e2e/helpers/accessibility.ts`
+- [x] T017 [US2] Verificar que screenshots sao capturados corretamente em caso de violacao com nome descritivo `a11y-{pagina}-{tema}-{cor}-violation.png`
 
 **Checkpoint**: Comportamento de bloqueio verificado — critical/serious falham, moderate/minor nao.
 
@@ -100,9 +100,9 @@
 
 ### Implementation for User Story 3
 
-- [ ] T018 [US3] Verificar que `checkAccessibility` e exportada corretamente e pode ser importada de `__tests__/e2e/helpers/accessibility.ts` com import simples
-- [ ] T019 [US3] Verificar que `disableRules` funciona via parametro optional em `__tests__/e2e/helpers/accessibility.ts`
-- [ ] T020 [US3] Verificar que a utility roda automaticamente todas as 10 combinacoes tema/cor quando chamada em teste de pagina autenticada — validar em `__tests__/e2e/accessibility.spec.ts`
+- [x] T018 [US3] Verificar que `checkAccessibility` e exportada corretamente e pode ser importada de `__tests__/e2e/helpers/accessibility.ts` com import simples
+- [x] T019 [US3] Verificar que `disableRules` funciona via parametro optional em `__tests__/e2e/helpers/accessibility.ts`
+- [x] T020 [US3] Verificar que a utility roda automaticamente todas as 10 combinacoes tema/cor quando chamada em teste de pagina autenticada — validar em `__tests__/e2e/accessibility.spec.ts`
 
 **Checkpoint**: Utility reutilizavel com API limpa. Integracao em 2 linhas confirmada.
 
@@ -112,11 +112,11 @@
 
 **Purpose**: Verificacao final de qualidade e limpeza
 
-- [ ] T021 Rodar `bun run lint` — zero erros e warnings
-- [ ] T022 Rodar `bun run test:unit` — todos os testes passando
-- [ ] T023 Rodar `bun run test:e2e` — todos os 22 checks de acessibilidade passando em todas as combinacoes
-- [ ] T024 Rodar `bun run build` — build de producao sem erros
-- [ ] T025 Validar quickstart.md executando os comandos documentados em `specs/011-e2e-accessibility/quickstart.md`
+- [x] T021 Rodar `bun run lint` — zero erros e warnings
+- [x] T022 Rodar `bun run test:unit` — todos os testes passando
+- [x] T023 Rodar `bun run test:e2e` — todos os 22 checks de acessibilidade passando em todas as combinacoes
+- [x] T024 Rodar `bun run build` — build de producao sem erros
+- [x] T025 Validar quickstart.md executando os comandos documentados em `specs/011-e2e-accessibility/quickstart.md`
 
 ---
 
