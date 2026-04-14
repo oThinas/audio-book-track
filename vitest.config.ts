@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => {
     ...sharedConfig,
     test: {
       environment: "node",
-      globals: true,
+      globals: false,
       env,
       projects: [
         {
@@ -28,7 +28,7 @@ export default defineConfig(({ mode }) => {
           test: {
             name: "unit",
             environment: "node",
-            globals: true,
+            globals: false,
             env,
             include: ["__tests__/unit/**/*.test.ts", "__tests__/unit/**/*.test.tsx"],
             exclude: ["node_modules", ".next"],
@@ -40,7 +40,7 @@ export default defineConfig(({ mode }) => {
           test: {
             name: "integration",
             environment: "node",
-            globals: true,
+            globals: false,
             env,
             include: ["__tests__/integration/**/*.test.ts"],
             exclude: ["node_modules", ".next"],

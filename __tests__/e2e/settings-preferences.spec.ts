@@ -63,7 +63,9 @@ test.describe("Settings Preferences (US4)", () => {
       const stored = await page.evaluate(() => localStorage.getItem("primary-color"));
       expect(stored).toBe("green");
 
-      await page.goto("/login");
+      // Logout first — authenticated users are redirected away from /login by middleware
+      await page.goto("/api/auth/clear-session");
+      await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
 
       const attr = await page.locator("html").getAttribute("data-primary-color");
       expect(attr).toBe("green");
