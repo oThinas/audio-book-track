@@ -39,9 +39,9 @@
 
 ### Implementation for User Story 1
 
-- [ ] T004 [US1] Verificar que `__tests__/unit/user-preference-service.test.ts` não usa `vi.mock()` para módulos internos (apenas `InMemoryUserPreferenceRepository` injetado)
-- [ ] T005 [US1] Verificar que `__tests__/repositories/in-memory-user-preference-repository.ts` implementa a interface `UserPreferenceRepository` de `src/lib/domain/user-preference-repository.ts`
-- [ ] T006 [US1] Verificar que para cada interface de repository no domínio (`src/lib/domain/`) existe um fake correspondente em `__tests__/repositories/`
+- [x] T004 [US1] Verificar que `__tests__/unit/user-preference-service.test.ts` não usa `vi.mock()` para módulos internos (apenas `InMemoryUserPreferenceRepository` injetado)
+- [x] T005 [US1] Verificar que `__tests__/repositories/in-memory-user-preference-repository.ts` implementa a interface `UserPreferenceRepository` de `src/lib/domain/user-preference-repository.ts`
+- [x] T006 [US1] Verificar que para cada interface de repository no domínio (`src/lib/domain/`) existe um fake correspondente em `__tests__/repositories/`
 
 **Checkpoint**: US1 validada — padrão de fakes in-memory para services confirmado como existente e funcional.
 
@@ -57,19 +57,19 @@
 
 ### Implementation for User Story 2 — health API route
 
-- [ ] T007 [US2] Ler módulo de produção testado por `__tests__/unit/api/health.test.ts` (route handler em `src/app/api/health/route.ts`) e entender como importa `createDatabasePing` e `checkDatabaseConnection`
-- [ ] T008 [US2] Extrair lógica do route handler de health em função testável que aceita dependências como parâmetro (ex: `createHealthHandler(deps)`) em `src/app/api/health/route.ts`
-- [ ] T009 [US2] Garantir que o route handler original chama a função extraída com as dependências concretas — comportamento de produção inalterado
-- [ ] T010 [US2] Refatorar `__tests__/unit/api/health.test.ts`: remover `vi.mock("@/lib/db/ping")` e `vi.mock("@/lib/db/health-check")`, substituir por fakes injetados via `vi.fn()`
-- [ ] T011 [US2] Executar `bun run test:unit` e `bun run lint` — verificar que health tests passam e lint está limpo
+- [x] T007 [US2] Ler módulo de produção testado por `__tests__/unit/api/health.test.ts` (route handler em `src/app/api/health/route.ts`) e entender como importa `createDatabasePing` e `checkDatabaseConnection`
+- [x] T008 [US2] Extrair lógica do route handler de health em função testável que aceita dependências como parâmetro (ex: `createHealthHandler(deps)`) em `src/app/api/health/route.ts`
+- [x] T009 [US2] Garantir que o route handler original chama a função extraída com as dependências concretas — comportamento de produção inalterado
+- [x] T010 [US2] Refatorar `__tests__/unit/api/health.test.ts`: remover `vi.mock("@/lib/db/ping")` e `vi.mock("@/lib/db/health-check")`, substituir por fakes injetados via `vi.fn()`
+- [x] T011 [US2] Executar `bun run test:unit` e `bun run lint` — verificar que health tests passam e lint está limpo
 
 ### Implementation for User Story 2 — instrumentation
 
-- [ ] T012 [US2] Ler `__tests__/unit/db/instrumentation.test.ts` para identificar o módulo de produção importado (provável `src/lib/db/instrumentation.ts` ou `src/instrumentation.ts`), confirmar path real e entender como importa `createDatabasePing` e `checkDatabaseHealth`
-- [ ] T013 [US2] Extrair lógica do módulo de instrumentação em função testável que aceita dependências como parâmetro
-- [ ] T014 [US2] Garantir que o módulo de instrumentação original chama a função extraída com as dependências concretas — comportamento de produção inalterado
-- [ ] T015 [US2] Refatorar `__tests__/unit/db/instrumentation.test.ts`: remover `vi.mock("@/lib/db/ping")` e `vi.mock("@/lib/db/health-check")`, substituir por fakes injetados via `vi.fn()`
-- [ ] T016 [US2] Executar `bun run test:unit` e `bun run lint` — verificar que instrumentation tests passam e lint está limpo
+- [x] T012 [US2] Ler `__tests__/unit/db/instrumentation.test.ts` para identificar o módulo de produção importado (provável `src/lib/db/instrumentation.ts` ou `src/instrumentation.ts`), confirmar path real e entender como importa `createDatabasePing` e `checkDatabaseHealth`
+- [x] T013 [US2] Extrair lógica do módulo de instrumentação em função testável que aceita dependências como parâmetro
+- [x] T014 [US2] Garantir que o módulo de instrumentação original chama a função extraída com as dependências concretas — comportamento de produção inalterado
+- [x] T015 [US2] Refatorar `__tests__/unit/db/instrumentation.test.ts`: remover `vi.mock("@/lib/db/ping")` e `vi.mock("@/lib/db/health-check")`, substituir por fakes injetados via `vi.fn()`
+- [x] T016 [US2] Executar `bun run test:unit` e `bun run lint` — verificar que instrumentation tests passam e lint está limpo
 
 **Checkpoint**: US2 completa — ambos os arquivos de teste refatorados sem `vi.mock()` para módulos internos.
 
@@ -85,10 +85,10 @@
 
 ### Implementation for User Story 3
 
-- [ ] T017 [US3] Verificar que `__tests__/unit/setup.ts` contém apenas mocks da allowlist (`@/lib/db`, `@/lib/env`)
-- [ ] T018 [US3] Executar verificação automatizada (grep) em `__tests__/unit/` para confirmar que todo `vi.mock()` restante referencia apenas módulos da allowlist: `next/headers`, `next/navigation`, `@axe-core/playwright`, `better-auth/cookies`, `@/lib/env`, `@/lib/db`
-- [ ] T019 [US3] Adicionar seção de convenção de test doubles no `CLAUDE.md`, na área de classificação de testes, documentando: (a) quando usar fakes manuais, (b) quando `vi.mock()` é aceitável (allowlist), (c) `vi.fn()` é livre para fakes tipados, (d) referência aos modelos existentes no codebase, (e) atualizar árvore de decisão rápida para incluir fakes injetados como critério de unit test: "O teste usa vi.mock(), fakes injetados ou testa função pura? → Unit"
-- [ ] T020 [US3] Executar `bun run lint` — verificar que CLAUDE.md não introduz erros
+- [x] T017 [US3] Verificar que `__tests__/unit/setup.ts` contém apenas mocks da allowlist (`@/lib/db`, `@/lib/env`)
+- [x] T018 [US3] Executar verificação automatizada (grep) em `__tests__/unit/` para confirmar que todo `vi.mock()` restante referencia apenas módulos da allowlist: `next/headers`, `next/navigation`, `@axe-core/playwright`, `better-auth/cookies`, `@/lib/env`, `@/lib/db`
+- [x] T019 [US3] Adicionar seção de convenção de test doubles no `CLAUDE.md`, na área de classificação de testes, documentando: (a) quando usar fakes manuais, (b) quando `vi.mock()` é aceitável (allowlist), (c) `vi.fn()` é livre para fakes tipados, (d) referência aos modelos existentes no codebase, (e) atualizar árvore de decisão rápida para incluir fakes injetados como critério de unit test: "O teste usa vi.mock(), fakes injetados ou testa função pura? → Unit"
+- [x] T020 [US3] Executar `bun run lint` — verificar que CLAUDE.md não introduz erros
 
 **Checkpoint**: US3 completa — allowlist verificada e convenção documentada.
 
@@ -100,11 +100,11 @@
 
 **Purpose**: Garantir integridade completa do codebase após todas as mudanças.
 
-- [ ] T021 Executar `bun run test:unit` — todos os testes unitários passam
-- [ ] T022 Executar `bun run test:integration` — testes de integração não foram afetados
-- [ ] T023 Executar `bun run build` — build de produção compila sem erros
-- [ ] T024 Confirmar com grep que nenhum `vi.mock()` em `__tests__/unit/` referencia módulo interno fora da allowlist
-- [ ] T025 Comparar cobertura de testes com baseline (T001) — cobertura >= nível pré-refatoração
+- [x] T021 Executar `bun run test:unit` — todos os testes unitários passam
+- [x] T022 Executar `bun run test:integration` — testes de integração não foram afetados
+- [x] T023 Executar `bun run build` — build de produção compila sem erros
+- [x] T024 Confirmar com grep que nenhum `vi.mock()` em `__tests__/unit/` referencia módulo interno fora da allowlist
+- [x] T025 Comparar cobertura de testes com baseline (T001) — cobertura >= nível pré-refatoração
 
 ---
 
