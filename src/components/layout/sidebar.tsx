@@ -119,7 +119,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           variant="ghost"
           onClick={handleLogout}
           className={cn(
-            "flex h-11 justify-start gap-2.5 rounded-lg px-4 text-sm text-destructive hover:bg-sidebar-accent hover:text-destructive/80",
+            "flex h-11 justify-start gap-2.5 rounded-lg px-4 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground",
             collapsed && "justify-center px-0",
           )}
           title={collapsed ? "Sair" : undefined}
