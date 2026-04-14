@@ -1,24 +1,27 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 2.7.0 → 2.8.0 (MINOR: added mandatory language rule
-for specification artifacts)
+Version change: 2.8.0 → 2.9.0 (MINOR: added test doubles convention
+to Principle V — Test Classification)
 
-Modified principles: N/A
+Modified principles:
+  - V. Desenvolvimento Orientado a Testes:
+    - Updated unit test "Regra de ouro" to include fakes injetados
+    - Updated "Árvore de decisão rápida" to include fakes injetados
+    - Added "Convenção de Test Doubles" subsection
 
 Added sections:
-  - Development Workflow: added "Idioma dos artefatos" rule requiring
-    all speckit artifacts (spec.md, plan.md, tasks.md, checklists,
-    research.md, data-model.md) to be written in Brazilian Portuguese.
+  - Principle V: "Convenção de Test Doubles" — documents when to use
+    manual fakes (DI), when vi.mock() is acceptable (allowlist), and
+    that vi.fn() is free for typed fakes.
 
 Removed sections: N/A
 
 Templates requiring updates:
   ✅ .specify/memory/constitution.md — this file (updated now)
-  ⚠ CLAUDE.md — add language rule to Development Workflow summary
+  ✅ CLAUDE.md — already updated with matching convention section
 
-Follow-up TODOs:
-  - Update CLAUDE.md Development Workflow section to mention pt-BR rule
+Follow-up TODOs: N/A
 -->
 
 # AudioBook Track Constitution
@@ -138,7 +141,8 @@ externas.
 | Velocidade | < 50ms por teste |
 | O que testar | Schemas Zod, funções puras, validações, state machines, config assertions, middleware com deps mockadas |
 
-Regra de ouro: se o teste usa `vi.mock()` para isolar a unidade → unit test.
+Regra de ouro: se o teste usa `vi.mock()`, fakes injetados via construtor
+ou parâmetro, ou testa função pura → unit test.
 
 **Integration (`__tests__/integration/`)**
 
@@ -173,10 +177,41 @@ E2E test.
 **Árvore de decisão rápida:**
 
 ```
-O teste usa vi.mock() ou testa função pura?     → Unit
-O teste conecta no banco ou integra módulos?     → Integration
-O teste abre browser e simula usuário?           → E2E
+O teste usa vi.mock(), fakes injetados ou testa função pura?  → Unit
+O teste conecta no banco ou integra módulos?                  → Integration
+O teste abre browser e simula usuário?                        → E2E
 ```
+
+#### Convenção de Test Doubles
+
+Para módulos internos do projeto (`@/lib/`, `@/app/`, etc.), `vi.mock()`
+é proibido. Em vez disso, usar injeção de dependência:
+
+1. **Repository fake (classe)**: Quando um service depende de uma interface
+   de repository via construtor. Modelo:
+   `__tests__/repositories/in-memory-user-preference-repository.ts`.
+2. **Fake de função (`vi.fn()`)**: Quando um módulo aceita dependência como
+   parâmetro. Modelos: `health-check.test.ts`, `health.test.ts`,
+   `instrumentation.test.ts`.
+
+**Allowlist de `vi.mock()` permitidos:**
+
+`vi.mock()` é aceitável apenas para módulos não injetáveis por design:
+
+| Módulo | Categoria |
+|--------|-----------|
+| `next/headers` | Framework externo (Next.js) |
+| `next/navigation` | Framework externo (Next.js) |
+| `@axe-core/playwright` | Biblioteca externa |
+| `better-auth/cookies` | Biblioteca externa |
+| `@/lib/env` | Infraestrutura de ambiente (singleton) |
+| `@/lib/db` | Infraestrutura de I/O (singleton PostgreSQL) |
+
+Mocks globais de `@/lib/db` e `@/lib/env` ficam em
+`__tests__/unit/setup.ts`.
+
+`vi.fn()` é livre para criar fakes tipados — não exige classes
+hand-written para funções simples.
 
 **Rationale**: A confiabilidade dos cálculos financeiros depende de testes
 abrangentes. Defeitos em pagamentos impactam diretamente pessoas reais.
@@ -791,4 +826,4 @@ submeter para review ou merge:
 revisar por outros e cria responsabilidade pessoal com os padrões
 definidos nesta constituição.
 
-**Version**: 2.8.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-04-10
+**Version**: 2.9.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-04-14

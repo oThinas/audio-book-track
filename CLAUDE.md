@@ -137,9 +137,45 @@ Testa **fluxos completos do usuário** pela interface, sem mocks.
 ### Decisão rápida
 
 ```
-O teste usa vi.mock() ou testa função pura?     → Unit
-O teste conecta no banco ou integra módulos?     → Integration
-O teste abre browser e simula usuário?           → E2E
+O teste usa vi.mock(), fakes injetados ou testa função pura?  → Unit
+O teste conecta no banco ou integra módulos?                  → Integration
+O teste abre browser e simula usuário?                        → E2E
+```
+
+### Convenção de Test Doubles
+
+#### Quando usar fakes manuais (injeção de dependência)
+
+Para módulos internos do projeto (`@/lib/`, `@/app/`, etc.), **não usar `vi.mock()`**. Em vez disso:
+
+1. **Repository fake (classe)**: Quando um service depende de uma interface de repository via construtor.
+   - Modelo: `__tests__/repositories/in-memory-user-preference-repository.ts` → `UserPreferenceService`
+2. **Fake de função (`vi.fn()`)**: Quando um módulo aceita dependência como parâmetro de função.
+   - Modelo: `__tests__/unit/db/health-check.test.ts` → `checkDatabaseHealth(ping)`
+   - Modelo: `__tests__/unit/api/health.test.ts` → `handleHealthCheck(deps)`
+   - Modelo: `__tests__/unit/db/instrumentation.test.ts` → `runStartupHealthCheck(deps)`
+
+#### Quando `vi.mock()` é aceitável (allowlist)
+
+`vi.mock()` é permitido **apenas** para módulos que não são injetáveis por design:
+
+| Módulo | Categoria |
+|--------|-----------|
+| `next/headers` | Framework externo (Next.js) |
+| `next/navigation` | Framework externo (Next.js) |
+| `@axe-core/playwright` | Biblioteca externa |
+| `better-auth/cookies` | Biblioteca externa |
+| `@/lib/env` | Infraestrutura de ambiente (singleton) |
+| `@/lib/db` | Infraestrutura de I/O (singleton PostgreSQL) |
+
+Os mocks globais de `@/lib/db` e `@/lib/env` ficam em `__tests__/unit/setup.ts`.
+
+#### `vi.fn()` é livre
+
+`vi.fn()` pode ser usado livremente para criar fakes tipados — não exige classes hand-written para funções simples. Exemplo:
+
+```
+const checkConnection = vi.fn().mockResolvedValue({ healthy: true });
 ```
 
 ---
@@ -229,10 +265,11 @@ Qualquer mudança no modelo financeiro (preço, horas, responsáveis) requer **r
 
 
 ## Recent Changes
+- 012-test-doubles-refactor: Added TypeScript 5.9.3 (Bun runtime) + Vitest (test runner), Next.js 16.2.1 (App Router)
 - 011-e2e-accessibility: Added TypeScript 5.9.3 (Bun runtime) + Next.js 16.2.1, Playwright 1.59.1, @axe-core/playwright (nova dependencia)
 - 010-db-health-check: Added TypeScript ^5.9.3 + Next.js 16.2.1, pg ^8.20.0 (node-postgres Pool), Drizzle ORM ^0.45.2, Zod ^4.3.6
 - 009-dark-mode-theming: CSS/Tailwind refactoring — replacing hardcoded color classes with semantic tokens for dark mode and primary color support
 
 ## Active Technologies
-- TypeScript 5.9.3 (Bun runtime) + Next.js 16.2.1, Playwright 1.59.1, @axe-core/playwright (nova dependencia) (011-e2e-accessibility)
-- PostgreSQL (apenas para seeding de testes E2E existente — sem alteracoes) (011-e2e-accessibility)
+- TypeScript 5.9.3 (Bun runtime) + Vitest (test runner), Next.js 16.2.1 (App Router) (012-test-doubles-refactor)
+- PostgreSQL (não afetado — apenas testes de unidade no escopo) (012-test-doubles-refactor)
