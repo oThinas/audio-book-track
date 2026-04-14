@@ -229,10 +229,10 @@ Qualquer mudança no modelo financeiro (preço, horas, responsáveis) requer **r
 
 
 ## Recent Changes
+- 012-test-doubles-refactor: Added TypeScript 5.9.3 (Bun runtime) + Vitest (test runner), Next.js 16.2.1 (App Router)
+- 012-test-doubles-refactor: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 - 010-db-health-check: Added TypeScript ^5.9.3 + Next.js 16.2.1, pg ^8.20.0 (node-postgres Pool), Drizzle ORM ^0.45.2, Zod ^4.3.6
-- 009-dark-mode-theming: CSS/Tailwind refactoring — replacing hardcoded color classes with semantic tokens for dark mode and primary color support
-- 007-session-invalidation-tests: Added TypeScript 5.9 (Bun runtime) + Next.js 16.2, better-auth 1.5, Vitest, Playwrigh
 
 ## Active Technologies
-- TypeScript ^5.9.3 + Next.js 16.2.1, pg ^8.20.0 (node-postgres Pool), Drizzle ORM ^0.45.2, Zod ^4.3.6 (010-db-health-check)
-- PostgreSQL (via pg.Pool existente) (010-db-health-check)
+- TypeScript 5.9.3 (Bun runtime) + Vitest (test runner), Next.js 16.2.1 (App Router) (012-test-doubles-refactor)
+- PostgreSQL (não afetado — apenas testes de unidade no escopo) (012-test-doubles-refactor)
