@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { DrizzleUserPreferenceRepository } from "@/lib/repositories/user-preference-repository";
+import { DrizzleUserPreferenceRepository } from "@/lib/repositories/drizzle/drizzle-user-preference-repository";
 import { UserPreferenceService } from "@/lib/services/user-preference-service";
 
 export function createUserPreferenceService(): UserPreferenceService {

@@ -1,7 +1,7 @@
 import { getTestDb } from "@tests/helpers/db";
 import { createTestUser } from "@tests/helpers/factories";
 import { describe, expect, it } from "vitest";
-import { DrizzleUserPreferenceRepository } from "@/lib/repositories/user-preference-repository";
+import { DrizzleUserPreferenceRepository } from "@/lib/repositories/drizzle/drizzle-user-preference-repository";
 
 describe("UserPreferenceRepository", () => {
   function createRepo() {
