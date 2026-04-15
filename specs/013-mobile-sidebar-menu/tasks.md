@@ -69,10 +69,10 @@
 
 ### Implementation for User Story 2 + User Story 4
 
-- [ ] T008 [US2] Create MobileSidebar component in src/components/layout/mobile-sidebar.tsx (fullscreen overlay below header, slide-in from left via CSS transform, imports NAV_ITEMS and BOTTOM_ITEMS from navigation.ts, renders all nav items + settings + logout, focus trap on open, md:hidden visibility; add inline comment referencing plan.md D5 justifying div usage over shadcn Sheet per constitution Principle VII)
-- [ ] T009 [US2] Integrate MobileSidebar into AuthenticatedLayoutClient in src/app/(authenticated)/layout-client.tsx (pass isOpen and onClose from useMobileMenu, wire onNavigate to close menu)
-- [ ] T010 [US4] Add close-on-navigate effect in src/app/(authenticated)/layout-client.tsx (useEffect watching pathname from usePathname — when pathname changes while menu is open, call close; ensures menu auto-closes after navigation)
-- [ ] T011 [US4] Add focus return logic in src/components/layout/mobile-sidebar.tsx (when panel closes, return focus to the Menu button ref in MobileHeader)
+- [x] T008 [US2] Create MobileSidebar component in src/components/layout/mobile-sidebar.tsx (fullscreen overlay below header, slide-in from left via CSS transform, imports NAV_ITEMS and BOTTOM_ITEMS from navigation.ts, renders all nav items + settings + logout, focus trap on open, md:hidden visibility; add inline comment referencing plan.md D5 justifying div usage over shadcn Sheet per constitution Principle VII)
+- [x] T009 [US2] Integrate MobileSidebar into AuthenticatedLayoutClient in src/app/(authenticated)/layout-client.tsx (pass isOpen and onClose from useMobileMenu, wire onNavigate to close menu)
+- [x] T010 [US4] Add close-on-navigate effect in src/app/(authenticated)/layout-client.tsx (useEffect watching pathname from usePathname — when pathname changes while menu is open, call close; ensures menu auto-closes after navigation)
+- [x] T011 [US4] Add focus return logic in src/components/layout/mobile-sidebar.tsx (when panel closes, return focus to the Menu button ref in MobileHeader)
 
 **Checkpoint**: Menu mobile abre com slide-in, exibe todos os itens, fecha via botão/Escape/navegação. Focus trap funciona. Desktop inalterado.
 
