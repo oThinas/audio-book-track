@@ -39,7 +39,7 @@ export default async function SettingsPage() {
 
         <CardContent className="flex flex-col gap-5 p-0">
           {/* Theme */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col justify-between gap-2 lg:items-center lg:gap-0 lg:flex-row">
             <div className="flex flex-col gap-1">
               <span className="text-sm font-medium text-foreground">Tema</span>
               <span className="text-[13px] text-muted-foreground">
@@ -52,7 +52,7 @@ export default async function SettingsPage() {
           <Separator className="bg-border" />
 
           {/* Font size */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col justify-between gap-2 md:flex-row md:items-center md:gap-0">
             <div className="flex flex-col gap-1">
               <span className="text-sm font-medium text-foreground">Tamanho da fonte</span>
               <span className="text-[13px] text-muted-foreground">
@@ -65,7 +65,7 @@ export default async function SettingsPage() {
           <Separator className="bg-border" />
 
           {/* Favorite page */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col justify-between gap-2 md:flex-row md:items-center md:gap-0">
             <div className="flex flex-col gap-1">
               <span className="text-sm font-medium text-foreground">Página favorita</span>
               <span className="text-[13px] text-muted-foreground">
@@ -78,7 +78,7 @@ export default async function SettingsPage() {
           <Separator className="bg-border" />
 
           {/* Primary color */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col justify-between gap-2 md:flex-row md:items-center md:gap-0">
             <div className="flex flex-col gap-1">
               <span className="text-sm font-medium text-foreground">Cor primária</span>
               <span className="text-[13px] text-muted-foreground">
