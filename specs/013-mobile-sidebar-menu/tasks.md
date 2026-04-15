@@ -32,8 +32,8 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T003 Write unit tests for useMobileMenu hook in __tests__/unit/hooks/use-mobile-menu.test.ts (RED — test isOpen state, toggle, close, Escape key handler; tests MUST fail before implementation)
-- [ ] T004 Implement useMobileMenu hook in src/lib/hooks/use-mobile-menu.ts (GREEN — isOpen state, toggle callback, close callback, Escape keydown handler; tests from T003 MUST pass)
+- [x] T003 Write unit tests for useMobileMenu hook in __tests__/unit/hooks/use-mobile-menu.test.ts (RED — test isOpen state, toggle, close, Escape key handler; tests MUST fail before implementation)
+- [x] T004 Implement useMobileMenu hook in src/lib/hooks/use-mobile-menu.ts (GREEN — isOpen state, toggle callback, close callback, Escape keydown handler; tests from T003 MUST pass)
 
 **Checkpoint**: Hook testado e funcional. User stories podem começar.
 
