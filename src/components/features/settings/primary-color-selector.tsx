@@ -33,7 +33,7 @@ export function PrimaryColorSelector({ initialValue }: PrimaryColorSelectorProps
   }
 
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2 ml-auto md:ml-0">
       {PRIMARY_COLORS.map((color) => (
         // Botão nativo em vez de <Button> do shadcn: o componente Button aplica
         // variantes de hover (ghost torna branco) e estilos de foco que conflitam

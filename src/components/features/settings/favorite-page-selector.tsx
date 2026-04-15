@@ -34,7 +34,7 @@ export function FavoritePageSelector({ initialValue }: FavoritePageSelectorProps
       <SelectTrigger
         data-testid="favorite-page-select"
         aria-label="Página favorita"
-        className="data-[size=default]:h-10 w-50 gap-2 rounded-lg border-border bg-background px-4"
+        className="data-[size=default]:h-10 w-50 gap-2 rounded-lg border-border bg-background px-4 ml-auto md:ml-0"
       >
         <div className="flex items-center gap-2">
           <Icon className="size-4 text-muted-foreground" />

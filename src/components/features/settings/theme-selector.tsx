@@ -32,7 +32,7 @@ export function ThemeSelector({ initialValue }: ThemeSelectorProps) {
     <RadioGroup
       defaultValue={initialValue}
       onValueChange={handleChange}
-      className="flex w-fit rounded-lg border border-border"
+      className="flex flex-col w-fit h-fit rounded-lg border border-border ml-auto sm:flex-row lg:ml-0"
     >
       {THEME_OPTIONS.map((option, i) => (
         <Label

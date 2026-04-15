@@ -32,7 +32,7 @@ export function FontSizeSelector({ initialValue }: FontSizeSelectorProps) {
     <RadioGroup
       defaultValue={initialValue}
       onValueChange={handleChange}
-      className="flex w-fit rounded-lg border border-border"
+      className="flex w-fit h-fit rounded-lg border border-border ml-auto md:ml-0"
     >
       {FONT_SIZE_OPTIONS.map((option, i) => (
         <Label
