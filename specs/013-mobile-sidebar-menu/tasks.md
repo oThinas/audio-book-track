@@ -88,9 +88,9 @@
 
 ### Implementation for User Story 3
 
-- [ ] T012 [US3] Create HamburgerIcon component in src/components/layout/hamburger-icon.tsx (3 spans with CSS transitions: top bar rotates +45deg, middle bar fades out via opacity, bottom bar rotates -45deg; duration 300ms ease-in-out; uses bg-current for theme compatibility; accepts isOpen prop)
-- [ ] T013 [US3] Replace Lucide Menu/X placeholder in MobileHeader in src/components/layout/mobile-header.tsx (swap Lucide icons for HamburgerIcon component, pass isOpen prop)
-- [ ] T014 [US3] Add prefers-reduced-motion support to HamburgerIcon in src/components/layout/hamburger-icon.tsx (add motion-reduce:transition-none Tailwind class to all animated spans)
+- [x] T012 [US3] Create HamburgerIcon component in src/components/layout/hamburger-icon.tsx (3 spans with CSS transitions: top bar rotates +45deg, middle bar fades out via opacity, bottom bar rotates -45deg; duration 300ms ease-in-out; uses bg-current for theme compatibility; accepts isOpen prop)
+- [x] T013 [US3] Replace Lucide Menu/X placeholder in MobileHeader in src/components/layout/mobile-header.tsx (swap Lucide icons for HamburgerIcon component, pass isOpen prop)
+- [x] T014 [US3] Add prefers-reduced-motion support to HamburgerIcon in src/components/layout/hamburger-icon.tsx (add motion-reduce:transition-none Tailwind class to all animated spans)
 
 **Checkpoint**: Ícone anima suavemente entre ≡ e ✕. Com reduced-motion, transição é instantânea.
 
@@ -102,10 +102,10 @@
 
 **Purpose**: E2E tests, verificação de regressão, dark mode, e validação final
 
-- [ ] T015 [P] Write E2E tests for mobile sidebar in __tests__/e2e/mobile-sidebar.spec.ts (viewport 375x667: verify sidebar hidden, header visible, menu opens/closes, navigation works, Escape closes, icon animation present, all nav items rendered)
-- [ ] T016 [P] Verify existing E2E sidebar-toggle.spec.ts passes at desktop viewport (1280x720) — no regression in desktop sidebar behavior
-- [ ] T017 Visual review: verify dark mode and all 5 primary color palettes (blue, orange, green, red, amber) render correctly for MobileHeader and MobileSidebar
-- [ ] T018 Run full verification suite: `bun run lint`, `bun run test:unit`, `bun run test:e2e`, `bun run build`
+- [x] T015 [P] Write E2E tests for mobile sidebar in __tests__/e2e/mobile-sidebar.spec.ts (viewport 375x667: verify sidebar hidden, header visible, menu opens/closes, navigation works, Escape closes, icon animation present, all nav items rendered)
+- [x] T016 [P] Verify existing E2E sidebar-toggle.spec.ts passes at desktop viewport (1280x720) — no regression in desktop sidebar behavior
+- [x] T017 Visual review: verify dark mode and all 5 primary color palettes (blue, orange, green, red, amber) render correctly for MobileHeader and MobileSidebar
+- [x] T018 Run full verification suite: `bun run lint`, `bun run test:unit`, `bun run test:e2e`, `bun run build`
 
 ---
 
