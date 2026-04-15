@@ -32,7 +32,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     <aside
       data-testid="sidebar"
       className={cn(
-        "flex h-full flex-col justify-between bg-sidebar py-6 transition-all duration-100",
+        "hidden h-full flex-col justify-between bg-sidebar py-6 transition-all duration-100 md:flex",
         collapsed ? "w-16" : "w-60",
       )}
     >

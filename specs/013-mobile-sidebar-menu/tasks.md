@@ -49,9 +49,9 @@
 
 ### Implementation for User Story 1
 
-- [ ] T005 [P] [US1] Create MobileHeader component in src/components/layout/mobile-header.tsx (fixed header with ghost Button "Menu" using Lucide Menu/X icons as placeholder, md:hidden visibility, sidebar color tokens for background)
-- [ ] T006 [P] [US1] Add responsive hiding to Sidebar in src/components/layout/sidebar.tsx (add `hidden md:flex` to the aside element, preserving all existing desktop behavior)
-- [ ] T007 [US1] Update AuthenticatedLayoutClient in src/app/(authenticated)/layout-client.tsx (add MobileHeader above content area, add useMobileMenu hook, restructure layout for responsive: flex-col wrapper with MobileHeader visible only on mobile, Sidebar visible only on desktop)
+- [x] T005 [P] [US1] Create MobileHeader component in src/components/layout/mobile-header.tsx (fixed header with ghost Button "Menu" using Lucide Menu/X icons as placeholder, md:hidden visibility, sidebar color tokens for background)
+- [x] T006 [P] [US1] Add responsive hiding to Sidebar in src/components/layout/sidebar.tsx (add `hidden md:flex` to the aside element, preserving all existing desktop behavior)
+- [x] T007 [US1] Update AuthenticatedLayoutClient in src/app/(authenticated)/layout-client.tsx (add MobileHeader above content area, add useMobileMenu hook, restructure layout for responsive: flex-col wrapper with MobileHeader visible only on mobile, Sidebar visible only on desktop)
 
 **Checkpoint**: Em viewport mobile, sidebar está escondida e header com botão "Menu" é visível. Em desktop, tudo funciona como antes.
 
