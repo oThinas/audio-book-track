@@ -1,8 +1,8 @@
 "use client";
 
-import { Menu, X } from "lucide-react";
 import type { RefObject } from "react";
 import { Button } from "@/components/ui/button";
+import { HamburgerIcon } from "./hamburger-icon";
 
 interface MobileHeaderProps {
   readonly isOpen: boolean;
@@ -25,7 +25,7 @@ export function MobileHeader({ isOpen, onToggle, buttonRef }: MobileHeaderProps)
         aria-expanded={isOpen}
         className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground aria-expanded:text-sidebar-foreground aria-expanded:bg-transparent"
       >
-        {isOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+        <HamburgerIcon isOpen={isOpen} />
       </Button>
 
       <span className="text-sm font-bold text-sidebar-foreground whitespace-nowrap">
