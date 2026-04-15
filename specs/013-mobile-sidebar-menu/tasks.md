@@ -19,8 +19,8 @@
 
 **Purpose**: Extrair constantes de navegação compartilhadas entre Sidebar desktop e MobileSidebar
 
-- [ ] T001 Create shared navigation constants in src/lib/constants/navigation.ts (extract NAV_ITEMS and BOTTOM_ITEMS from sidebar.tsx, export NavigationItem type)
-- [ ] T002 Update src/components/layout/sidebar.tsx to import NAV_ITEMS, BOTTOM_ITEMS from src/lib/constants/navigation.ts (remove inline declarations)
+- [x] T001 Create shared navigation constants in src/lib/constants/navigation.ts (extract NAV_ITEMS and BOTTOM_ITEMS from sidebar.tsx, export NavigationItem type)
+- [x] T002 Update src/components/layout/sidebar.tsx to import NAV_ITEMS, BOTTOM_ITEMS from src/lib/constants/navigation.ts (remove inline declarations)
 
 **Quality Gate**: `bun run lint` e `bun run build` — sem erros ou warnings.
 
