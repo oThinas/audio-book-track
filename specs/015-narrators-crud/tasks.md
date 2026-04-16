@@ -44,9 +44,9 @@ description: "Task list for CRUD de Narradores"
 
 ### Domínio e Contratos
 
-- [ ] T005 [P] Criar classes de erro `NarratorEmailAlreadyInUseError` e `NarratorNotFoundError` em `src/lib/errors/narrator-errors.ts`
-- [ ] T006 [P] Criar interface `Narrator`, schemas Zod (`narratorFormSchema`, `createNarratorSchema`, `updateNarratorSchema`) e types inferidos em `src/lib/domain/narrator.ts`
-- [ ] T007 [P] Criar interface `NarratorRepository` em `src/lib/domain/narrator-repository.ts` (métodos findAll, findById, findByEmail, create, update, delete)
+- [X] T005 [P] Criar classes de erro `NarratorEmailAlreadyInUseError` e `NarratorNotFoundError` em `src/lib/errors/narrator-errors.ts`
+- [X] T006 [P] Criar interface `Narrator`, schemas Zod (`narratorFormSchema`, `createNarratorSchema`, `updateNarratorSchema`) e types inferidos em `src/lib/domain/narrator.ts`
+- [X] T007 [P] Criar interface `NarratorRepository` em `src/lib/domain/narrator-repository.ts` (métodos findAll, findById, findByEmail, create, update, delete)
 
 ### Infraestrutura de Testes
 
