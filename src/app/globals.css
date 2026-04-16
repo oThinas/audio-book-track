@@ -6,6 +6,12 @@
 
 @theme {
   --color-*: initial;
+  --color-blue-600: oklch(54.6% 0.245 262.881);
+  --color-orange-600: oklch(64.6% 0.222 41.116);
+  --color-emerald-600: oklch(59.6% 0.145 163.225);
+  --color-rose-600: oklch(58.6% 0.253 17.585);
+  --color-amber-600: oklch(66.6% 0.179 58.318);
+  --color-white: #fff;
 }
 
 @theme inline {
