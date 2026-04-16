@@ -1,5 +1,5 @@
 {
-  "version": "2.10",
+  "version": "2.11",
   "children": [
     {
       "type": "frame",
@@ -8471,6 +8471,113 @@
                   ]
                 }
               ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "tRiIi",
+      "x": 0,
+      "y": 5000,
+      "name": "09 - Pagina 404",
+      "width": 1440,
+      "height": 900,
+      "fill": "$color/bg-page",
+      "layout": "vertical",
+      "gap": 20,
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "icon_font",
+          "id": "xvP2u",
+          "name": "icon",
+          "width": 64,
+          "height": 64,
+          "iconFontName": "headphone-off",
+          "iconFontFamily": "lucide",
+          "fill": "$color/primary"
+        },
+        {
+          "type": "text",
+          "id": "0FFMP",
+          "name": "txt_404",
+          "fill": "$color/text-primary",
+          "content": "404",
+          "textAlign": "center",
+          "fontFamily": "Plus Jakarta Sans",
+          "fontSize": 120,
+          "fontWeight": "800",
+          "letterSpacing": -4
+        },
+        {
+          "type": "text",
+          "id": "aDryd",
+          "name": "txt_msg",
+          "fill": "$color/text-secondary",
+          "textGrowth": "fixed-width",
+          "width": 440,
+          "content": "Esse capítulo ainda não foi escrito...",
+          "textAlign": "center",
+          "fontFamily": "Plus Jakarta Sans",
+          "fontSize": 20,
+          "fontWeight": "500"
+        },
+        {
+          "type": "text",
+          "id": "4VhTz",
+          "name": "txt_sub",
+          "fill": "$color/text-muted",
+          "textGrowth": "fixed-width",
+          "width": 440,
+          "content": "A página que você procura não foi encontrada.",
+          "textAlign": "center",
+          "fontFamily": "Plus Jakarta Sans",
+          "fontSize": 15,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "frame",
+          "id": "RaBQ5",
+          "name": "spacer",
+          "width": 1,
+          "height": 8
+        },
+        {
+          "type": "frame",
+          "id": "QSwxK",
+          "name": "btn_back",
+          "fill": "$color/primary",
+          "cornerRadius": 8,
+          "gap": 8,
+          "padding": [
+            12,
+            28
+          ],
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "D7LEk",
+              "name": "btn_ico",
+              "width": 16,
+              "height": 16,
+              "iconFontName": "arrow-left",
+              "iconFontFamily": "lucide",
+              "fill": "#FFFFFF"
+            },
+            {
+              "type": "text",
+              "id": "AdHBZ",
+              "name": "btn_txt",
+              "fill": "#FFFFFF",
+              "content": "Voltar ao início",
+              "fontFamily": "Plus Jakarta Sans",
+              "fontSize": 14,
+              "fontWeight": "600"
             }
           ]
         }
