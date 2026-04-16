@@ -39,8 +39,8 @@ description: "Task list for CRUD de Narradores"
 
 ### Banco de Dados
 
-- [ ] T003 Adicionar tabela `narrator` em `src/lib/db/schema.ts` (campos id, name, email, createdAt, updatedAt + unique index em email, conforme data-model.md)
-- [ ] T004 Gerar e aplicar migration com `bunx drizzle-kit generate` + `bun run db:migrate` (arquivo esperado `drizzle/0XXX_narrator_initial.sql`)
+- [X] T003 Adicionar tabela `narrator` em `src/lib/db/schema.ts` (campos id, name, email, createdAt, updatedAt + unique index em email, conforme data-model.md)
+- [X] T004 Gerar e aplicar migration com `bunx drizzle-kit generate` + `bun run db:migrate` (arquivo esperado `drizzle/0XXX_narrator_initial.sql`)
 
 ### Domínio e Contratos
 

@@ -109,3 +109,20 @@ export const userPreference = pgTable(
   },
   (table) => [uniqueIndex("user_preference_user_id_idx").on(table.userId)],
 );
+
+export const narrator = pgTable(
+  "narrator",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    name: text("name").notNull(),
+    email: text("email").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [uniqueIndex("narrator_email_unique").on(table.email)],
+);
