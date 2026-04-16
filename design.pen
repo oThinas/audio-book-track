@@ -6901,7 +6901,7 @@
       "id": "BZfLf",
       "x": 1520,
       "y": 2940,
-      "name": "08 - Gravadores",
+      "name": "08 - Narradores",
       "width": 1440,
       "height": 900,
       "fill": "$color/bg-page",
@@ -8485,99 +8485,196 @@
       "width": 1440,
       "height": 900,
       "fill": "$color/bg-page",
-      "layout": "vertical",
-      "gap": 20,
       "justifyContent": "center",
       "alignItems": "center",
       "children": [
         {
-          "type": "icon_font",
-          "id": "xvP2u",
-          "name": "icon",
-          "width": 64,
-          "height": 64,
-          "iconFontName": "headphone-off",
-          "iconFontFamily": "lucide",
-          "fill": "$color/primary"
-        },
-        {
-          "type": "text",
-          "id": "0FFMP",
-          "name": "txt_404",
-          "fill": "$color/text-primary",
-          "content": "404",
-          "textAlign": "center",
-          "fontFamily": "Plus Jakarta Sans",
-          "fontSize": 120,
-          "fontWeight": "800",
-          "letterSpacing": -4
-        },
-        {
-          "type": "text",
-          "id": "aDryd",
-          "name": "txt_msg",
-          "fill": "$color/text-secondary",
-          "textGrowth": "fixed-width",
-          "width": 440,
-          "content": "Esse capítulo ainda não foi escrito...",
-          "textAlign": "center",
-          "fontFamily": "Plus Jakarta Sans",
-          "fontSize": 20,
-          "fontWeight": "500"
-        },
-        {
-          "type": "text",
-          "id": "4VhTz",
-          "name": "txt_sub",
-          "fill": "$color/text-muted",
-          "textGrowth": "fixed-width",
-          "width": 440,
-          "content": "A página que você procura não foi encontrada.",
-          "textAlign": "center",
-          "fontFamily": "Plus Jakarta Sans",
-          "fontSize": 15,
-          "fontWeight": "normal"
+          "id": "zWjWy",
+          "type": "ref",
+          "ref": "tYtVp",
+          "height": "fill_container",
+          "name": "blsb",
+          "x": 0,
+          "y": 0,
+          "layout": "vertical",
+          "descendants": {
+            "Y1hTu": {
+              "width": "fill_container",
+              "height": "fit_content",
+              "y": 24
+            },
+            "ABG6j": {
+              "width": "fill_container",
+              "height": "fit_content"
+            },
+            "Lsomh": {
+              "width": "fit_content",
+              "height": "fit_content",
+              "x": 20
+            },
+            "PqdQT": {
+              "x": 38,
+              "y": 5
+            },
+            "mVVXM": {
+              "x": 202,
+              "y": 5
+            },
+            "YZndy": {
+              "width": "fill_container",
+              "y": 52
+            },
+            "G4dHe": {
+              "x": 16,
+              "y": 13
+            },
+            "wxjuh": {
+              "x": 44,
+              "y": 13
+            },
+            "ZpCdx": {
+              "fill": "$color/primary",
+              "width": "fill_container",
+              "y": 104
+            },
+            "LpAcZ": {
+              "fill": "$color/bg-surface",
+              "x": 16,
+              "y": 13
+            },
+            "TCCHh": {
+              "fill": "$color/bg-surface",
+              "fontWeight": "600",
+              "x": 44,
+              "y": 13
+            },
+            "JlGj9": {
+              "width": "fill_container",
+              "y": 156
+            },
+            "DGGUD": {
+              "x": 16,
+              "y": 13
+            },
+            "OnQyJ": {
+              "x": 44,
+              "y": 13
+            },
+            "SGOdm": {
+              "width": "fill_container",
+              "y": 208
+            },
+            "suUeJ": {
+              "x": 16,
+              "y": 13
+            },
+            "MF3lq": {
+              "x": 44,
+              "y": 13
+            },
+            "SXeCF": {
+              "width": "fill_container",
+              "y": 260
+            },
+            "CZyeO": {
+              "x": 16,
+              "y": 13
+            },
+            "tfIKa": {
+              "x": 44,
+              "y": 13,
+              "content": "Narradores"
+            },
+            "wvPza": {
+              "width": "fill_container",
+              "height": "fit_content",
+              "y": 784
+            },
+            "dXdqw": {
+              "width": "fill_container",
+              "x": 8
+            },
+            "Hcfff": {
+              "x": 8,
+              "y": 13
+            },
+            "zUQO1": {
+              "x": 36,
+              "y": 13
+            },
+            "Ekq2s": {
+              "width": "fill_container",
+              "x": 8,
+              "y": 48
+            },
+            "Vms0H": {
+              "x": 8,
+              "y": 13
+            },
+            "Mz8Tm": {
+              "x": 36,
+              "y": 13
+            }
+          }
         },
         {
           "type": "frame",
-          "id": "RaBQ5",
-          "name": "spacer",
-          "width": 1,
-          "height": 8
-        },
-        {
-          "type": "frame",
-          "id": "QSwxK",
-          "name": "btn_back",
-          "fill": "$color/primary",
-          "cornerRadius": 8,
-          "gap": 8,
-          "padding": [
-            12,
-            28
-          ],
+          "id": "AhWo7",
+          "name": "Frame 1",
+          "width": "fill_container",
+          "height": "fill_container",
+          "fill": "#FFFFFF",
+          "layout": "vertical",
           "justifyContent": "center",
           "alignItems": "center",
           "children": [
             {
               "type": "icon_font",
-              "id": "D7LEk",
-              "name": "btn_ico",
-              "width": 16,
-              "height": 16,
-              "iconFontName": "arrow-left",
+              "id": "5ZgAv",
+              "name": "icon",
+              "width": 64,
+              "height": 64,
+              "iconFontName": "headphone-off",
               "iconFontFamily": "lucide",
-              "fill": "#FFFFFF"
+              "fill": "$color/primary"
             },
             {
               "type": "text",
-              "id": "AdHBZ",
-              "name": "btn_txt",
-              "fill": "#FFFFFF",
-              "content": "Voltar ao início",
+              "id": "9AmDp",
+              "name": "txt_404",
+              "fill": "$color/text-primary",
+              "content": "404",
+              "textAlign": "center",
               "fontFamily": "Plus Jakarta Sans",
-              "fontSize": 14,
-              "fontWeight": "600"
+              "fontSize": 120,
+              "fontWeight": "800",
+              "letterSpacing": -4
+            },
+            {
+              "type": "text",
+              "id": "kgexa",
+              "name": "txt_msg",
+              "fill": "$color/text-secondary",
+              "textGrowth": "fixed-width",
+              "width": 440,
+              "content": "Esse capítulo ainda não foi escrito...",
+              "textAlign": "center",
+              "fontFamily": "Plus Jakarta Sans",
+              "fontSize": 20,
+              "fontWeight": "500"
+            },
+            {
+              "type": "text",
+              "id": "Gh6zZ",
+              "name": "txt_sub",
+              "fill": "$color/text-muted",
+              "textGrowth": "fixed-width",
+              "width": 440,
+              "content": "A página que você procura não foi encontrada.",
+              "textAlign": "center",
+              "fontFamily": "Plus Jakarta Sans",
+              "fontSize": 15,
+              "fontWeight": "normal"
             }
           ]
         }
