@@ -50,8 +50,8 @@ description: "Task list for CRUD de Narradores"
 
 ### Infraestrutura de Testes
 
-- [ ] T008 [P] Criar fake `InMemoryNarratorRepository` em `__tests__/repositories/in-memory-narrator-repository.ts` (implementa NarratorRepository em memória, lança `NarratorEmailAlreadyInUseError` em duplicata)
-- [ ] T009 [P] Escrever testes unitários dos schemas Zod em `__tests__/unit/domain/narrator-schema.test.ts` (validação de nome min/max, email válido/inválido, trim, lowercase)
+- [X] T008 [P] Criar fake `InMemoryNarratorRepository` em `__tests__/repositories/in-memory-narrator-repository.ts` (implementa NarratorRepository em memória, lança `NarratorEmailAlreadyInUseError` em duplicata)
+- [X] T009 [P] Escrever testes unitários dos schemas Zod em `__tests__/unit/domain/narrator-schema.test.ts` (validação de nome min/max, email válido/inválido, trim, lowercase)
 
 ### Repository (TDD)
 
