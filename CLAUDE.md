@@ -265,10 +265,10 @@ Qualquer mudança no modelo financeiro (preço, horas, responsáveis) requer **r
 
 
 ## Recent Changes
+- 015-narrators-crud: Added TypeScript 5.9.3 (Bun runtime 1.x) + Next.js 16.2.1 (App Router), React 19.2.4, Drizzle ORM 0.45.2, Zod 4.3.6, better-auth 1.5.6, React Hook Form 7.72.0 + `@hookform/resolvers` 5.2.2, shadcn/ui 4.1.2, `@tanstack/react-table` (nova dependência), Tailwind CSS 4.2, lucide-react 1.7.0, sonner 2.0.7
 - 014-custom-404-page: Added TypeScript 5.9.3 (Bun runtime) + Next.js 16.2.1 (App Router), React 19.2.4, Tailwind CSS v4, shadcn/ui 4.1.2, lucide-react 1.7.0
 - 013-mobile-sidebar-menu: Added TypeScript 5.9.3 (Bun runtime) + Next.js 16.2.1 (App Router), React 19.2.4, Tailwind CSS v4, lucide-react 1.7.0, shadcn/ui 4.1.2
-- 012-test-doubles-refactor: Added TypeScript 5.9.3 (Bun runtime) + Vitest (test runner), Next.js 16.2.1 (App Router)
 
 ## Active Technologies
-- TypeScript 5.9.3 (Bun runtime) + Next.js 16.2.1 (App Router), React 19.2.4, Tailwind CSS v4, shadcn/ui 4.1.2, lucide-react 1.7.0 (014-custom-404-page)
-- N/A (sem banco de dados) (014-custom-404-page)
+- TypeScript 5.9.3 (Bun runtime 1.x) + Next.js 16.2.1 (App Router), React 19.2.4, Drizzle ORM 0.45.2, Zod 4.3.6, better-auth 1.5.6, React Hook Form 7.72.0 + `@hookform/resolvers` 5.2.2, shadcn/ui 4.1.2, `@tanstack/react-table` (nova dependência), Tailwind CSS 4.2, lucide-react 1.7.0, sonner 2.0.7 (015-narrators-crud)
+- PostgreSQL via Drizzle ORM (nova tabela `narrator`) (015-narrators-crud)
