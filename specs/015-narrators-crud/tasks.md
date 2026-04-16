@@ -69,11 +69,11 @@ description: "Task list for CRUD de Narradores"
 
 ### API Response Helpers
 
-- [ ] T015 [P] Adicionar helpers `notFoundResponse(code, message)` e `conflictResponse(code, message)` em `src/lib/api/responses.ts` (seguir padrão dos existentes `unauthorizedResponse` e `validationErrorResponse`)
+- [X] T015 [P] Adicionar helpers `notFoundResponse(code, message)` e `conflictResponse(code, message)` em `src/lib/api/responses.ts` (seguir padrão dos existentes `unauthorizedResponse` e `validationErrorResponse`)
 
 ### Design Tokens
 
-- [ ] T016 [P] Adicionar override `--destructive` para `html[data-primary-color="red"]` (light + dark) em `src/app/globals.css` (valores OKLCH conforme research.md: `oklch(0.42 0.20 12)` light, `oklch(0.55 0.22 8)` dark)
+- [X] T016 [P] Adicionar override `--destructive` para `html[data-primary-color="red"]` (light + dark) em `src/app/globals.css` (valores OKLCH conforme research.md: `oklch(0.42 0.20 12)` light, `oklch(0.55 0.22 8)` dark)
 
 **Checkpoint**: Fundação pronta — qualquer user story pode começar em paralelo.
 

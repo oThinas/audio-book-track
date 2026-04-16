@@ -19,3 +19,11 @@ export function validationErrorResponse(error: ZodError): NextResponse {
     { status: 422 },
   );
 }
+
+export function notFoundResponse(code: string, message: string): NextResponse {
+  return NextResponse.json({ error: { code, message } }, { status: 404 });
+}
+
+export function conflictResponse(code: string, message: string): NextResponse {
+  return NextResponse.json({ error: { code, message } }, { status: 409 });
+}
