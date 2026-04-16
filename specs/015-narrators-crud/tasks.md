@@ -55,8 +55,8 @@ description: "Task list for CRUD de Narradores"
 
 ### Repository (TDD)
 
-- [ ] T010 Escrever testes de integração em `__tests__/integration/repositories/drizzle-narrator-repository.test.ts` cobrindo: create, findAll, findById, findByEmail, update, delete, unique violation → `NarratorEmailAlreadyInUseError`, update/delete em id inexistente → `NarratorNotFoundError` (testes DEVEM falhar antes da implementação)
-- [ ] T011 Implementar `DrizzleNarratorRepository` em `src/lib/repositories/drizzle/drizzle-narrator-repository.ts` satisfazendo todos os testes de T010 (capturar pg error 23505 para unique_violation; selects explícitos, sem SELECT *)
+- [X] T010 Escrever testes de integração em `__tests__/integration/repositories/drizzle-narrator-repository.test.ts` cobrindo: create, findAll, findById, findByEmail, update, delete, unique violation → `NarratorEmailAlreadyInUseError`, update/delete em id inexistente → `NarratorNotFoundError` (testes DEVEM falhar antes da implementação)
+- [X] T011 Implementar `DrizzleNarratorRepository` em `src/lib/repositories/drizzle/drizzle-narrator-repository.ts` satisfazendo todos os testes de T010 (capturar pg error 23505 para unique_violation; selects explícitos, sem SELECT *)
 
 ### Service (TDD)
 
