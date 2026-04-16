@@ -190,17 +190,28 @@ const checkConnection = vi.fn().mockResolvedValue({ healthy: true });
 
 ---
 
-## Verificação de qualidade (obrigatório por fase)
+## Verificação de qualidade (fase final única, não por fase)
 
-- **SEMPRE usar scripts do `package.json`**, nunca comandos diretos:
-  - `bun run lint` (não `bunx biome check .`)
-  - `bun run test:unit` (não `bun vitest run __tests__/unit/`)
-  - `bun run test:integration` (não `bun vitest run __tests__/integration/`)
-  - `bun run test:e2e` (não `bunx playwright test`)
-  - `bun run build` (não `next build`)
-- Nenhuma fase é concluída com erros ou warnings de lint.
-- Nenhuma fase é concluída com testes falhando.
-- Build DEVE passar antes de criar PR.
+Durante fases intermediárias, rodar apenas os testes diretamente
+relacionados à mudança atual (ex: o arquivo de teste do TDD).
+Não rodar `bun run lint`, `bun run build` ou a suíte completa a cada
+task — isso é ruído desproporcional.
+
+**Fase final (obrigatória antes do PR / `/finish-task`):**
+
+- `bun run lint` — zero erros e zero warnings
+- `bun run test:unit`
+- `bun run test:integration`
+- `bun run test:e2e` (quando a mudança afeta fluxos E2E)
+- `bun run build` — produção compila sem erros
+
+**Regra permanente — SEMPRE usar scripts do `package.json`, nunca comandos diretos:**
+
+- `bun run lint` (não `bunx biome check .`)
+- `bun run test:unit` (não `bun vitest run __tests__/unit/`)
+- `bun run test:integration` (não `bun vitest run __tests__/integration/`)
+- `bun run test:e2e` (não `bunx playwright test`)
+- `bun run build` (não `next build`)
 
 ---
 
@@ -229,7 +240,7 @@ const checkConnection = vi.fn().mockResolvedValue({ healthy: true });
 - [ ] XI.   Sem SELECT *? Foreign keys com índice? Monetário em numeric?
 - [ ] XII.  Nenhum anti-padrão proibido presente?
 - [ ] XV.   Context7 MCP consultado? design.pen referenciado para telas?
-- [ ] XVI.  bun run lint, testes e build passando sem erros/warnings?
+- [ ] XVI.  Fase final de verificação executada (lint + testes + build) antes do PR?
 ```
 
 ---
@@ -254,7 +265,7 @@ Sem entidades órfãs: capítulo sem livro ou livro sem estúdio são inválidos
 2. `plan.md` com decisões de arquitetura antes de codar (`/speckit-plan`). Consultar `design.pen` via Pencil MCP.
 3. Consultar docs de libs via Context7 MCP antes de implementar.
 4. TDD (ver acima) — usar `/tdd`.
-5. Verificação de qualidade após cada fase: `bun run lint`, `bun run test:unit`, `bun run build`.
+5. Verificação de qualidade em fase final única (antes do PR): `bun run lint`, `bun run test:unit`, `bun run test:integration`, `bun run test:e2e` (quando aplicável), `bun run build`. Durante fases intermediárias, rodar apenas os testes da mudança atual.
 6. Code review verificando conformidade com os Princípios I–XVI (`/code-review`).
 7. Commits convencionais: `feat:`, `fix:`, `refactor:`, `test:`, `docs:` (`/conventional-commits`).
 8. Finalização: `/finish-task` para criar PR contra `main`.
