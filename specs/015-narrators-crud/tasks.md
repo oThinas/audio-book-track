@@ -65,7 +65,7 @@ description: "Task list for CRUD de Narradores"
 
 ### Composition Root
 
-- [ ] T014 Criar factory `createNarratorService()` em `src/lib/factories/narrator.ts` (instancia `DrizzleNarratorRepository` e `NarratorService`)
+- [X] T014 Criar factory `createNarratorService()` em `src/lib/factories/narrator.ts` (instancia `DrizzleNarratorRepository` e `NarratorService`)
 
 ### API Response Helpers
 
