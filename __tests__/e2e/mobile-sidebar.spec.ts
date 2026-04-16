@@ -54,7 +54,7 @@ test.describe("Mobile Sidebar Menu", () => {
     await expect(mobileSidebar.getByText("Livros")).toBeVisible();
     await expect(mobileSidebar.getByText("Estúdios")).toBeVisible();
     await expect(mobileSidebar.getByText("Editores")).toBeVisible();
-    await expect(mobileSidebar.getByText("Gravadores")).toBeVisible();
+    await expect(mobileSidebar.getByText("Narradores")).toBeVisible();
     await expect(mobileSidebar.getByText("Configurações")).toBeVisible();
     await expect(mobileSidebar.getByText("Sair")).toBeVisible();
   });

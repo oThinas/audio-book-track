@@ -12,7 +12,7 @@ export const NAV_ITEMS: readonly NavigationItem[] = [
   { href: "/books", label: "Livros", icon: PAGE_ICONS.books },
   { href: "/studios", label: "Estúdios", icon: PAGE_ICONS.studios },
   { href: "/editors", label: "Editores", icon: PAGE_ICONS.editors },
-  { href: "/narrators", label: "Gravadores", icon: PAGE_ICONS.narrators },
+  { href: "/narrators", label: "Narradores", icon: PAGE_ICONS.narrators },
 ] as const;
 
 export const BOTTOM_ITEMS: readonly NavigationItem[] = [

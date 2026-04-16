@@ -1,12 +1,5 @@
 import { expect, test } from "@playwright/test";
-
-async function login(page: import("@playwright/test").Page) {
-  await page.goto("/login");
-  await page.locator("#username").fill("admin");
-  await page.locator("#password").fill("admin123");
-  await page.locator("#login-submit").click();
-  await expect(page).not.toHaveURL(/\/login/, { timeout: 10000 });
-}
+import { login } from "./helpers/auth";
 
 async function setFavoritePage(page: import("@playwright/test").Page, label: string) {
   await page.goto("/settings");

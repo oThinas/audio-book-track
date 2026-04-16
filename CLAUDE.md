@@ -265,10 +265,10 @@ Qualquer mudança no modelo financeiro (preço, horas, responsáveis) requer **r
 
 
 ## Recent Changes
+- 014-custom-404-page: Added TypeScript 5.9.3 (Bun runtime) + Next.js 16.2.1 (App Router), React 19.2.4, Tailwind CSS v4, shadcn/ui 4.1.2, lucide-react 1.7.0
 - 013-mobile-sidebar-menu: Added TypeScript 5.9.3 (Bun runtime) + Next.js 16.2.1 (App Router), React 19.2.4, Tailwind CSS v4, lucide-react 1.7.0, shadcn/ui 4.1.2
 - 012-test-doubles-refactor: Added TypeScript 5.9.3 (Bun runtime) + Vitest (test runner), Next.js 16.2.1 (App Router)
-- 011-e2e-accessibility: Added TypeScript 5.9.3 (Bun runtime) + Next.js 16.2.1, Playwright 1.59.1, @axe-core/playwright (nova dependencia)
 
 ## Active Technologies
-- TypeScript 5.9.3 (Bun runtime) + Next.js 16.2.1 (App Router), React 19.2.4, Tailwind CSS v4, lucide-react 1.7.0, shadcn/ui 4.1.2 (013-mobile-sidebar-menu)
-- N/A (sem mudanças de banco de dados) (013-mobile-sidebar-menu)
+- TypeScript 5.9.3 (Bun runtime) + Next.js 16.2.1 (App Router), React 19.2.4, Tailwind CSS v4, shadcn/ui 4.1.2, lucide-react 1.7.0 (014-custom-404-page)
+- N/A (sem banco de dados) (014-custom-404-page)
