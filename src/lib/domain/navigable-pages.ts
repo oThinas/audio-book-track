@@ -11,7 +11,7 @@ export const NAVIGABLE_PAGES: readonly NavigablePage[] = [
   { slug: "books", url: "/books", label: "Livros" },
   { slug: "studios", url: "/studios", label: "Estúdios" },
   { slug: "editors", url: "/editors", label: "Editores" },
-  { slug: "narrators", url: "/narrators", label: "Gravadores" },
+  { slug: "narrators", url: "/narrators", label: "Narradores" },
   { slug: "settings", url: "/settings", label: "Configurações" },
 ] as const;
 
