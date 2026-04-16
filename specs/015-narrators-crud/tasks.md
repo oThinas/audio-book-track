@@ -60,8 +60,8 @@ description: "Task list for CRUD de Narradores"
 
 ### Service (TDD)
 
-- [ ] T012 Escrever testes unitários em `__tests__/unit/services/narrator-service.test.ts` usando `InMemoryNarratorRepository` (testes DEVEM falhar antes da implementação)
-- [ ] T013 Implementar `NarratorService` em `src/lib/services/narrator-service.ts` (métodos list, create, update, delete — orquestram repository, sem SQL/HTTP direto)
+- [X] T012 Escrever testes unitários em `__tests__/unit/services/narrator-service.test.ts` usando `InMemoryNarratorRepository` (testes DEVEM falhar antes da implementação)
+- [X] T013 Implementar `NarratorService` em `src/lib/services/narrator-service.ts` (métodos list, create, update, delete — orquestram repository, sem SQL/HTTP direto)
 
 ### Composition Root
 
