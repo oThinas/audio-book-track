@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures/app-server";
 
 test.describe("Login Page Styling (US1)", () => {
   test.beforeEach(async ({ page }) => {

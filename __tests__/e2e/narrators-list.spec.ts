@@ -1,15 +1,13 @@
-import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+
+import { expect, test } from "./fixtures/app-server";
 import { login } from "./helpers/auth";
 
-async function seedNarrator(
-  request: import("@playwright/test").APIRequestContext,
-  name: string,
-  email: string,
-) {
-  const response = await request.post("/api/v1/narrators", {
+async function seedNarrator(page: Page, name: string, email: string) {
+  const response = await page.request.post("/api/v1/narrators", {
     data: { name, email },
   });
-  if (!response.ok() && response.status() !== 409) {
+  if (!response.ok()) {
     throw new Error(`Failed to seed narrator ${email}: ${response.status()}`);
   }
 }
@@ -19,9 +17,7 @@ test.describe("Narrators list", () => {
     await login(page);
   });
 
-  // NOTE: empty-state assertion runs against a shared DB that other specs
-  // seed in parallel. Re-enable once DELETE (Phase 6) allows pre-test cleanup.
-  test.fixme("empty state is shown when no narrators exist", async ({ page }) => {
+  test("empty state is shown when no narrators exist", async ({ page }) => {
     await page.goto("/narrators");
 
     await expect(page.getByRole("heading", { name: /narradores/i })).toBeVisible();
@@ -36,12 +32,14 @@ test.describe("Narrators list", () => {
   });
 
   test("table is wrapped in a ScrollArea", async ({ page }) => {
+    await seedNarrator(page, "Visible Narrator", "visible@example.com");
     await page.goto("/narrators");
 
     await expect(page.getByTestId("narrators-scroll-area")).toBeVisible();
   });
 
   test("sortable headers are present with aria-sort semantics", async ({ page }) => {
+    await seedNarrator(page, "Visible Narrator", "visible@example.com");
     await page.goto("/narrators");
 
     const nameHeader = page.getByRole("button", { name: /^nome$/i });
@@ -51,19 +49,15 @@ test.describe("Narrators list", () => {
     await expect(emailHeader).toBeVisible();
   });
 
-  test.fixme("seeded narrators appear as rows and can be sorted by name", async ({
-    page,
-    request,
-  }) => {
-    const stamp = Date.now();
-    await seedNarrator(request, "Carla Souza", `carla-${stamp}@example.com`);
-    await seedNarrator(request, "Bruno Lima", `bruno-${stamp}@example.com`);
-    await seedNarrator(request, "Ana Prado", `ana-${stamp}@example.com`);
+  test("seeded narrators appear as rows and can be sorted by name", async ({ page }) => {
+    await seedNarrator(page, "Carla Souza", "carla@example.com");
+    await seedNarrator(page, "Bruno Lima", "bruno@example.com");
+    await seedNarrator(page, "Ana Prado", "ana@example.com");
 
     await page.goto("/narrators");
 
     const rows = page.getByTestId("narrator-row");
-    await expect(rows).toHaveCount(3, { timeout: 10000 });
+    await expect(rows).toHaveCount(3);
 
     const nameHeader = page.getByRole("button", { name: /^nome$/i });
     await nameHeader.click();
@@ -75,20 +69,19 @@ test.describe("Narrators list", () => {
     await expect(firstRowName).toHaveText(/carla souza/i);
   });
 
-  test.fixme("seeded narrators can be sorted by email", async ({ page, request }) => {
-    const stamp = Date.now();
-    await seedNarrator(request, "Zeca Andrade", `zz-${stamp}@example.com`);
-    await seedNarrator(request, "Alice Barbosa", `aa-${stamp}@example.com`);
+  test("seeded narrators can be sorted by email", async ({ page }) => {
+    await seedNarrator(page, "Zeca Andrade", "zz@example.com");
+    await seedNarrator(page, "Alice Barbosa", "aa@example.com");
 
     await page.goto("/narrators");
 
     const rows = page.getByTestId("narrator-row");
-    await expect(rows.first()).toBeVisible({ timeout: 10000 });
+    await expect(rows).toHaveCount(2);
 
     const emailHeader = page.getByRole("button", { name: /^e-mail$/i });
     await emailHeader.click();
 
     const firstRowEmail = rows.first().getByTestId("narrator-email");
-    await expect(firstRowEmail).toHaveText(new RegExp(`aa-${stamp}@example.com`));
+    await expect(firstRowEmail).toHaveText("aa@example.com");
   });
 });

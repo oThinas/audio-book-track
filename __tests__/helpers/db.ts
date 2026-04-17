@@ -1,7 +1,7 @@
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
-
 import type * as schema from "@/lib/db/schema";
+import { env } from "@/lib/env";
 
 export type TestDb = NodePgDatabase<typeof schema>;
 
@@ -10,7 +10,10 @@ let currentDb: TestDb | undefined;
 
 export function getPool(): Pool {
   if (!pool) {
-    pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    if (!env.TEST_DATABASE_URL) {
+      throw new Error("TEST_DATABASE_URL is required for integration tests. Set it in .env.test.");
+    }
+    pool = new Pool({ connectionString: env.TEST_DATABASE_URL });
   }
   return pool;
 }

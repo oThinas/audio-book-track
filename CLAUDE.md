@@ -91,6 +91,20 @@
 
 ---
 
+## Nova entidade de domínio: factory, não seed
+
+Adicionar uma entidade nova (ex: `book`, `chapter`) **NUNCA** toca `src/lib/db/seed-test.ts`. Esse arquivo existe apenas para criar o admin e é a única linha estável entre execuções de teste.
+
+Para prover dados novos em testes:
+
+1. Criar uma factory em `__tests__/helpers/factories.ts` (ex: `createTestBook(db, overrides)`).
+2. Chamar a factory no `beforeEach` ou no próprio teste.
+3. Confiar no auto-reset do fixture E2E (truncate seletivo) ou no `BEGIN/ROLLBACK` do setup integration para limpar entre testes.
+
+Regra: se você está alterando `seed-test.ts` fora de uma feature que refaz o admin, pare e repense — provavelmente você quer uma factory.
+
+---
+
 ## Regras de Classificação de Testes
 
 ### Unit (`__tests__/unit/`)
@@ -177,6 +191,19 @@ Os mocks globais de `@/lib/db` e `@/lib/env` ficam em `__tests__/unit/setup.ts`.
 ```
 const checkConnection = vi.fn().mockResolvedValue({ healthy: true });
 ```
+
+### Isolamento de testes (integration e E2E)
+
+- **Banco de teste separado**: `audiobook_track_test`. `TEST_DATABASE_URL` é obrigatória quando `NODE_ENV=test` (validado via `superRefine` no schema Zod de env). `DATABASE_URL` NUNCA aponta para essa base.
+- **Integration — BEGIN/ROLLBACK**: cada teste roda em transação iniciada em `beforeEach`, desfeita em `afterEach`. Nenhum dado persiste entre testes.
+- **E2E — schema-per-worker**: cada worker do Playwright recebe `e2e_w{i}_{uuid8}`. Migrations aplicadas via CLI customizado que reescreve `"public"."..."` → `"<schema>"."..."` e mantém journal em `<schema>.__drizzle_migrations`.
+- **E2E — servidor por worker**: `next start` em `BASE_E2E_PORT + workerIndex`, `.next/` compartilhado via `next build` único cacheado (`globalSetup`). `next dev --turbopack` por worker é PROIBIDO.
+- **E2E — reset entre testes**: `TRUNCATE ... RESTART IDENTITY CASCADE` preservando `user`/`account`/`session`/`__drizzle_migrations`. Admin seed fica de pé durante todo o worker.
+- **`E2E_TEST_MODE=1`**: flag lido por request para desligar rate limit e habilitar signup no `auth/server.ts`. Usar em vez de `NODE_ENV === "test"` (incompatível com `next start` que exige `production`).
+- **Schemas órfãos**: identificados por `COMMENT ON SCHEMA` com timestamp ISO. Limpeza por `globalSetup` do Playwright e `bun run db:test:clean-orphans`.
+- **`src/lib/env/schema.ts` separado de `index.ts`**: permite importar o schema puro sem acionar mock global de `@/lib/env` em unit tests.
+
+Referência detalhada com diagramas e troubleshooting: [docs/testing-strategy.md](docs/testing-strategy.md).
 
 ---
 
@@ -277,9 +304,12 @@ Qualquer mudança no modelo financeiro (preço, horas, responsáveis) requer **r
 
 ## Recent Changes
 - 015-narrators-crud: Added TypeScript 5.9.3 (Bun runtime 1.x) + Next.js 16.2.1 (App Router), React 19.2.4, Drizzle ORM 0.45.2, Zod 4.3.6, better-auth 1.5.6, React Hook Form 7.72.0 + `@hookform/resolvers` 5.2.2, shadcn/ui 4.1.2, `@tanstack/react-table` (nova dependência), Tailwind CSS 4.2, lucide-react 1.7.0, sonner 2.0.7
+- 016-test-db-isolation: Added TypeScript 5.9.3 (Bun 1.2 runtime) + Next.js 16.2.1, Drizzle ORM 0.45, `pg` 8.20, Playwright 1.59, Vitest 4.1, better-auth 1.5
 - 014-custom-404-page: Added TypeScript 5.9.3 (Bun runtime) + Next.js 16.2.1 (App Router), React 19.2.4, Tailwind CSS v4, shadcn/ui 4.1.2, lucide-react 1.7.0
 - 013-mobile-sidebar-menu: Added TypeScript 5.9.3 (Bun runtime) + Next.js 16.2.1 (App Router), React 19.2.4, Tailwind CSS v4, lucide-react 1.7.0, shadcn/ui 4.1.2
 
 ## Active Technologies
 - TypeScript 5.9.3 (Bun runtime 1.x) + Next.js 16.2.1 (App Router), React 19.2.4, Drizzle ORM 0.45.2, Zod 4.3.6, better-auth 1.5.6, React Hook Form 7.72.0 + `@hookform/resolvers` 5.2.2, shadcn/ui 4.1.2, `@tanstack/react-table` (nova dependência), Tailwind CSS 4.2, lucide-react 1.7.0, sonner 2.0.7 (015-narrators-crud)
 - PostgreSQL via Drizzle ORM (nova tabela `narrator`) (015-narrators-crud)
+- TypeScript 5.9.3 (Bun 1.2 runtime) + Next.js 16.2.1, Drizzle ORM 0.45, `pg` 8.20, Playwright 1.59, Vitest 4.1, better-auth 1.5 (016-test-db-isolation)
+- PostgreSQL (local: único servidor; dev DB = `audiobook_track`; test DB = `audiobook_track_test`) (016-test-db-isolation)

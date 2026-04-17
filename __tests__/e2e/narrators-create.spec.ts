@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures/app-server";
 import { login } from "./helpers/auth";
 
 test.describe("Narrators create", () => {
@@ -8,8 +8,7 @@ test.describe("Narrators create", () => {
   });
 
   test("happy path: create narrator appears as a row", async ({ page }) => {
-    const stamp = Date.now();
-    const email = `new-${stamp}@example.com`;
+    const email = "new@example.com";
 
     await page.getByRole("button", { name: "Novo narrador", exact: true }).click();
 
@@ -62,8 +61,7 @@ test.describe("Narrators create", () => {
   });
 
   test("shows conflict error on duplicate e-mail", async ({ page }) => {
-    const stamp = Date.now();
-    const email = `dup-${stamp}@example.com`;
+    const email = "dup@example.com";
 
     const seed = await page.request.post("/api/v1/narrators", {
       data: { name: "Já cadastrado", email },

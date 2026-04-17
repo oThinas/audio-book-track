@@ -5,6 +5,11 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
+  // Propagate to process.env so globalSetup (which runs in the vitest host process,
+  // not in a test worker) sees TEST_DATABASE_URL, BETTER_AUTH_*, etc.
+  for (const [key, value] of Object.entries(env)) {
+    if (process.env[key] === undefined) process.env[key] = value;
+  }
 
   const sharedConfig = {
     plugins: [react()],
@@ -30,7 +35,12 @@ export default defineConfig(({ mode }) => {
             environment: "node",
             globals: false,
             env,
-            include: ["__tests__/unit/**/*.test.ts", "__tests__/unit/**/*.test.tsx"],
+            include: [
+              "__tests__/unit/**/*.test.ts",
+              "__tests__/unit/**/*.test.tsx",
+              "__tests__/unit/**/*.spec.ts",
+              "__tests__/unit/**/*.spec.tsx",
+            ],
             exclude: ["node_modules", ".next"],
             setupFiles: ["__tests__/unit/setup.ts"],
           },
@@ -42,8 +52,9 @@ export default defineConfig(({ mode }) => {
             environment: "node",
             globals: false,
             env,
-            include: ["__tests__/integration/**/*.test.ts"],
+            include: ["__tests__/integration/**/*.test.ts", "__tests__/integration/**/*.spec.ts"],
             exclude: ["node_modules", ".next"],
+            globalSetup: ["__tests__/integration/global-setup.ts"],
             setupFiles: ["__tests__/integration/setup.ts"],
           },
         },
