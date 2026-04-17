@@ -9,13 +9,6 @@ export const envSchema = z
     NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   })
   .superRefine((values, ctx) => {
-    // Next.js runs `next build` with NODE_ENV=production and imports route
-    // handlers to collect page data — no DB connection happens during this
-    // phase. Skip database URL enforcement here; the runtime still parses
-    // env when the server actually starts and will fail loudly if the URL
-    // for the active NODE_ENV is missing.
-    if (process.env.NEXT_PHASE === "phase-production-build") return;
-
     if (values.NODE_ENV === "test") {
       if (!values.TEST_DATABASE_URL) {
         ctx.addIssue({
@@ -27,6 +20,16 @@ export const envSchema = z
       }
       return;
     }
+
+    // During `next build` for the E2E suite, Next.js forces NODE_ENV to
+    // production but only TEST_DATABASE_URL is present. No DB connection
+    // happens — route handlers are imported to collect page data, and
+    // runtime workers override DATABASE_URL per worker. Accept the build
+    // only when the caller is clearly a test harness (TEST_DATABASE_URL
+    // set); real production builds still require DATABASE_URL.
+    const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
+    if (isBuildPhase && values.TEST_DATABASE_URL) return;
+
     if (!values.DATABASE_URL) {
       ctx.addIssue({
         code: "custom",

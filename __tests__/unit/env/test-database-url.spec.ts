@@ -80,15 +80,33 @@ describe("envSchema — conditional URL requirements", () => {
       else process.env.NEXT_PHASE = originalPhase;
     });
 
-    it("passes with no DATABASE_URL and no TEST_DATABASE_URL", () => {
+    it("passes with only TEST_DATABASE_URL (E2E build path)", () => {
       process.env.NEXT_PHASE = "phase-production-build";
-      const result = envSchema.safeParse({ ...authEnv, NODE_ENV: "production" });
+      const result = envSchema.safeParse({
+        ...authEnv,
+        NODE_ENV: "production",
+        TEST_DATABASE_URL: testUrl,
+      });
       expect(result.success).toBe(true);
     });
 
-    it("passes in test mode without TEST_DATABASE_URL", () => {
+    it("still requires DATABASE_URL when neither URL is present (real prod build)", () => {
       process.env.NEXT_PHASE = "phase-production-build";
-      const result = envSchema.safeParse({ ...authEnv, NODE_ENV: "test" });
+      const result = envSchema.safeParse({ ...authEnv, NODE_ENV: "production" });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        const issue = result.error.issues.find((i) => i.path.includes("DATABASE_URL"));
+        expect(issue).toBeDefined();
+      }
+    });
+
+    it("passes with only DATABASE_URL (real prod build)", () => {
+      process.env.NEXT_PHASE = "phase-production-build";
+      const result = envSchema.safeParse({
+        ...authEnv,
+        NODE_ENV: "production",
+        DATABASE_URL: devUrl,
+      });
       expect(result.success).toBe(true);
     });
   });
