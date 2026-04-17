@@ -42,12 +42,20 @@ export async function startNextDev(options: StartNextDevOptions): Promise<NextDe
   const databaseUrl = buildSchemaAwareUrl(testDatabaseUrl, schemaName);
   const baseURL = `http://localhost:${port}`;
 
-  const proc = spawn("bun", ["x", "next", "dev", "--turbopack", "--port", String(port)], {
+  // `next start` serves the pre-compiled `.next/` build from the shared
+  // project directory. Per-worker server only differs by PORT / DATABASE_URL /
+  // BETTER_AUTH_URL — no compilation happens in the worker, so cold start is
+  // seconds instead of the minute+ that `next dev --turbopack` needs at
+  // 4-way parallelism.
+  const proc = spawn("bun", ["x", "next", "start", "--port", String(port)], {
     env: {
       ...process.env,
-      NODE_ENV: "development",
+      NODE_ENV: "production",
       DATABASE_URL: databaseUrl,
       BETTER_AUTH_URL: baseURL,
+      // Flip auth config to test-friendly values (rate limit off, signup
+      // enabled) without tripping Next.js production-mode invariants.
+      E2E_TEST_MODE: "1",
     },
     stdio: ["ignore", "pipe", "pipe"],
   });

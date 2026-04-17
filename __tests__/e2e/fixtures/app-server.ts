@@ -45,7 +45,11 @@ export const test = base.extend<{ autoReset: void }, { appServer: AppServer }>({
         await closeResetPool();
       }
     },
-    { scope: "worker" },
+    // Cold-start budget for 4 parallel workers: each spawns migrate, seed-test,
+    // and a dedicated Next.js dev server with its own .next-e2e-<port> cache,
+    // so the default 30s window is far too tight. 180s covers the slowest
+    // machine we test on.
+    { scope: "worker", timeout: 180_000 },
   ],
 
   baseURL: async ({ appServer }, use) => {

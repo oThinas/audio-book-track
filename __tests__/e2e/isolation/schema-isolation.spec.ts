@@ -19,7 +19,7 @@ test.describe("Schema isolation across workers", () => {
         name: "Isolation Probe",
         email: sharedEmail,
         password: "probepwd123",
-        username: `probe-${appServer.port}`,
+        username: `probe${appServer.port}`,
       },
     });
     expect(response.ok()).toBe(true);
@@ -39,7 +39,7 @@ test.describe("Schema isolation across workers", () => {
         name: "Isolation Probe",
         email: sharedEmail,
         password: "probepwd123",
-        username: `probe-${appServer.port}`,
+        username: `probe${appServer.port}`,
       },
     });
     expect(response.ok()).toBe(true);
