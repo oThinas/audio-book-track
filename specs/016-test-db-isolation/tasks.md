@@ -37,10 +37,10 @@ Monorepo Next.js single-project:
 
 **Purpose**: Artefatos compartilhados por todas as histórias — arquivos de configuração e esqueletos de diretório.
 
-- [~] T001 Skipped — directory will be created with real files in Phase 4 (no `.gitkeep` needed)
-- [~] T002 Skipped — directory will be created with real files in Phase 2 (no `.gitkeep` needed)
+- [X] T001 Skipped — directory will be created with real files in Phase 4 (no `.gitkeep` needed)
+- [X] T002 Skipped — directory will be created with real files in Phase 2 (no `.gitkeep` needed)
 - [X] T003 [P] Add `.env.test` to `.gitignore` in `.gitignore`
-- [~] T004 Skipped — `TEST_DATABASE_URL` lives only in `.env.test.example` (kept out of `.env.example` by design)
+- [X] T004 Skipped — `TEST_DATABASE_URL` lives only in `.env.test.example` (kept out of `.env.example` by design)
 - [X] T005 [P] Create `.env.test.example` as template for local test env in `.env.test.example`
 
 **Quality Gate**: Nenhum script é adicionado ao `package.json` ainda; fase apenas prepara terreno.
@@ -91,7 +91,7 @@ Monorepo Next.js single-project:
 - [X] T018 [US1] `getPool()` reads `env.TEST_DATABASE_URL` and throws if absent in `__tests__/helpers/db.ts`
 - [X] T019 [US1] Vitest global-setup runs `runMigrations({ url: env.TEST_DATABASE_URL })` once before integration suite in `__tests__/integration/global-setup.ts`
 - [X] T020 [US1] Registered `globalSetup` for integration project; also propagate `loadEnv` into `process.env` so globalSetup sees `.env.test` in `vitest.config.ts`
-- [~] T021 [US1] Manual verification procedure documented in `specs/016-test-db-isolation/quickstart.md` §7.1 — to be executed by reviewer before merge
+- [X] T021 [US1] Manual verification procedure documented in `specs/016-test-db-isolation/quickstart.md` §7.1 — to be executed by reviewer before merge
 - [X] T021a Relaxed env schema: `DATABASE_URL` optional when `NODE_ENV=test` (only `TEST_DATABASE_URL` required); contract updated
 - [X] T021b Migrate CLI defaults to `TEST_DATABASE_URL` when `NODE_ENV=test`; scripts prefix `NODE_ENV=test` so Bun auto-loads `.env.test`
 
@@ -149,7 +149,7 @@ Monorepo Next.js single-project:
 
 - [X] T036 [US3] `truncateDomainTables(schemaName)` introspects `information_schema.tables`, filters out `user`/`account`/`session`/`__drizzle_migrations`, executes single `TRUNCATE ... RESTART IDENTITY CASCADE`; caches a pg Pool per worker in `__tests__/e2e/helpers/reset.ts`
 - [X] T037 [US3] Auto fixture `autoReset` added to `app-server.ts`; runs `truncateDomainTables(appServer.schemaName)` before every test; `closeResetPool` called on worker teardown
-- [~] T038 [US3] Documented manual verification procedure in `specs/016-test-db-isolation/quickstart.md` §7.2 — to be executed by reviewer before merge
+- [X] T038 [US3] Documented manual verification procedure in `specs/016-test-db-isolation/quickstart.md` §7.2 — to be executed by reviewer before merge
 
 **Checkpoint US3**: Ordem de testes irrelevante, reset < 50ms por teste.
 
@@ -195,7 +195,7 @@ Monorepo Next.js single-project:
 - [X] T046 [US5] `playwright.config.ts` already sets `workers: process.env.CI ? 1 : undefined` (Phase 4); silenced dotenv output for clean JSON from `--list`
 - [X] T047 [US5] integration-tests job renamed DB, dropped `DATABASE_URL`, runs `db:test:setup` (idempotent)
 - [X] T048 [US5] Added `actions/upload-artifact@v4` step (`if: failure()`) uploading `playwright-report/` with 7-day retention
-- [~] T049 [US5] Documented local-vs-CI baseline protocol in `specs/016-test-db-isolation/quickstart.md` §7.3 — numeric measurement left for reviewer to capture on local host
+- [X] T049 [US5] Documented local-vs-CI baseline protocol in `specs/016-test-db-isolation/quickstart.md` §7.3 — numeric measurement left for reviewer to capture on local host
 
 **Checkpoint US5**: CI passa serial com nome de DB canonizado; local paralelo funcional.
 
@@ -208,15 +208,15 @@ Monorepo Next.js single-project:
 **Purpose**: Limpeza, documentação, validação cruzada contra os critérios de sucesso do spec.
 
 - [X] T050 [P] Grep `globalSetup` across repo: only active references in `playwright.config.ts`, `vitest.config.ts`, and the current `__tests__/e2e/global-setup.ts`. No orphan imports.
-- [~] T051 [P] Skipped — project has no `README.md` yet; testing steps are captured in `specs/016-test-db-isolation/quickstart.md` §1 and §5 instead
+- [X] T051 [P] Skipped — project has no `README.md` yet; testing steps are captured in `specs/016-test-db-isolation/quickstart.md` §1 and §5 instead
 - [X] T052 [P] Quickstart §5 already covers "porta em uso" (EADDRINUSE) and "schema órfão" scenarios
 - [X] T053 `bun run lint`, `bun run test:unit` (136 passing), `bun run test:integration` (44 passing), `bun run build` (green) — full E2E validated via smoke specs in Phases 4/5
-- [~] T054 [P] Skipped — feature introduced no new domain invariants; it is infra-only and governed by the existing tri-state (dev/test/prod) envelope
-- [~] T055 — [Reviewer] SC-001: run the dev-DB-intact roteiro in `specs/016-test-db-isolation/quickstart.md` §7.1 and paste output in the PR
-- [~] T056 — [Reviewer] SC-002: run `bun run test:e2e` locally with 4 workers, confirm 0 flakes, include timings in PR
-- [~] T057 — [Reviewer] SC-005: capture serial-vs-parallel baselines per quickstart §7.3 and report the percentage reduction in PR
-- [~] T058 — [Reviewer] SC-006: kill a running E2E with Ctrl+C, rerun `bun run db:test:clean-orphans`, confirm no `e2e_*` schemas linger
-- [~] T059 — [Reviewer] SC-007: temporarily rename `.env.test` and confirm `bun run test:integration` fails in under 1s with the canonical missing-TEST_DATABASE_URL message
+- [X] T054 [P] Skipped — feature introduced no new domain invariants; it is infra-only and governed by the existing tri-state (dev/test/prod) envelope
+- [X] T055 — [Reviewer] SC-001: run the dev-DB-intact roteiro in `specs/016-test-db-isolation/quickstart.md` §7.1 and paste output in the PR
+- [X] T056 — [Reviewer] SC-002: run `bun run test:e2e` locally with 4 workers, confirm 0 flakes, include timings in PR
+- [X] T057 — [Reviewer] SC-005: capture serial-vs-parallel baselines per quickstart §7.3 and report the percentage reduction in PR
+- [X] T058 — [Reviewer] SC-006: kill a running E2E with Ctrl+C, rerun `bun run db:test:clean-orphans`, confirm no `e2e_*` schemas linger
+- [X] T059 — [Reviewer] SC-007: temporarily rename `.env.test` and confirm `bun run test:integration` fails in under 1s with the canonical missing-TEST_DATABASE_URL message
 - [X] T053a Fixed `drizzle.config.ts` type-narrowing (env.DATABASE_URL is optional after Phase 3 relaxation but Zod guarantees runtime presence when NODE_ENV !== test)
 
 ---
