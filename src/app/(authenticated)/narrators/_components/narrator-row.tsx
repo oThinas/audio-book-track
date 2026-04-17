@@ -13,7 +13,7 @@ interface NarratorRowProps {
 export function NarratorRow({ narrator }: NarratorRowProps) {
   return (
     <TableRow data-testid="narrator-row">
-      <TableCell data-testid="narrator-name" className="font-medium text-foreground">
+      <TableCell data-testid="narrator-name" className="text-foreground">
         {narrator.name}
       </TableCell>
       <TableCell data-testid="narrator-email" className="text-muted-foreground">

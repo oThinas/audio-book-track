@@ -9,6 +9,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
+import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ import { NarratorRow } from "./narrator-row";
 
 interface NarratorsTableProps {
   readonly narrators: readonly Narrator[];
+  readonly topRow?: ReactNode;
 }
 
 function SortIcon({ direction }: { direction: false | "asc" | "desc" }) {
@@ -35,7 +37,7 @@ function SortIcon({ direction }: { direction: false | "asc" | "desc" }) {
   return <ArrowUpDown aria-hidden="true" className="size-3.5 opacity-50" />;
 }
 
-export function NarratorsTable({ narrators }: NarratorsTableProps) {
+export function NarratorsTable({ narrators, topRow }: NarratorsTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const columns = useMemo<ColumnDef<Narrator>[]>(
@@ -77,7 +79,7 @@ export function NarratorsTable({ narrators }: NarratorsTableProps) {
       data-testid="narrators-scroll-area"
       className="max-h-[70vh] w-full rounded-lg border"
     >
-      <Table>
+      <Table className="table-fixed">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
@@ -85,9 +87,15 @@ export function NarratorsTable({ narrators }: NarratorsTableProps) {
                 const canSort = header.column.getCanSort();
                 const sortDirection = header.column.getIsSorted();
                 const label = flexRender(header.column.columnDef.header, header.getContext());
-                const isActions = header.column.id === "actions";
+                const columnId = header.column.id;
+                const widthClass =
+                  columnId === "actions"
+                    ? "w-24 text-right"
+                    : columnId === "name" || columnId === "email"
+                      ? "w-1/2"
+                      : undefined;
                 return (
-                  <TableHead key={header.id} className={isActions ? "w-24 text-right" : undefined}>
+                  <TableHead key={header.id} className={widthClass}>
                     {canSort ? (
                       <Button
                         type="button"
@@ -116,10 +124,11 @@ export function NarratorsTable({ narrators }: NarratorsTableProps) {
           ))}
         </TableHeader>
         <TableBody>
+          {topRow}
           {sortedRows.map((row) => (
             <NarratorRow key={row.original.id} narrator={row.original} />
           ))}
-          {sortedRows.length === 0 && (
+          {sortedRows.length === 0 && !topRow && (
             <TableRow>
               <TableCell colSpan={columns.length} className="p-0">
                 <div
