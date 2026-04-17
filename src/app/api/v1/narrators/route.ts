@@ -7,14 +7,11 @@ import {
   validationErrorResponse,
 } from "@/lib/api/responses";
 import { auth } from "@/lib/auth/server";
+import type { Session } from "@/lib/auth/session";
 import { createNarratorSchema } from "@/lib/domain/narrator";
 import { NarratorEmailAlreadyInUseError } from "@/lib/errors/narrator-errors";
 import { createNarratorService } from "@/lib/factories/narrator";
 import type { NarratorService } from "@/lib/services/narrator-service";
-
-interface Session {
-  readonly user: { readonly id: string };
-}
 
 interface NarratorsDeps {
   readonly getSession: (args: { headers: Headers }) => Promise<Session | null>;
