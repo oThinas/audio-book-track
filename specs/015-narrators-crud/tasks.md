@@ -91,16 +91,16 @@ description: "Task list for CRUD de Narradores"
 
 > **NOTE**: Testes escritos PRIMEIRO, DEVEM falhar antes da implementação.
 
-- [ ] T017 [P] [US1] Escrever teste unitário do route handler GET em `__tests__/unit/api/narrators-list.test.ts` (cenários: 401 sem sessão, 200 lista vazia `{ data: [] }`, 200 com items ordenados por createdAt ASC)
-- [ ] T018 [P] [US1] Escrever teste E2E em `__tests__/e2e/narrators-list.spec.ts` (cenários: seed + listagem, estado vazio, sort por nome ASC/DESC, sort por e-mail, ScrollArea presente; usar helper `loginAsTestUser` de `__tests__/e2e/helpers/auth.ts`)
+- [X] T017 [P] [US1] Escrever teste unitário do route handler GET em `__tests__/unit/api/narrators-list.test.ts` (cenários: 401 sem sessão, 200 lista vazia `{ data: [] }`, 200 com items ordenados por createdAt ASC)
+- [X] T018 [P] [US1] Escrever teste E2E em `__tests__/e2e/narrators-list.spec.ts` (cenários: seed + listagem, estado vazio, sort por nome ASC/DESC, sort por e-mail, ScrollArea presente; usar helper `loginAsTestUser` de `__tests__/e2e/helpers/auth.ts`)
 
 ### Implementation for User Story 1
 
-- [ ] T019 [US1] Criar route handler GET em `src/app/api/v1/narrators/route.ts` (usa `auth.api.getSession`, `createNarratorService`, retorna `{ data: Narrator[] }` com 200 e `Cache-Control: no-store` no header — Princípio VIII)
-- [ ] T020 [P] [US1] Criar componente visual `NarratorRow` em `src/app/(authenticated)/narrators/_components/narrator-row.tsx` (view mode: exibe name, email, ícones Edit/Trash placeholders — sem lógica de ação ainda; usa Button ghost + lucide icons)
-- [ ] T021 [US1] Criar componente `NarratorsTable` em `src/app/(authenticated)/narrators/_components/narrators-table.tsx` (TanStack Table com sortable columns "Nome" e "E-mail", envolvido em `ScrollArea`, usa shadcn `Table`, renderiza `NarratorRow` por linha, empty state quando `data.length === 0`)
-- [ ] T022 [US1] Criar client wrapper `NarratorsClient` em `src/app/(authenticated)/narrators/_components/narrators-client.tsx` (`"use client"`, recebe `initialNarrators: Narrator[]` via props, gerencia state local da tabela, renderiza header da página com título/descrição/botão "+ Novo Narrador" renderizado mas `disabled` nesta fase — handler real entra em T028)
-- [ ] T023 [US1] Criar Server Component `page.tsx` em `src/app/(authenticated)/narrators/page.tsx` (async, chama `createNarratorService().list()`, passa para `NarratorsClient` via prop; envolve em `PageContainer`, `PageHeader`, `PageTitle`, `PageDescription`)
+- [X] T019 [US1] Criar route handler GET em `src/app/api/v1/narrators/route.ts` (usa `auth.api.getSession`, `createNarratorService`, retorna `{ data: Narrator[] }` com 200 e `Cache-Control: no-store` no header — Princípio VIII)
+- [X] T020 [P] [US1] Criar componente visual `NarratorRow` em `src/app/(authenticated)/narrators/_components/narrator-row.tsx` (view mode: exibe name, email, ícones Edit/Trash placeholders — sem lógica de ação ainda; usa Button ghost + lucide icons)
+- [X] T021 [US1] Criar componente `NarratorsTable` em `src/app/(authenticated)/narrators/_components/narrators-table.tsx` (TanStack Table com sortable columns "Nome" e "E-mail", envolvido em `ScrollArea`, usa shadcn `Table`, renderiza `NarratorRow` por linha, empty state quando `data.length === 0`)
+- [X] T022 [US1] Criar client wrapper `NarratorsClient` em `src/app/(authenticated)/narrators/_components/narrators-client.tsx` (`"use client"`, recebe `initialNarrators: Narrator[]` via props, gerencia state local da tabela, renderiza header da página com título/descrição/botão "+ Novo Narrador" renderizado mas `disabled` nesta fase — handler real entra em T028)
+- [X] T023 [US1] Criar Server Component `page.tsx` em `src/app/(authenticated)/narrators/page.tsx` (async, chama `createNarratorService().list()`, passa para `NarratorsClient` via prop; envolve em `PageContainer`, `PageHeader`, `PageTitle`, `PageDescription`)
 
 **Checkpoint**: US1 totalmente funcional — listagem, sort e estado vazio funcionam. Ícones de ação ainda não executam nada.
 
