@@ -2,8 +2,8 @@ import { config as loadDotenv } from "dotenv";
 
 // Populate process.env for the Playwright host process (bunx does not auto-load
 // .env.test even when NODE_ENV=test, because dotenv is only triggered by `bun run`).
-loadDotenv({ path: ".env.test", override: false });
-loadDotenv({ path: ".env", override: false });
+loadDotenv({ path: ".env.test", override: false, quiet: true });
+loadDotenv({ path: ".env", override: false, quiet: true });
 
 import { defineConfig } from "@playwright/test";
 

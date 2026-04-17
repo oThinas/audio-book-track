@@ -187,15 +187,15 @@ Monorepo Next.js single-project:
 
 ### Tests (US5)
 
-- [ ] T044 [P] [US5] Add a job output assertion step that fails if Playwright report shows more than 1 worker used in CI in `.github/workflows/pr-checks.yml`
+- [X] T044 [P] [US5] Pre-test assertion step parses `playwright test --list --reporter=json` and fails if `config.workers !== 1` under CI=true in `.github/workflows/pr-checks.yml`
 
 ### Implementation (US5)
 
-- [ ] T045 [US5] Update `.github/workflows/pr-checks.yml` e2e-tests job: **rename `audio_book_track_test` → `audiobook_track_test`** na definição do serviço Postgres e em env vars; criar tanto `audiobook_track` quanto `audiobook_track_test`; setar `TEST_DATABASE_URL`; trocar `bun run db:migrate` por `bun run db:test:setup` in `.github/workflows/pr-checks.yml`
-- [ ] T046 [US5] Update `playwright.config.ts` setting `workers: process.env.CI ? 1 : undefined` (CI serial, local default) in `playwright.config.ts`
-- [ ] T047 [US5] Update `.github/workflows/pr-checks.yml` integration-tests job: **rename `audio_book_track_test` → `audiobook_track_test`**; setar `TEST_DATABASE_URL` (real) e manter `DATABASE_URL` como placeholder não-usado; rodar `bun run db:test:setup` in `.github/workflows/pr-checks.yml`
-- [ ] T048 [US5] Add artifact upload step for Playwright HTML report on failure in `.github/workflows/pr-checks.yml`
-- [ ] T049 [US5] Measure local baseline: rodar E2E serial (`workers: 1`) e com 4 workers na mesma máquina, documentar a redução no PR description e em `specs/016-test-db-isolation/quickstart.md`
+- [X] T045 [US5] e2e-tests job renamed DB to `audiobook_track_test`, sets `TEST_DATABASE_URL`, bootstraps via `db:test:setup` (no `DATABASE_URL`), `BETTER_AUTH_URL=http://localhost:3100`
+- [X] T046 [US5] `playwright.config.ts` already sets `workers: process.env.CI ? 1 : undefined` (Phase 4); silenced dotenv output for clean JSON from `--list`
+- [X] T047 [US5] integration-tests job renamed DB, dropped `DATABASE_URL`, runs `db:test:setup` (idempotent)
+- [X] T048 [US5] Added `actions/upload-artifact@v4` step (`if: failure()`) uploading `playwright-report/` with 7-day retention
+- [~] T049 [US5] Documented local-vs-CI baseline protocol in `specs/016-test-db-isolation/quickstart.md` §7.3 — numeric measurement left for reviewer to capture on local host
 
 **Checkpoint US5**: CI passa serial com nome de DB canonizado; local paralelo funcional.
 

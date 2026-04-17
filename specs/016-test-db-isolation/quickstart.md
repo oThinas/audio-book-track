@@ -192,6 +192,24 @@ Depois do merge, estas verificações devem passar (uma vez cada, manualmente, a
 - [ ] Rodar `bun run test:e2e`, matar com Ctrl+C no meio, rodar de novo — segunda execução passa.
 - [ ] Abrir PR com mudança em seed-test → revisor rejeita (não deve ser necessário mexer nele para features de domínio).
 
+### 7.3. US5 — baseline local: serial vs paralelo (Phase 7)
+
+Para documentar o ganho de paralelismo local, rodar a suíte E2E duas vezes na mesma máquina:
+
+```bash
+# serial (como no CI)
+NODE_ENV=test bunx playwright test --workers=1 | tee /tmp/e2e-serial.log
+
+# default (Playwright decide; em máquina 4+ cores, ~4 workers)
+bun run test:e2e | tee /tmp/e2e-parallel.log
+```
+
+Anotar no PR: o tempo total paralelo deve ser ≥ 40% menor que o serial (SC-005). Se não for, verificar:
+
+1. O host tem pelo menos 4 CPUs disponíveis.
+2. Nenhum worker falhou por `EADDRINUSE` — se houver colisão de portas, aumentar `BASE_E2E_PORT` em `fixtures/app-server.ts`.
+3. Postgres não está com limite de conexões abaixo do necessário (4 workers × ~5 conexões = 20, bem abaixo do default 100).
+
 ### 7.2. US3 — admin session sobrevive aos resets (Phase 5)
 
 Roteiro para provar que `truncateDomainTables` não invalida a sessão do admin:
