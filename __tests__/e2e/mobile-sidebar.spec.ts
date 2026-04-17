@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures/app-server";
 
 test.describe("Mobile Sidebar Menu", () => {
   test.beforeEach(async ({ page }) => {

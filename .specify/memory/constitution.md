@@ -1,25 +1,29 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 2.8.0 → 2.9.0 (MINOR: added test doubles convention
-to Principle V — Test Classification)
+Version change: 2.9.0 → 2.10.0 (MINOR: added test isolation and
+test-database architecture to Principle V — Desenvolvimento
+Orientado a Testes)
 
 Modified principles:
   - V. Desenvolvimento Orientado a Testes:
-    - Updated unit test "Regra de ouro" to include fakes injetados
-    - Updated "Árvore de decisão rápida" to include fakes injetados
-    - Added "Convenção de Test Doubles" subsection
+    - Added "Isolamento de Testes e Banco de Dados de Teste"
+      subsection documenting the cross-layer isolation strategy
+      delivered in feature 016-test-db-isolation
 
 Added sections:
-  - Principle V: "Convenção de Test Doubles" — documents when to use
-    manual fakes (DI), when vi.mock() is acceptable (allowlist), and
-    that vi.fn() is free for typed fakes.
+  - Principle V: "Isolamento de Testes e Banco de Dados de Teste" —
+    mandates TEST_DATABASE_URL separation, BEGIN/ROLLBACK for
+    integration, schema-per-worker for E2E, TRUNCATE-based reset
+    preserving the admin, E2E_TEST_MODE flag for auth config, and
+    factory-not-seed rule for new entities.
 
 Removed sections: N/A
 
 Templates requiring updates:
   ✅ .specify/memory/constitution.md — this file (updated now)
-  ✅ CLAUDE.md — already updated with matching convention section
+  ✅ CLAUDE.md — updated with matching "Isolamento de testes" section
+  ✅ docs/testing-strategy.md — canonical reference, already written
 
 Follow-up TODOs: N/A
 -->
@@ -213,10 +217,97 @@ Mocks globais de `@/lib/db` e `@/lib/env` ficam em
 `vi.fn()` é livre para criar fakes tipados — não exige classes
 hand-written para funções simples.
 
+#### Isolamento de Testes e Banco de Dados de Teste
+
+Testes DEVEM ser isolados entre si. Nenhum teste pode observar ou
+influenciar dados de outro. A estratégia de isolamento é específica
+por camada e é obrigatória.
+
+**Banco de dados de teste separado:**
+
+- Integration e E2E DEVEM operar sobre `audiobook_track_test` —
+  nunca `audiobook_track` (dev/prod).
+- `TEST_DATABASE_URL` é obrigatória quando `NODE_ENV=test`;
+  `DATABASE_URL` é obrigatória nos demais casos. Validação é feita
+  via `.superRefine()` no schema Zod de env.
+- `DATABASE_URL` NÃO DEVE apontar para a base de teste em nenhum
+  ambiente — garante que um teste acidental não corrompa dados de
+  desenvolvimento.
+- `src/lib/env/schema.ts` é separado de `src/lib/env/index.ts` para
+  permitir importar o schema puro sem acionar o mock global de
+  `@/lib/env` usado em unit tests (ver Convenção de Test Doubles).
+
+**Integration — BEGIN/ROLLBACK automático:**
+
+- Cada teste roda dentro de uma transação PostgreSQL iniciada em
+  `beforeEach` e desfeita em `afterEach` via `ROLLBACK`.
+- Mudanças do teste são descartadas; o próximo teste começa com o
+  estado pós-migrations. Nenhum teardown manual, nenhum seed
+  compartilhado além de `__drizzle_migrations`.
+
+**E2E — schema-per-worker:**
+
+- Cada worker do Playwright recebe um schema PostgreSQL exclusivo
+  (`e2e_w{index}_{uuid8}`) na base `audiobook_track_test`.
+- Migrations são aplicadas no schema do worker via CLI customizado
+  que reescreve referências `"public"."..."` dos arquivos SQL do
+  Drizzle para o schema-alvo, e mantém um journal próprio em
+  `<schema>.__drizzle_migrations`.
+- Cada worker sobe uma instância `next start` em porta dedicada
+  (`BASE_E2E_PORT + workerIndex`) com `DATABASE_URL` apontando ao
+  schema via `?options=-c search_path=<schema>`.
+- O Playwright `globalSetup` roda `next build` uma única vez por
+  sessão (cacheado por `BUILD_FRESH_WINDOW_MS`) e os workers
+  compartilham `.next/`. Rodar `next dev --turbopack` por worker é
+  PROIBIDO — satura CPU em paralelismo ≥ 2 workers.
+- Schemas são dropados no teardown do worker. Schemas órfãos são
+  identificados por `COMMENT ON SCHEMA` com timestamp ISO e
+  limpos pelo `globalSetup` mais pelo script
+  `bun run db:test:clean-orphans`.
+
+**E2E — reset entre testes (TRUNCATE seletivo):**
+
+- Fixture auto-scope executa `TRUNCATE ... RESTART IDENTITY CASCADE`
+  em `beforeEach`, preservando `user`, `account`, `session` e
+  `__drizzle_migrations`.
+- O admin seed (única linha de `src/lib/db/seed-test.ts`) é
+  preservado durante todo o worker — `login()` funciona em qualquer
+  teste sem re-seed.
+- DROP + CREATE de schema por teste é PROIBIDO (uma ordem de
+  magnitude mais lento que TRUNCATE).
+
+**Flag `E2E_TEST_MODE`:**
+
+- `next start` exige `NODE_ENV=production`. Qualquer configuração
+  de auth/backend que precise ser flipada em E2E (rate limit
+  desligado, signup habilitado) DEVE usar
+  `process.env.E2E_TEST_MODE === "1"`, nunca `NODE_ENV === "test"`.
+- Lido por request no runtime — produção fica intocada quando o
+  flag não está setado.
+
+**Factory, não seed, para novas entidades:**
+
+- Adicionar uma entidade nova (ex: `book`, `chapter`) NUNCA altera
+  `src/lib/db/seed-test.ts`. Esse arquivo existe apenas para criar
+  o admin e é a única linha estável entre execuções.
+- Dados de teste DEVEM vir de factories em
+  `__tests__/helpers/factories.ts` (ex: `createTestBook(db, overrides)`),
+  chamadas em `beforeEach` ou no próprio teste.
+- O auto-reset do fixture E2E (TRUNCATE seletivo) ou o
+  `BEGIN/ROLLBACK` do setup integration limpam entre testes —
+  nenhum teardown manual é necessário.
+
+Referência detalhada com diagramas, exemplos e troubleshooting:
+[docs/testing-strategy.md](../../docs/testing-strategy.md).
+
 **Rationale**: A confiabilidade dos cálculos financeiros depende de testes
 abrangentes. Defeitos em pagamentos impactam diretamente pessoas reais.
 Classificação correta dos testes garante que cada tipo execute no ambiente
-apropriado e que a pirâmide de testes seja respeitada.
+apropriado e que a pirâmide de testes seja respeitada. Isolamento
+automático por camada — schema-per-worker no E2E, BEGIN/ROLLBACK no
+integration, TEST_DATABASE_URL separado de DATABASE_URL — permite
+paralelismo real sem flakiness e impede que uma execução acidental de
+testes corrompa dados de desenvolvimento.
 
 ## Engineering Standards
 
@@ -826,4 +917,4 @@ submeter para review ou merge:
 revisar por outros e cria responsabilidade pessoal com os padrões
 definidos nesta constituição.
 
-**Version**: 2.9.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-04-14
+**Version**: 2.10.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-04-17

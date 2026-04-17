@@ -1,3 +1,1 @@
-{
-  "feature_directory": "specs/014-custom-404-page"
-}
+{ "feature_directory": "specs/016-test-db-isolation" }

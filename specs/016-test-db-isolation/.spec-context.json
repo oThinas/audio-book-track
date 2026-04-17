@@ -1,0 +1,48 @@
+{
+  "transitions": [
+    {
+      "step": "specify",
+      "substep": null,
+      "from": null,
+      "by": "extension",
+      "at": "2026-04-17T14:32:15.095Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-17T14:32:26.061Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-17T14:33:14.194Z"
+    }
+  ],
+  "currentStep": "tasks",
+  "stepHistory": {
+    "specify": {
+      "startedAt": "2026-04-17T14:32:15.095Z",
+      "completedAt": "2026-04-17T14:32:26.060Z"
+    },
+    "plan": {
+      "startedAt": "2026-04-17T14:32:26.060Z",
+      "completedAt": "2026-04-17T14:33:14.193Z"
+    },
+    "tasks": {
+      "startedAt": "2026-04-17T14:33:14.193Z",
+      "completedAt": null
+    }
+  },
+  "status": "archived",
+  "specName": "Test Db Isolation"
+}

@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "../fixtures/app-server";
 
 test.describe("Login Flow (US2)", () => {
   test("should redirect unauthenticated user from /dashboard to /login", async ({ page }) => {

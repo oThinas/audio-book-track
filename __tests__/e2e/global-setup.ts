@@ -1,24 +1,44 @@
-import "dotenv/config";
-import { execSync } from "node:child_process";
-import { sql } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/node-postgres";
-import { Pool } from "pg";
+import { spawn } from "node:child_process";
+import { existsSync, statSync } from "node:fs";
 
-export default async function globalSetup() {
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-  const db = drizzle(pool);
+import { cleanOrphanSchemas } from "@/lib/db/test-schema";
 
-  try {
-    const tables = await db.execute(sql`
-      SELECT tablename FROM pg_tables WHERE schemaname = 'public'
-    `);
-    const tableNames = tables.rows.map((r) => `"${r.tablename}"`).join(", ");
-    if (tableNames) {
-      await db.execute(sql.raw(`TRUNCATE TABLE ${tableNames} CASCADE`));
+const ONE_HOUR_MS = 60 * 60 * 1000;
+const BUILD_ID_PATH = ".next/BUILD_ID";
+const BUILD_FRESH_WINDOW_MS = 15 * 60 * 1000;
+
+async function ensureNextBuild(): Promise<void> {
+  if (existsSync(BUILD_ID_PATH)) {
+    const age = Date.now() - statSync(BUILD_ID_PATH).mtimeMs;
+    if (age < BUILD_FRESH_WINDOW_MS) {
+      console.info(`Reusing .next build (${Math.round(age / 1000)}s old).`);
+      return;
     }
+  }
 
-    execSync("bun run db:seed", { stdio: "pipe" });
-  } finally {
-    await pool.end();
+  console.info("Running `next build` so E2E workers can share a compiled app...");
+  await new Promise<void>((resolve, reject) => {
+    const proc = spawn("bun", ["run", "build"], {
+      stdio: "inherit",
+      env: { ...process.env, NODE_ENV: "production" },
+    });
+    proc.once("error", reject);
+    proc.once("close", (code) => {
+      if (code === 0) resolve();
+      else reject(new Error(`next build exited with code ${code}`));
+    });
+  });
+}
+
+export default async function globalSetup(): Promise<void> {
+  if (!process.env.TEST_DATABASE_URL) {
+    throw new Error("TEST_DATABASE_URL is required for E2E. Set it in .env.test.");
+  }
+
+  await ensureNextBuild();
+
+  const { dropped } = await cleanOrphanSchemas(ONE_HOUR_MS);
+  if (dropped.length > 0) {
+    console.info(`Cleaned ${dropped.length} orphan test schema(s):`, dropped);
   }
 }

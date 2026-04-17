@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures/app-server";
 import { login } from "./helpers/auth";
 
 const KNOWN_MESSAGES = [

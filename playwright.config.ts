@@ -1,7 +1,11 @@
-import { defineConfig } from "@playwright/test";
+import { config as loadDotenv } from "dotenv";
 
-const E2E_PORT = 3100;
-const E2E_BASE_URL = `http://localhost:${E2E_PORT}`;
+// Populate process.env for the Playwright host process (bunx does not auto-load
+// .env.test even when NODE_ENV=test, because dotenv is only triggered by `bun run`).
+loadDotenv({ path: ".env.test", override: false, quiet: true });
+loadDotenv({ path: ".env", override: false, quiet: true });
+
+import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
   globalSetup: "./__tests__/e2e/global-setup.ts",
@@ -12,14 +16,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: "html",
   use: {
-    baseURL: E2E_BASE_URL,
     trace: "on-first-retry",
   },
   projects: [{ name: "chromium", use: { browserName: "chromium" } }],
-  webServer: {
-    command: `bun run dev --port ${E2E_PORT}`,
-    url: E2E_BASE_URL,
-    reuseExistingServer: !process.env.CI,
-    timeout: 30000,
-  },
 });

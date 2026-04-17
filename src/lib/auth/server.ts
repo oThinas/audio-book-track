@@ -15,7 +15,10 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
-    disableSignUp: true,
+    // Signup is disabled by default. E2E test workers spawn `next start` with
+    // NODE_ENV=production (Next.js requires it), so we gate on a dedicated
+    // `E2E_TEST_MODE` flag read at request time instead of at build time.
+    disableSignUp: process.env.E2E_TEST_MODE !== "1",
   },
   plugins: [
     username({
@@ -31,8 +34,11 @@ export const auth = betterAuth({
       maxAge: 300,
     },
   },
-  rateLimit: {
-    window: 60,
-    max: 3,
-  },
+  rateLimit:
+    process.env.E2E_TEST_MODE === "1"
+      ? { enabled: false }
+      : {
+          window: 60,
+          max: 3,
+        },
 });
