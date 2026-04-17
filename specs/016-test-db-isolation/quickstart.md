@@ -192,6 +192,22 @@ Depois do merge, estas verificações devem passar (uma vez cada, manualmente, a
 - [ ] Rodar `bun run test:e2e`, matar com Ctrl+C no meio, rodar de novo — segunda execução passa.
 - [ ] Abrir PR com mudança em seed-test → revisor rejeita (não deve ser necessário mexer nele para features de domínio).
 
+### 7.2. US3 — admin session sobrevive aos resets (Phase 5)
+
+Roteiro para provar que `truncateDomainTables` não invalida a sessão do admin:
+
+1. Rodar a suíte E2E inteira:
+
+   ```bash
+   bun run test:e2e
+   ```
+
+2. Observar: nenhum teste deve redirecionar para `/login` depois do primeiro login no `beforeEach`. Se os dados do admin fossem apagados, qualquer teste que rodasse depois precisaria logar de novo.
+
+3. Abrir `playwright-report/`, filtrar por testes que exercitam rotas autenticadas (ex.: `settings`, `mobile-sidebar`), e confirmar que o primeiro `page.goto(...)` após login mantém cookie válido.
+
+4. Opcional: grep os testes por `beforeEach.*login` — cada arquivo loga apenas uma vez no próprio `beforeEach` (não entre testes dentro do mesmo describe).
+
 ### 7.1. US1 — verificação manual (Phase 3)
 
 Roteiro para provar que `bun run test:integration` NÃO toca `audiobook_track`:

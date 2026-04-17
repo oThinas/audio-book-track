@@ -2,6 +2,7 @@ import { test as base } from "@playwright/test";
 
 import { buildWorkerSchemaName, createWorkerSchema, dropWorkerSchema } from "@/lib/db/test-schema";
 
+import { closeResetPool, truncateDomainTables } from "../helpers/reset";
 import { applyMigrationsToSchema } from "./migrate-helper";
 import { type NextDevHandle, startNextDev, stopNextDev } from "./next-dev-process";
 import { seedAdminForSchema } from "./seed-helper";
@@ -14,8 +15,8 @@ export interface AppServer {
   readonly port: number;
 }
 
-// biome-ignore lint/complexity/noBannedTypes: empty test-fixtures generic is required so Playwright resolves `appServer` against the worker-fixtures slot
-export const test = base.extend<{}, { appServer: AppServer }>({
+// biome-ignore lint/suspicious/noConfusingVoidType: Playwright's auto fixtures idiomatically produce void (no consumable value)
+export const test = base.extend<{ autoReset: void }, { appServer: AppServer }>({
   appServer: [
     // biome-ignore lint/correctness/noEmptyPattern: Playwright fixture signature requires empty pattern when no other fixtures are consumed
     async ({}, use, workerInfo) => {
@@ -41,6 +42,7 @@ export const test = base.extend<{}, { appServer: AppServer }>({
       } finally {
         if (handle) await stopNextDev(handle);
         await dropWorkerSchema(schemaName, { url: testDatabaseUrl }).catch(() => {});
+        await closeResetPool();
       }
     },
     { scope: "worker" },
@@ -49,6 +51,17 @@ export const test = base.extend<{}, { appServer: AppServer }>({
   baseURL: async ({ appServer }, use) => {
     await use(appServer.baseURL);
   },
+
+  // Auto-run before every test: clear non-preserved tables so tests observe a
+  // consistent baseline. Admin (user/account/session) stays so the session
+  // established in previous tests continues to work.
+  autoReset: [
+    async ({ appServer }, use) => {
+      await truncateDomainTables(appServer.schemaName);
+      await use();
+    },
+    { auto: true },
+  ],
 });
 
 export { expect } from "@playwright/test";

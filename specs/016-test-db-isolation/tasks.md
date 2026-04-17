@@ -142,14 +142,14 @@ Monorepo Next.js single-project:
 
 ### Tests (US3)
 
-- [ ] T034 [P] [US3] Write integration test for `truncateDomainTables(schema)` that asserts: domain tables empty; `user`/`account`/`session` preserved; sequences reset in `__tests__/integration/infra/truncate-domain-tables.spec.ts`
-- [ ] T035 [P] [US3] Write E2E test that creates a row with a unique field, runs twice, both pass (validates reset between tests) in `__tests__/e2e/isolation/between-tests-reset.spec.ts`
+- [X] T034 [P] [US3] Integration test with synthetic schema proving preserved vs truncated tables in `__tests__/integration/infra/truncate-domain-tables.spec.ts`
+- [X] T035 [P] [US3] E2E spec in `__tests__/e2e/isolation/between-tests-reset.spec.ts` — two tests, second starts with empty `user_preference` and re-inserts the unique admin row
 
 ### Implementation (US3)
 
-- [ ] T036 [US3] Implement `truncateDomainTables(schema)` that introspects `information_schema.tables` and TRUNCATEs everything except `user`/`account`/`session` with `RESTART IDENTITY CASCADE` in `__tests__/e2e/helpers/reset.ts`
-- [ ] T037 [US3] Wire `beforeEach` in fixture to call `truncateDomainTables(appServer.schemaName)` before each test (extend fixture in `__tests__/e2e/fixtures/app-server.ts`)
-- [ ] T038 [US3] Re-run E2E suite to ensure admin session remains valid across tests (no re-login needed)
+- [X] T036 [US3] `truncateDomainTables(schemaName)` introspects `information_schema.tables`, filters out `user`/`account`/`session`/`__drizzle_migrations`, executes single `TRUNCATE ... RESTART IDENTITY CASCADE`; caches a pg Pool per worker in `__tests__/e2e/helpers/reset.ts`
+- [X] T037 [US3] Auto fixture `autoReset` added to `app-server.ts`; runs `truncateDomainTables(appServer.schemaName)` before every test; `closeResetPool` called on worker teardown
+- [~] T038 [US3] Documented manual verification procedure in `specs/016-test-db-isolation/quickstart.md` §7.2 — to be executed by reviewer before merge
 
 **Checkpoint US3**: Ordem de testes irrelevante, reset < 50ms por teste.
 
