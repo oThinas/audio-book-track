@@ -101,8 +101,15 @@ export function NarratorsTable({
                     : columnId === "name" || columnId === "email"
                       ? "w-1/2"
                       : undefined;
+                const ariaSort = canSort
+                  ? sortDirection === "asc"
+                    ? "ascending"
+                    : sortDirection === "desc"
+                      ? "descending"
+                      : "none"
+                  : undefined;
                 return (
-                  <TableHead key={header.id} className={widthClass}>
+                  <TableHead key={header.id} className={widthClass} aria-sort={ariaSort}>
                     {canSort ? (
                       <Button
                         type="button"
@@ -110,13 +117,6 @@ export function NarratorsTable({
                         size="sm"
                         onClick={header.column.getToggleSortingHandler()}
                         className="-ml-2 gap-1.5"
-                        aria-sort={
-                          sortDirection === "asc"
-                            ? "ascending"
-                            : sortDirection === "desc"
-                              ? "descending"
-                              : "none"
-                        }
                       >
                         {label}
                         <SortIcon direction={sortDirection} />
