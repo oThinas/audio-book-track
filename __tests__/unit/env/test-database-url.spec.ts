@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import { envSchema } from "@/lib/env/schema";
 
@@ -70,5 +70,26 @@ describe("envSchema — conditional URL requirements", () => {
     if (result.success) {
       expect(result.data.NODE_ENV).toBe("development");
     }
+  });
+
+  describe("during next build (NEXT_PHASE=phase-production-build)", () => {
+    const originalPhase = process.env.NEXT_PHASE;
+
+    afterEach(() => {
+      if (originalPhase === undefined) delete process.env.NEXT_PHASE;
+      else process.env.NEXT_PHASE = originalPhase;
+    });
+
+    it("passes with no DATABASE_URL and no TEST_DATABASE_URL", () => {
+      process.env.NEXT_PHASE = "phase-production-build";
+      const result = envSchema.safeParse({ ...authEnv, NODE_ENV: "production" });
+      expect(result.success).toBe(true);
+    });
+
+    it("passes in test mode without TEST_DATABASE_URL", () => {
+      process.env.NEXT_PHASE = "phase-production-build";
+      const result = envSchema.safeParse({ ...authEnv, NODE_ENV: "test" });
+      expect(result.success).toBe(true);
+    });
   });
 });

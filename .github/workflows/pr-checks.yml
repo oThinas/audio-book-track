@@ -72,13 +72,6 @@ jobs:
           --health-retries=5
     env:
       TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/audiobook_track_test
-      # `next build` (invoked by global-setup.ts) forces NODE_ENV=production
-      # and eagerly validates `@/lib/env` while collecting page data. The
-      # production schema requires DATABASE_URL. The build never connects —
-      # runtime workers overwrite DATABASE_URL per worker with a schema-aware
-      # URL — so we point it at the same test database here to satisfy the
-      # validator.
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/audiobook_track_test
       BETTER_AUTH_SECRET: ci-test-secret-do-not-use-in-production
       BETTER_AUTH_URL: http://localhost:3100
     steps:
