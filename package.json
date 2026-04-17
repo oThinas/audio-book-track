@@ -9,7 +9,7 @@
     "db:migrate": "bun run src/lib/db/migrate.ts",
     "db:seed": "bun run src/lib/db/seed.ts",
     "db:studio": "bunx drizzle-kit studio",
-    "db:test:setup": "NODE_ENV=test bun run scripts/db/ensure-test-db.ts && NODE_ENV=test bun run src/lib/db/migrate.ts",
+    "db:test:setup": "NODE_ENV=test bun run scripts/db/ensure-test-db.ts && NODE_ENV=test bun run src/lib/db/migrate.ts && NODE_ENV=test bun run src/lib/db/seed-test.ts",
     "db:test:seed": "NODE_ENV=test bun run src/lib/db/seed-test.ts",
     "db:test:clean-orphans": "NODE_ENV=test bun run scripts/db/clean-orphan-schemas.ts",
     "test": "vitest run && bunx playwright test",

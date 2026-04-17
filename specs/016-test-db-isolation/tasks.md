@@ -165,14 +165,15 @@ Monorepo Next.js single-project:
 
 ### Tests (US4)
 
-- [ ] T039 [P] [US4] Write unit test asserting `seed-test.ts` only inserts into `user`/`account` tables (grep or AST check) in `__tests__/unit/db/seed-test-scope.spec.ts`
-- [ ] T040 [P] [US4] Write integration test that runs seed-test against an empty schema and asserts exactly one admin row with known credentials in `__tests__/integration/infra/seed-test.spec.ts`
+- [X] T039 [P] [US4] Unit spec grep-checking `seed-test.ts` against drizzle/raw-SQL references to domain tables in `__tests__/unit/db/seed-test-scope.spec.ts`
+- [X] T040 [P] [US4] Integration spec runs `seedAdmin` against a freshly migrated worker schema and asserts 1 user + 1 account + idempotency in `__tests__/integration/infra/seed-test.spec.ts`
 
 ### Implementation (US4)
 
-- [ ] T041 [US4] Create `src/lib/db/seed-test.ts` containing only the admin creation logic (idempotent via `findFirst` check), accepting `--url` and `--schema` argv in `src/lib/db/seed-test.ts`
-- [ ] T042 [US4] Update `src/lib/db/seed.ts` header comment to clarify it is DEV-ONLY and may be expanded freely in `src/lib/db/seed.ts`
-- [ ] T043 [US4] Update `CLAUDE.md` with short paragraph on "Nova entidade de domínio: factory, não seed" convention in `CLAUDE.md`
+- [X] T041 [US4] `src/lib/db/seed-test.ts` already exists (created pre-emptively in Phase 4)
+- [X] T042 [US4] Added DEV-ONLY banner comment to `src/lib/db/seed.ts` directing new entities to `seed-test.ts`/factories rule
+- [X] T043 [US4] Added "Nova entidade de domínio: factory, não seed" section to `CLAUDE.md`
+- [X] T043a Chained `seed-test.ts` into `db:test:setup` in `package.json` (Phase 4 deferred this)
 
 **Checkpoint US4**: seed-test estável, documentação clara, nenhum acoplamento a domínio.
 

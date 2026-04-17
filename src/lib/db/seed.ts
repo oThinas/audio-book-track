@@ -1,3 +1,7 @@
+// DEV-ONLY seed. Free to grow with example records for local exploration
+// (sample studios, books, chapters). NOT used by tests — tests bootstrap
+// through src/lib/db/seed-test.ts (admin only) and create their own data
+// via factories. See CLAUDE.md › "Nova entidade: factory, não seed".
 import "dotenv/config";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";

@@ -91,6 +91,20 @@
 
 ---
 
+## Nova entidade de domínio: factory, não seed
+
+Adicionar uma entidade nova (ex: `book`, `chapter`) **NUNCA** toca `src/lib/db/seed-test.ts`. Esse arquivo existe apenas para criar o admin e é a única linha estável entre execuções de teste.
+
+Para prover dados novos em testes:
+
+1. Criar uma factory em `__tests__/helpers/factories.ts` (ex: `createTestBook(db, overrides)`).
+2. Chamar a factory no `beforeEach` ou no próprio teste.
+3. Confiar no auto-reset do fixture E2E (truncate seletivo) ou no `BEGIN/ROLLBACK` do setup integration para limpar entre testes.
+
+Regra: se você está alterando `seed-test.ts` fora de uma feature que refaz o admin, pare e repense — provavelmente você quer uma factory.
+
+---
+
 ## Regras de Classificação de Testes
 
 ### Unit (`__tests__/unit/`)
