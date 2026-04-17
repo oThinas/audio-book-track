@@ -52,6 +52,11 @@ export function NarratorsTable({ narrators }: NarratorsTableProps) {
         header: "E-mail",
         enableSorting: true,
       },
+      {
+        id: "actions",
+        header: () => <span className="sr-only">Ações</span>,
+        enableSorting: false,
+      },
     ],
     [],
   );
@@ -80,8 +85,9 @@ export function NarratorsTable({ narrators }: NarratorsTableProps) {
                 const canSort = header.column.getCanSort();
                 const sortDirection = header.column.getIsSorted();
                 const label = flexRender(header.column.columnDef.header, header.getContext());
+                const isActions = header.column.id === "actions";
                 return (
-                  <TableHead key={header.id}>
+                  <TableHead key={header.id} className={isActions ? "w-24 text-right" : undefined}>
                     {canSort ? (
                       <Button
                         type="button"
@@ -106,9 +112,6 @@ export function NarratorsTable({ narrators }: NarratorsTableProps) {
                   </TableHead>
                 );
               })}
-              <TableHead className="w-24 text-right">
-                <span className="sr-only">Ações</span>
-              </TableHead>
             </TableRow>
           ))}
         </TableHeader>
@@ -118,7 +121,7 @@ export function NarratorsTable({ narrators }: NarratorsTableProps) {
           ))}
           {sortedRows.length === 0 && (
             <TableRow>
-              <TableCell colSpan={columns.length + 1} className="p-0">
+              <TableCell colSpan={columns.length} className="p-0">
                 <div
                   data-testid="narrators-empty-state"
                   className="flex flex-col items-center justify-center py-16 text-center"
