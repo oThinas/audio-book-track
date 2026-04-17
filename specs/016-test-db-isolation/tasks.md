@@ -37,11 +37,11 @@ Monorepo Next.js single-project:
 
 **Purpose**: Artefatos compartilhados por todas as histórias — arquivos de configuração e esqueletos de diretório.
 
-- [ ] T001 Create directory `__tests__/e2e/fixtures/` with `.gitkeep` if needed in `__tests__/e2e/fixtures/.gitkeep`
-- [ ] T002 Create directory `scripts/db/` with `.gitkeep` in `scripts/db/.gitkeep`
-- [ ] T003 [P] Add `.env.test` to `.gitignore` in `.gitignore`
-- [ ] T004 [P] Update `.env.example` with `TEST_DATABASE_URL` placeholder in `.env.example`
-- [ ] T005 [P] Create `.env.test.example` as template for local test env in `.env.test.example`
+- [~] T001 Skipped — directory will be created with real files in Phase 4 (no `.gitkeep` needed)
+- [~] T002 Skipped — directory will be created with real files in Phase 2 (no `.gitkeep` needed)
+- [X] T003 [P] Add `.env.test` to `.gitignore` in `.gitignore`
+- [~] T004 Skipped — `TEST_DATABASE_URL` lives only in `.env.test.example` (kept out of `.env.example` by design)
+- [X] T005 [P] Create `.env.test.example` as template for local test env in `.env.test.example`
 
 **Quality Gate**: Nenhum script é adicionado ao `package.json` ainda; fase apenas prepara terreno.
 
@@ -55,19 +55,19 @@ Monorepo Next.js single-project:
 
 ### Tests (foundation)
 
-- [ ] T006 [P] Write unit test for env validation: `NODE_ENV=test` without `TEST_DATABASE_URL` must fail in `__tests__/unit/env/test-database-url.spec.ts`
-- [ ] T007 [P] Write unit test for `buildWorkerSchemaName(index)` shape (`^e2e_w\\d+_[a-f0-9]{8}$`) in `__tests__/unit/db/test-schema.spec.ts`
-- [ ] T008 [P] Write unit test for migrate CLI arg parsing (accepts `--url`, `--schema`) in `__tests__/unit/db/migrate-cli.spec.ts`
+- [X] T006 [P] Write unit test for env validation in `__tests__/unit/env/test-database-url.spec.ts`
+- [X] T007 [P] Write unit test for `buildWorkerSchemaName(index)` in `__tests__/unit/db/test-schema.spec.ts`
+- [X] T008 [P] Write unit test for migrate CLI arg parsing in `__tests__/unit/db/migrate-cli.spec.ts`
 
 ### Implementation (foundation)
 
-- [ ] T009 Update env schema to add `TEST_DATABASE_URL` (optional) and conditional `.superRefine` when `NODE_ENV=test` in `src/lib/env/index.ts`
-- [ ] T010 [P] Create `buildWorkerSchemaName(index)` and schema helpers (`createWorkerSchema`, `dropWorkerSchema`, `cleanOrphanSchemas`) in `src/lib/db/test-schema.ts`
-- [ ] T011 Extend migrate CLI to accept `--url` and `--schema` flags and apply `search_path` in `src/lib/db/migrate.ts`
-- [ ] T012 [P] Create idempotent script that ensures the test database exists in `scripts/db/ensure-test-db.ts`
-- [ ] T013 [P] Create orphan-schema cleanup script in `scripts/db/clean-orphan-schemas.ts`
-- [ ] T014 Add scripts to `package.json`: `db:test:setup`, `db:test:seed`, `db:test:clean-orphans`; update `test:integration` and `test:e2e` to force `NODE_ENV=test` in `package.json`
-- [ ] T015 Run `bun run lint` and `bun run test:unit` — foundation phase tests must all pass
+- [X] T009 Extract env schema to `src/lib/env/schema.ts` with `TEST_DATABASE_URL` (optional) + `superRefine` when `NODE_ENV=test`
+- [X] T010 [P] Create schema helpers (`buildWorkerSchemaName`, `createWorkerSchema`, `dropWorkerSchema`, `cleanOrphanSchemas`) in `src/lib/db/test-schema.ts`
+- [X] T011 Extend migrate CLI with `parseMigrateArgs`, `runMigrations`, `--url`/`--schema` flags in `src/lib/db/migrate.ts`
+- [X] T012 [P] Idempotent `ensure-test-db.ts` in `scripts/db/ensure-test-db.ts`
+- [X] T013 [P] Orphan-schema cleanup script in `scripts/db/clean-orphan-schemas.ts`
+- [X] T014 Add `db:test:setup`, `db:test:seed`, `db:test:clean-orphans` and force `NODE_ENV=test` on test scripts in `package.json` — note: `db:test:setup` will chain `seed-test.ts` in Phase 6 once it exists
+- [X] T015 `bun run lint` clean; `bun run test:unit` — 131 tests passing (3 new specs green)
 
 **Checkpoint**: Foundation ready — user stories can proceed.
 
