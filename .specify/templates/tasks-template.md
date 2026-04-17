@@ -71,8 +71,6 @@ Examples of foundational tasks (adjust based on your project):
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
-**Quality Gate**: Run `bun run lint` and `bun run build` — phase CANNOT advance with errors or warnings.
-
 ---
 
 ## Phase 3: User Story 1 - [Title] (Priority: P1) 🎯 MVP
@@ -98,8 +96,6 @@ Examples of foundational tasks (adjust based on your project):
 - [ ] T017 [US1] Add logging for user story 1 operations
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
-
-**Quality Gate**: Run `bun run lint`, `bun run test:unit`, `bun run test:integration`, and `bun run build` — all must pass before proceeding.
 
 ---
 
@@ -160,6 +156,21 @@ Examples of foundational tasks (adjust based on your project):
 - [ ] TXXX [P] Additional unit tests (if requested) in tests/unit/
 - [ ] TXXX Security hardening
 - [ ] TXXX Run quickstart.md validation
+
+---
+
+## Final Quality Gate (single, before PR)
+
+Per Constitution Principle XVI, quality checks are NOT run per-phase.
+Run them once here, before marking the feature done or opening the PR:
+
+- [ ] `bun run lint` — zero erros e zero warnings
+- [ ] `bun run test:unit` — toda a suíte passando
+- [ ] `bun run test:integration` — toda a suíte passando
+- [ ] `bun run test:e2e` — quando a mudança afeta fluxos E2E
+- [ ] `bun run build` — build de produção compila sem erros
+
+Se qualquer verificação falhar, a feature não está pronta.
 
 ---
 

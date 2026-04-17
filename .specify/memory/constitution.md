@@ -1,15 +1,26 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 2.9.0 → 2.10.0 (MINOR: added test isolation and
-test-database architecture to Principle V — Desenvolvimento
-Orientado a Testes)
+Version change: 2.9.0 → 2.10.0 (MINOR: Principle XVI rewritten — quality
+checks move from per-phase gate to single final-verification gate;
+Principle V expanded with test isolation and test-database architecture)
 
 Modified principles:
   - V. Desenvolvimento Orientado a Testes:
     - Added "Isolamento de Testes e Banco de Dados de Teste"
       subsection documenting the cross-layer isolation strategy
       delivered in feature 016-test-db-isolation
+  - XVI. Qualidade de Código e Verificação:
+    - Removed per-phase/per-task mandatory run of lint/build/tests
+    - Added "Fase final de verificação" as the single mandatory gate
+      before PR / task completion
+    - Clarified that during implementation, tests written for the
+      current change MUST pass locally, but full lint/build/test
+      sweeps are deferred to the final verification phase
+    - Preserved rules on using package.json scripts (not direct CLI)
+  - Development Workflow:
+    - Step 5 reworded: "Verificação de qualidade" is a final phase
+      before code review, not per-phase.
 
 Added sections:
   - Principle V: "Isolamento de Testes e Banco de Dados de Teste" —
@@ -22,7 +33,10 @@ Removed sections: N/A
 
 Templates requiring updates:
   ✅ .specify/memory/constitution.md — this file (updated now)
-  ✅ CLAUDE.md — updated with matching "Isolamento de testes" section
+  ✅ .specify/templates/tasks-template.md — per-phase Quality Gates
+     replaced by a single final-phase Quality Gate
+  ✅ CLAUDE.md — "Verificação de qualidade" section updated to match;
+     also updated with matching "Isolamento de testes" section
   ✅ docs/testing-strategy.md — canonical reference, already written
 
 Follow-up TODOs: N/A
@@ -730,19 +744,38 @@ independente de quem ou o que está executando a tarefa.
 
 ### XVI. Qualidade de Código e Verificação
 
-Antes de marcar qualquer fase ou task como concluída, DEVEM ser
-executadas verificações de qualidade de código.
+Verificações completas de qualidade (lint, build, suíte de testes)
+NÃO DEVEM ser executadas a cada task ou fase intermediária. Elas DEVEM
+ser executadas em uma **fase final de verificação** única, antes de
+marcar a feature como concluída ou abrir o PR.
 
-**Verificações obrigatórias (usar scripts do `package.json`):**
+**Durante a implementação (fases intermediárias):**
 
-- `bun run lint` — verificar erros e warnings do Biome. Todos os
-  warnings e erros DEVEM ser resolvidos antes de prosseguir.
-- `bun run test:unit` — rodar testes unitários.
-- `bun run test:integration` — rodar testes de integração.
-- `bun run test:e2e` — rodar testes E2E (quando aplicável à mudança).
-- `bun run build` — verificar que o build de produção compila sem erros.
+- Rodar apenas os testes diretamente relacionados à mudança atual
+  (ex: arquivo de teste recém-escrito em TDD). Eles DEVEM estar
+  verdes antes de prosseguir para a próxima task.
+- `bun run lint` e `bun run build` NÃO precisam ser executados a
+  cada task/fase. Editor e autoformat locais cobrem o loop rápido.
+- Suítes completas (`bun run test:unit`, `bun run test:integration`,
+  `bun run test:e2e`) NÃO DEVEM ser rodadas após cada task por
+  padrão — isto gera atrito desproporcional ao risco.
 
-**Regras de uso dos scripts:**
+**Fase final de verificação (obrigatória antes do PR):**
+
+Antes de marcar a feature como concluída, abrir PR ou executar
+`/finish-task`, as seguintes verificações DEVEM passar **todas**,
+nesta ordem:
+
+1. `bun run lint` — zero erros e zero warnings do Biome.
+2. `bun run test:unit` — toda a suíte passando.
+3. `bun run test:integration` — toda a suíte passando.
+4. `bun run test:e2e` — quando a mudança afeta fluxos cobertos por E2E.
+5. `bun run build` — build de produção compila sem erros.
+
+Se qualquer uma falhar, a feature NÃO está concluída. Corrigir antes
+de avançar.
+
+**Regras de uso dos scripts (sempre válidas):**
 
 - SEMPRE usar os scripts definidos no `package.json` em vez de chamar
   ferramentas diretamente. Exemplo:
@@ -753,18 +786,12 @@ executadas verificações de qualidade de código.
 - Isto garante que configurações, flags e paths sejam consistentes
   com o que o projeto espera.
 
-**Gate de qualidade por fase:**
-
-- Nenhuma fase de implementação pode ser marcada como concluída se
-  existirem erros ou warnings de lint não resolvidos.
-- Nenhuma fase pode ser marcada como concluída se testes existentes
-  estiverem falhando.
-- O build de produção (`bun run build`) DEVE passar sem erros antes
-  de criar PR ou marcar feature como concluída.
-
-**Rationale**: Erros e warnings ignorados acumulam débito técnico
-rapidamente. Verificar em cada fase é mais barato do que corrigir
-no final.
+**Rationale**: Rodar lint + build + suíte inteira a cada task gera
+ruído repetitivo e atraso desproporcional em um projeto pequeno.
+Concentrar a verificação completa em uma fase final preserva a
+garantia de qualidade antes do merge sem penalizar o ciclo de
+desenvolvimento iterativo. Os testes TDD da própria mudança, rodando
+localmente, já servem como sinal rápido durante a implementação.
 
 ## Domain Model Constraints
 
@@ -800,9 +827,11 @@ Processo de desenvolvimento que DEVE ser seguido em todas as features:
    atualizada via Context7 MCP para todas as libs utilizadas.
 4. **TDD**: Testes escritos e falhando antes da implementação
    (ver Princípio V, usar `/tdd`).
-5. **Verificação de qualidade**: Após cada fase, executar `bun run lint`,
-   `bun run test:unit`, `bun run test:integration` e `bun run build`.
-   Nenhuma fase avança com erros ou warnings (ver Princípio XVI).
+5. **Verificação de qualidade (fase final única)**: Antes de abrir
+   PR ou marcar feature como concluída, executar `bun run lint`,
+   `bun run test:unit`, `bun run test:integration`, `bun run test:e2e`
+   (quando aplicável) e `bun run build`. Durante fases intermediárias,
+   rodar apenas os testes da mudança atual (ver Princípio XVI).
 6. **Code Review**: Revisão obrigatória antes de merge. Verificar
    conformidade com os Princípios I–XVI (usar `/code-review`).
 7. **Commits convencionais**: `feat:`, `fix:`, `refactor:`, `test:`,
@@ -896,9 +925,11 @@ submeter para review ou merge:
 - [ ] XV.  Skills apropriadas foram usadas no workflow (speckit, tdd, etc.)?
 - [ ] XV.  Documentação de libs consultada via Context7 MCP antes de implementar?
 - [ ] XV.  Arquivo `design.pen` consultado para telas novas?
-- [ ] XVI. `bun run lint` passa sem erros ou warnings?
-- [ ] XVI. `bun run test:unit` e `bun run test:integration` passam?
-- [ ] XVI. `bun run build` compila sem erros?
+- [ ] XVI. Fase final de verificação executada antes do PR?
+- [ ] XVI. `bun run lint` passou sem erros ou warnings (gate final)?
+- [ ] XVI. `bun run test:unit` e `bun run test:integration` passaram (gate final)?
+- [ ] XVI. `bun run test:e2e` rodado quando aplicável (gate final)?
+- [ ] XVI. `bun run build` compilou sem erros (gate final)?
 - [ ] XVI. Scripts do `package.json` usados (não comandos diretos)?
 
 ### Anti-Padrões

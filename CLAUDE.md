@@ -217,17 +217,28 @@ Referência detalhada com diagramas e troubleshooting: [docs/testing-strategy.md
 
 ---
 
-## Verificação de qualidade (obrigatório por fase)
+## Verificação de qualidade (fase final única, não por fase)
 
-- **SEMPRE usar scripts do `package.json`**, nunca comandos diretos:
-  - `bun run lint` (não `bunx biome check .`)
-  - `bun run test:unit` (não `bun vitest run __tests__/unit/`)
-  - `bun run test:integration` (não `bun vitest run __tests__/integration/`)
-  - `bun run test:e2e` (não `bunx playwright test`)
-  - `bun run build` (não `next build`)
-- Nenhuma fase é concluída com erros ou warnings de lint.
-- Nenhuma fase é concluída com testes falhando.
-- Build DEVE passar antes de criar PR.
+Durante fases intermediárias, rodar apenas os testes diretamente
+relacionados à mudança atual (ex: o arquivo de teste do TDD).
+Não rodar `bun run lint`, `bun run build` ou a suíte completa a cada
+task — isso é ruído desproporcional.
+
+**Fase final (obrigatória antes do PR / `/finish-task`):**
+
+- `bun run lint` — zero erros e zero warnings
+- `bun run test:unit`
+- `bun run test:integration`
+- `bun run test:e2e` (quando a mudança afeta fluxos E2E)
+- `bun run build` — produção compila sem erros
+
+**Regra permanente — SEMPRE usar scripts do `package.json`, nunca comandos diretos:**
+
+- `bun run lint` (não `bunx biome check .`)
+- `bun run test:unit` (não `bun vitest run __tests__/unit/`)
+- `bun run test:integration` (não `bun vitest run __tests__/integration/`)
+- `bun run test:e2e` (não `bunx playwright test`)
+- `bun run build` (não `next build`)
 
 ---
 
@@ -256,7 +267,7 @@ Referência detalhada com diagramas e troubleshooting: [docs/testing-strategy.md
 - [ ] XI.   Sem SELECT *? Foreign keys com índice? Monetário em numeric?
 - [ ] XII.  Nenhum anti-padrão proibido presente?
 - [ ] XV.   Context7 MCP consultado? design.pen referenciado para telas?
-- [ ] XVI.  bun run lint, testes e build passando sem erros/warnings?
+- [ ] XVI.  Fase final de verificação executada (lint + testes + build) antes do PR?
 ```
 
 ---
@@ -281,7 +292,7 @@ Sem entidades órfãs: capítulo sem livro ou livro sem estúdio são inválidos
 2. `plan.md` com decisões de arquitetura antes de codar (`/speckit-plan`). Consultar `design.pen` via Pencil MCP.
 3. Consultar docs de libs via Context7 MCP antes de implementar.
 4. TDD (ver acima) — usar `/tdd`.
-5. Verificação de qualidade após cada fase: `bun run lint`, `bun run test:unit`, `bun run build`.
+5. Verificação de qualidade em fase final única (antes do PR): `bun run lint`, `bun run test:unit`, `bun run test:integration`, `bun run test:e2e` (quando aplicável), `bun run build`. Durante fases intermediárias, rodar apenas os testes da mudança atual.
 6. Code review verificando conformidade com os Princípios I–XVI (`/code-review`).
 7. Commits convencionais: `feat:`, `fix:`, `refactor:`, `test:`, `docs:` (`/conventional-commits`).
 8. Finalização: `/finish-task` para criar PR contra `main`.
@@ -292,10 +303,13 @@ Qualquer mudança no modelo financeiro (preço, horas, responsáveis) requer **r
 
 
 ## Recent Changes
+- 015-narrators-crud: Added TypeScript 5.9.3 (Bun runtime 1.x) + Next.js 16.2.1 (App Router), React 19.2.4, Drizzle ORM 0.45.2, Zod 4.3.6, better-auth 1.5.6, React Hook Form 7.72.0 + `@hookform/resolvers` 5.2.2, shadcn/ui 4.1.2, `@tanstack/react-table` (nova dependência), Tailwind CSS 4.2, lucide-react 1.7.0, sonner 2.0.7
 - 016-test-db-isolation: Added TypeScript 5.9.3 (Bun 1.2 runtime) + Next.js 16.2.1, Drizzle ORM 0.45, `pg` 8.20, Playwright 1.59, Vitest 4.1, better-auth 1.5
 - 014-custom-404-page: Added TypeScript 5.9.3 (Bun runtime) + Next.js 16.2.1 (App Router), React 19.2.4, Tailwind CSS v4, shadcn/ui 4.1.2, lucide-react 1.7.0
 - 013-mobile-sidebar-menu: Added TypeScript 5.9.3 (Bun runtime) + Next.js 16.2.1 (App Router), React 19.2.4, Tailwind CSS v4, lucide-react 1.7.0, shadcn/ui 4.1.2
 
 ## Active Technologies
+- TypeScript 5.9.3 (Bun runtime 1.x) + Next.js 16.2.1 (App Router), React 19.2.4, Drizzle ORM 0.45.2, Zod 4.3.6, better-auth 1.5.6, React Hook Form 7.72.0 + `@hookform/resolvers` 5.2.2, shadcn/ui 4.1.2, `@tanstack/react-table` (nova dependência), Tailwind CSS 4.2, lucide-react 1.7.0, sonner 2.0.7 (015-narrators-crud)
+- PostgreSQL via Drizzle ORM (nova tabela `narrator`) (015-narrators-crud)
 - TypeScript 5.9.3 (Bun 1.2 runtime) + Next.js 16.2.1, Drizzle ORM 0.45, `pg` 8.20, Playwright 1.59, Vitest 4.1, better-auth 1.5 (016-test-db-isolation)
 - PostgreSQL (local: único servidor; dev DB = `audiobook_track`; test DB = `audiobook_track_test`) (016-test-db-isolation)

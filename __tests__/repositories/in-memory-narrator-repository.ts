@@ -1,0 +1,86 @@
+import type { CreateNarratorInput, Narrator, UpdateNarratorInput } from "@/lib/domain/narrator";
+import type { NarratorRepository } from "@/lib/domain/narrator-repository";
+import {
+  NarratorEmailAlreadyInUseError,
+  NarratorNotFoundError,
+} from "@/lib/errors/narrator-errors";
+
+export class InMemoryNarratorRepository implements NarratorRepository {
+  private readonly store = new Map<string, Narrator>();
+
+  async findAll(): Promise<Narrator[]> {
+    return Array.from(this.store.values()).sort(
+      (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
+    );
+  }
+
+  async findById(id: string): Promise<Narrator | null> {
+    return this.store.get(id) ?? null;
+  }
+
+  async findByEmail(email: string): Promise<Narrator | null> {
+    const normalized = email.trim().toLowerCase();
+    for (const narrator of this.store.values()) {
+      if (narrator.email === normalized) {
+        return narrator;
+      }
+    }
+    return null;
+  }
+
+  async create(input: CreateNarratorInput): Promise<Narrator> {
+    const email = input.email.trim().toLowerCase();
+    const existing = await this.findByEmail(email);
+    if (existing) {
+      throw new NarratorEmailAlreadyInUseError(email);
+    }
+
+    const now = new Date();
+    const narrator: Narrator = {
+      id: crypto.randomUUID(),
+      name: input.name.trim(),
+      email,
+      createdAt: now,
+      updatedAt: now,
+    };
+    this.store.set(narrator.id, narrator);
+    return narrator;
+  }
+
+  async update(id: string, input: UpdateNarratorInput): Promise<Narrator> {
+    const existing = this.store.get(id);
+    if (!existing) {
+      throw new NarratorNotFoundError(id);
+    }
+
+    if (input.email !== undefined) {
+      const normalizedEmail = input.email.trim().toLowerCase();
+      if (normalizedEmail !== existing.email) {
+        const duplicate = await this.findByEmail(normalizedEmail);
+        if (duplicate && duplicate.id !== id) {
+          throw new NarratorEmailAlreadyInUseError(normalizedEmail);
+        }
+      }
+    }
+
+    const updated: Narrator = {
+      ...existing,
+      name: input.name !== undefined ? input.name.trim() : existing.name,
+      email: input.email !== undefined ? input.email.trim().toLowerCase() : existing.email,
+      updatedAt: new Date(),
+    };
+    this.store.set(id, updated);
+    return updated;
+  }
+
+  async delete(id: string): Promise<void> {
+    if (!this.store.has(id)) {
+      throw new NarratorNotFoundError(id);
+    }
+    this.store.delete(id);
+  }
+
+  clear(): void {
+    this.store.clear();
+  }
+}

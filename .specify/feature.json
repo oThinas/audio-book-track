@@ -1,1 +1,3 @@
-{ "feature_directory": "specs/016-test-db-isolation" }
+{
+  "feature_directory": "specs/015-narrators-crud"
+}

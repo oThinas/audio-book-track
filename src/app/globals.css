@@ -214,6 +214,7 @@ html[data-primary-color="red"] {
   --primary: oklch(0.627 0.257 29);
   --primary-foreground: oklch(0.145 0 0);
   --ring: oklch(0.627 0.257 29);
+  --destructive: oklch(0.42 0.2 12);
   --sidebar: oklch(0.235 0.025 27);
   --sidebar-accent: oklch(0.295 0.03 27);
   --sidebar-primary: oklch(0.627 0.257 29);
@@ -225,6 +226,7 @@ html[data-primary-color="red"] .dark {
   --primary: oklch(0.704 0.191 22);
   --primary-foreground: oklch(0.145 0 0);
   --ring: oklch(0.704 0.191 22);
+  --destructive: oklch(0.55 0.22 8);
   --sidebar: oklch(0.195 0.025 27);
   --sidebar-accent: oklch(0.255 0.03 27);
   --sidebar-primary: oklch(0.704 0.191 22);
