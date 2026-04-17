@@ -49,9 +49,9 @@ export async function createWorkerSchema(
   const pool = new Pool({ connectionString: resolveTestUrl(options.url) });
   try {
     await pool.query(`CREATE SCHEMA IF NOT EXISTS "${schemaName}"`);
-    await pool.query(`COMMENT ON SCHEMA "${schemaName}" IS $1`, [
-      `${CREATED_AT_COMMENT_PREFIX}${new Date().toISOString()}`,
-    ]);
+    const comment = `${CREATED_AT_COMMENT_PREFIX}${new Date().toISOString()}`;
+    const escaped = comment.replace(/'/g, "''");
+    await pool.query(`COMMENT ON SCHEMA "${schemaName}" IS '${escaped}'`);
   } finally {
     await pool.end();
   }

@@ -1,3 +1,5 @@
+import { readdir, readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { drizzle } from "drizzle-orm/node-postgres";
@@ -5,6 +7,8 @@ import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Pool } from "pg";
 
 import { env } from "@/lib/env";
+
+const MIGRATIONS_DIR = "./drizzle";
 
 export interface MigrateArgs {
   readonly url?: string;
@@ -56,11 +60,52 @@ export async function runMigrations(args: MigrateArgs): Promise<void> {
   try {
     if (args.schema) {
       await pool.query(`CREATE SCHEMA IF NOT EXISTS "${args.schema}"`);
+      // Drizzle-generated migrations hardcode `"public"."table"` in FK
+      // references, so we can't reuse drizzle-kit's migrator for a non-public
+      // target. Apply SQL files manually with the schema name substituted.
+      await applyMigrationsForSchema(pool, args.schema);
+    } else {
+      const database = drizzle(pool);
+      await migrate(database, { migrationsFolder: MIGRATIONS_DIR });
     }
-    const database = drizzle(pool);
-    await migrate(database, { migrationsFolder: "./drizzle" });
   } finally {
     await pool.end();
+  }
+}
+
+async function applyMigrationsForSchema(pool: Pool, targetSchema: string): Promise<void> {
+  await pool.query(
+    `CREATE TABLE IF NOT EXISTS "${targetSchema}"."__drizzle_migrations" (
+       id SERIAL PRIMARY KEY,
+       hash TEXT NOT NULL UNIQUE,
+       created_at BIGINT NOT NULL
+     )`,
+  );
+
+  const files = (await readdir(MIGRATIONS_DIR)).filter((name) => name.endsWith(".sql")).sort();
+
+  const { rows } = await pool.query<{ hash: string }>(
+    `SELECT hash FROM "${targetSchema}"."__drizzle_migrations"`,
+  );
+  const applied = new Set(rows.map((r) => r.hash));
+
+  for (const file of files) {
+    if (applied.has(file)) continue;
+    const raw = await readFile(join(MIGRATIONS_DIR, file), "utf-8");
+    const rewritten = raw.replaceAll(/"public"\.(?=")/g, `"${targetSchema}".`);
+    const statements = rewritten
+      .split("--> statement-breakpoint")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    for (const statement of statements) {
+      await pool.query(statement);
+    }
+
+    await pool.query(
+      `INSERT INTO "${targetSchema}"."__drizzle_migrations" (hash, created_at) VALUES ($1, $2)`,
+      [file, Date.now()],
+    );
   }
 }
 

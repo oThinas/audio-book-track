@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures/app-server";
 import { login } from "./helpers/auth";
 
 async function setFavoritePage(page: import("@playwright/test").Page, label: string) {

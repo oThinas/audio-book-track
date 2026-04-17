@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "../fixtures/app-server";
 import { login } from "../helpers/auth";
 
 // Uses /api/auth/clear-session directly because authClient.signOut() fails

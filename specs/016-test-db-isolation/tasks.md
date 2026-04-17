@@ -109,24 +109,24 @@ Monorepo Next.js single-project:
 
 ### Tests (US2)
 
-- [ ] T022 [P] [US2] Write integration test asserting `createWorkerSchema/dropWorkerSchema` round-trip (schema exists after create, gone after drop) in `__tests__/integration/infra/worker-schema-lifecycle.spec.ts`
-- [ ] T023 [P] [US2] Write integration test for `cleanOrphanSchemas(olderThanMs)` removing matching schemas and preserving fresh ones in `__tests__/integration/infra/orphan-cleanup.spec.ts`
-- [ ] T024 [P] [US2] Write E2E smoke test that asserts `appServer.schemaName` fixture matches `/^e2e_w\\d+_[a-f0-9]{8}$/` and baseURL is reachable in `__tests__/e2e/fixtures/app-server.spec.ts`
-- [ ] T025 [P] [US2] Write E2E test that creates a row via UI/API in one worker and asserts a second worker sees empty state (schema isolation) in `__tests__/e2e/isolation/schema-isolation.spec.ts`
+- [X] T022 [P] [US2] Worker-schema-lifecycle integration spec in `__tests__/integration/infra/worker-schema-lifecycle.spec.ts`
+- [X] T023 [P] [US2] Orphan-cleanup integration spec (timestamp-based) in `__tests__/integration/infra/orphan-cleanup.spec.ts`
+- [X] T024 [P] [US2] App-server fixture smoke spec in `__tests__/e2e/fixtures/app-server.spec.ts`
+- [X] T025 [P] [US2] Cross-worker schema-isolation spec (skipped when workers=1) in `__tests__/e2e/isolation/schema-isolation.spec.ts`
 
 ### Implementation (US2)
 
-Ordem de execução: T026 ∥ T027 ∥ T028 (três helpers em arquivos independentes) → T029 (fixture consolida os três) → T030 ∥ T031 → T032 → T033a → T033b.
-
-- [ ] T026 [US2] Implement helper `applyMigrationsToSchema({ url, schema })` that spawns migrate CLI in `__tests__/e2e/fixtures/migrate-helper.ts`
-- [ ] T027 [US2] Implement helper `startNextDev({ port, schemaName })` that spawns `next dev --port <port>` with schema-aware `DATABASE_URL` and awaits `/api/health` in `__tests__/e2e/fixtures/next-dev-process.ts`
-- [ ] T028 [US2] Implement seed-test invocation helper (imports and runs seed logic against a specific schema URL) in `__tests__/e2e/fixtures/seed-helper.ts`
-- [ ] T029 [US2] Implement worker-scoped fixture that orchestrates create-schema → migrate → seed-test → spawn-next → drop-schema, consuming helpers T026/T027/T028, in `__tests__/e2e/fixtures/app-server.ts`
-- [ ] T030 [US2] Rewrite Playwright global-setup to only run `cleanOrphanSchemas(1 hour)` and env validation in `__tests__/e2e/global-setup.ts`
-- [ ] T031 [US2] Update `playwright.config.ts`: remove `webServer`, set `fullyParallel: true`, keep workers default locally (undefined) in `playwright.config.ts`
-- [ ] T032 [US2] Update existing E2E specs to import `test` from the new fixture module instead of `@playwright/test` in each file under `__tests__/e2e/**/*.spec.ts`; also rename legacy `__tests__/e2e/auth/login.test.ts` → `__tests__/e2e/auth/login.spec.ts`
-- [ ] T033a [US2] Verify whether `__tests__/e2e/helpers/auth.ts` uses relative URLs (grep for hardcoded `http://` / absolute URLs) in `__tests__/e2e/helpers/auth.ts`
-- [ ] T033b [US2] If T033a found absolute URLs, refactor `auth.ts` to use relative paths so Playwright applies fixture `baseURL` automatically; skip if already compliant — file `__tests__/e2e/helpers/auth.ts`
+- [X] T025a Pre-created `src/lib/db/seed-test.ts` with `seedAdmin`/`parseSeedTestArgs` (Phase 6 just validates)
+- [X] T026 [US2] `applyMigrationsToSchema` spawns migrate CLI in `__tests__/e2e/fixtures/migrate-helper.ts`
+- [X] T027 [US2] `startNextDev`/`stopNextDev` spawn Next with schema-aware `DATABASE_URL` and poll `/api/health` in `__tests__/e2e/fixtures/next-dev-process.ts`
+- [X] T028 [US2] `seedAdminForSchema` spawns seed-test as child process (avoids better-auth CJS/ESM loader clash inside Playwright) in `__tests__/e2e/fixtures/seed-helper.ts`
+- [X] T029 [US2] Worker-scoped fixture orchestrates create → migrate → seed → spawn → drop in `__tests__/e2e/fixtures/app-server.ts`
+- [X] T030 [US2] Playwright global-setup now only validates env and runs `cleanOrphanSchemas(1h)` in `__tests__/e2e/global-setup.ts`
+- [X] T031 [US2] Playwright config: removed `webServer`, kept `fullyParallel: true`; added dotenv loading at top because `bunx` does not auto-load `.env.test`
+- [X] T032 [US2] All E2E specs now import `test`/`expect` from the fixture; `auth/login.test.ts` renamed to `auth/login.spec.ts`
+- [X] T033a [US2] Verified `__tests__/e2e/helpers/auth.ts` uses only relative URLs — no refactor needed
+- [X] T033b [US2] Skipped (covered by T033a verification)
+- [X] T029a Migrate CLI rewrites Drizzle's hardcoded `"public"."<table>"` FK references to the target schema and tracks applications in `<schema>.__drizzle_migrations`
 
 **Checkpoint US2**: E2E com 2+ workers locais roda sem interferência.
 

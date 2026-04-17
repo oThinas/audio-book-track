@@ -1,24 +1,14 @@
-import "dotenv/config";
-import { execSync } from "node:child_process";
-import { sql } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/node-postgres";
-import { Pool } from "pg";
+import { cleanOrphanSchemas } from "@/lib/db/test-schema";
 
-export default async function globalSetup() {
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-  const db = drizzle(pool);
+const ONE_HOUR_MS = 60 * 60 * 1000;
 
-  try {
-    const tables = await db.execute(sql`
-      SELECT tablename FROM pg_tables WHERE schemaname = 'public'
-    `);
-    const tableNames = tables.rows.map((r) => `"${r.tablename}"`).join(", ");
-    if (tableNames) {
-      await db.execute(sql.raw(`TRUNCATE TABLE ${tableNames} CASCADE`));
-    }
+export default async function globalSetup(): Promise<void> {
+  if (!process.env.TEST_DATABASE_URL) {
+    throw new Error("TEST_DATABASE_URL is required for E2E. Set it in .env.test.");
+  }
 
-    execSync("bun run db:seed", { stdio: "pipe" });
-  } finally {
-    await pool.end();
+  const { dropped } = await cleanOrphanSchemas(ONE_HOUR_MS);
+  if (dropped.length > 0) {
+    console.info(`Cleaned ${dropped.length} orphan test schema(s):`, dropped);
   }
 }

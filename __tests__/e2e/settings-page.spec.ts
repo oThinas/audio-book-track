@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures/app-server";
 
 test.describe("Settings Page (US3)", () => {
   test.beforeEach(async ({ page }) => {
