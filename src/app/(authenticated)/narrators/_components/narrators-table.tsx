@@ -29,6 +29,7 @@ import { NarratorRow } from "./narrator-row";
 interface NarratorsTableProps {
   readonly narrators: readonly Narrator[];
   readonly topRow?: ReactNode;
+  readonly onNarratorUpdated?: (narrator: Narrator) => void;
 }
 
 function SortIcon({ direction }: { direction: false | "asc" | "desc" }) {
@@ -37,7 +38,7 @@ function SortIcon({ direction }: { direction: false | "asc" | "desc" }) {
   return <ArrowUpDown aria-hidden="true" className="size-3.5 opacity-50" />;
 }
 
-export function NarratorsTable({ narrators, topRow }: NarratorsTableProps) {
+export function NarratorsTable({ narrators, topRow, onNarratorUpdated }: NarratorsTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const columns = useMemo<ColumnDef<Narrator>[]>(
@@ -126,7 +127,11 @@ export function NarratorsTable({ narrators, topRow }: NarratorsTableProps) {
         <TableBody>
           {topRow}
           {sortedRows.map((row) => (
-            <NarratorRow key={row.original.id} narrator={row.original} />
+            <NarratorRow
+              key={row.original.id}
+              narrator={row.original}
+              onUpdated={onNarratorUpdated}
+            />
           ))}
           {sortedRows.length === 0 && !topRow && (
             <TableRow>

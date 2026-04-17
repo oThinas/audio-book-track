@@ -48,6 +48,11 @@ export function NarratorsClient({ initialNarrators }: NarratorsClientProps) {
     setIsCreating(false);
   }
 
+  function handleUpdated(updated: Narrator) {
+    setNarrators((current) => current.map((n) => (n.id === updated.id ? updated : n)));
+    router.refresh();
+  }
+
   return (
     <div className="flex flex-col">
       <PageHeader className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
@@ -67,6 +72,7 @@ export function NarratorsClient({ initialNarrators }: NarratorsClientProps) {
             <NarratorNewRow onCreated={handleCreated} onCancelled={handleCancelled} />
           ) : null
         }
+        onNarratorUpdated={handleUpdated}
       />
     </div>
   );

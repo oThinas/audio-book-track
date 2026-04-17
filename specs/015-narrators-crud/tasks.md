@@ -139,14 +139,14 @@ description: "Task list for CRUD de Narradores"
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T029 [P] [US3] Escrever teste unitário do route handler PATCH em `__tests__/unit/api/narrators-update.test.ts` (cenários: 401, 404 `NARRATOR_NOT_FOUND`, 422 body inválido, 409 `EMAIL_ALREADY_IN_USE`, 200 update parcial apenas name, 200 update de ambos campos)
-- [ ] T030 [P] [US3] Escrever teste E2E em `__tests__/e2e/narrators-update.spec.ts` (happy path, cancelar restaura valores, validação inline, e-mail duplicado mostra erro)
+- [X] T029 [P] [US3] Escrever teste unitário do route handler PATCH em `__tests__/unit/api/narrators-update.test.ts` (cenários: 401, 404 `NARRATOR_NOT_FOUND`, 422 body inválido, 409 `EMAIL_ALREADY_IN_USE`, 200 update parcial apenas name, 200 update de ambos campos)
+- [X] T030 [P] [US3] Escrever teste E2E em `__tests__/e2e/narrators-update.spec.ts` (happy path, cancelar restaura valores, validação inline, e-mail duplicado mostra erro)
 
 ### Implementation for User Story 3
 
-- [ ] T031 [US3] Criar route handler PATCH em `src/app/api/v1/narrators/[id]/route.ts` (valida `updateNarratorSchema`, chama `service.update`, trata `NarratorNotFoundError` → 404, `NarratorEmailAlreadyInUseError` → 409, retorna `{ data: Narrator }` com 200 e `Cache-Control: no-store`)
-- [ ] T032 [US3] Adicionar modo edit a `NarratorRow` em `src/app/(authenticated)/narrators/_components/narrator-row.tsx` (state `isEditing`, `useForm` com defaultValues do narrador, ícone Edit alterna para modo edit, inputs substituem textos, botões Cancel/Confirm substituem ícones Edit/Trash; cancel → `form.reset(originalValues)` + sair edit; confirm → PATCH + callback `onUpdated(narrator)` no sucesso; **em erro de rede/servidor: NÃO sair do modo edit, NÃO chamar onUpdated, exibir `toast.error(...)` do sonner e manter os valores editados para o usuário tentar novamente**; em 422 exibir mensagens inline; em 409 exibir erro no campo e-mail; em 404 mostrar toast "narrador não existe mais" e sair do edit)
-- [ ] T033 [US3] Integrar callback `onUpdated` em `NarratorsTable` / `NarratorsClient` (atualiza narrador no state local + `router.refresh()`)
+- [X] T031 [US3] Criar route handler PATCH em `src/app/api/v1/narrators/[id]/route.ts` (valida `updateNarratorSchema`, chama `service.update`, trata `NarratorNotFoundError` → 404, `NarratorEmailAlreadyInUseError` → 409, retorna `{ data: Narrator }` com 200 e `Cache-Control: no-store`)
+- [X] T032 [US3] Adicionar modo edit a `NarratorRow` em `src/app/(authenticated)/narrators/_components/narrator-row.tsx` (state `isEditing`, `useForm` com defaultValues do narrador, ícone Edit alterna para modo edit, inputs substituem textos, botões Cancel/Confirm substituem ícones Edit/Trash; cancel → `form.reset(originalValues)` + sair edit; confirm → PATCH + callback `onUpdated(narrator)` no sucesso; **em erro de rede/servidor: NÃO sair do modo edit, NÃO chamar onUpdated, exibir `toast.error(...)` do sonner e manter os valores editados para o usuário tentar novamente**; em 422 exibir mensagens inline; em 409 exibir erro no campo e-mail; em 404 mostrar toast "narrador não existe mais" e sair do edit)
+- [X] T033 [US3] Integrar callback `onUpdated` em `NarratorsTable` / `NarratorsClient` (atualiza narrador no state local + `router.refresh()`)
 
 **Checkpoint**: US1 + US2 + US3 funcionam. Ícone Excluir ainda é placeholder.
 
