@@ -1,5 +1,3 @@
-import "dotenv/config";
-
 import { cleanOrphanSchemas } from "@/lib/db/test-schema";
 
 const ONE_HOUR_MS = 60 * 60 * 1000;

@@ -191,3 +191,33 @@ Depois do merge, estas verificações devem passar (uma vez cada, manualmente, a
 - [ ] Criar registros manuais em dev → rodar suíte completa → confirmar que registros continuam intactos.
 - [ ] Rodar `bun run test:e2e`, matar com Ctrl+C no meio, rodar de novo — segunda execução passa.
 - [ ] Abrir PR com mudança em seed-test → revisor rejeita (não deve ser necessário mexer nele para features de domínio).
+
+### 7.1. US1 — verificação manual (Phase 3)
+
+Roteiro para provar que `bun run test:integration` NÃO toca `audiobook_track`:
+
+1. Inserir um marcador em dev:
+
+   ```bash
+   psql "$DATABASE_URL" -c "INSERT INTO \"user\" (id, name, email, \"emailVerified\", \"createdAt\", \"updatedAt\") VALUES ('DEV_RECORD', 'dev-marker', 'dev-marker@local', false, now(), now());"
+   ```
+
+2. Rodar a suíte:
+
+   ```bash
+   bun run test:integration
+   ```
+
+3. Confirmar que o registro sobreviveu:
+
+   ```bash
+   psql "$DATABASE_URL" -c "SELECT id FROM \"user\" WHERE id = 'DEV_RECORD';"
+   ```
+
+   Deve retornar exatamente 1 linha. Se zero, a integração não está usando `TEST_DATABASE_URL` e Phase 3 está quebrada.
+
+4. Limpeza (opcional):
+
+   ```bash
+   psql "$DATABASE_URL" -c "DELETE FROM \"user\" WHERE id = 'DEV_RECORD';"
+   ```

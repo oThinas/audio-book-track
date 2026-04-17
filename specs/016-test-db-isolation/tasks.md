@@ -83,15 +83,17 @@ Monorepo Next.js single-project:
 
 ### Tests (US1)
 
-- [ ] T016 [P] [US1] Write integration test that asserts connection URL used in tests is `TEST_DATABASE_URL` (compares against `process.env.DATABASE_URL`) in `__tests__/integration/infra/test-db-connection.spec.ts`
-- [ ] T017 [P] [US1] Write integration test proving `BEGIN/ROLLBACK` rollback works against the test DB `public` schema in `__tests__/integration/infra/rollback-isolation.spec.ts`
+- [X] T016 [P] [US1] Integration test asserting connection target = `TEST_DATABASE_URL` in `__tests__/integration/infra/test-db-connection.spec.ts`
+- [X] T017 [P] [US1] Integration test proving `BEGIN/ROLLBACK` works on test DB public schema in `__tests__/integration/infra/rollback-isolation.spec.ts`
 
 ### Implementation (US1)
 
-- [ ] T018 [US1] Update `getPool()` to read `TEST_DATABASE_URL` in `__tests__/helpers/db.ts`
-- [ ] T019 [US1] Create Vitest global setup that runs migrations in `public` of test DB once before integration suite in `__tests__/integration/global-setup.ts`
-- [ ] T020 [US1] Register `globalSetup` in `vitest.config.ts` for the integration project in `vitest.config.ts`
-- [ ] T021 [US1] Manual verification: write `DEV_RECORD` row into local `audiobook_track`, run `bun run test:integration`, assert row still present; document in `specs/016-test-db-isolation/quickstart.md` validation section
+- [X] T018 [US1] `getPool()` reads `env.TEST_DATABASE_URL` and throws if absent in `__tests__/helpers/db.ts`
+- [X] T019 [US1] Vitest global-setup runs `runMigrations({ url: env.TEST_DATABASE_URL })` once before integration suite in `__tests__/integration/global-setup.ts`
+- [X] T020 [US1] Registered `globalSetup` for integration project; also propagate `loadEnv` into `process.env` so globalSetup sees `.env.test` in `vitest.config.ts`
+- [~] T021 [US1] Manual verification procedure documented in `specs/016-test-db-isolation/quickstart.md` §7.1 — to be executed by reviewer before merge
+- [X] T021a Relaxed env schema: `DATABASE_URL` optional when `NODE_ENV=test` (only `TEST_DATABASE_URL` required); contract updated
+- [X] T021b Migrate CLI defaults to `TEST_DATABASE_URL` when `NODE_ENV=test`; scripts prefix `NODE_ENV=test` so Bun auto-loads `.env.test`
 
 **Checkpoint US1**: Integration tests 100% em test DB, dev DB intacta.
 

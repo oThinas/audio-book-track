@@ -1,5 +1,5 @@
 import { fileURLToPath } from "node:url";
-import "dotenv/config";
+
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Pool } from "pg";
@@ -44,7 +44,13 @@ function buildConnectionString(url: string, schema: string | undefined): string 
 }
 
 export async function runMigrations(args: MigrateArgs): Promise<void> {
-  const url = args.url ?? env.DATABASE_URL;
+  const defaultUrl = env.NODE_ENV === "test" ? env.TEST_DATABASE_URL : env.DATABASE_URL;
+  const url = args.url ?? defaultUrl;
+  if (!url) {
+    throw new Error(
+      "No database URL available. Pass --url or set DATABASE_URL (or TEST_DATABASE_URL when NODE_ENV=test).",
+    );
+  }
   const connectionString = buildConnectionString(url, args.schema);
   const pool = new Pool({ connectionString });
   try {
