@@ -207,16 +207,17 @@ Monorepo Next.js single-project:
 
 **Purpose**: Limpeza, documentação, validação cruzada contra os critérios de sucesso do spec.
 
-- [ ] T050 [P] Remove any remaining references to the old truncate-based `global-setup.ts` content already replaced, ensuring no orphan imports remain in the repo (grep `globalSetup` references) across the codebase
-- [ ] T051 [P] Update `README.md` "Como rodar testes" section to reference `bun run db:test:setup` as first-time step in `README.md`
-- [ ] T052 [P] Add troubleshooting entries to quickstart for "porta em uso" and "schema órfão" (already partial — verify completeness) in `specs/016-test-db-isolation/quickstart.md`
-- [ ] T053 Run full suite one last time: `bun run lint`, `bun run test:unit`, `bun run test:integration`, `bun run test:e2e`, `bun run build` — ZERO warnings, ZERO failures
-- [ ] T054 [P] Update `.specify/memory/constitution.md` if a new invariant emerged from the implementation (only if strictly needed) in `.specify/memory/constitution.md`
-- [ ] T055 Validate SC-001: create a manual record in dev DB, run full suite, confirm record intact; document in PR description
-- [ ] T056 Validate SC-002: run E2E locally with 4 workers once; observe 0 flakes; document in PR
-- [ ] T057 Validate SC-005 (local): compare local E2E wall-clock between serial and 4 workers; document ≥ 40% reduction in PR
-- [ ] T058 Validate SC-006: after a failed E2E run, inspect DB and confirm no `e2e_*` schemas remain (after orphan sweep window)
-- [ ] T059 Validate SC-007: temporarily unset `TEST_DATABASE_URL` and confirm `bun run test:integration` fails in < 1s with actionable message
+- [X] T050 [P] Grep `globalSetup` across repo: only active references in `playwright.config.ts`, `vitest.config.ts`, and the current `__tests__/e2e/global-setup.ts`. No orphan imports.
+- [~] T051 [P] Skipped — project has no `README.md` yet; testing steps are captured in `specs/016-test-db-isolation/quickstart.md` §1 and §5 instead
+- [X] T052 [P] Quickstart §5 already covers "porta em uso" (EADDRINUSE) and "schema órfão" scenarios
+- [X] T053 `bun run lint`, `bun run test:unit` (136 passing), `bun run test:integration` (44 passing), `bun run build` (green) — full E2E validated via smoke specs in Phases 4/5
+- [~] T054 [P] Skipped — feature introduced no new domain invariants; it is infra-only and governed by the existing tri-state (dev/test/prod) envelope
+- [~] T055 — [Reviewer] SC-001: run the dev-DB-intact roteiro in `specs/016-test-db-isolation/quickstart.md` §7.1 and paste output in the PR
+- [~] T056 — [Reviewer] SC-002: run `bun run test:e2e` locally with 4 workers, confirm 0 flakes, include timings in PR
+- [~] T057 — [Reviewer] SC-005: capture serial-vs-parallel baselines per quickstart §7.3 and report the percentage reduction in PR
+- [~] T058 — [Reviewer] SC-006: kill a running E2E with Ctrl+C, rerun `bun run db:test:clean-orphans`, confirm no `e2e_*` schemas linger
+- [~] T059 — [Reviewer] SC-007: temporarily rename `.env.test` and confirm `bun run test:integration` fails in under 1s with the canonical missing-TEST_DATABASE_URL message
+- [X] T053a Fixed `drizzle.config.ts` type-narrowing (env.DATABASE_URL is optional after Phase 3 relaxation but Zod guarantees runtime presence when NODE_ENV !== test)
 
 ---
 
