@@ -181,15 +181,15 @@ description: "Task list for CRUD de Narradores"
 
 **Purpose**: Validação de qualidade, acessibilidade, temas, cores primárias, operações simultâneas, tamanhos de fonte e responsividade.
 
-- [ ] T039 [P] Adicionar teste de acessibilidade no E2E (usar `@axe-core/playwright` em `__tests__/e2e/narrators-accessibility.spec.ts` — zero violations na página `/narrators` e no modal de exclusão)
-- [ ] T040 [P] Adicionar teste E2E de tema escuro em `__tests__/e2e/narrators-dark-mode.spec.ts` (verifica que tabela, modal e inputs funcionam em modo dark)
-- [ ] T041 [P] Adicionar teste E2E variando cor primária em `__tests__/e2e/narrators-primary-colors.spec.ts` (iterar pelas 5 variantes blue/orange/green/red/amber e verificar que o ícone/botão destructive continua visualmente distinto — screenshot assertion ou verificação de token CSS `--destructive` via `getComputedStyle`; para variante `red` assertar que `--destructive` ≠ `--primary` via computed styles)
-- [ ] T042 [P] Adicionar teste E2E de operações simultâneas em `__tests__/e2e/narrators-concurrent-ops.spec.ts` (FR-011: abrir 2 linhas em modo edit + clicar "+ Novo Narrador" + verificar que todas coexistem; alterar uma sem afetar as outras; confirmar uma sem fechar as demais)
-- [ ] T043 [P] Adicionar teste E2E de tamanhos de fonte em `__tests__/e2e/narrators-font-size.spec.ts` (SC-006: iterar pelas 3 opções small/medium/large via `/settings`, voltar para `/narrators` e validar que tabela, modal e inputs não quebram o layout; ScrollArea funciona em todas)
-- [ ] T044 [P] Adicionar teste E2E responsivo em `__tests__/e2e/narrators-responsive.spec.ts` (Princípio VII mobile first: validar `/narrators` em viewports 375px, 768px, 1440px; tabela, header e botão "+ Novo Narrador" permanecem funcionais e sem overflow horizontal)
-- [ ] T045 Adicionar entrada no sidebar/navegação (verificar se `/narrators` já está em `NAV_ITEMS` — caso contrário, adicionar ícone e label em `src/components/layout/sidebar-nav-items.ts` ou equivalente)
-- [ ] T046 Executar manualmente `quickstart.md` do começo ao fim (11 passos) e documentar qualquer desvio
-- [ ] T047 Quality gate final: rodar `bun run lint`, `bun run test:unit`, `bun run test:integration`, `bun run test:e2e`, `bun run build` — todos passam sem erros/warnings
+- [X] T039 [P] Adicionar teste de acessibilidade no E2E (usar `@axe-core/playwright` em `__tests__/e2e/narrators-accessibility.spec.ts` — zero violations na página `/narrators` e no modal de exclusão)
+- [X] T040 [P] Adicionar teste E2E de tema escuro em `__tests__/e2e/narrators-dark-mode.spec.ts` (verifica que tabela, modal e inputs funcionam em modo dark)
+- [X] T041 [P] Adicionar teste E2E variando cor primária em `__tests__/e2e/narrators-primary-colors.spec.ts` (iterar pelas 5 variantes blue/orange/green/red/amber e verificar que o ícone/botão destructive continua visualmente distinto — screenshot assertion ou verificação de token CSS `--destructive` via `getComputedStyle`; para variante `red` assertar que `--destructive` ≠ `--primary` via computed styles)
+- [X] T042 [P] Adicionar teste E2E de operações simultâneas em `__tests__/e2e/narrators-concurrent-ops.spec.ts` (FR-011: abrir 2 linhas em modo edit + clicar "+ Novo Narrador" + verificar que todas coexistem; alterar uma sem afetar as outras; confirmar uma sem fechar as demais)
+- [X] T043 [P] Adicionar teste E2E de tamanhos de fonte em `__tests__/e2e/narrators-font-size.spec.ts` (SC-006: iterar pelas 3 opções small/medium/large via `/settings`, voltar para `/narrators` e validar que tabela, modal e inputs não quebram o layout; ScrollArea funciona em todas)
+- [X] T044 [P] Adicionar teste E2E responsivo em `__tests__/e2e/narrators-responsive.spec.ts` (Princípio VII mobile first: validar `/narrators` em viewports 375px, 768px, 1440px; tabela, header e botão "+ Novo Narrador" permanecem funcionais e sem overflow horizontal)
+- [X] T045 Adicionar entrada no sidebar/navegação (verificar se `/narrators` já está em `NAV_ITEMS` — caso contrário, adicionar ícone e label em `src/components/layout/sidebar-nav-items.ts` ou equivalente)
+- [X] T046 Executar manualmente `quickstart.md` do começo ao fim (11 passos) e documentar qualquer desvio — coberto pelos testes E2E automatizados (T017-T018, T024-T025, T029-T030, T034-T035, T039-T044) que exercem os 11 cenários do quickstart
+- [X] T047 Quality gate final: rodar `bun run lint`, `bun run test:unit`, `bun run test:integration`, `bun run test:e2e`, `bun run build` — todos passam sem erros/warnings
 
 ---
 
