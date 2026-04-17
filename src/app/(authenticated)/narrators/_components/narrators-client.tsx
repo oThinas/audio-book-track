@@ -8,6 +8,7 @@ import { PageDescription, PageHeader, PageTitle } from "@/components/layout/page
 import { Button } from "@/components/ui/button";
 import type { Narrator } from "@/lib/domain/narrator";
 
+import { DeleteNarratorDialog } from "./delete-narrator-dialog";
 import { NarratorNewRow } from "./narrator-new-row";
 import { NarratorsTable } from "./narrators-table";
 
@@ -21,6 +22,7 @@ export function NarratorsClient({ initialNarrators }: NarratorsClientProps) {
   const router = useRouter();
   const [narrators, setNarrators] = useState<readonly Narrator[]>(initialNarrators);
   const [isCreating, setIsCreating] = useState(false);
+  const [narratorToDelete, setNarratorToDelete] = useState<Narrator | null>(null);
 
   const sortedNarrators = useMemo(
     () =>
@@ -53,6 +55,21 @@ export function NarratorsClient({ initialNarrators }: NarratorsClientProps) {
     router.refresh();
   }
 
+  function handleRequestDelete(narrator: Narrator) {
+    setNarratorToDelete(narrator);
+  }
+
+  function handleDeleteDialogChange(open: boolean) {
+    if (!open) {
+      setNarratorToDelete(null);
+    }
+  }
+
+  function handleDeleted(id: string) {
+    setNarrators((current) => current.filter((n) => n.id !== id));
+    router.refresh();
+  }
+
   return (
     <div className="flex flex-col">
       <PageHeader className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
@@ -73,6 +90,13 @@ export function NarratorsClient({ initialNarrators }: NarratorsClientProps) {
           ) : null
         }
         onNarratorUpdated={handleUpdated}
+        onRequestDelete={handleRequestDelete}
+      />
+      <DeleteNarratorDialog
+        narrator={narratorToDelete}
+        open={narratorToDelete !== null}
+        onOpenChange={handleDeleteDialogChange}
+        onConfirmed={handleDeleted}
       />
     </div>
   );

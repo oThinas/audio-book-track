@@ -162,14 +162,14 @@ description: "Task list for CRUD de Narradores"
 
 ### Tests for User Story 4 ⚠️
 
-- [ ] T034 [P] [US4] Escrever teste unitário do route handler DELETE em `__tests__/unit/api/narrators-delete.test.ts` (cenários: 401, 404 `NARRATOR_NOT_FOUND`, 204 sucesso sem body)
-- [ ] T035 [P] [US4] Escrever teste E2E em `__tests__/e2e/narrators-delete.spec.ts` (happy path, cancelar no modal, ESC fecha modal, título do modal menciona nome do narrador)
+- [X] T034 [P] [US4] Escrever teste unitário do route handler DELETE em `__tests__/unit/api/narrators-delete.test.ts` (cenários: 401, 404 `NARRATOR_NOT_FOUND`, 204 sucesso sem body)
+- [X] T035 [P] [US4] Escrever teste E2E em `__tests__/e2e/narrators-delete.spec.ts` (happy path, cancelar no modal, ESC fecha modal, título do modal menciona nome do narrador)
 
 ### Implementation for User Story 4
 
-- [ ] T036 [US4] Criar route handler DELETE em `src/app/api/v1/narrators/[id]/route.ts` (chama `service.delete`, trata `NarratorNotFoundError` → 404, retorna 204 sem body com `Cache-Control: no-store` no header; nota: constraint `NARRATOR_HAS_ACTIVE_CHAPTERS` fica diferida — ver research.md e contracts/narrators-api.md)
-- [ ] T037 [P] [US4] Criar componente `DeleteNarratorDialog` em `src/app/(authenticated)/narrators/_components/delete-narrator-dialog.tsx` (usa `AlertDialog` shadcn, recebe `narrator`, `open`, `onOpenChange`, `onConfirmed` props; título menciona nome do narrador; `AlertDialogAction` com `variant="destructive"`; em confirm chama DELETE via fetch, em sucesso chama `onConfirmed(narrator.id)` e fecha modal; **em erro de rede/servidor: NÃO fechar o modal, NÃO chamar onConfirmed, exibir `toast.error(...)` do sonner; em 404 fechar modal e chamar onConfirmed mesmo assim (registro já não existe)**)
-- [ ] T038 [US4] Integrar `DeleteNarratorDialog` em `NarratorRow`/`NarratorsClient` (state `narratorToDelete: Narrator | null`; ícone Trash seta o estado e abre modal; callback `onConfirmed` remove do state local + `router.refresh()`)
+- [X] T036 [US4] Criar route handler DELETE em `src/app/api/v1/narrators/[id]/route.ts` (chama `service.delete`, trata `NarratorNotFoundError` → 404, retorna 204 sem body com `Cache-Control: no-store` no header; nota: constraint `NARRATOR_HAS_ACTIVE_CHAPTERS` fica diferida — ver research.md e contracts/narrators-api.md)
+- [X] T037 [P] [US4] Criar componente `DeleteNarratorDialog` em `src/app/(authenticated)/narrators/_components/delete-narrator-dialog.tsx` (usa `AlertDialog` shadcn, recebe `narrator`, `open`, `onOpenChange`, `onConfirmed` props; título menciona nome do narrador; `AlertDialogAction` com `variant="destructive"`; em confirm chama DELETE via fetch, em sucesso chama `onConfirmed(narrator.id)` e fecha modal; **em erro de rede/servidor: NÃO fechar o modal, NÃO chamar onConfirmed, exibir `toast.error(...)` do sonner; em 404 fechar modal e chamar onConfirmed mesmo assim (registro já não existe)**)
+- [X] T038 [US4] Integrar `DeleteNarratorDialog` em `NarratorRow`/`NarratorsClient` (state `narratorToDelete: Narrator | null`; ícone Trash seta o estado e abre modal; callback `onConfirmed` remove do state local + `router.refresh()`)
 
 **Checkpoint**: CRUD completo funcional. Todas as 4 user stories passam nos testes E2E.
 

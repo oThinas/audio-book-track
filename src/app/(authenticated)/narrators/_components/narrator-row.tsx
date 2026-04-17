@@ -16,9 +16,10 @@ import { type Narrator, type NarratorFormValues, narratorFormSchema } from "@/li
 interface NarratorRowProps {
   readonly narrator: Narrator;
   readonly onUpdated?: (narrator: Narrator) => void;
+  readonly onRequestDelete?: (narrator: Narrator) => void;
 }
 
-export function NarratorRow({ narrator, onUpdated }: NarratorRowProps) {
+export function NarratorRow({ narrator, onUpdated, onRequestDelete }: NarratorRowProps) {
   const [isEditing, setIsEditing] = useState(false);
 
   if (isEditing) {
@@ -58,7 +59,8 @@ export function NarratorRow({ narrator, onUpdated }: NarratorRowProps) {
             variant="ghost"
             size="icon-sm"
             aria-label={`Excluir ${narrator.name}`}
-            disabled
+            disabled={!onRequestDelete}
+            onClick={() => onRequestDelete?.(narrator)}
             className="text-destructive hover:bg-destructive/10 hover:text-destructive"
           >
             <Trash2 aria-hidden="true" />
