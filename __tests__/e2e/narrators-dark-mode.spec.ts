@@ -12,13 +12,6 @@ async function seedNarrator(page: Page, name: string, email: string) {
   }
 }
 
-async function applyTheme(page: Page, theme: "light" | "dark") {
-  await page.evaluate((t) => {
-    localStorage.setItem("theme", t);
-    document.documentElement.classList.toggle("dark", t === "dark");
-  }, theme);
-}
-
 test.describe("Narrators: dark mode", () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
@@ -26,9 +19,12 @@ test.describe("Narrators: dark mode", () => {
 
   test("table, edit row and delete dialog render in dark mode", async ({ page }) => {
     await seedNarrator(page, "Dark Mode Subject", "dark@example.com");
-    await page.goto("/narrators");
-    await applyTheme(page, "dark");
 
+    await page.goto("/settings");
+    await page.getByText("Escuro", { exact: true }).click();
+    await expect(page.locator("html")).toHaveClass(/dark/);
+
+    await page.goto("/narrators");
     await expect(page.locator("html")).toHaveClass(/dark/);
     await expect(page.getByTestId("narrators-scroll-area")).toBeVisible();
 
