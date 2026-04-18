@@ -47,11 +47,11 @@ describe("GET /api/v1/narrators (handleNarratorsList)", () => {
   });
 
   it("returns 200 with narrators ordered by createdAt ASC", async () => {
-    const first = await repo.create({ name: "João", email: "joao@example.com" });
+    const first = await repo.create({ name: "João" });
     await new Promise((resolve) => setTimeout(resolve, 2));
-    const second = await repo.create({ name: "Maria", email: "maria@example.com" });
+    const second = await repo.create({ name: "Maria" });
     await new Promise((resolve) => setTimeout(resolve, 2));
-    const third = await repo.create({ name: "Pedro", email: "pedro@example.com" });
+    const third = await repo.create({ name: "Pedro" });
 
     const deps = createDeps({ session: { user: { id: "user-1" } }, service });
 
@@ -60,11 +60,8 @@ describe("GET /api/v1/narrators (handleNarratorsList)", () => {
 
     expect(response.status).toBe(200);
     expect(body.data.map((n) => n.id)).toEqual([first.id, second.id, third.id]);
-    expect(body.data[0]).toMatchObject({
-      id: first.id,
-      name: "João",
-      email: "joao@example.com",
-    });
+    expect(body.data[0]).toMatchObject({ id: first.id, name: "João" });
+    expect(body.data[0]).not.toHaveProperty("email");
   });
 
   it("sets Cache-Control: no-store header", async () => {

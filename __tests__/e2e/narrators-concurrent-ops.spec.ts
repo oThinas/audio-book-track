@@ -3,12 +3,12 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "./fixtures/app-server";
 import { login } from "./helpers/auth";
 
-async function seedNarrator(page: Page, name: string, email: string) {
+async function seedNarrator(page: Page, name: string) {
   const response = await page.request.post("/api/v1/narrators", {
-    data: { name, email },
+    data: { name },
   });
   if (!response.ok()) {
-    throw new Error(`Failed to seed narrator ${email}: ${response.status()}`);
+    throw new Error(`Failed to seed narrator ${name}: ${response.status()}`);
   }
 }
 
@@ -18,15 +18,15 @@ test.describe("Narrators: concurrent operations (FR-011)", () => {
   });
 
   test("two rows in edit mode and the new row coexist", async ({ page }) => {
-    await seedNarrator(page, "Alpha", "alpha@example.com");
-    await seedNarrator(page, "Beta", "beta@example.com");
+    await seedNarrator(page, "Alpha");
+    await seedNarrator(page, "Beta");
     await page.goto("/narrators");
 
     const rows = page.getByTestId("narrator-row");
     await expect(rows).toHaveCount(2);
 
-    const firstRow = rows.filter({ hasText: /alpha@example\.com|Alpha/ }).first();
-    const secondRow = rows.filter({ hasText: /beta@example\.com|Beta/ }).first();
+    const firstRow = rows.filter({ hasText: "Alpha" }).first();
+    const secondRow = rows.filter({ hasText: "Beta" }).first();
 
     await firstRow.getByRole("button", { name: /editar alpha/i }).click();
     await secondRow.getByRole("button", { name: /editar beta/i }).click();
@@ -41,8 +41,8 @@ test.describe("Narrators: concurrent operations (FR-011)", () => {
   });
 
   test("confirming one row edit does not affect other active operations", async ({ page }) => {
-    await seedNarrator(page, "Alpha", "alpha@example.com");
-    await seedNarrator(page, "Beta", "beta@example.com");
+    await seedNarrator(page, "Alpha");
+    await seedNarrator(page, "Beta");
     await page.goto("/narrators");
 
     // Table is sorted by createdAt DESC → nth(0) = Beta (last), nth(1) = Alpha.

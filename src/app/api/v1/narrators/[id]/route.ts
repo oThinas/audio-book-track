@@ -10,10 +10,7 @@ import {
 import { auth } from "@/lib/auth/server";
 import type { Session } from "@/lib/auth/session";
 import { updateNarratorSchema } from "@/lib/domain/narrator";
-import {
-  NarratorEmailAlreadyInUseError,
-  NarratorNotFoundError,
-} from "@/lib/errors/narrator-errors";
+import { NarratorNameAlreadyInUseError, NarratorNotFoundError } from "@/lib/errors/narrator-errors";
 import { createNarratorService } from "@/lib/factories/narrator";
 import type { NarratorService } from "@/lib/services/narrator-service";
 
@@ -57,8 +54,8 @@ export async function handleNarratorsUpdate(
     if (error instanceof NarratorNotFoundError) {
       return notFoundResponse("NARRATOR_NOT_FOUND", "Narrador não encontrado");
     }
-    if (error instanceof NarratorEmailAlreadyInUseError) {
-      return conflictResponse("EMAIL_ALREADY_IN_USE", "E-mail já cadastrado");
+    if (error instanceof NarratorNameAlreadyInUseError) {
+      return conflictResponse("NAME_ALREADY_IN_USE", "Nome já cadastrado");
     }
     throw error;
   }

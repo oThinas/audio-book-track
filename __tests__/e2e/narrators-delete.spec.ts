@@ -3,12 +3,12 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "./fixtures/app-server";
 import { login } from "./helpers/auth";
 
-async function seedNarrator(page: Page, name: string, email: string) {
+async function seedNarrator(page: Page, name: string) {
   const response = await page.request.post("/api/v1/narrators", {
-    data: { name, email },
+    data: { name },
   });
   if (!response.ok()) {
-    throw new Error(`Failed to seed narrator ${email}: ${response.status()}`);
+    throw new Error(`Failed to seed narrator ${name}: ${response.status()}`);
   }
 }
 
@@ -18,7 +18,7 @@ test.describe("Narrators delete", () => {
   });
 
   test("happy path: confirming removes the row and the record", async ({ page }) => {
-    await seedNarrator(page, "Target", "target@example.com");
+    await seedNarrator(page, "Target");
     await page.goto("/narrators");
 
     const row = page.getByTestId("narrator-row").first();
@@ -35,7 +35,7 @@ test.describe("Narrators delete", () => {
   });
 
   test("cancelling the modal keeps the row intact", async ({ page }) => {
-    await seedNarrator(page, "Keep Me", "keep@example.com");
+    await seedNarrator(page, "Keep Me");
     await page.goto("/narrators");
 
     const row = page.getByTestId("narrator-row").first();
@@ -52,7 +52,7 @@ test.describe("Narrators delete", () => {
   });
 
   test("pressing Escape closes the modal without deleting", async ({ page }) => {
-    await seedNarrator(page, "Escape Target", "esc@example.com");
+    await seedNarrator(page, "Escape Target");
     await page.goto("/narrators");
 
     const row = page.getByTestId("narrator-row").first();
