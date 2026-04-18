@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { hashPassword } from "better-auth/crypto";
-import { account, narrator, session, user } from "@/lib/db/schema";
+import { account, editor, narrator, session, user } from "@/lib/db/schema";
 import type { TestDb } from "./db";
 
 interface CreateTestUserOptions {
@@ -110,4 +110,30 @@ export async function createTestNarrator(
     .returning();
 
   return { narrator: createdNarrator };
+}
+
+interface CreateTestEditorOptions {
+  readonly name?: string;
+  readonly email?: string;
+}
+
+interface CreateTestEditorResult {
+  readonly editor: typeof editor.$inferSelect;
+}
+
+export async function createTestEditor(
+  db: TestDb,
+  overrides: CreateTestEditorOptions = {},
+): Promise<CreateTestEditorResult> {
+  const suffix = randomUUID().slice(0, 8);
+
+  const [createdEditor] = await db
+    .insert(editor)
+    .values({
+      name: overrides.name ?? `Editor ${suffix}`,
+      email: overrides.email ?? `editor-${suffix}@test.local`,
+    })
+    .returning();
+
+  return { editor: createdEditor };
 }
