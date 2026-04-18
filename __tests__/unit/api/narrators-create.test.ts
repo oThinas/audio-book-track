@@ -34,7 +34,7 @@ describe("POST /api/v1/narrators (handleNarratorsCreate)", () => {
 
   it("returns 401 when there is no session", async () => {
     const deps = createDeps({ session: null, service });
-    const request = buildRequest({ name: "João", email: "joao@example.com" });
+    const request = buildRequest({ name: "João" });
 
     const response = await handleNarratorsCreate(request, deps);
     const body = await response.json();
@@ -43,9 +43,9 @@ describe("POST /api/v1/narrators (handleNarratorsCreate)", () => {
     expect(body.error.code).toBe("UNAUTHORIZED");
   });
 
-  it("returns 422 with details when body is invalid", async () => {
+  it("returns 422 with details when name is invalid", async () => {
     const deps = createDeps({ session: { user: { id: "u1" } }, service });
-    const request = buildRequest({ name: "a", email: "not-an-email" });
+    const request = buildRequest({ name: "a" });
 
     const response = await handleNarratorsCreate(request, deps);
     const body = (await response.json()) as {
@@ -54,36 +54,48 @@ describe("POST /api/v1/narrators (handleNarratorsCreate)", () => {
 
     expect(response.status).toBe(422);
     expect(body.error.code).toBe("VALIDATION_ERROR");
-    expect(body.error.details.length).toBeGreaterThan(0);
     expect(body.error.details.some((d) => d.field === "name")).toBe(true);
-    expect(body.error.details.some((d) => d.field === "email")).toBe(true);
   });
 
-  it("returns 409 when e-mail is already in use", async () => {
-    await repo.create({ name: "Existing", email: "dup@example.com" });
+  it("returns 409 when name is already in use", async () => {
+    await repo.create({ name: "Duplicado" });
     const deps = createDeps({ session: { user: { id: "u1" } }, service });
-    const request = buildRequest({ name: "Another", email: "dup@example.com" });
+    const request = buildRequest({ name: "Duplicado" });
 
     const response = await handleNarratorsCreate(request, deps);
     const body = await response.json();
 
     expect(response.status).toBe(409);
-    expect(body.error.code).toBe("EMAIL_ALREADY_IN_USE");
+    expect(body.error.code).toBe("NAME_ALREADY_IN_USE");
   });
 
   it("returns 201 with Location header and narrator payload on success", async () => {
     const deps = createDeps({ session: { user: { id: "u1" } }, service });
-    const request = buildRequest({ name: "  João Silva ", email: "  JOAO@Example.com " });
+    const request = buildRequest({ name: "  João Silva " });
 
     const response = await handleNarratorsCreate(request, deps);
     const body = (await response.json()) as {
-      data: { id: string; name: string; email: string };
+      data: { id: string; name: string };
     };
 
     expect(response.status).toBe(201);
     expect(body.data.name).toBe("João Silva");
-    expect(body.data.email).toBe("joao@example.com");
+    expect(body.data).not.toHaveProperty("email");
     expect(response.headers.get("Location")).toBe(`/api/v1/narrators/${body.data.id}`);
     expect(response.headers.get("Cache-Control")).toBe("no-store");
+  });
+
+  it("returns 201 and silently discards an extra email field", async () => {
+    const deps = createDeps({ session: { user: { id: "u1" } }, service });
+    const request = buildRequest({ name: "João", email: "legacy@example.com" });
+
+    const response = await handleNarratorsCreate(request, deps);
+    const body = (await response.json()) as {
+      data: { id: string; name: string; email?: string };
+    };
+
+    expect(response.status).toBe(201);
+    expect(body.data.name).toBe("João");
+    expect(body.data).not.toHaveProperty("email");
   });
 });

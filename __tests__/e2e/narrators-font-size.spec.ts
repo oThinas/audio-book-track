@@ -9,12 +9,12 @@ const FONT_SIZES = [
   { label: "Grande", cssValue: "18px" },
 ] as const;
 
-async function seedNarrator(page: Page, name: string, email: string) {
+async function seedNarrator(page: Page, name: string) {
   const response = await page.request.post("/api/v1/narrators", {
-    data: { name, email },
+    data: { name },
   });
   if (!response.ok()) {
-    throw new Error(`Failed to seed narrator ${email}: ${response.status()}`);
+    throw new Error(`Failed to seed narrator ${name}: ${response.status()}`);
   }
 }
 
@@ -25,7 +25,7 @@ test.describe("Narrators: font size variants (SC-006)", () => {
 
   for (const { label, cssValue } of FONT_SIZES) {
     test(`layout holds with font size ${label}`, async ({ page }) => {
-      await seedNarrator(page, "Font Subject", "font@example.com");
+      await seedNarrator(page, "Font Subject");
 
       await page.goto("/settings");
       await page.getByText(label, { exact: true }).click();

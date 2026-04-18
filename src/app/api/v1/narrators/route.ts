@@ -9,7 +9,7 @@ import {
 import { auth } from "@/lib/auth/server";
 import type { Session } from "@/lib/auth/session";
 import { createNarratorSchema } from "@/lib/domain/narrator";
-import { NarratorEmailAlreadyInUseError } from "@/lib/errors/narrator-errors";
+import { NarratorNameAlreadyInUseError } from "@/lib/errors/narrator-errors";
 import { createNarratorService } from "@/lib/factories/narrator";
 import type { NarratorService } from "@/lib/services/narrator-service";
 
@@ -70,8 +70,8 @@ export async function handleNarratorsCreate(
       },
     );
   } catch (error: unknown) {
-    if (error instanceof NarratorEmailAlreadyInUseError) {
-      return conflictResponse("EMAIL_ALREADY_IN_USE", "E-mail já cadastrado");
+    if (error instanceof NarratorNameAlreadyInUseError) {
+      return conflictResponse("NAME_ALREADY_IN_USE", "Nome já cadastrado");
     }
     throw error;
   }

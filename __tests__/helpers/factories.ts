@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { hashPassword } from "better-auth/crypto";
-import { account, session, user } from "@/lib/db/schema";
+import { account, narrator, session, user } from "@/lib/db/schema";
 import type { TestDb } from "./db";
 
 interface CreateTestUserOptions {
@@ -86,4 +86,28 @@ export async function createTestSession(
     .returning();
 
   return { session: createdSession };
+}
+
+interface CreateTestNarratorOptions {
+  readonly name?: string;
+}
+
+interface CreateTestNarratorResult {
+  readonly narrator: typeof narrator.$inferSelect;
+}
+
+export async function createTestNarrator(
+  db: TestDb,
+  overrides: CreateTestNarratorOptions = {},
+): Promise<CreateTestNarratorResult> {
+  const suffix = randomUUID().slice(0, 8);
+
+  const [createdNarrator] = await db
+    .insert(narrator)
+    .values({
+      name: overrides.name ?? `Narrator ${suffix}`,
+    })
+    .returning();
+
+  return { narrator: createdNarrator };
 }

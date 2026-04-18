@@ -56,35 +56,35 @@ _(Vazia.)_
 
 #### Unit — domain & service
 
-- [ ] T004 [P] [US1] Atualizar `__tests__/unit/services/narrator-service.test.ts`: remover fixtures com `email`; ajustar `Narrator` fake para o shape `{ id, name, createdAt, updatedAt }`; substituir o caso de "unique email" por "unique name"; testes devem cobrir que `NarratorNameAlreadyInUseError` se propaga do repository fake para o chamador
-- [ ] T005 [P] [US1] Se houver `__tests__/unit/domain/narrator*.test.ts`, remover asserts sobre `email` nos schemas Zod; adicionar caso que comprova que payload `{ name, email }` é aceito mas `email` é descartado silenciosamente; nome é preservado com `trim` e sem lowercase
+- [X] T004 [P] [US1] Atualizar `__tests__/unit/services/narrator-service.test.ts`: remover fixtures com `email`; ajustar `Narrator` fake para o shape `{ id, name, createdAt, updatedAt }`; substituir o caso de "unique email" por "unique name"; testes devem cobrir que `NarratorNameAlreadyInUseError` se propaga do repository fake para o chamador
+- [X] T005 [P] [US1] Se houver `__tests__/unit/domain/narrator*.test.ts`, remover asserts sobre `email` nos schemas Zod; adicionar caso que comprova que payload `{ name, email }` é aceito mas `email` é descartado silenciosamente; nome é preservado com `trim` e sem lowercase
 
 #### Unit — API handlers
 
-- [ ] T006 [P] [US1] Atualizar `__tests__/unit/api/narrators-create.test.ts`: payloads de POST sem `email`; substituir caso `409 EMAIL_ALREADY_IN_USE` por `409 NAME_ALREADY_IN_USE`; trocar import de `NarratorEmailAlreadyInUseError` por `NarratorNameAlreadyInUseError`; adicionar caso que confirma que POST com `email` extra responde 201 e objeto retornado não contém `email`
-- [ ] T007 [P] [US1] Atualizar `__tests__/unit/api/narrators-update.test.ts`: payloads de PATCH sem `email`; substituir caso `409 EMAIL_ALREADY_IN_USE` por `409 NAME_ALREADY_IN_USE`; adicionar caso de PATCH mantendo o mesmo `name` (idempotente) — NÃO deve retornar `409`; confirmar que PATCH com `email` extra é aceito e ignorado
-- [ ] T008 [P] [US1] Atualizar `__tests__/unit/api/narrators-list.test.ts`: fixtures e asserts sem `email`
-- [ ] T009 [P] [US1] Revisar `__tests__/unit/api/narrators-delete.test.ts` — deve estar inalterado; remover qualquer fixture colateral com `email`
+- [X] T006 [P] [US1] Atualizar `__tests__/unit/api/narrators-create.test.ts`: payloads de POST sem `email`; substituir caso `409 EMAIL_ALREADY_IN_USE` por `409 NAME_ALREADY_IN_USE`; trocar import de `NarratorEmailAlreadyInUseError` por `NarratorNameAlreadyInUseError`; adicionar caso que confirma que POST com `email` extra responde 201 e objeto retornado não contém `email`
+- [X] T007 [P] [US1] Atualizar `__tests__/unit/api/narrators-update.test.ts`: payloads de PATCH sem `email`; substituir caso `409 EMAIL_ALREADY_IN_USE` por `409 NAME_ALREADY_IN_USE`; adicionar caso de PATCH mantendo o mesmo `name` (idempotente) — NÃO deve retornar `409`; confirmar que PATCH com `email` extra é aceito e ignorado
+- [X] T008 [P] [US1] Atualizar `__tests__/unit/api/narrators-list.test.ts`: fixtures e asserts sem `email`
+- [X] T009 [P] [US1] Revisar `__tests__/unit/api/narrators-delete.test.ts` — deve estar inalterado; remover qualquer fixture colateral com `email`
 
 #### Integration — Drizzle repository
 
-- [ ] T010 [P] [US1] Atualizar `__tests__/integration/repositories/drizzle-narrator-repository.test.ts`: substituir testes de `findByEmail` por testes de `findByName` (match exato, case-sensitive; retorna `null` para nome inexistente); substituir suite "email unique" por "name unique" (POST duplicado lança `NarratorNameAlreadyInUseError`, PATCH de um narrador para o nome de outro também); remover `email` dos inputs; adicionar teste que confirma PATCH para o próprio nome é no-op de conflito (não lança); adicionar teste que confirma que narrador com mesmo `name` mas capitalização diferente é aceito (case-sensitive)
+- [X] T010 [P] [US1] Atualizar `__tests__/integration/repositories/drizzle-narrator-repository.test.ts`: substituir testes de `findByEmail` por testes de `findByName` (match exato, case-sensitive; retorna `null` para nome inexistente); substituir suite "email unique" por "name unique" (POST duplicado lança `NarratorNameAlreadyInUseError`, PATCH de um narrador para o nome de outro também); remover `email` dos inputs; adicionar teste que confirma PATCH para o próprio nome é no-op de conflito (não lança); adicionar teste que confirma que narrador com mesmo `name` mas capitalização diferente é aceito (case-sensitive)
 
 #### E2E
 
-- [ ] T011 [P] [US1] Atualizar `__tests__/e2e/narrators-list.spec.ts`: remover asserts da coluna/header "E-mail"; remover locator `data-testid="narrator-email"`
-- [ ] T012 [P] [US1] Atualizar `__tests__/e2e/narrators-create.spec.ts`: remover passos de preenchimento do input de email; remover asserts de validação de email; adicionar assert de que a nova linha editável tem apenas o input `name`; **adicionar caso** de criação com nome duplicado → mensagem "Nome já cadastrado" é exibida no campo
-- [ ] T013 [P] [US1] Atualizar `__tests__/e2e/narrators-update.spec.ts`: remover alteração do campo email e assert de conflito 409 por email; **adicionar caso** de edição para nome já existente em outro narrador → mensagem "Nome já cadastrado"; **adicionar caso** de edição mantendo o mesmo nome → sucesso sem erro
-- [ ] T014 [P] [US1] Atualizar `__tests__/e2e/narrators-accessibility.spec.ts`: revisar labels/aria esperados (remover `narrator-new-email`, `narrator-edit-email-<id>`, label "E-mail"); manter labels do input `name`
-- [ ] T015 [P] [US1] Atualizar `__tests__/e2e/narrators-concurrent-ops.spec.ts`: remover fixtures e steps que usam `email`; se a suite testa dois produtores editando simultaneamente, substituir o campo alterado por `name`
-- [ ] T016 [P] [US1] Atualizar `__tests__/e2e/narrators-responsive.spec.ts`: revisar breakpoints de largura da tabela após remoção da coluna; ajustar asserts de layout se necessário
-- [ ] T017 [P] [US1] Atualizar `__tests__/e2e/narrators-font-size.spec.ts`: revisar layout da tabela nos 3 tamanhos de fonte após remoção da coluna
-- [ ] T018 [P] [US1] Revisar `__tests__/e2e/narrators-dark-mode.spec.ts`, `narrators-delete.spec.ts`, `narrators-primary-colors.spec.ts` — remover eventuais fixtures com email e confirmar que não há assert da coluna de email
+- [X] T011 [P] [US1] Atualizar `__tests__/e2e/narrators-list.spec.ts`: remover asserts da coluna/header "E-mail"; remover locator `data-testid="narrator-email"`
+- [X] T012 [P] [US1] Atualizar `__tests__/e2e/narrators-create.spec.ts`: remover passos de preenchimento do input de email; remover asserts de validação de email; adicionar assert de que a nova linha editável tem apenas o input `name`; **adicionar caso** de criação com nome duplicado → mensagem "Nome já cadastrado" é exibida no campo
+- [X] T013 [P] [US1] Atualizar `__tests__/e2e/narrators-update.spec.ts`: remover alteração do campo email e assert de conflito 409 por email; **adicionar caso** de edição para nome já existente em outro narrador → mensagem "Nome já cadastrado"; **adicionar caso** de edição mantendo o mesmo nome → sucesso sem erro
+- [X] T014 [P] [US1] Atualizar `__tests__/e2e/narrators-accessibility.spec.ts`: revisar labels/aria esperados (remover `narrator-new-email`, `narrator-edit-email-<id>`, label "E-mail"); manter labels do input `name`
+- [X] T015 [P] [US1] Atualizar `__tests__/e2e/narrators-concurrent-ops.spec.ts`: remover fixtures e steps que usam `email`; se a suite testa dois produtores editando simultaneamente, substituir o campo alterado por `name`
+- [X] T016 [P] [US1] Atualizar `__tests__/e2e/narrators-responsive.spec.ts`: revisar breakpoints de largura da tabela após remoção da coluna; ajustar asserts de layout se necessário
+- [X] T017 [P] [US1] Atualizar `__tests__/e2e/narrators-font-size.spec.ts`: revisar layout da tabela nos 3 tamanhos de fonte após remoção da coluna
+- [X] T018 [P] [US1] Revisar `__tests__/e2e/narrators-dark-mode.spec.ts`, `narrators-delete.spec.ts`, `narrators-primary-colors.spec.ts` — remover eventuais fixtures com email e confirmar que não há assert da coluna de email
 
 #### Factories & in-memory repo (test helpers)
 
-- [ ] T019 [P] [US1] Atualizar `__tests__/repositories/in-memory-narrator-repository.ts`: substituir `findByEmail` por `findByName` (match exato, case-sensitive); remover normalização `.toLowerCase()`; aplicar apenas `.trim()` em `name` no `create`/`update`; substituir `NarratorEmailAlreadyInUseError` por `NarratorNameAlreadyInUseError` nos throws; garantir que PATCH para o próprio `name` não lança
-- [ ] T020 [P] [US1] Se `__tests__/helpers/factories.ts` tiver `createTestNarrator`, remover o parâmetro `email` e seu default. Se não houver, adicionar factory simples `createTestNarrator(db, { name }: { name?: string })` para facilitar testes de unicidade (nome default aleatório via `randomUUID().slice(0, 8)`)
+- [X] T019 [P] [US1] Atualizar `__tests__/repositories/in-memory-narrator-repository.ts`: substituir `findByEmail` por `findByName` (match exato, case-sensitive); remover normalização `.toLowerCase()`; aplicar apenas `.trim()` em `name` no `create`/`update`; substituir `NarratorEmailAlreadyInUseError` por `NarratorNameAlreadyInUseError` nos throws; garantir que PATCH para o próprio `name` não lança
+- [X] T020 [P] [US1] Se `__tests__/helpers/factories.ts` tiver `createTestNarrator`, remover o parâmetro `email` e seu default. Se não houver, adicionar factory simples `createTestNarrator(db, { name }: { name?: string })` para facilitar testes de unicidade (nome default aleatório via `randomUUID().slice(0, 8)`)
 
 **Checkpoint Tests-First**: rodar `bun run test:unit` + `bun run test:integration` + `bunx playwright test __tests__/e2e/narrators-*` — toda a suíte afetada DEVE ter falhas. Se algum teste novo passar sem mudança no código, provavelmente o assert não está apontado ao ponto certo.
 
@@ -94,35 +94,35 @@ _(Vazia.)_
 
 #### 1. Schema DB e migração
 
-- [ ] T021 [US1] Editar `src/lib/db/schema.ts`: (a) remover a linha `email: text("email").notNull(),`; (b) **substituir** o callback de config `(table) => [uniqueIndex("narrator_email_unique").on(table.email)]` por `(table) => [uniqueIndex("narrator_name_unique").on(table.name)]`
-- [ ] T022 [US1] Gerar migração: `bun run db:generate` — confirmar que o arquivo novo em `drizzle/` contém `DROP INDEX "narrator_email_unique"`, `ALTER TABLE "narrator" DROP COLUMN "email"` e `CREATE UNIQUE INDEX "narrator_name_unique" ON "narrator" ("name")`
-- [ ] T023 [US1] Aplicar migração ao banco de dev: `bun run db:migrate`. Se houver erro de violação de unicidade ao criar o índice, voltar para T003 e deduplicar. Confirmar estado final com `psql audiobook_track -c '\d narrator'`: colunas sem `email`, índice `narrator_name_unique` UNIQUE presente
+- [X] T021 [US1] Editar `src/lib/db/schema.ts`: (a) remover a linha `email: text("email").notNull(),`; (b) **substituir** o callback de config `(table) => [uniqueIndex("narrator_email_unique").on(table.email)]` por `(table) => [uniqueIndex("narrator_name_unique").on(table.name)]`
+- [X] T022 [US1] Gerar migração: `bun run db:generate` — confirmar que o arquivo novo em `drizzle/` contém `DROP INDEX "narrator_email_unique"`, `ALTER TABLE "narrator" DROP COLUMN "email"` e `CREATE UNIQUE INDEX "narrator_name_unique" ON "narrator" ("name")`
+- [X] T023 [US1] Aplicar migração ao banco de dev: `bun run db:migrate`. Se houver erro de violação de unicidade ao criar o índice, voltar para T003 e deduplicar. Confirmar estado final com `psql audiobook_track -c '\d narrator'`: colunas sem `email`, índice `narrator_name_unique` UNIQUE presente
 
 #### 2. Domain e repository interface
 
-- [ ] T024 [US1] Editar `src/lib/domain/narrator.ts`: remover `email` da interface `Narrator`; remover `email: ...` dos schemas Zod; manter `.trim()` em `name` e ajustar para NÃO aplicar `.toLowerCase()` (se estava sendo aplicado — confirmar pela implementação atual)
-- [ ] T025 [US1] Editar `src/lib/domain/narrator-repository.ts`: substituir a linha `findByEmail(email: string): Promise<Narrator | null>;` por `findByName(name: string): Promise<Narrator | null>;`
-- [ ] T026 [US1] Editar `src/lib/errors/narrator-errors.ts`: **renomear** a classe `NarratorEmailAlreadyInUseError` para `NarratorNameAlreadyInUseError`; ajustar a mensagem do construtor para `Nome já cadastrado: ${name}`; o parâmetro passa a ser `name: string`; manter `NarratorNotFoundError` inalterado
+- [X] T024 [US1] Editar `src/lib/domain/narrator.ts`: remover `email` da interface `Narrator`; remover `email: ...` dos schemas Zod; manter `.trim()` em `name` e ajustar para NÃO aplicar `.toLowerCase()` (se estava sendo aplicado — confirmar pela implementação atual)
+- [X] T025 [US1] Editar `src/lib/domain/narrator-repository.ts`: substituir a linha `findByEmail(email: string): Promise<Narrator | null>;` por `findByName(name: string): Promise<Narrator | null>;`
+- [X] T026 [US1] Editar `src/lib/errors/narrator-errors.ts`: **renomear** a classe `NarratorEmailAlreadyInUseError` para `NarratorNameAlreadyInUseError`; ajustar a mensagem do construtor para `Nome já cadastrado: ${name}`; o parâmetro passa a ser `name: string`; manter `NarratorNotFoundError` inalterado
 
 #### 3. Repositories (concreto e in-memory)
 
-- [ ] T027 [US1] Editar `src/lib/repositories/drizzle/drizzle-narrator-repository.ts`: (a) substituir `findByEmail` por `findByName` (select com `where(eq(narrator.name, name))`); (b) **manter** `POSTGRES_UNIQUE_VIOLATION`, `hasUniqueViolationCode`, `isUniqueViolation`; (c) remover `email` de `NARRATOR_COLUMNS`; (d) remover `email` dos objetos passados a `.values()` e `.set()`; (e) em `create`, trocar `NarratorEmailAlreadyInUseError(input.email)` por `NarratorNameAlreadyInUseError(input.name)`; (f) em `update`, trocar a condição `input.email !== undefined` para `input.name !== undefined` e lançar `NarratorNameAlreadyInUseError(input.name)`; ajustar imports
-- [ ] T028 [US1] (Nota: `InMemoryNarratorRepository` já foi editado na T019 junto com os testes — confirmar que a alteração compila após T024–T026)
+- [X] T027 [US1] Editar `src/lib/repositories/drizzle/drizzle-narrator-repository.ts`: (a) substituir `findByEmail` por `findByName` (select com `where(eq(narrator.name, name))`); (b) **manter** `POSTGRES_UNIQUE_VIOLATION`, `hasUniqueViolationCode`, `isUniqueViolation`; (c) remover `email` de `NARRATOR_COLUMNS`; (d) remover `email` dos objetos passados a `.values()` e `.set()`; (e) em `create`, trocar `NarratorEmailAlreadyInUseError(input.email)` por `NarratorNameAlreadyInUseError(input.name)`; (f) em `update`, trocar a condição `input.email !== undefined` para `input.name !== undefined` e lançar `NarratorNameAlreadyInUseError(input.name)`; ajustar imports
+- [X] T028 [US1] (Nota: `InMemoryNarratorRepository` já foi editado na T019 junto com os testes — confirmar que a alteração compila após T024–T026)
 
 #### 4. API routes
 
-- [ ] T029 [US1] Editar `src/app/api/v1/narrators/route.ts`: trocar import de `NarratorEmailAlreadyInUseError` por `NarratorNameAlreadyInUseError`; no bloco `catch` do `handleNarratorsCreate`, trocar a classe e o código do `conflictResponse` para `conflictResponse("NAME_ALREADY_IN_USE", "Nome já cadastrado")`
-- [ ] T030 [US1] Editar `src/app/api/v1/narrators/[id]/route.ts`: mesma troca no `handleNarratorsUpdate` — `NarratorNameAlreadyInUseError` + `conflictResponse("NAME_ALREADY_IN_USE", "Nome já cadastrado")`
+- [X] T029 [US1] Editar `src/app/api/v1/narrators/route.ts`: trocar import de `NarratorEmailAlreadyInUseError` por `NarratorNameAlreadyInUseError`; no bloco `catch` do `handleNarratorsCreate`, trocar a classe e o código do `conflictResponse` para `conflictResponse("NAME_ALREADY_IN_USE", "Nome já cadastrado")`
+- [X] T030 [US1] Editar `src/app/api/v1/narrators/[id]/route.ts`: mesma troca no `handleNarratorsUpdate` — `NarratorNameAlreadyInUseError` + `conflictResponse("NAME_ALREADY_IN_USE", "Nome já cadastrado")`
 
 #### 5. UI components
 
-- [ ] T031 [US1] Editar `src/app/(authenticated)/narrators/_components/narrators-table.tsx`: remover a coluna `email` do array `columns`; remover branch `columnId === "email"` no switch de largura/alinhamento; ajustar largura da coluna "Nome" para ocupar o espaço bem (usar tokens Tailwind, sem hardcode)
-- [ ] T032 [US1] Editar `src/app/(authenticated)/narrators/_components/narrator-row.tsx`: remover `emailFieldId`, `email` de `defaultValues`, bloco do `<Input type="email">` + label + mensagem de erro `errors.email`, `<TableCell data-testid="narrator-email">`; **trocar** o handler de conflito para mapear `code === "NAME_ALREADY_IN_USE"` (ou detecção equivalente baseada no `details`/`field`) em `setError("name", { message: "Nome já cadastrado" })`; remover branch `detail.field === "email"` e adicionar/ajustar branch para `detail.field === "name"`
-- [ ] T033 [US1] Editar `src/app/(authenticated)/narrators/_components/narrator-new-row.tsx`: remover `email: ""` de `defaultValues`, bloco do input de email (label, Input, mensagem de erro); trocar `setError("email", ...)` por `setError("name", { message: "Nome já cadastrado" })` no handler de conflito; ajustar branch de detecção do erro para código `NAME_ALREADY_IN_USE`
+- [X] T031 [US1] Editar `src/app/(authenticated)/narrators/_components/narrators-table.tsx`: remover a coluna `email` do array `columns`; remover branch `columnId === "email"` no switch de largura/alinhamento; ajustar largura da coluna "Nome" para ocupar o espaço bem (usar tokens Tailwind, sem hardcode)
+- [X] T032 [US1] Editar `src/app/(authenticated)/narrators/_components/narrator-row.tsx`: remover `emailFieldId`, `email` de `defaultValues`, bloco do `<Input type="email">` + label + mensagem de erro `errors.email`, `<TableCell data-testid="narrator-email">`; **trocar** o handler de conflito para mapear `code === "NAME_ALREADY_IN_USE"` (ou detecção equivalente baseada no `details`/`field`) em `setError("name", { message: "Nome já cadastrado" })`; remover branch `detail.field === "email"` e adicionar/ajustar branch para `detail.field === "name"`
+- [X] T033 [US1] Editar `src/app/(authenticated)/narrators/_components/narrator-new-row.tsx`: remover `email: ""` de `defaultValues`, bloco do input de email (label, Input, mensagem de erro); trocar `setError("email", ...)` por `setError("name", { message: "Nome já cadastrado" })` no handler de conflito; ajustar branch de detecção do erro para código `NAME_ALREADY_IN_USE`
 
 #### 6. Seed de dev
 
-- [ ] T034 [US1] Revisar `src/lib/db/seed.ts`: se houver inserts de narrador com `email`, remover o campo; **garantir** que os nomes inseridos sejam únicos entre si (se o seed tiver dois "Narrador Teste", ajustar). `src/lib/db/seed-test.ts` NÃO deve ser tocado (regra do projeto)
+- [X] T034 [US1] Revisar `src/lib/db/seed.ts`: se houver inserts de narrador com `email`, remover o campo; **garantir** que os nomes inseridos sejam únicos entre si (se o seed tiver dois "Narrador Teste", ajustar). `src/lib/db/seed-test.ts` NÃO deve ser tocado (regra do projeto)
 
 **Checkpoint US1**: rodar `bun run test:unit`, `bun run test:integration` e testes E2E específicos de narradores. Todos verdes. Abrir `http://localhost:1197/narrators` em dev e validar fluxo manual conforme [quickstart.md](./quickstart.md) §4.
 
@@ -132,12 +132,12 @@ _(Vazia.)_
 
 **Purpose**: Documentação e limpeza final.
 
-- [ ] T035 [P] Atualizar tabela de domínio em `CLAUDE.md` (seção "Modelo de domínio (resumo)"): remover qualquer menção a `email` na linha de Narrador; adicionar nota de que `name` é único (case-sensitive, após `trim`)
-- [ ] T036 [P] Se existir `docs/futuras-features.md` ou similar mencionando e-mail do narrador para integração Google Drive (herdado da feature 015), remover a nota obsoleta ou registrar que a integração foi descartada
-- [ ] T037 Executar greps de verificação do [quickstart.md](./quickstart.md) §"Artefatos verificáveis":
+- [X] T035 [P] Atualizar tabela de domínio em `CLAUDE.md` (seção "Modelo de domínio (resumo)"): remover qualquer menção a `email` na linha de Narrador; adicionar nota de que `name` é único (case-sensitive, após `trim`)
+- [X] T036 [P] Se existir `docs/futuras-features.md` ou similar mencionando e-mail do narrador para integração Google Drive (herdado da feature 015), remover a nota obsoleta ou registrar que a integração foi descartada
+- [X] T037 Executar greps de verificação do [quickstart.md](./quickstart.md) §"Artefatos verificáveis":
   - DEVEM retornar **zero**: `rg '\bemail\b' src/lib/domain/narrator.ts src/lib/domain/narrator-repository.ts`; `rg '\bemail\b' src/lib/repositories/drizzle/drizzle-narrator-repository.ts`; `rg '\bemail\b' 'src/app/(authenticated)/narrators'`; `rg 'NarratorEmailAlreadyInUseError' src/ __tests__/`; `rg 'findByEmail' src/ __tests__/`; `rg 'narrator_email_unique' src/lib/db/schema.ts`
   - DEVEM retornar match: `rg 'narrator_name_unique' src/lib/db/schema.ts`; `rg 'NarratorNameAlreadyInUseError' src/lib/errors/narrator-errors.ts`; `rg 'findByName' src/lib/domain/narrator-repository.ts`; `rg 'NAME_ALREADY_IN_USE' src/app/api/v1/narrators/`
-- [ ] T038 Rodar validação manual completa de [quickstart.md](./quickstart.md) (passos 4 e 5) — login, CRUD completo via UI incluindo casos de nome duplicado e idempotência, curls da API
+- [X] T038 Rodar validação manual completa de [quickstart.md](./quickstart.md) (passos 4 e 5) — login, CRUD completo via UI incluindo casos de nome duplicado e idempotência, curls da API
 
 ---
 

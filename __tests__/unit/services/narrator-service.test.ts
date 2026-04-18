@@ -1,10 +1,7 @@
 import { InMemoryNarratorRepository } from "@tests/repositories/in-memory-narrator-repository";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import {
-  NarratorEmailAlreadyInUseError,
-  NarratorNotFoundError,
-} from "@/lib/errors/narrator-errors";
+import { NarratorNameAlreadyInUseError, NarratorNotFoundError } from "@/lib/errors/narrator-errors";
 import { NarratorService } from "@/lib/services/narrator-service";
 
 describe("NarratorService", () => {
@@ -23,8 +20,8 @@ describe("NarratorService", () => {
     });
 
     it("returns narrators ordered by createdAt ASC", async () => {
-      const first = await service.create({ name: "Primeiro", email: "a@exemplo.com" });
-      const second = await service.create({ name: "Segundo", email: "b@exemplo.com" });
+      const first = await service.create({ name: "Primeiro" });
+      const second = await service.create({ name: "Segundo" });
 
       const result = await service.list();
 
@@ -33,53 +30,40 @@ describe("NarratorService", () => {
   });
 
   describe("create", () => {
-    it("creates a narrator with the provided values", async () => {
-      const created = await service.create({ name: "João", email: "joao@exemplo.com" });
+    it("creates a narrator with the provided name", async () => {
+      const created = await service.create({ name: "João" });
 
       expect(created.name).toBe("João");
-      expect(created.email).toBe("joao@exemplo.com");
       expect(created.id).toEqual(expect.any(String));
+      expect(created).not.toHaveProperty("email");
     });
 
-    it("propagates NarratorEmailAlreadyInUseError on duplicate email", async () => {
-      await service.create({ name: "Primeiro", email: "dup@exemplo.com" });
+    it("propagates NarratorNameAlreadyInUseError on duplicate name", async () => {
+      await service.create({ name: "Duplicado" });
 
-      await expect(
-        service.create({ name: "Segundo", email: "dup@exemplo.com" }),
-      ).rejects.toBeInstanceOf(NarratorEmailAlreadyInUseError);
+      await expect(service.create({ name: "Duplicado" })).rejects.toBeInstanceOf(
+        NarratorNameAlreadyInUseError,
+      );
     });
   });
 
   describe("update", () => {
-    it("updates a single field (name)", async () => {
-      const created = await service.create({ name: "Original", email: "orig@exemplo.com" });
+    it("updates the name", async () => {
+      const created = await service.create({ name: "Original" });
 
       const updated = await service.update(created.id, { name: "Atualizado" });
 
       expect(updated.id).toBe(created.id);
       expect(updated.name).toBe("Atualizado");
-      expect(updated.email).toBe("orig@exemplo.com");
     });
 
-    it("updates a single field (email)", async () => {
-      const created = await service.create({ name: "João", email: "joao@exemplo.com" });
+    it("is idempotent when renaming to the same name", async () => {
+      const created = await service.create({ name: "Mesmo Nome" });
 
-      const updated = await service.update(created.id, { email: "novo@exemplo.com" });
+      const updated = await service.update(created.id, { name: "Mesmo Nome" });
 
-      expect(updated.name).toBe("João");
-      expect(updated.email).toBe("novo@exemplo.com");
-    });
-
-    it("updates both fields", async () => {
-      const created = await service.create({ name: "João", email: "joao@exemplo.com" });
-
-      const updated = await service.update(created.id, {
-        name: "João Santos",
-        email: "santos@exemplo.com",
-      });
-
-      expect(updated.name).toBe("João Santos");
-      expect(updated.email).toBe("santos@exemplo.com");
+      expect(updated.id).toBe(created.id);
+      expect(updated.name).toBe("Mesmo Nome");
     });
 
     it("propagates NarratorNotFoundError when id does not exist", async () => {
@@ -88,19 +72,19 @@ describe("NarratorService", () => {
       );
     });
 
-    it("propagates NarratorEmailAlreadyInUseError when email is taken", async () => {
-      await service.create({ name: "Primeiro", email: "first@exemplo.com" });
-      const second = await service.create({ name: "Segundo", email: "second@exemplo.com" });
+    it("propagates NarratorNameAlreadyInUseError when renaming to another narrator's name", async () => {
+      await service.create({ name: "Primeiro" });
+      const second = await service.create({ name: "Segundo" });
 
-      await expect(
-        service.update(second.id, { email: "first@exemplo.com" }),
-      ).rejects.toBeInstanceOf(NarratorEmailAlreadyInUseError);
+      await expect(service.update(second.id, { name: "Primeiro" })).rejects.toBeInstanceOf(
+        NarratorNameAlreadyInUseError,
+      );
     });
   });
 
   describe("delete", () => {
     it("removes the narrator", async () => {
-      const created = await service.create({ name: "João", email: "joao@exemplo.com" });
+      const created = await service.create({ name: "Para excluir" });
 
       await service.delete(created.id);
 

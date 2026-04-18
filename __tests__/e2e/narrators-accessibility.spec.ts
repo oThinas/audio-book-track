@@ -4,12 +4,12 @@ import { expect, test } from "./fixtures/app-server";
 import { checkAccessibility } from "./helpers/accessibility";
 import { login } from "./helpers/auth";
 
-async function seedNarrator(page: Page, name: string, email: string) {
+async function seedNarrator(page: Page, name: string) {
   const response = await page.request.post("/api/v1/narrators", {
-    data: { name, email },
+    data: { name },
   });
   if (!response.ok()) {
-    throw new Error(`Failed to seed narrator ${email}: ${response.status()}`);
+    throw new Error(`Failed to seed narrator ${name}: ${response.status()}`);
   }
 }
 
@@ -19,7 +19,7 @@ test.describe("Accessibility: Narrators", () => {
   });
 
   test("narrators list page - WCAG 2.1 AA across themes and colors", async ({ page }) => {
-    await seedNarrator(page, "A11y Subject", "a11y@example.com");
+    await seedNarrator(page, "A11y Subject");
     await page.goto("/narrators");
     await expect(page.getByRole("heading", { name: /narradores/i })).toBeVisible();
 
@@ -27,7 +27,7 @@ test.describe("Accessibility: Narrators", () => {
   });
 
   test("delete confirmation dialog - WCAG 2.1 AA across themes and colors", async ({ page }) => {
-    await seedNarrator(page, "A11y Subject", "a11y@example.com");
+    await seedNarrator(page, "A11y Subject");
     await page.goto("/narrators");
 
     const row = page.getByTestId("narrator-row").first();

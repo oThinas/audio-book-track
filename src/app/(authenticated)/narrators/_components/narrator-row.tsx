@@ -40,9 +40,6 @@ export function NarratorRow({ narrator, onUpdated, onRequestDelete }: NarratorRo
       <TableCell data-testid="narrator-name" className="text-foreground">
         {narrator.name}
       </TableCell>
-      <TableCell data-testid="narrator-email" className="text-muted-foreground">
-        {narrator.email}
-      </TableCell>
       <TableCell className="w-24">
         <div className="flex items-center justify-end gap-1">
           <Button
@@ -81,7 +78,6 @@ function NarratorRowEditMode({ narrator, onCancel, onUpdated }: NarratorRowEditM
   const firstFieldRef = useRef<HTMLInputElement | null>(null);
   const formId = `narrator-edit-row-form-${narrator.id}`;
   const nameFieldId = `narrator-edit-name-${narrator.id}`;
-  const emailFieldId = `narrator-edit-email-${narrator.id}`;
 
   const {
     register,
@@ -90,7 +86,7 @@ function NarratorRowEditMode({ narrator, onCancel, onUpdated }: NarratorRowEditM
     setError,
   } = useForm<NarratorFormValues>({
     resolver: zodResolver(narratorFormSchema),
-    defaultValues: { name: narrator.name, email: narrator.email },
+    defaultValues: { name: narrator.name },
   });
 
   useEffect(() => {
@@ -113,15 +109,15 @@ function NarratorRowEditMode({ narrator, onCancel, onUpdated }: NarratorRowEditM
     if (response.status === 422) {
       const body = (await response.json()) as ApiErrorBody;
       for (const detail of body.error.details ?? []) {
-        if (detail.field === "name" || detail.field === "email") {
-          setError(detail.field, { message: detail.message });
+        if (detail.field === "name") {
+          setError("name", { message: detail.message });
         }
       }
       return;
     }
 
     if (response.status === 409) {
-      setError("email", { message: "E-mail já cadastrado" });
+      setError("name", { message: "Nome já cadastrado" });
       return;
     }
 
@@ -156,21 +152,6 @@ function NarratorRowEditMode({ narrator, onCancel, onUpdated }: NarratorRowEditM
           }}
         />
         {errors.name && <p className="mt-1 text-xs text-destructive">{errors.name.message}</p>}
-      </TableCell>
-      <TableCell className="align-top">
-        <Label htmlFor={emailFieldId} className="sr-only">
-          E-mail
-        </Label>
-        <Input
-          id={emailFieldId}
-          form={formId}
-          type="email"
-          placeholder="email@exemplo.com"
-          aria-invalid={errors.email ? true : undefined}
-          disabled={isSubmitting}
-          {...register("email")}
-        />
-        {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>}
       </TableCell>
       <TableCell className="w-24">
         <div className="flex items-center justify-end gap-1">

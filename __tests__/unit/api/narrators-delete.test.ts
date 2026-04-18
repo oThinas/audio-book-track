@@ -45,7 +45,7 @@ describe("DELETE /api/v1/narrators/:id (handleNarratorsDelete)", () => {
   });
 
   it("returns 204 with no body and Cache-Control no-store on success", async () => {
-    const existing = await repo.create({ name: "Delete Me", email: "del@example.com" });
+    const existing = await repo.create({ name: "Delete Me" });
     const deps = createDeps({ session: { user: { id: "u1" } }, service });
 
     const response = await handleNarratorsDelete(deps, { id: existing.id });

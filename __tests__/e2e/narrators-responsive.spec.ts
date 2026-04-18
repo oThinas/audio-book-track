@@ -9,12 +9,12 @@ const VIEWPORTS = [
   { label: "desktop", width: 1440, height: 900 },
 ] as const;
 
-async function seedNarrator(page: Page, name: string, email: string) {
+async function seedNarrator(page: Page, name: string) {
   const response = await page.request.post("/api/v1/narrators", {
-    data: { name, email },
+    data: { name },
   });
   if (!response.ok()) {
-    throw new Error(`Failed to seed narrator ${email}: ${response.status()}`);
+    throw new Error(`Failed to seed narrator ${name}: ${response.status()}`);
   }
 }
 
@@ -25,7 +25,7 @@ test.describe("Narrators: responsive layout", () => {
 
   for (const { label, width, height } of VIEWPORTS) {
     test(`renders without horizontal overflow at ${label} (${width}px)`, async ({ page }) => {
-      await seedNarrator(page, "Responsive Subject", "resp@example.com");
+      await seedNarrator(page, "Responsive Subject");
       await page.setViewportSize({ width, height });
       await page.goto("/narrators");
 

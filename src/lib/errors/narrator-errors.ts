@@ -1,7 +1,7 @@
-export class NarratorEmailAlreadyInUseError extends Error {
-  constructor(email: string) {
-    super(`E-mail já cadastrado: ${email}`);
-    this.name = "NarratorEmailAlreadyInUseError";
+export class NarratorNameAlreadyInUseError extends Error {
+  constructor(name: string) {
+    super(`Nome já cadastrado: ${name}`);
+    this.name = "NarratorNameAlreadyInUseError";
   }
 }
 

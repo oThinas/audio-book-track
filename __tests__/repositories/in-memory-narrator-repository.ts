@@ -1,9 +1,6 @@
 import type { CreateNarratorInput, Narrator, UpdateNarratorInput } from "@/lib/domain/narrator";
 import type { NarratorRepository } from "@/lib/domain/narrator-repository";
-import {
-  NarratorEmailAlreadyInUseError,
-  NarratorNotFoundError,
-} from "@/lib/errors/narrator-errors";
+import { NarratorNameAlreadyInUseError, NarratorNotFoundError } from "@/lib/errors/narrator-errors";
 
 export class InMemoryNarratorRepository implements NarratorRepository {
   private readonly store = new Map<string, Narrator>();
@@ -18,10 +15,9 @@ export class InMemoryNarratorRepository implements NarratorRepository {
     return this.store.get(id) ?? null;
   }
 
-  async findByEmail(email: string): Promise<Narrator | null> {
-    const normalized = email.trim().toLowerCase();
+  async findByName(name: string): Promise<Narrator | null> {
     for (const narrator of this.store.values()) {
-      if (narrator.email === normalized) {
+      if (narrator.name === name) {
         return narrator;
       }
     }
@@ -29,17 +25,16 @@ export class InMemoryNarratorRepository implements NarratorRepository {
   }
 
   async create(input: CreateNarratorInput): Promise<Narrator> {
-    const email = input.email.trim().toLowerCase();
-    const existing = await this.findByEmail(email);
+    const name = input.name.trim();
+    const existing = await this.findByName(name);
     if (existing) {
-      throw new NarratorEmailAlreadyInUseError(email);
+      throw new NarratorNameAlreadyInUseError(name);
     }
 
     const now = new Date();
     const narrator: Narrator = {
       id: crypto.randomUUID(),
-      name: input.name.trim(),
-      email,
+      name,
       createdAt: now,
       updatedAt: now,
     };
@@ -53,12 +48,12 @@ export class InMemoryNarratorRepository implements NarratorRepository {
       throw new NarratorNotFoundError(id);
     }
 
-    if (input.email !== undefined) {
-      const normalizedEmail = input.email.trim().toLowerCase();
-      if (normalizedEmail !== existing.email) {
-        const duplicate = await this.findByEmail(normalizedEmail);
+    if (input.name !== undefined) {
+      const trimmedName = input.name.trim();
+      if (trimmedName !== existing.name) {
+        const duplicate = await this.findByName(trimmedName);
         if (duplicate && duplicate.id !== id) {
-          throw new NarratorEmailAlreadyInUseError(normalizedEmail);
+          throw new NarratorNameAlreadyInUseError(trimmedName);
         }
       }
     }
@@ -66,7 +61,6 @@ export class InMemoryNarratorRepository implements NarratorRepository {
     const updated: Narrator = {
       ...existing,
       name: input.name !== undefined ? input.name.trim() : existing.name,
-      email: input.email !== undefined ? input.email.trim().toLowerCase() : existing.email,
       updatedAt: new Date(),
     };
     this.store.set(id, updated);

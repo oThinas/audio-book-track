@@ -3,12 +3,12 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "./fixtures/app-server";
 import { login } from "./helpers/auth";
 
-async function seedNarrator(page: Page, name: string, email: string) {
+async function seedNarrator(page: Page, name: string) {
   const response = await page.request.post("/api/v1/narrators", {
-    data: { name, email },
+    data: { name },
   });
   if (!response.ok()) {
-    throw new Error(`Failed to seed narrator ${email}: ${response.status()}`);
+    throw new Error(`Failed to seed narrator ${name}: ${response.status()}`);
   }
 }
 
@@ -18,7 +18,7 @@ test.describe("Narrators: dark mode", () => {
   });
 
   test("table, edit row and delete dialog render in dark mode", async ({ page }) => {
-    await seedNarrator(page, "Dark Mode Subject", "dark@example.com");
+    await seedNarrator(page, "Dark Mode Subject");
 
     await page.goto("/settings");
     await page.getByText("Escuro", { exact: true }).click();

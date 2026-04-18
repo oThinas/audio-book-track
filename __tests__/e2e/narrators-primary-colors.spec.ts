@@ -5,12 +5,12 @@ import { login } from "./helpers/auth";
 
 const PRIMARY_COLORS = ["blue", "orange", "green", "red", "amber"] as const;
 
-async function seedNarrator(page: Page, name: string, email: string) {
+async function seedNarrator(page: Page, name: string) {
   const response = await page.request.post("/api/v1/narrators", {
-    data: { name, email },
+    data: { name },
   });
   if (!response.ok()) {
-    throw new Error(`Failed to seed narrator ${email}: ${response.status()}`);
+    throw new Error(`Failed to seed narrator ${name}: ${response.status()}`);
   }
 }
 
@@ -28,7 +28,7 @@ test.describe("Narrators: primary colors", () => {
 
   for (const color of PRIMARY_COLORS) {
     test(`destructive stays visually distinct from primary for ${color}`, async ({ page }) => {
-      await seedNarrator(page, `Color ${color}`, `color-${color}@example.com`);
+      await seedNarrator(page, `Color ${color}`);
       await page.goto("/narrators");
       await applyPrimaryColor(page, color);
 

@@ -9,29 +9,28 @@ import {
 describe("narratorFormSchema", () => {
   describe("name", () => {
     it("accepts a typical name", () => {
-      const result = narratorFormSchema.safeParse({
-        name: "João Silva",
-        email: "joao@exemplo.com",
-      });
+      const result = narratorFormSchema.safeParse({ name: "João Silva" });
       expect(result.success).toBe(true);
     });
 
     it("trims surrounding whitespace", () => {
-      const result = narratorFormSchema.safeParse({
-        name: "   Maria   ",
-        email: "maria@exemplo.com",
-      });
+      const result = narratorFormSchema.safeParse({ name: "   Maria   " });
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.name).toBe("Maria");
       }
     });
 
+    it("preserves case (no lowercasing)", () => {
+      const result = narratorFormSchema.safeParse({ name: "JOÃO" });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.name).toBe("JOÃO");
+      }
+    });
+
     it("rejects a name with less than 2 characters", () => {
-      const result = narratorFormSchema.safeParse({
-        name: "A",
-        email: "a@exemplo.com",
-      });
+      const result = narratorFormSchema.safeParse({ name: "A" });
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error.issues[0]?.message).toBe("Nome deve ter no mínimo 2 caracteres");
@@ -39,18 +38,12 @@ describe("narratorFormSchema", () => {
     });
 
     it("rejects a name after trim that is too short", () => {
-      const result = narratorFormSchema.safeParse({
-        name: "  A  ",
-        email: "a@exemplo.com",
-      });
+      const result = narratorFormSchema.safeParse({ name: "  A  " });
       expect(result.success).toBe(false);
     });
 
     it("rejects a name with more than 100 characters", () => {
-      const result = narratorFormSchema.safeParse({
-        name: "x".repeat(101),
-        email: "x@exemplo.com",
-      });
+      const result = narratorFormSchema.safeParse({ name: "x".repeat(101) });
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error.issues[0]?.message).toBe("Nome deve ter no máximo 100 caracteres");
@@ -58,78 +51,49 @@ describe("narratorFormSchema", () => {
     });
 
     it("accepts exactly 100 characters", () => {
-      const result = narratorFormSchema.safeParse({
-        name: "x".repeat(100),
-        email: "x@exemplo.com",
-      });
+      const result = narratorFormSchema.safeParse({ name: "x".repeat(100) });
       expect(result.success).toBe(true);
     });
   });
 
-  describe("email", () => {
-    it("accepts a valid email", () => {
+  describe("legacy email field", () => {
+    it("silently discards email when present (schema no longer declares the field)", () => {
       const result = narratorFormSchema.safeParse({
         name: "João",
-        email: "joao@exemplo.com",
-      });
-      expect(result.success).toBe(true);
-    });
-
-    it("lowercases the email", () => {
-      const result = narratorFormSchema.safeParse({
-        name: "João",
-        email: "JOAO@EXEMPLO.COM",
+        email: "legacy@example.com",
       });
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.email).toBe("joao@exemplo.com");
+        expect(result.data).toEqual({ name: "João" });
+        expect(result.data).not.toHaveProperty("email");
       }
-    });
-
-    it("trims the email", () => {
-      const result = narratorFormSchema.safeParse({
-        name: "João",
-        email: "  joao@exemplo.com  ",
-      });
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.email).toBe("joao@exemplo.com");
-      }
-    });
-
-    it("rejects a malformed email", () => {
-      const result = narratorFormSchema.safeParse({
-        name: "João",
-        email: "not-an-email",
-      });
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.issues[0]?.message).toBe("E-mail inválido");
-      }
-    });
-
-    it("rejects an empty email", () => {
-      const result = narratorFormSchema.safeParse({
-        name: "João",
-        email: "",
-      });
-      expect(result.success).toBe(false);
     });
   });
 });
 
 describe("createNarratorSchema", () => {
-  it("is equivalent to narratorFormSchema (both fields required)", () => {
-    const result = createNarratorSchema.safeParse({ name: "João" });
+  it("requires name", () => {
+    const result = createNarratorSchema.safeParse({});
     expect(result.success).toBe(false);
   });
 
-  it("accepts a complete payload", () => {
+  it("accepts a payload with only name", () => {
+    const result = createNarratorSchema.safeParse({ name: "João Silva" });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).toEqual({ name: "João Silva" });
+    }
+  });
+
+  it("silently discards an extra email field", () => {
     const result = createNarratorSchema.safeParse({
-      name: "João Silva",
-      email: "joao@exemplo.com",
+      name: "João",
+      email: "legacy@example.com",
     });
     expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).not.toHaveProperty("email");
+    }
   });
 });
 
@@ -147,25 +111,20 @@ describe("updateNarratorSchema", () => {
     }
   });
 
-  it("accepts partial update of email only", () => {
-    const result = updateNarratorSchema.safeParse({
-      email: "novo@exemplo.com",
-    });
-    expect(result.success).toBe(true);
-  });
-
-  it("still validates provided fields", () => {
-    const result = updateNarratorSchema.safeParse({ email: "invalid" });
+  it("still validates the provided name", () => {
+    const result = updateNarratorSchema.safeParse({ name: "A" });
     expect(result.success).toBe(false);
   });
 
-  it("applies trim/lowercase to provided email", () => {
+  it("silently discards an extra email field in PATCH payloads", () => {
     const result = updateNarratorSchema.safeParse({
-      email: "  NEW@MAIL.COM  ",
+      name: "Novo",
+      email: "legacy@example.com",
     });
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.email).toBe("new@mail.com");
+      expect(result.data).toEqual({ name: "Novo" });
+      expect(result.data).not.toHaveProperty("email");
     }
   });
 });

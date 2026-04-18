@@ -5,15 +5,11 @@ import type * as schema from "@/lib/db/schema";
 import { narrator } from "@/lib/db/schema";
 import type { CreateNarratorInput, Narrator, UpdateNarratorInput } from "@/lib/domain/narrator";
 import type { NarratorRepository } from "@/lib/domain/narrator-repository";
-import {
-  NarratorEmailAlreadyInUseError,
-  NarratorNotFoundError,
-} from "@/lib/errors/narrator-errors";
+import { NarratorNameAlreadyInUseError, NarratorNotFoundError } from "@/lib/errors/narrator-errors";
 
 const NARRATOR_COLUMNS = {
   id: narrator.id,
   name: narrator.name,
-  email: narrator.email,
   createdAt: narrator.createdAt,
   updatedAt: narrator.updatedAt,
 } as const;
@@ -51,11 +47,11 @@ export class DrizzleNarratorRepository implements NarratorRepository {
     return rows[0] ?? null;
   }
 
-  async findByEmail(email: string): Promise<Narrator | null> {
+  async findByName(name: string): Promise<Narrator | null> {
     const rows = await this.db
       .select(NARRATOR_COLUMNS)
       .from(narrator)
-      .where(eq(narrator.email, email));
+      .where(eq(narrator.name, name));
     return rows[0] ?? null;
   }
 
@@ -63,12 +59,12 @@ export class DrizzleNarratorRepository implements NarratorRepository {
     try {
       const [row] = await this.db
         .insert(narrator)
-        .values({ name: input.name, email: input.email })
+        .values({ name: input.name })
         .returning(NARRATOR_COLUMNS);
       return row;
     } catch (error) {
       if (isUniqueViolation(error)) {
-        throw new NarratorEmailAlreadyInUseError(input.email);
+        throw new NarratorNameAlreadyInUseError(input.name);
       }
       throw error;
     }
@@ -80,7 +76,6 @@ export class DrizzleNarratorRepository implements NarratorRepository {
         .update(narrator)
         .set({
           ...(input.name !== undefined ? { name: input.name } : {}),
-          ...(input.email !== undefined ? { email: input.email } : {}),
         })
         .where(eq(narrator.id, id))
         .returning(NARRATOR_COLUMNS);
@@ -93,8 +88,8 @@ export class DrizzleNarratorRepository implements NarratorRepository {
       if (error instanceof NarratorNotFoundError) {
         throw error;
       }
-      if (isUniqueViolation(error) && input.email !== undefined) {
-        throw new NarratorEmailAlreadyInUseError(input.email);
+      if (isUniqueViolation(error) && input.name !== undefined) {
+        throw new NarratorNameAlreadyInUseError(input.name);
       }
       throw error;
     }

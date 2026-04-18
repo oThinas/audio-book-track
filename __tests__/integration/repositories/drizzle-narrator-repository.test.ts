@@ -1,10 +1,7 @@
 import { getTestDb } from "@tests/helpers/db";
 import { describe, expect, it } from "vitest";
 
-import {
-  NarratorEmailAlreadyInUseError,
-  NarratorNotFoundError,
-} from "@/lib/errors/narrator-errors";
+import { NarratorNameAlreadyInUseError, NarratorNotFoundError } from "@/lib/errors/narrator-errors";
 import { DrizzleNarratorRepository } from "@/lib/repositories/drizzle/drizzle-narrator-repository";
 
 function createRepo() {
@@ -13,28 +10,33 @@ function createRepo() {
 
 describe("DrizzleNarratorRepository", () => {
   describe("create", () => {
-    it("persists a narrator and returns the full record", async () => {
+    it("persists a narrator and returns the full record (without email)", async () => {
       const repo = createRepo();
 
-      const created = await repo.create({
-        name: "João Silva",
-        email: "joao@exemplo.com",
-      });
+      const created = await repo.create({ name: "João Silva" });
 
       expect(created.id).toEqual(expect.any(String));
       expect(created.name).toBe("João Silva");
-      expect(created.email).toBe("joao@exemplo.com");
+      expect(created).not.toHaveProperty("email");
       expect(created.createdAt).toBeInstanceOf(Date);
       expect(created.updatedAt).toBeInstanceOf(Date);
     });
 
-    it("throws NarratorEmailAlreadyInUseError on duplicate email", async () => {
+    it("throws NarratorNameAlreadyInUseError on duplicate name", async () => {
       const repo = createRepo();
-      await repo.create({ name: "Primeiro", email: "dup@exemplo.com" });
+      await repo.create({ name: "Duplicado" });
 
-      await expect(
-        repo.create({ name: "Segundo", email: "dup@exemplo.com" }),
-      ).rejects.toBeInstanceOf(NarratorEmailAlreadyInUseError);
+      await expect(repo.create({ name: "Duplicado" })).rejects.toBeInstanceOf(
+        NarratorNameAlreadyInUseError,
+      );
+    });
+
+    it("accepts two narrators whose names differ only in case (case-sensitive unique)", async () => {
+      const repo = createRepo();
+      const lower = await repo.create({ name: "joão" });
+      const upper = await repo.create({ name: "JOÃO" });
+
+      expect(lower.id).not.toBe(upper.id);
     });
   });
 
@@ -47,11 +49,11 @@ describe("DrizzleNarratorRepository", () => {
 
     it("returns narrators ordered by createdAt ASC", async () => {
       const repo = createRepo();
-      const first = await repo.create({ name: "Primeiro", email: "a@exemplo.com" });
+      const first = await repo.create({ name: "Primeiro" });
       await new Promise((resolve) => setTimeout(resolve, 5));
-      const second = await repo.create({ name: "Segundo", email: "b@exemplo.com" });
+      const second = await repo.create({ name: "Segundo" });
       await new Promise((resolve) => setTimeout(resolve, 5));
-      const third = await repo.create({ name: "Terceiro", email: "c@exemplo.com" });
+      const third = await repo.create({ name: "Terceiro" });
 
       const result = await repo.findAll();
 
@@ -62,13 +64,13 @@ describe("DrizzleNarratorRepository", () => {
   describe("findById", () => {
     it("returns the narrator when id exists", async () => {
       const repo = createRepo();
-      const created = await repo.create({ name: "João", email: "joao@exemplo.com" });
+      const created = await repo.create({ name: "João" });
 
       const found = await repo.findById(created.id);
 
       expect(found).not.toBeNull();
       expect(found?.id).toBe(created.id);
-      expect(found?.email).toBe("joao@exemplo.com");
+      expect(found?.name).toBe("João");
     });
 
     it("returns null when id does not exist", async () => {
@@ -78,58 +80,43 @@ describe("DrizzleNarratorRepository", () => {
     });
   });
 
-  describe("findByEmail", () => {
-    it("returns the narrator when email exists", async () => {
+  describe("findByName", () => {
+    it("returns the narrator when an exact-case name exists", async () => {
       const repo = createRepo();
-      await repo.create({ name: "Maria", email: "maria@exemplo.com" });
+      await repo.create({ name: "Maria" });
 
-      const found = await repo.findByEmail("maria@exemplo.com");
+      const found = await repo.findByName("Maria");
 
       expect(found).not.toBeNull();
-      expect(found?.email).toBe("maria@exemplo.com");
+      expect(found?.name).toBe("Maria");
     });
 
-    it("returns null when email does not exist", async () => {
+    it("returns null for a different case (match is case-sensitive)", async () => {
       const repo = createRepo();
-      const found = await repo.findByEmail("missing@exemplo.com");
+      await repo.create({ name: "Maria" });
+
+      const found = await repo.findByName("maria");
+
+      expect(found).toBeNull();
+    });
+
+    it("returns null when name does not exist", async () => {
+      const repo = createRepo();
+      const found = await repo.findByName("Inexistente");
       expect(found).toBeNull();
     });
   });
 
   describe("update", () => {
-    it("updates name only and refreshes updatedAt", async () => {
+    it("updates name and refreshes updatedAt", async () => {
       const repo = createRepo();
-      const created = await repo.create({ name: "Original", email: "orig@exemplo.com" });
+      const created = await repo.create({ name: "Original" });
 
       const updated = await repo.update(created.id, { name: "Atualizado" });
 
       expect(updated.id).toBe(created.id);
       expect(updated.name).toBe("Atualizado");
-      expect(updated.email).toBe("orig@exemplo.com");
       expect(updated.updatedAt.getTime()).toBeGreaterThanOrEqual(created.updatedAt.getTime());
-    });
-
-    it("updates email only", async () => {
-      const repo = createRepo();
-      const created = await repo.create({ name: "João", email: "joao@exemplo.com" });
-
-      const updated = await repo.update(created.id, { email: "novo@exemplo.com" });
-
-      expect(updated.email).toBe("novo@exemplo.com");
-      expect(updated.name).toBe("João");
-    });
-
-    it("updates both fields at once", async () => {
-      const repo = createRepo();
-      const created = await repo.create({ name: "João", email: "joao@exemplo.com" });
-
-      const updated = await repo.update(created.id, {
-        name: "João Santos",
-        email: "santos@exemplo.com",
-      });
-
-      expect(updated.name).toBe("João Santos");
-      expect(updated.email).toBe("santos@exemplo.com");
     });
 
     it("throws NarratorNotFoundError when id does not exist", async () => {
@@ -139,34 +126,31 @@ describe("DrizzleNarratorRepository", () => {
       );
     });
 
-    it("throws NarratorEmailAlreadyInUseError when email belongs to another narrator", async () => {
+    it("throws NarratorNameAlreadyInUseError when name belongs to another narrator", async () => {
       const repo = createRepo();
-      await repo.create({ name: "Primeiro", email: "first@exemplo.com" });
-      const second = await repo.create({ name: "Segundo", email: "second@exemplo.com" });
+      await repo.create({ name: "Primeiro" });
+      const second = await repo.create({ name: "Segundo" });
 
-      await expect(repo.update(second.id, { email: "first@exemplo.com" })).rejects.toBeInstanceOf(
-        NarratorEmailAlreadyInUseError,
+      await expect(repo.update(second.id, { name: "Primeiro" })).rejects.toBeInstanceOf(
+        NarratorNameAlreadyInUseError,
       );
     });
 
-    it("allows updating a narrator with its own email unchanged", async () => {
+    it("allows updating a narrator with its own name unchanged (idempotent)", async () => {
       const repo = createRepo();
-      const created = await repo.create({ name: "João", email: "joao@exemplo.com" });
+      const created = await repo.create({ name: "João" });
 
-      const updated = await repo.update(created.id, {
-        name: "João Silva",
-        email: "joao@exemplo.com",
-      });
+      const updated = await repo.update(created.id, { name: "João" });
 
-      expect(updated.name).toBe("João Silva");
-      expect(updated.email).toBe("joao@exemplo.com");
+      expect(updated.id).toBe(created.id);
+      expect(updated.name).toBe("João");
     });
   });
 
   describe("delete", () => {
     it("removes the narrator", async () => {
       const repo = createRepo();
-      const created = await repo.create({ name: "João", email: "joao@exemplo.com" });
+      const created = await repo.create({ name: "João" });
 
       await repo.delete(created.id);
 

@@ -27,7 +27,7 @@ export function NarratorNewRow({ onCreated, onCancelled }: NarratorNewRowProps) 
     setError,
   } = useForm<NarratorFormValues>({
     resolver: zodResolver(narratorFormSchema),
-    defaultValues: { name: "", email: "" },
+    defaultValues: { name: "" },
   });
 
   useEffect(() => {
@@ -50,15 +50,15 @@ export function NarratorNewRow({ onCreated, onCancelled }: NarratorNewRowProps) 
     if (response.status === 422) {
       const body = (await response.json()) as ApiErrorBody;
       for (const detail of body.error.details ?? []) {
-        if (detail.field === "name" || detail.field === "email") {
-          setError(detail.field, { message: detail.message });
+        if (detail.field === "name") {
+          setError("name", { message: detail.message });
         }
       }
       return;
     }
 
     if (response.status === 409) {
-      setError("email", { message: "E-mail já cadastrado" });
+      setError("name", { message: "Nome já cadastrado" });
       return;
     }
 
@@ -92,21 +92,6 @@ export function NarratorNewRow({ onCreated, onCancelled }: NarratorNewRowProps) 
           }}
         />
         {errors.name && <p className="mt-1 text-xs text-destructive">{errors.name.message}</p>}
-      </TableCell>
-      <TableCell className="align-top">
-        <Label htmlFor="narrator-new-email" className="sr-only">
-          E-mail
-        </Label>
-        <Input
-          id="narrator-new-email"
-          form="narrator-new-row-form"
-          type="email"
-          placeholder="email@exemplo.com"
-          aria-invalid={errors.email ? true : undefined}
-          disabled={isSubmitting}
-          {...register("email")}
-        />
-        {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>}
       </TableCell>
       <TableCell className="w-24">
         <div className="flex items-center justify-end gap-1">

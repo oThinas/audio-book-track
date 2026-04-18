@@ -56,12 +56,6 @@ export function NarratorsTable({
         enableSorting: true,
       },
       {
-        id: "email",
-        accessorKey: "email",
-        header: "E-mail",
-        enableSorting: true,
-      },
-      {
         id: "actions",
         header: () => <span className="sr-only">Ações</span>,
         enableSorting: false,
@@ -98,8 +92,8 @@ export function NarratorsTable({
                 const widthClass =
                   columnId === "actions"
                     ? "w-24 text-right"
-                    : columnId === "name" || columnId === "email"
-                      ? "w-1/2"
+                    : columnId === "name"
+                      ? "w-auto"
                       : undefined;
                 const ariaSort = canSort
                   ? sortDirection === "asc"

@@ -279,7 +279,7 @@ task — isso é ruído desproporcional.
 | Estúdio    | —          | nome                                 |
 | Livro      | Estúdio    | `preço_por_hora` (imutável quando `pago`), `pdf_url` (opcional) |
 | Capítulo   | Livro      | status, narrador, editor, horas_editadas, num_paginas |
-| Narrador   | —          | responsável pela gravação dos capítulos    |
+| Narrador   | —          | `name` único (case-sensitive, após `trim`); responsável pela gravação dos capítulos |
 | Editor     | —          | recebe pagamento por horas em capítulos atribuídos |
 
 Sem entidades órfãs: capítulo sem livro ou livro sem estúdio são inválidos.

@@ -55,9 +55,9 @@ describe("PATCH /api/v1/narrators/:id (handleNarratorsUpdate)", () => {
   });
 
   it("returns 422 with details when body is invalid", async () => {
-    const existing = await repo.create({ name: "Original", email: "orig@example.com" });
+    const existing = await repo.create({ name: "Original" });
     const deps = createDeps({ session: { user: { id: "u1" } }, service });
-    const request = buildRequest({ email: "not-an-email" }, existing.id);
+    const request = buildRequest({ name: "a" }, existing.id);
 
     const response = await handleNarratorsUpdate(request, deps, { id: existing.id });
     const body = (await response.json()) as {
@@ -66,54 +66,60 @@ describe("PATCH /api/v1/narrators/:id (handleNarratorsUpdate)", () => {
 
     expect(response.status).toBe(422);
     expect(body.error.code).toBe("VALIDATION_ERROR");
-    expect(body.error.details.some((d) => d.field === "email")).toBe(true);
+    expect(body.error.details.some((d) => d.field === "name")).toBe(true);
   });
 
-  it("returns 409 when the new e-mail is already in use", async () => {
-    const first = await repo.create({ name: "First", email: "first@example.com" });
-    await repo.create({ name: "Second", email: "second@example.com" });
+  it("returns 409 when the new name is already in use by another narrator", async () => {
+    const first = await repo.create({ name: "First" });
+    await repo.create({ name: "Second" });
     const deps = createDeps({ session: { user: { id: "u1" } }, service });
-    const request = buildRequest({ email: "second@example.com" }, first.id);
+    const request = buildRequest({ name: "Second" }, first.id);
 
     const response = await handleNarratorsUpdate(request, deps, { id: first.id });
     const body = await response.json();
 
     expect(response.status).toBe(409);
-    expect(body.error.code).toBe("EMAIL_ALREADY_IN_USE");
+    expect(body.error.code).toBe("NAME_ALREADY_IN_USE");
   });
 
-  it("returns 200 updating only the name (partial update)", async () => {
-    const existing = await repo.create({ name: "Original", email: "same@example.com" });
+  it("returns 200 when PATCH keeps the same name (idempotent)", async () => {
+    const existing = await repo.create({ name: "Mesmo" });
+    const deps = createDeps({ session: { user: { id: "u1" } }, service });
+    const request = buildRequest({ name: "Mesmo" }, existing.id);
+
+    const response = await handleNarratorsUpdate(request, deps, { id: existing.id });
+    const body = (await response.json()) as { data: { id: string; name: string } };
+
+    expect(response.status).toBe(200);
+    expect(body.data.id).toBe(existing.id);
+    expect(body.data.name).toBe("Mesmo");
+  });
+
+  it("returns 200 updating the name (with trim)", async () => {
+    const existing = await repo.create({ name: "Original" });
     const deps = createDeps({ session: { user: { id: "u1" } }, service });
     const request = buildRequest({ name: "  Novo Nome  " }, existing.id);
 
     const response = await handleNarratorsUpdate(request, deps, { id: existing.id });
-    const body = (await response.json()) as {
-      data: { id: string; name: string; email: string };
-    };
+    const body = (await response.json()) as { data: { id: string; name: string } };
 
     expect(response.status).toBe(200);
     expect(body.data.id).toBe(existing.id);
     expect(body.data.name).toBe("Novo Nome");
-    expect(body.data.email).toBe("same@example.com");
+    expect(body.data).not.toHaveProperty("email");
     expect(response.headers.get("Cache-Control")).toBe("no-store");
   });
 
-  it("returns 200 updating both name and email", async () => {
-    const existing = await repo.create({ name: "Original", email: "orig@example.com" });
+  it("returns 200 and silently ignores an extra email field", async () => {
+    const existing = await repo.create({ name: "Original" });
     const deps = createDeps({ session: { user: { id: "u1" } }, service });
-    const request = buildRequest(
-      { name: "Atualizado", email: "ATUALIZADO@example.com" },
-      existing.id,
-    );
+    const request = buildRequest({ name: "Atualizado", email: "legacy@example.com" }, existing.id);
 
     const response = await handleNarratorsUpdate(request, deps, { id: existing.id });
-    const body = (await response.json()) as {
-      data: { id: string; name: string; email: string };
-    };
+    const body = (await response.json()) as { data: { id: string; name: string } };
 
     expect(response.status).toBe(200);
     expect(body.data.name).toBe("Atualizado");
-    expect(body.data.email).toBe("atualizado@example.com");
+    expect(body.data).not.toHaveProperty("email");
   });
 });
