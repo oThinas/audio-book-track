@@ -12,6 +12,9 @@ async function seedEditor(page: Page, name: string, email: string) {
   }
 }
 
+const editingRowLocator = (page: Page) =>
+  page.locator('[data-testid="editor-row"]:has(input[placeholder="Nome do editor"])');
+
 test.describe("Editors update", () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
@@ -24,8 +27,9 @@ test.describe("Editors update", () => {
     const row = page.getByTestId("editor-row").filter({ hasText: "Carla Edit" });
     await row.getByRole("button", { name: /editar carla edit/i }).click();
 
-    await expect(row.getByLabel(/^nome$/i)).toHaveValue("Carla Edit");
-    await expect(row.getByLabel(/^e-mail$/i)).toHaveValue("carla-edit@studio.com");
+    const editing = editingRowLocator(page);
+    await expect(editing.getByLabel(/^nome$/i)).toHaveValue("Carla Edit");
+    await expect(editing.getByLabel(/^e-mail$/i)).toHaveValue("carla-edit@studio.com");
   });
 
   test("happy path: updating the name persists and returns to view mode", async ({ page }) => {
@@ -35,8 +39,9 @@ test.describe("Editors update", () => {
     const row = page.getByTestId("editor-row").filter({ hasText: "Nome Antigo" });
     await row.getByRole("button", { name: /editar nome antigo/i }).click();
 
-    await row.getByLabel(/^nome$/i).fill("Nome Novo");
-    await row.getByRole("button", { name: /confirmar/i }).click();
+    const editing = editingRowLocator(page);
+    await editing.getByLabel(/^nome$/i).fill("Nome Novo");
+    await editing.getByRole("button", { name: /confirmar/i }).click();
 
     await expect(page.getByTestId("editor-row").filter({ hasText: "Nome Novo" })).toBeVisible();
     await expect(page.getByTestId("editor-row").filter({ hasText: "Nome Antigo" })).toHaveCount(0);
@@ -49,8 +54,9 @@ test.describe("Editors update", () => {
     const row = page.getByTestId("editor-row").filter({ hasText: "Email Solo" });
     await row.getByRole("button", { name: /editar email solo/i }).click();
 
-    await row.getByLabel(/^e-mail$/i).fill("email-novo@studio.com");
-    await row.getByRole("button", { name: /confirmar/i }).click();
+    const editing = editingRowLocator(page);
+    await editing.getByLabel(/^e-mail$/i).fill("email-novo@studio.com");
+    await editing.getByRole("button", { name: /confirmar/i }).click();
 
     await expect(
       page.getByTestId("editor-row").filter({ hasText: "email-novo@studio.com" }),
@@ -64,8 +70,9 @@ test.describe("Editors update", () => {
     const row = page.getByTestId("editor-row").filter({ hasText: "Keep Me" });
     await row.getByRole("button", { name: /editar keep me/i }).click();
 
-    await row.getByLabel(/^nome$/i).fill("Typed But Cancelled");
-    await row.getByRole("button", { name: /cancelar/i }).click();
+    const editing = editingRowLocator(page);
+    await editing.getByLabel(/^nome$/i).fill("Typed But Cancelled");
+    await editing.getByRole("button", { name: /cancelar/i }).click();
 
     await expect(page.getByTestId("editor-row").filter({ hasText: "Keep Me" })).toBeVisible();
     await expect(
@@ -80,10 +87,11 @@ test.describe("Editors update", () => {
     const row = page.getByTestId("editor-row").filter({ hasText: "Validate Name" });
     await row.getByRole("button", { name: /editar validate name/i }).click();
 
-    await row.getByLabel(/^nome$/i).fill("");
-    await row.getByRole("button", { name: /confirmar/i }).click();
+    const editing = editingRowLocator(page);
+    await editing.getByLabel(/^nome$/i).fill("");
+    await editing.getByRole("button", { name: /confirmar/i }).click();
 
-    await expect(row.getByText(/mínimo 2 caracteres/i)).toBeVisible();
+    await expect(editing.getByText(/mínimo 2 caracteres/i)).toBeVisible();
   });
 
   test("shows inline validation when email becomes invalid", async ({ page }) => {
@@ -93,10 +101,11 @@ test.describe("Editors update", () => {
     const row = page.getByTestId("editor-row").filter({ hasText: "Validate Email" });
     await row.getByRole("button", { name: /editar validate email/i }).click();
 
-    await row.getByLabel(/^e-mail$/i).fill("not-an-email");
-    await row.getByRole("button", { name: /confirmar/i }).click();
+    const editing = editingRowLocator(page);
+    await editing.getByLabel(/^e-mail$/i).fill("not-an-email");
+    await editing.getByRole("button", { name: /confirmar/i }).click();
 
-    await expect(row.getByText(/e-mail inválido/i)).toBeVisible();
+    await expect(editing.getByText(/e-mail inválido/i)).toBeVisible();
   });
 
   test("shows conflict error when renaming to another editor's name", async ({ page }) => {
@@ -107,10 +116,11 @@ test.describe("Editors update", () => {
     const row = page.getByTestId("editor-row").filter({ hasText: "Beta Name" });
     await row.getByRole("button", { name: /editar beta name/i }).click();
 
-    await row.getByLabel(/^nome$/i).fill("Alpha Name");
-    await row.getByRole("button", { name: /confirmar/i }).click();
+    const editing = editingRowLocator(page);
+    await editing.getByLabel(/^nome$/i).fill("Alpha Name");
+    await editing.getByRole("button", { name: /confirmar/i }).click();
 
-    await expect(row.getByText(/nome já cadastrado/i)).toBeVisible();
+    await expect(editing.getByText(/nome já cadastrado/i)).toBeVisible();
   });
 
   test("shows conflict error when email collides (case-insensitive)", async ({ page }) => {
@@ -121,10 +131,11 @@ test.describe("Editors update", () => {
     const row = page.getByTestId("editor-row").filter({ hasText: "Delta" });
     await row.getByRole("button", { name: /editar delta/i }).click();
 
-    await row.getByLabel(/^e-mail$/i).fill("GAMMA-CONFLICT@STUDIO.COM");
-    await row.getByRole("button", { name: /confirmar/i }).click();
+    const editing = editingRowLocator(page);
+    await editing.getByLabel(/^e-mail$/i).fill("GAMMA-CONFLICT@STUDIO.COM");
+    await editing.getByRole("button", { name: /confirmar/i }).click();
 
-    await expect(row.getByText(/e-mail já cadastrado/i)).toBeVisible();
+    await expect(editing.getByText(/e-mail já cadastrado/i)).toBeVisible();
   });
 
   test("is idempotent when submitting the same values", async ({ page }) => {
@@ -134,7 +145,8 @@ test.describe("Editors update", () => {
     const row = page.getByTestId("editor-row").filter({ hasText: "Idempotent" });
     await row.getByRole("button", { name: /editar idempotent/i }).click();
 
-    await row.getByRole("button", { name: /confirmar/i }).click();
+    const editing = editingRowLocator(page);
+    await editing.getByRole("button", { name: /confirmar/i }).click();
 
     await expect(
       page.getByTestId("editor-row").filter({ hasText: "idempotent@studio.com" }),

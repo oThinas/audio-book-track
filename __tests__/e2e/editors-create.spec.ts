@@ -70,7 +70,7 @@ test.describe("Editors create", () => {
     await newRow.getByLabel(/^nome$/i).fill("Carla");
     await newRow.getByRole("button", { name: /confirmar/i }).click();
 
-    await expect(newRow.getByText(/e-mail/i)).toBeVisible();
+    await expect(newRow.getByText(/e-mail é obrigatório/i)).toBeVisible();
     await expect(newRow).toBeVisible();
   });
 
