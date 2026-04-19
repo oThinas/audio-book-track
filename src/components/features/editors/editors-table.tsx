@@ -9,6 +9,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { ArrowDown, ArrowUp, ArrowUpDown, Pencil, Trash2 } from "lucide-react";
+import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ import type { Editor } from "@/lib/domain/editor";
 
 interface EditorsTableProps {
   readonly editors: readonly Editor[];
+  readonly topRow?: ReactNode;
 }
 
 function SortIcon({ direction }: { direction: false | "asc" | "desc" }) {
@@ -33,7 +35,7 @@ function SortIcon({ direction }: { direction: false | "asc" | "desc" }) {
   return <ArrowUpDown aria-hidden="true" className="size-3.5 opacity-50" />;
 }
 
-export function EditorsTable({ editors }: EditorsTableProps) {
+export function EditorsTable({ editors, topRow }: EditorsTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const columns = useMemo<ColumnDef<Editor>[]>(
@@ -117,6 +119,7 @@ export function EditorsTable({ editors }: EditorsTableProps) {
           ))}
         </TableHeader>
         <TableBody>
+          {topRow}
           {sortedRows.map((row) => (
             <TableRow key={row.original.id} data-testid="editor-row">
               <TableCell data-testid="editor-name" className="text-foreground">
@@ -154,7 +157,7 @@ export function EditorsTable({ editors }: EditorsTableProps) {
               </TableCell>
             </TableRow>
           ))}
-          {sortedRows.length === 0 && (
+          {sortedRows.length === 0 && !topRow && (
             <TableRow>
               <TableCell colSpan={columns.length} className="p-0">
                 <div
