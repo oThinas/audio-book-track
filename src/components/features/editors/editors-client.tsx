@@ -8,6 +8,7 @@ import { PageDescription, PageHeader, PageTitle } from "@/components/layout/page
 import { Button } from "@/components/ui/button";
 import type { Editor } from "@/lib/domain/editor";
 
+import { DeleteEditorDialog } from "./delete-editor-dialog";
 import { EditorNewRow } from "./editor-new-row";
 import { EditorsTable } from "./editors-table";
 
@@ -21,6 +22,7 @@ export function EditorsClient({ initialEditors }: EditorsClientProps) {
   const router = useRouter();
   const [editors, setEditors] = useState<readonly Editor[]>(initialEditors);
   const [isCreating, setIsCreating] = useState(false);
+  const [editorToDelete, setEditorToDelete] = useState<Editor | null>(null);
 
   const sortedEditors = useMemo(
     () =>
@@ -53,6 +55,21 @@ export function EditorsClient({ initialEditors }: EditorsClientProps) {
     router.refresh();
   }
 
+  function handleRequestDelete(editor: Editor) {
+    setEditorToDelete(editor);
+  }
+
+  function handleDeleteDialogChange(open: boolean) {
+    if (!open) {
+      setEditorToDelete(null);
+    }
+  }
+
+  function handleDeleted(id: string) {
+    setEditors((current) => current.filter((e) => e.id !== id));
+    router.refresh();
+  }
+
   return (
     <div className="flex flex-col">
       <PageHeader className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
@@ -73,6 +90,13 @@ export function EditorsClient({ initialEditors }: EditorsClientProps) {
           ) : null
         }
         onEditorUpdated={handleUpdated}
+        onRequestDelete={handleRequestDelete}
+      />
+      <DeleteEditorDialog
+        editor={editorToDelete}
+        open={editorToDelete !== null}
+        onOpenChange={handleDeleteDialogChange}
+        onConfirmed={handleDeleted}
       />
     </div>
   );

@@ -145,15 +145,15 @@ Monorepo Next.js em `src/` e testes em `__tests__/`. Paths absolutos no workspac
 
 ### Testes de US4 (RED) ⚠️
 
-- [ ] T038 [P] [US4] Escrever [__tests__/unit/api/editors-delete.test.ts](__tests__/unit/api/editors-delete.test.ts) testando `handleEditorsDelete(deps, params)`: 401, 404 quando id inexistente, 204 em sucesso com `Cache-Control: no-store`.
-- [ ] T039 [P] [US4] Escrever [__tests__/e2e/editors-delete.spec.ts](__tests__/e2e/editors-delete.spec.ts): clicar ícone Excluir → modal aparece → confirmar → row desaparece; cancelar fecha modal sem remover.
+- [X] T038 [P] [US4] Escrever [__tests__/unit/api/editors-delete.test.ts](__tests__/unit/api/editors-delete.test.ts) testando `handleEditorsDelete(deps, params)`: 401, 404 quando id inexistente, 204 em sucesso com `Cache-Control: no-store`.
+- [X] T039 [P] [US4] Escrever [__tests__/e2e/editors-delete.spec.ts](__tests__/e2e/editors-delete.spec.ts): clicar ícone Excluir → modal aparece → confirmar → row desaparece; cancelar fecha modal sem remover.
 
 ### Implementação de US4
 
-- [ ] T040 [US4] Criar `handleEditorsDelete` + `DELETE` wrapper em [src/app/api/v1/editors/[id]/route.ts](src/app/api/v1/editors/[id]/route.ts) espelhando narrator: 204 em sucesso, `EditorNotFoundError` → `notFoundResponse("EDITOR_NOT_FOUND", ...)`. Rodar T038.
-- [ ] T041 [US4] Criar [src/app/(authenticated)/editors/_components/delete-editor-dialog.tsx](src/app/(authenticated)/editors/_components/delete-editor-dialog.tsx) com shadcn `<Dialog>`: título, mensagem `"Tem certeza que deseja excluir o editor {nome}?"`, botões Cancelar e Excluir (classe `destructive`). Callback `onConfirm` dispara DELETE. Em sucesso, callback `onDeleted(id)` volta ao client. **Em erro de rede / resposta não-2xx, exibir toast de erro genérico via `sonner` (`toast.error(...)`); o modal permanece aberto para o usuário tentar novamente ou cancelar. Sucesso NÃO dispara toast (FR-013).**
-- [ ] T042 [US4] Atualizar [src/app/(authenticated)/editors/_components/editors-client.tsx](src/app/(authenticated)/editors/_components/editors-client.tsx) com estado `editorToDelete: Editor | null`, handler `handleDeleteRequested(editor)` que abre o dialog, handler `handleDeleted(id)` que faz `setEditors(prev => prev.filter(e => e.id !== id))`.
-- [ ] T043 [US4] Atualizar [src/app/(authenticated)/editors/_components/editor-row.tsx](src/app/(authenticated)/editors/_components/editor-row.tsx) para que o ícone Excluir (classe destructive) dispare `onDeleteRequested(editor)` quando clicado.
+- [X] T040 [US4] Criar `handleEditorsDelete` + `DELETE` wrapper em [src/app/api/v1/editors/[id]/route.ts](src/app/api/v1/editors/[id]/route.ts) espelhando narrator: 204 em sucesso, `EditorNotFoundError` → `notFoundResponse("EDITOR_NOT_FOUND", ...)`. Rodar T038.
+- [X] T041 [US4] Criar [src/components/features/editors/delete-editor-dialog.tsx](src/components/features/editors/delete-editor-dialog.tsx) com shadcn `<AlertDialog>`: título, mensagem, botões Cancelar e Excluir (classe `destructive`). Callback `onConfirm` dispara DELETE. Em sucesso/404, callback `onConfirmed(id)` volta ao client. Em erro de rede / resposta não-2xx, exibir toast de erro genérico via `sonner`; o modal permanece aberto. Sucesso NÃO dispara toast (FR-013).
+- [X] T042 [US4] Atualizar [src/components/features/editors/editors-client.tsx](src/components/features/editors/editors-client.tsx) com estado `editorToDelete: Editor | null`, handler `handleRequestDelete(editor)` que abre o dialog, handler `handleDeleted(id)` que faz `setEditors(prev => prev.filter(e => e.id !== id))`.
+- [X] T043 [US4] Ícone Excluir em [src/components/features/editors/editor-row.tsx](src/components/features/editors/editor-row.tsx) já dispara `onRequestDelete(editor)` quando presente (introduzido em T034). Ativação automática assim que o client passa `handleRequestDelete`.
 
 **Checkpoint**: CRUD completo funcional.
 
