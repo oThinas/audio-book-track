@@ -165,9 +165,9 @@ Para módulos internos do projeto (`@/lib/`, `@/app/`, etc.), **não usar `vi.mo
 1. **Repository fake (classe)**: Quando um service depende de uma interface de repository via construtor.
    - Modelo: `__tests__/repositories/in-memory-user-preference-repository.ts` → `UserPreferenceService`
 2. **Fake de função (`vi.fn()`)**: Quando um módulo aceita dependência como parâmetro de função.
-   - Modelo: `__tests__/unit/db/health-check.test.ts` → `checkDatabaseHealth(ping)`
-   - Modelo: `__tests__/unit/api/health.test.ts` → `handleHealthCheck(deps)`
-   - Modelo: `__tests__/unit/db/instrumentation.test.ts` → `runStartupHealthCheck(deps)`
+   - Modelo: `__tests__/unit/db/health-check.spec.ts` → `checkDatabaseHealth(ping)`
+   - Modelo: `__tests__/unit/api/health.spec.ts` → `handleHealthCheck(deps)`
+   - Modelo: `__tests__/unit/db/instrumentation.spec.ts` → `runStartupHealthCheck(deps)`
 
 #### Quando `vi.mock()` é aceitável (allowlist)
 
