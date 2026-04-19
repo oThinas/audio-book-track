@@ -48,6 +48,11 @@ export function EditorsClient({ initialEditors }: EditorsClientProps) {
     setIsCreating(false);
   }
 
+  function handleUpdated(updated: Editor) {
+    setEditors((current) => current.map((e) => (e.id === updated.id ? updated : e)));
+    router.refresh();
+  }
+
   return (
     <div className="flex flex-col">
       <PageHeader className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
@@ -67,6 +72,7 @@ export function EditorsClient({ initialEditors }: EditorsClientProps) {
             <EditorNewRow onCreated={handleCreated} onCancelled={handleCancelled} />
           ) : null
         }
+        onEditorUpdated={handleUpdated}
       />
     </div>
   );

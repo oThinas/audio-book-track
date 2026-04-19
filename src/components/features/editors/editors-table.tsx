@@ -8,7 +8,7 @@ import {
   type SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowDown, ArrowUp, ArrowUpDown, Pencil, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 
@@ -24,9 +24,13 @@ import {
 } from "@/components/ui/table";
 import type { Editor } from "@/lib/domain/editor";
 
+import { EditorRow } from "./editor-row";
+
 interface EditorsTableProps {
   readonly editors: readonly Editor[];
   readonly topRow?: ReactNode;
+  readonly onEditorUpdated?: (editor: Editor) => void;
+  readonly onRequestDelete?: (editor: Editor) => void;
 }
 
 function SortIcon({ direction }: { direction: false | "asc" | "desc" }) {
@@ -35,7 +39,12 @@ function SortIcon({ direction }: { direction: false | "asc" | "desc" }) {
   return <ArrowUpDown aria-hidden="true" className="size-3.5 opacity-50" />;
 }
 
-export function EditorsTable({ editors, topRow }: EditorsTableProps) {
+export function EditorsTable({
+  editors,
+  topRow,
+  onEditorUpdated,
+  onRequestDelete,
+}: EditorsTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const columns = useMemo<ColumnDef<Editor>[]>(
@@ -121,41 +130,12 @@ export function EditorsTable({ editors, topRow }: EditorsTableProps) {
         <TableBody>
           {topRow}
           {sortedRows.map((row) => (
-            <TableRow key={row.original.id} data-testid="editor-row">
-              <TableCell data-testid="editor-name" className="text-foreground">
-                {row.original.name}
-              </TableCell>
-              <TableCell
-                data-testid="editor-email"
-                className="text-muted-foreground truncate"
-                title={row.original.email}
-              >
-                {row.original.email}
-              </TableCell>
-              <TableCell className="w-24">
-                <div className="flex items-center justify-end gap-1">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    aria-label={`Editar ${row.original.name}`}
-                    disabled
-                  >
-                    <Pencil aria-hidden="true" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    aria-label={`Excluir ${row.original.name}`}
-                    disabled
-                    className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                  >
-                    <Trash2 aria-hidden="true" />
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
+            <EditorRow
+              key={row.original.id}
+              editor={row.original}
+              onUpdated={onEditorUpdated}
+              onRequestDelete={onRequestDelete}
+            />
           ))}
           {sortedRows.length === 0 && !topRow && (
             <TableRow>
