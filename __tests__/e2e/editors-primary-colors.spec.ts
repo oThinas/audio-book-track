@@ -1,0 +1,53 @@
+import type { Page } from "@playwright/test";
+
+import { expect, test } from "./fixtures/app-server";
+import { login } from "./helpers/auth";
+
+const PRIMARY_COLORS = ["blue", "orange", "green", "red", "amber"] as const;
+
+async function seedEditor(page: Page, name: string, email: string) {
+  const response = await page.request.post("/api/v1/editors", {
+    data: { name, email },
+  });
+  if (!response.ok()) {
+    throw new Error(`Failed to seed editor ${name}: ${response.status()}`);
+  }
+}
+
+async function applyPrimaryColor(page: Page, color: string) {
+  await page.evaluate((c) => {
+    document.documentElement.setAttribute("data-primary-color", c);
+    localStorage.setItem("primary-color", c);
+  }, color);
+}
+
+test.describe("Editors: primary colors", () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+  });
+
+  for (const color of PRIMARY_COLORS) {
+    test(`destructive stays visually distinct from primary for ${color}`, async ({ page }) => {
+      await seedEditor(page, `Color ${color}`, `color-${color}@studio.com`);
+      await page.goto("/editors");
+      await applyPrimaryColor(page, color);
+
+      const { primary, destructive } = await page.evaluate(() => {
+        const styles = getComputedStyle(document.documentElement);
+        return {
+          primary: styles.getPropertyValue("--primary").trim(),
+          destructive: styles.getPropertyValue("--destructive").trim(),
+        };
+      });
+
+      expect(primary).not.toBe("");
+      expect(destructive).not.toBe("");
+      expect(destructive).not.toBe(primary);
+
+      const row = page.getByTestId("editor-row").first();
+      await expect(
+        row.getByRole("button", { name: new RegExp(`excluir color ${color}`, "i") }),
+      ).toBeVisible();
+    });
+  }
+});
