@@ -125,3 +125,23 @@ export const narrator = pgTable(
   },
   (table) => [uniqueIndex("narrator_name_unique").on(table.name)],
 );
+
+export const editor = pgTable(
+  "editor",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    name: text("name").notNull(),
+    email: text("email").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("editor_name_unique").on(table.name),
+    uniqueIndex("editor_email_unique").on(table.email),
+  ],
+);

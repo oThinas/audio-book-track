@@ -303,10 +303,9 @@ Qualquer mudança no modelo financeiro (preço, horas, responsáveis) requer **r
 
 
 ## Recent Changes
+- 018-editors-crud: Added TypeScript 5.9.3 (Bun runtime 1.2) + Next.js 16.2.1 (App Router), React 19.2.4, Drizzle ORM 0.45.2 + drizzle-kit 0.31.10, Zod 4.3.6, better-auth 1.5.6, React Hook Form 7.72.1 + `@hookform/resolvers` 5.2.2, `@tanstack/react-table` 8.21.3, shadcn/ui 4.1.2, Tailwind CSS 4.2, sonner 2.0.7
 - 017-narrator-remove-email: Added TypeScript 5.9.3 (Bun runtime 1.2) + Next.js 16.2.1 (App Router), React 19.2.4, Drizzle ORM 0.45.2 + drizzle-kit 0.31.10, Zod 4.3.6, better-auth 1.5.6, React Hook Form 7.72.1 + `@hookform/resolvers` 5.2.2, `@tanstack/react-table` 8.21.3, shadcn/ui 4.1.2, Tailwind CSS 4.2, sonner 2.0.7
 - 015-narrators-crud: Added TypeScript 5.9.3 (Bun runtime 1.x) + Next.js 16.2.1 (App Router), React 19.2.4, Drizzle ORM 0.45.2, Zod 4.3.6, better-auth 1.5.6, React Hook Form 7.72.0 + `@hookform/resolvers` 5.2.2, shadcn/ui 4.1.2, `@tanstack/react-table` (nova dependência), Tailwind CSS 4.2, lucide-react 1.7.0, sonner 2.0.7
-- 016-test-db-isolation: Added TypeScript 5.9.3 (Bun 1.2 runtime) + Next.js 16.2.1, Drizzle ORM 0.45, `pg` 8.20, Playwright 1.59, Vitest 4.1, better-auth 1.5
 
 ## Active Technologies
-- TypeScript 5.9.3 (Bun runtime 1.2) + Next.js 16.2.1 (App Router), React 19.2.4, Drizzle ORM 0.45.2 + drizzle-kit 0.31.10, Zod 4.3.6, better-auth 1.5.6, React Hook Form 7.72.1 + `@hookform/resolvers` 5.2.2, `@tanstack/react-table` 8.21.3, shadcn/ui 4.1.2, Tailwind CSS 4.2, sonner 2.0.7 (017-narrator-remove-email)
-- PostgreSQL via Drizzle ORM — tabela `narrator` existente, sem FKs entrantes ou saintes (narrador ainda não referencia capítulo) (017-narrator-remove-email)
+- PostgreSQL via Drizzle ORM — tabela `editor` **nova** (não existe no schema atual), sem FKs entrantes ou saintes nesta feature. Dois índices únicos: `editor_name_unique` em `name` (byte-exato) e `editor_email_unique` em `email` (sobre o valor já normalizado pelo service). (018-editors-crud)

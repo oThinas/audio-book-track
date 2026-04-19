@@ -6613,8 +6613,8 @@
               "children": [
                 {
                   "type": "frame",
-                  "id": "1wbvo",
-                  "name": "edth",
+                  "id": "wsqYh",
+                  "name": "rcth",
                   "width": "fill_container",
                   "height": 44,
                   "fill": "$color/bg-page",
@@ -6631,41 +6631,101 @@
                   "alignItems": "center",
                   "children": [
                     {
-                      "type": "text",
-                      "id": "3J2DK",
-                      "fill": "$color/text-secondary",
-                      "textGrowth": "fixed-width",
+                      "type": "frame",
+                      "id": "gfHky",
+                      "name": "nomeFrame",
                       "width": "fill_container",
-                      "content": "Nome",
-                      "fontFamily": "Plus Jakarta Sans",
-                      "fontSize": 12,
-                      "fontWeight": "600"
+                      "height": "fill_container",
+                      "gap": 4,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "PGzDD",
+                          "name": "nomeText",
+                          "fill": "$color/text-secondary",
+                          "content": "Nome",
+                          "fontFamily": "Plus Jakarta Sans",
+                          "fontSize": 12,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "icon_font",
+                          "id": "LWGQd",
+                          "name": "nomeIcon",
+                          "width": 12,
+                          "height": 12,
+                          "iconFontName": "arrow-up-down",
+                          "iconFontFamily": "lucide",
+                          "fill": "$color/text-muted"
+                        }
+                      ]
                     },
                     {
-                      "type": "text",
-                      "id": "YmBeI",
-                      "fill": "$color/text-secondary",
-                      "textGrowth": "fixed-width",
-                      "width": 280,
-                      "content": "Contato",
-                      "fontFamily": "Plus Jakarta Sans",
-                      "fontSize": 12,
-                      "fontWeight": "600"
+                      "type": "frame",
+                      "id": "nTiz8",
+                      "name": "nomeFrame",
+                      "width": 277,
+                      "height": "fill_container",
+                      "gap": 4,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "UpFdz",
+                          "name": "emailText",
+                          "fill": "$color/text-secondary",
+                          "content": "E-mail",
+                          "fontFamily": "Plus Jakarta Sans",
+                          "fontSize": 12,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "icon_font",
+                          "id": "ILZxC",
+                          "name": "emailIcon",
+                          "width": 12,
+                          "height": 12,
+                          "iconFontName": "arrow-up-down",
+                          "iconFontFamily": "lucide",
+                          "fill": "$color/text-muted"
+                        }
+                      ]
                     },
                     {
-                      "type": "text",
-                      "id": "LKtQC",
-                      "fill": "$color/text-secondary",
-                      "textGrowth": "fixed-width",
+                      "type": "frame",
+                      "id": "cD6fb",
+                      "name": "capsFrame",
                       "width": 100,
-                      "content": "Capítulos",
-                      "fontFamily": "Plus Jakarta Sans",
-                      "fontSize": 12,
-                      "fontWeight": "600"
+                      "height": "fill_container",
+                      "gap": 4,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "lkWIH",
+                          "name": "capsText",
+                          "fill": "$color/text-secondary",
+                          "content": "Capítulos",
+                          "fontFamily": "Plus Jakarta Sans",
+                          "fontSize": 12,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "icon_font",
+                          "id": "ceSkP",
+                          "name": "capsIcon",
+                          "width": 12,
+                          "height": 12,
+                          "iconFontName": "arrow-up-down",
+                          "iconFontFamily": "lucide",
+                          "fill": "$color/text-muted"
+                        }
+                      ]
                     },
                     {
                       "type": "text",
-                      "id": "GeDPb",
+                      "id": "tRPXI",
                       "fill": "$color/text-secondary",
                       "textGrowth": "fixed-width",
                       "width": 60,
@@ -8467,37 +8527,6 @@
                     },
                     {
                       "type": "frame",
-                      "id": "CirgG",
-                      "name": "emailFrame",
-                      "width": 280,
-                      "height": "fill_container",
-                      "gap": 4,
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "QaWN3",
-                          "name": "emailText",
-                          "fill": "$color/text-secondary",
-                          "content": "E-mail",
-                          "fontFamily": "Plus Jakarta Sans",
-                          "fontSize": 12,
-                          "fontWeight": "600"
-                        },
-                        {
-                          "type": "icon_font",
-                          "id": "3ZvM0",
-                          "name": "emailIcon",
-                          "width": 12,
-                          "height": 12,
-                          "iconFontName": "arrow-up-down",
-                          "iconFontFamily": "lucide",
-                          "fill": "$color/text-muted"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
                       "id": "58BGs",
                       "name": "capsFrame",
                       "width": 100,
@@ -8601,46 +8630,6 @@
                       ]
                     },
                     {
-                      "type": "frame",
-                      "id": "AsFmt",
-                      "name": "edr1c",
-                      "width": 280,
-                      "height": "fill_container",
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "AcD66",
-                          "name": "edr1ci",
-                          "height": 36,
-                          "fill": "$color/bg-page",
-                          "cornerRadius": 6,
-                          "stroke": {
-                            "align": "inside",
-                            "thickness": 1,
-                            "fill": "$color/border"
-                          },
-                          "gap": 8,
-                          "padding": [
-                            0,
-                            12
-                          ],
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "waEml",
-                              "fill": "$color/text-primary",
-                              "content": "ana@email.com",
-                              "fontFamily": "Plus Jakarta Sans",
-                              "fontSize": 13,
-                              "fontWeight": "normal"
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    {
                       "type": "text",
                       "id": "qcwGq",
                       "fill": "$color/text-secondary",
@@ -8711,26 +8700,6 @@
                       "fontFamily": "Plus Jakarta Sans",
                       "fontSize": 14,
                       "fontWeight": "500"
-                    },
-                    {
-                      "type": "frame",
-                      "id": "wFRKu",
-                      "name": "rcr2c",
-                      "width": 280,
-                      "height": "fill_container",
-                      "gap": 8,
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "Sw3Aw",
-                          "fill": "$color/text-primary",
-                          "content": "luis@email.com",
-                          "fontFamily": "Plus Jakarta Sans",
-                          "fontSize": 13,
-                          "fontWeight": "normal"
-                        }
-                      ]
                     },
                     {
                       "type": "text",
