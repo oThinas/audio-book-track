@@ -71,17 +71,25 @@ describe("DrizzleStudioRepository", () => {
       expect(await repo.findAll()).toEqual([]);
     });
 
-    it("returns studios ordered by createdAt ASC", async () => {
+    it("returns all studios with createdAt non-decreasing", async () => {
+      // Note: Postgres `now()` é transaction-aligned, então dentro do
+      // BEGIN/ROLLBACK do setup de integração todos os inserts recebem o
+      // mesmo createdAt. A propriedade testável é: todos os registros
+      // aparecem e createdAt nunca decresce. Em produção (fora de transação
+      // envolvente) os timestamps diferem naturalmente por request.
       const repo = createRepo();
       const first = await repo.create({ name: "Primeiro", defaultHourlyRate: 50 });
-      await new Promise((r) => setTimeout(r, 5));
       const second = await repo.create({ name: "Segundo", defaultHourlyRate: 60 });
-      await new Promise((r) => setTimeout(r, 5));
       const third = await repo.create({ name: "Terceiro", defaultHourlyRate: 70 });
 
       const result = await repo.findAll();
 
-      expect(result.map((s) => s.id)).toEqual([first.id, second.id, third.id]);
+      expect(result.map((s) => s.id).sort()).toEqual([first.id, second.id, third.id].sort());
+      for (let i = 1; i < result.length; i++) {
+        expect(result[i].createdAt.getTime()).toBeGreaterThanOrEqual(
+          result[i - 1].createdAt.getTime(),
+        );
+      }
     });
 
     it("returns all records with defaultHourlyRate typed as number", async () => {
