@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { hashPassword } from "better-auth/crypto";
-import { account, editor, narrator, session, user } from "@/lib/db/schema";
+import { account, editor, narrator, session, studio, user } from "@/lib/db/schema";
 import type { TestDb } from "./db";
 
 interface CreateTestUserOptions {
@@ -136,4 +136,38 @@ export async function createTestEditor(
     .returning();
 
   return { editor: createdEditor };
+}
+
+interface CreateTestStudioOptions {
+  readonly name?: string;
+  readonly defaultHourlyRate?: number;
+}
+
+interface CreateTestStudioResult {
+  readonly studio: Omit<typeof studio.$inferSelect, "defaultHourlyRate"> & {
+    readonly defaultHourlyRate: number;
+  };
+}
+
+export async function createTestStudio(
+  db: TestDb,
+  overrides: CreateTestStudioOptions = {},
+): Promise<CreateTestStudioResult> {
+  const suffix = randomUUID().slice(0, 8);
+  const rate = overrides.defaultHourlyRate ?? 85;
+
+  const [createdStudio] = await db
+    .insert(studio)
+    .values({
+      name: overrides.name ?? `Studio ${suffix}`,
+      defaultHourlyRate: rate.toFixed(2),
+    })
+    .returning();
+
+  return {
+    studio: {
+      ...createdStudio,
+      defaultHourlyRate: Number(createdStudio.defaultHourlyRate),
+    },
+  };
 }
