@@ -48,6 +48,11 @@ export function StudiosClient({ initialStudios }: StudiosClientProps) {
     setIsCreating(false);
   }
 
+  function handleUpdated(updated: Studio) {
+    setStudios((current) => current.map((s) => (s.id === updated.id ? updated : s)));
+    router.refresh();
+  }
+
   return (
     <div className="flex flex-col">
       <PageHeader className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
@@ -67,6 +72,7 @@ export function StudiosClient({ initialStudios }: StudiosClientProps) {
             <StudioNewRow onCreated={handleCreated} onCancelled={handleCancelled} />
           ) : null
         }
+        onStudioUpdated={handleUpdated}
       />
     </div>
   );
