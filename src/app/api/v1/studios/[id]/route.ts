@@ -60,10 +60,39 @@ export async function handleStudiosUpdate(
   }
 }
 
+export async function handleStudiosDelete(
+  deps: StudioByIdDeps,
+  params: { id: string },
+): Promise<NextResponse> {
+  const session = await deps.getSession({ headers: await deps.headersFn() });
+  if (!session) {
+    return unauthorizedResponse();
+  }
+
+  const service = deps.createService();
+  try {
+    await service.delete(params.id);
+    return new NextResponse(null, { status: 204, headers: NO_STORE_HEADERS });
+  } catch (error: unknown) {
+    if (error instanceof StudioNotFoundError) {
+      return notFoundResponse("STUDIO_NOT_FOUND", "Estúdio não encontrado");
+    }
+    throw error;
+  }
+}
+
 export async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ): Promise<NextResponse> {
   const params = await context.params;
   return handleStudiosUpdate(request, defaultDeps(), params);
+}
+
+export async function DELETE(
+  _request: Request,
+  context: { params: Promise<{ id: string }> },
+): Promise<NextResponse> {
+  const params = await context.params;
+  return handleStudiosDelete(defaultDeps(), params);
 }

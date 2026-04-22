@@ -8,6 +8,7 @@ import { PageDescription, PageHeader, PageTitle } from "@/components/layout/page
 import { Button } from "@/components/ui/button";
 import type { Studio } from "@/lib/domain/studio";
 
+import { DeleteStudioDialog } from "./delete-studio-dialog";
 import { StudioNewRow } from "./studio-new-row";
 import { StudiosTable } from "./studios-table";
 
@@ -21,6 +22,7 @@ export function StudiosClient({ initialStudios }: StudiosClientProps) {
   const router = useRouter();
   const [studios, setStudios] = useState<readonly Studio[]>(initialStudios);
   const [isCreating, setIsCreating] = useState(false);
+  const [studioToDelete, setStudioToDelete] = useState<Studio | null>(null);
 
   const sortedStudios = useMemo(
     () =>
@@ -53,6 +55,21 @@ export function StudiosClient({ initialStudios }: StudiosClientProps) {
     router.refresh();
   }
 
+  function handleRequestDelete(studio: Studio) {
+    setStudioToDelete(studio);
+  }
+
+  function handleDeleteDialogChange(open: boolean) {
+    if (!open) {
+      setStudioToDelete(null);
+    }
+  }
+
+  function handleDeleted(id: string) {
+    setStudios((current) => current.filter((s) => s.id !== id));
+    router.refresh();
+  }
+
   return (
     <div className="flex flex-col">
       <PageHeader className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
@@ -73,6 +90,13 @@ export function StudiosClient({ initialStudios }: StudiosClientProps) {
           ) : null
         }
         onStudioUpdated={handleUpdated}
+        onRequestDelete={handleRequestDelete}
+      />
+      <DeleteStudioDialog
+        studio={studioToDelete}
+        open={studioToDelete !== null}
+        onOpenChange={handleDeleteDialogChange}
+        onConfirmed={handleDeleted}
       />
     </div>
   );
