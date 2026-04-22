@@ -2,17 +2,13 @@
 
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { Studio } from "@/lib/domain/studio";
+import { formatBRL } from "@/lib/utils";
 
 interface StudioRowProps {
   readonly studio: Studio;
   readonly onUpdated?: (studio: Studio) => void;
   readonly onRequestDelete?: (studio: Studio) => void;
 }
-
-const BRL_FORMATTER = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL",
-});
 
 export function StudioRow({ studio }: StudioRowProps) {
   return (
@@ -21,7 +17,7 @@ export function StudioRow({ studio }: StudioRowProps) {
         {studio.name}
       </TableCell>
       <TableCell data-testid="studio-hourly-rate" className="text-foreground">
-        {BRL_FORMATTER.format(studio.defaultHourlyRate)}
+        {formatBRL(studio.defaultHourlyRate)}
       </TableCell>
       <TableCell className="text-right" />
     </TableRow>
