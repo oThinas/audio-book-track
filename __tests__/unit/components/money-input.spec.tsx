@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { useState } from "react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { MoneyInput } from "@/components/ui/money-input";
 
@@ -34,16 +35,6 @@ function getInput(): HTMLInputElement {
   return screen.getByLabelText(/valor/i) as HTMLInputElement;
 }
 
-function typeDigit(input: HTMLInputElement, digit: string) {
-  const event = new InputEvent("beforeinput", {
-    data: digit,
-    bubbles: true,
-    cancelable: true,
-    inputType: "insertText",
-  });
-  fireEvent(input, event);
-}
-
 describe("MoneyInput", () => {
   it("renders the formatted BRL value from the prop (controlled)", () => {
     render(<Harness initial={85} />);
@@ -55,114 +46,165 @@ describe("MoneyInput", () => {
     expect(getInput().value).toMatch(/R\$\s*0,00/);
   });
 
-  it("typing a single digit accumulates as cents (8 → R$ 0,08)", () => {
+  it("typing a single digit accumulates as cents (8 → R$ 0,08)", async () => {
+    const user = userEvent.setup();
     render(<Harness />);
     const input = getInput();
-    typeDigit(input, "8");
+    await user.type(input, "8");
     expect(screen.getByTestId("value").textContent).toBe("0.08");
     expect(input.value).toMatch(/R\$\s*0,08/);
   });
 
-  it("typing a sequence (8,5,0,0) results in R$ 85,00", () => {
+  it("typing a sequence (8,5,0,0) results in R$ 85,00", async () => {
+    const user = userEvent.setup();
     render(<Harness />);
     const input = getInput();
-    typeDigit(input, "8");
-    typeDigit(input, "5");
-    typeDigit(input, "0");
-    typeDigit(input, "0");
+    await user.type(input, "8500");
     expect(screen.getByTestId("value").textContent).toBe("85");
     expect(input.value).toMatch(/R\$\s*85,00/);
   });
 
-  it("typing 6 nines accumulates R$ 9.999,99", () => {
-    render(<Harness max={9999.99} />);
-    const input = getInput();
-    for (let i = 0; i < 6; i++) typeDigit(input, "9");
-    expect(input.value).toMatch(/R\$\s*9\.999,99/);
-  });
-
-  it("clamps to max when additional digits would exceed it", () => {
-    render(<Harness max={9999.99} />);
-    const input = getInput();
-    for (let i = 0; i < 6; i++) typeDigit(input, "9");
-    typeDigit(input, "9");
-    expect(input.value).toMatch(/R\$\s*9\.999,99/);
-  });
-
-  it("ignores non-numeric characters", () => {
+  it("typing 6 nines reaches R$ 9.999,99 when no max is set", async () => {
+    const user = userEvent.setup();
     render(<Harness />);
     const input = getInput();
-    typeDigit(input, "a");
-    typeDigit(input, ",");
-    typeDigit(input, ".");
-    typeDigit(input, "-");
+    await user.type(input, "999999");
+    expect(input.value).toMatch(/R\$\s*9\.999,99/);
+  });
+
+  it("clamps to max when additional digits would exceed it", async () => {
+    const user = userEvent.setup();
+    render(<Harness max={9999.99} />);
+    const input = getInput();
+    await user.type(input, "9999999");
+    expect(input.value).toMatch(/R\$\s*9\.999,99/);
+  });
+
+  it("ignores non-numeric characters", async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+    const input = getInput();
+    await user.type(input, "a,.-");
     expect(input.value).toMatch(/R\$\s*0,00/);
     expect(screen.getByTestId("value").textContent).toBe("0");
   });
 
-  it("Backspace removes the last accumulated digit", () => {
+  it("Backspace removes the last accumulated digit", async () => {
+    const user = userEvent.setup();
     render(<Harness />);
     const input = getInput();
-    typeDigit(input, "8");
-    typeDigit(input, "5");
-    typeDigit(input, "0");
-    typeDigit(input, "0");
+    await user.type(input, "8500");
     expect(input.value).toMatch(/R\$\s*85,00/);
-    fireEvent.keyDown(input, { key: "Backspace" });
+    await user.type(input, "{Backspace}");
     expect(input.value).toMatch(/R\$\s*8,50/);
-    fireEvent.keyDown(input, { key: "Backspace" });
+    await user.type(input, "{Backspace}");
     expect(input.value).toMatch(/R\$\s*0,85/);
-    fireEvent.keyDown(input, { key: "Backspace" });
+    await user.type(input, "{Backspace}");
     expect(input.value).toMatch(/R\$\s*0,08/);
-    fireEvent.keyDown(input, { key: "Backspace" });
+    await user.type(input, "{Backspace}");
     expect(input.value).toMatch(/R\$\s*0,00/);
-    fireEvent.keyDown(input, { key: "Backspace" });
+    await user.type(input, "{Backspace}");
     expect(input.value).toMatch(/R\$\s*0,00/);
   });
 
-  it("paste extracts digits and applies them in order (no max)", () => {
+  it("paste extracts digits and applies them in order (no max)", async () => {
+    const user = userEvent.setup();
     render(<Harness />);
     const input = getInput();
-    fireEvent.paste(input, {
-      clipboardData: { getData: () => "R$ 1.234,56" },
-    });
+    await user.click(input);
+    await user.paste("R$ 1.234,56");
     expect(input.value).toMatch(/R\$\s*1\.234,56/);
   });
 
-  it("paste respects max (studios: 9999.99)", () => {
-    render(<Harness max={9999.99} />);
-    const input = getInput();
-    fireEvent.paste(input, {
-      clipboardData: { getData: () => "12345678" },
-    });
-    expect(input.value).toMatch(/R\$\s*9\.999,99/);
-  });
-
-  it("paste containing no digits is a no-op", () => {
+  it("paste containing no digits is a no-op", async () => {
+    const user = userEvent.setup();
     render(<Harness initial={50} />);
     const input = getInput();
-    fireEvent.paste(input, {
-      clipboardData: { getData: () => "abc" },
-    });
+    await user.click(input);
+    await user.paste("abc");
     expect(input.value).toMatch(/R\$\s*50,00/);
   });
 
-  it("paste clamps to max", () => {
-    render(<Harness max={5} />);
+  it("paste clamps to max (studios: 9999.99)", async () => {
+    const user = userEvent.setup();
+    render(<Harness max={9999.99} />);
     const input = getInput();
-    fireEvent.paste(input, {
-      clipboardData: { getData: () => "999999" },
-    });
+    await user.click(input);
+    await user.paste("12345678");
+    expect(input.value).toMatch(/R\$\s*9\.999,99/);
+  });
+
+  it("does not clamp to min during typing (cents-first UX preserved)", async () => {
+    const user = userEvent.setup();
+    render(<Harness min={1} />);
+    const input = getInput();
+    await user.type(input, "5");
+    // Typing "5" builds up 5 cents; clamping to min=R$ 1,00 at this point
+    // would skip the R$ 0,05 → R$ 0,50 → R$ 5,00 progression. The display
+    // must follow the user's digits.
+    expect(input.value).toMatch(/R\$\s*0,05/);
+    expect(screen.getByTestId("value").textContent).toBe("0.05");
+  });
+
+  it("snaps to min on blur when value is non-zero and below min", async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <Harness min={1} />
+        <button type="button">other</button>
+      </>,
+    );
+    const input = getInput();
+    await user.type(input, "5");
+    expect(input.value).toMatch(/R\$\s*0,05/);
+    await user.click(screen.getByRole("button", { name: "other" }));
+    expect(input.value).toMatch(/R\$\s*1,00/);
+  });
+
+  it("leaves zero untouched on blur even when min > 0 (empty state)", async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <Harness min={1} />
+        <button type="button">other</button>
+      </>,
+    );
+    const input = getInput();
+    await user.click(input);
+    await user.click(screen.getByRole("button", { name: "other" }));
+    expect(input.value).toMatch(/R\$\s*0,00/);
+  });
+
+  it("leaves value untouched on blur when already ≥ min", async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <Harness initial={5} min={1} />
+        <button type="button">other</button>
+      </>,
+    );
+    const input = getInput();
+    await user.click(input);
+    await user.click(screen.getByRole("button", { name: "other" }));
     expect(input.value).toMatch(/R\$\s*5,00/);
   });
 
-  it("respects max when accumulating via keystrokes (max=5 → never above R$ 5,00)", () => {
-    render(<Harness max={5} />);
-    const input = getInput();
-    for (let i = 0; i < 8; i++) typeDigit(input, "9");
-    const cents = Number(screen.getByTestId("value").textContent) * 100;
-    expect(cents).toBeLessThanOrEqual(500);
-    expect(input.value).toMatch(/R\$\s*5,00/);
+  it("calls the forwarded onBlur after internal blur handling", async () => {
+    const user = userEvent.setup();
+    const onBlur = vi.fn();
+    function WithBlur() {
+      const [value, setValue] = useState(0);
+      return (
+        <>
+          <MoneyInput value={value} onChange={setValue} onBlur={onBlur} aria-label="Valor" />
+          <button type="button">other</button>
+        </>
+      );
+    }
+    render(<WithBlur />);
+    await user.click(screen.getByLabelText(/valor/i));
+    await user.click(screen.getByRole("button", { name: "other" }));
+    expect(onBlur).toHaveBeenCalledTimes(1);
   });
 
   it("uses type=text and inputMode=numeric (mobile numeric keyboard)", () => {
