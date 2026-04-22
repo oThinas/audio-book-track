@@ -6160,8 +6160,8 @@
                 },
                 {
                   "type": "frame",
-                  "id": "CazQP",
-                  "name": "str1",
+                  "id": "lXsti",
+                  "name": "edr1",
                   "width": "fill_container",
                   "height": 56,
                   "stroke": {
@@ -6177,29 +6177,20 @@
                   "alignItems": "center",
                   "children": [
                     {
-                      "type": "text",
-                      "id": "w9B9s",
-                      "fill": "$color/text-primary",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container",
-                      "content": "Estúdio Voz & Arte",
-                      "fontFamily": "Plus Jakarta Sans",
-                      "fontSize": 14,
-                      "fontWeight": "500"
-                    },
-                    {
                       "type": "frame",
-                      "id": "eTATV",
-                      "name": "str1v",
-                      "width": 220,
-                      "height": "fill_container",
-                      "gap": 8,
+                      "id": "0bvf6",
+                      "name": "edr1a",
+                      "width": "fill_container",
+                      "height": 54,
+                      "fill": "#FFFFFF",
+                      "justifyContent": "space_between",
                       "alignItems": "center",
                       "children": [
                         {
                           "type": "frame",
-                          "id": "Am6qH",
-                          "name": "str1vi",
+                          "id": "sgVnS",
+                          "name": "edr1aa",
+                          "width": 212,
                           "height": 36,
                           "fill": "$color/bg-page",
                           "cornerRadius": 6,
@@ -6208,7 +6199,6 @@
                             "thickness": 1,
                             "fill": "$color/border"
                           },
-                          "gap": 8,
                           "padding": [
                             0,
                             12
@@ -6217,21 +6207,56 @@
                           "children": [
                             {
                               "type": "text",
-                              "id": "oBitE",
+                              "id": "1rLNI",
+                              "rotation": -0.004374742208035749,
                               "fill": "$color/text-primary",
-                              "content": "R$ 85,00",
+                              "textGrowth": "fixed-width",
+                              "width": 123,
+                              "content": "Estúdio Voz & Arte",
                               "fontFamily": "Plus Jakarta Sans",
-                              "fontSize": 13,
-                              "fontWeight": "normal"
-                            },
+                              "fontSize": 14,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "zxapK",
+                          "name": "str1v",
+                          "width": 220,
+                          "height": "fill_container",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
                             {
-                              "type": "icon_font",
-                              "id": "DS1qN",
-                              "width": 14,
-                              "height": 14,
-                              "iconFontName": "pencil",
-                              "iconFontFamily": "lucide",
-                              "fill": "$color/text-muted"
+                              "type": "frame",
+                              "id": "ZMJQb",
+                              "name": "str1vi",
+                              "height": 36,
+                              "fill": "$color/bg-page",
+                              "cornerRadius": 6,
+                              "stroke": {
+                                "align": "inside",
+                                "thickness": 1,
+                                "fill": "$color/border"
+                              },
+                              "gap": 8,
+                              "padding": [
+                                0,
+                                12
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "LlFz5",
+                                  "fill": "$color/text-primary",
+                                  "content": "R$ 85,00",
+                                  "fontFamily": "Plus Jakarta Sans",
+                                  "fontSize": 13,
+                                  "fontWeight": "normal"
+                                }
+                              ]
                             }
                           ]
                         }
@@ -6239,7 +6264,7 @@
                     },
                     {
                       "type": "text",
-                      "id": "db8v4",
+                      "id": "OsDPH",
                       "fill": "$color/text-secondary",
                       "textGrowth": "fixed-width",
                       "width": 100,
@@ -6250,19 +6275,30 @@
                     },
                     {
                       "type": "frame",
-                      "id": "gkxgL",
-                      "name": "str1a",
+                      "id": "aQ2nx",
+                      "name": "edr1a",
                       "width": 60,
-                      "justifyContent": "end",
+                      "gap": 8,
+                      "justifyContent": "center",
+                      "alignItems": "center",
                       "children": [
                         {
                           "type": "icon_font",
-                          "id": "k4HsU",
+                          "id": "jWEEr",
                           "width": 16,
                           "height": 16,
-                          "iconFontName": "trash-2",
+                          "iconFontName": "x",
                           "iconFontFamily": "lucide",
-                          "fill": "$color/danger"
+                          "fill": "$color/text-secondary"
+                        },
+                        {
+                          "type": "icon_font",
+                          "id": "OxOTo",
+                          "width": 16,
+                          "height": 16,
+                          "iconFontName": "check",
+                          "iconFontFamily": "lucide",
+                          "fill": "$color/primary"
                         }
                       ]
                     }
@@ -6301,43 +6337,13 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "frame",
-                          "id": "tY4F9",
-                          "name": "str2vi",
-                          "height": 36,
-                          "fill": "$color/bg-page",
-                          "cornerRadius": 6,
-                          "stroke": {
-                            "align": "inside",
-                            "thickness": 1,
-                            "fill": "$color/border"
-                          },
-                          "gap": 8,
-                          "padding": [
-                            0,
-                            12
-                          ],
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "KhOSl",
-                              "fill": "$color/text-primary",
-                              "content": "R$ 90,00",
-                              "fontFamily": "Plus Jakarta Sans",
-                              "fontSize": 13,
-                              "fontWeight": "normal"
-                            },
-                            {
-                              "type": "icon_font",
-                              "id": "UcS1j",
-                              "width": 14,
-                              "height": 14,
-                              "iconFontName": "pencil",
-                              "iconFontFamily": "lucide",
-                              "fill": "$color/text-muted"
-                            }
-                          ]
+                          "type": "text",
+                          "id": "KhOSl",
+                          "fill": "$color/text-primary",
+                          "content": "R$ 90,00",
+                          "fontFamily": "Plus Jakarta Sans",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -8498,7 +8504,7 @@
                       "type": "frame",
                       "id": "XYjVH",
                       "name": "nomeFrame",
-                      "width": "fill_container",
+                      "width": 875,
                       "height": "fill_container",
                       "gap": 4,
                       "alignItems": "center",
@@ -8529,7 +8535,7 @@
                       "type": "frame",
                       "id": "58BGs",
                       "name": "capsFrame",
-                      "width": 100,
+                      "width": 176,
                       "height": "fill_container",
                       "gap": 4,
                       "alignItems": "center",
@@ -8591,7 +8597,7 @@
                       "type": "frame",
                       "id": "cZ6WZ",
                       "name": "edr1a",
-                      "width": "fill_container",
+                      "width": 879,
                       "height": 54,
                       "fill": "#FFFFFF",
                       "alignItems": "center",
@@ -8633,8 +8639,9 @@
                       "type": "text",
                       "id": "qcwGq",
                       "fill": "$color/text-secondary",
-                      "textGrowth": "fixed-width",
-                      "width": 100,
+                      "textGrowth": "fixed-width-height",
+                      "width": 163,
+                      "height": 17,
                       "content": "9 caps.",
                       "fontFamily": "Plus Jakarta Sans",
                       "fontSize": 13,
@@ -8695,7 +8702,7 @@
                       "id": "iWqok",
                       "fill": "$color/text-primary",
                       "textGrowth": "fixed-width",
-                      "width": "fill_container",
+                      "width": 875,
                       "content": "Luis Alberto",
                       "fontFamily": "Plus Jakarta Sans",
                       "fontSize": 14,
@@ -8705,8 +8712,9 @@
                       "type": "text",
                       "id": "bb0jB",
                       "fill": "$color/text-secondary",
-                      "textGrowth": "fixed-width",
-                      "width": 100,
+                      "textGrowth": "fixed-width-height",
+                      "width": 169,
+                      "height": 12,
                       "content": "5 caps.",
                       "fontFamily": "Plus Jakarta Sans",
                       "fontSize": 13,

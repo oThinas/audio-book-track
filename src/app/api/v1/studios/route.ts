@@ -9,29 +9,26 @@ import {
 } from "@/lib/api/responses";
 import { auth } from "@/lib/auth/server";
 import type { Session } from "@/lib/auth/session";
-import { createEditorSchema } from "@/lib/domain/editor";
-import {
-  EditorEmailAlreadyInUseError,
-  EditorNameAlreadyInUseError,
-} from "@/lib/errors/editor-errors";
-import { createEditorService } from "@/lib/factories/editor";
-import type { EditorService } from "@/lib/services/editor-service";
+import { createStudioSchema } from "@/lib/domain/studio";
+import { StudioNameAlreadyInUseError } from "@/lib/errors/studio-errors";
+import { createStudioService } from "@/lib/factories/studio";
+import type { StudioService } from "@/lib/services/studio-service";
 
-interface EditorsDeps {
+interface StudiosDeps {
   readonly getSession: (args: { headers: Headers }) => Promise<Session | null>;
-  readonly createService: () => EditorService;
+  readonly createService: () => StudioService;
   readonly headersFn: () => Promise<Headers>;
 }
 
-function defaultDeps(): EditorsDeps {
+function defaultDeps(): StudiosDeps {
   return {
     getSession: (args) => auth.api.getSession(args) as Promise<Session | null>,
-    createService: createEditorService,
+    createService: createStudioService,
     headersFn: headers,
   };
 }
 
-export async function handleEditorsList(deps: EditorsDeps): Promise<NextResponse> {
+export async function handleStudiosList(deps: StudiosDeps): Promise<NextResponse> {
   const session = await deps.getSession({ headers: await deps.headersFn() });
   if (!session) {
     return unauthorizedResponse();
@@ -43,9 +40,9 @@ export async function handleEditorsList(deps: EditorsDeps): Promise<NextResponse
   return NextResponse.json({ data }, { headers: NO_STORE_HEADERS });
 }
 
-export async function handleEditorsCreate(
+export async function handleStudiosCreate(
   request: Request,
-  deps: EditorsDeps,
+  deps: StudiosDeps,
 ): Promise<NextResponse> {
   const session = await deps.getSession({ headers: await deps.headersFn() });
   if (!session) {
@@ -53,39 +50,36 @@ export async function handleEditorsCreate(
   }
 
   const body: unknown = await request.json();
-  const parsed = createEditorSchema.safeParse(body);
+  const parsed = createStudioSchema.safeParse(body);
   if (!parsed.success) {
     return validationErrorResponse(parsed.error);
   }
 
   const service = deps.createService();
   try {
-    const editor = await service.create(parsed.data);
+    const studio = await service.create(parsed.data);
     return NextResponse.json(
-      { data: editor },
+      { data: studio },
       {
         status: 201,
         headers: {
           ...NO_STORE_HEADERS,
-          Location: `/api/v1/editors/${editor.id}`,
+          Location: `/api/v1/studios/${studio.id}`,
         },
       },
     );
   } catch (error: unknown) {
-    if (error instanceof EditorNameAlreadyInUseError) {
+    if (error instanceof StudioNameAlreadyInUseError) {
       return conflictResponse("NAME_ALREADY_IN_USE", "Nome já cadastrado");
-    }
-    if (error instanceof EditorEmailAlreadyInUseError) {
-      return conflictResponse("EMAIL_ALREADY_IN_USE", "E-mail já cadastrado");
     }
     throw error;
   }
 }
 
 export async function GET(): Promise<NextResponse> {
-  return handleEditorsList(defaultDeps());
+  return handleStudiosList(defaultDeps());
 }
 
 export async function POST(request: Request): Promise<NextResponse> {
-  return handleEditorsCreate(request, defaultDeps());
+  return handleStudiosCreate(request, defaultDeps());
 }

@@ -15,10 +15,14 @@ function getResetPool(): Pool {
   return pool;
 }
 
-export async function truncateDomainTables(schemaName: string): Promise<void> {
+function assertSchemaName(schemaName: string): void {
   if (!/^[a-z][a-z0-9_]*$/.test(schemaName)) {
-    throw new Error(`Invalid schema name for truncate: ${schemaName}`);
+    throw new Error(`Invalid schema name: ${schemaName}`);
   }
+}
+
+export async function truncateDomainTables(schemaName: string): Promise<void> {
+  assertSchemaName(schemaName);
 
   const client = getResetPool();
   const { rows } = await client.query<{ table_name: string }>(
@@ -34,6 +38,18 @@ export async function truncateDomainTables(schemaName: string): Promise<void> {
 
   const qualified = targets.map((t) => `"${schemaName}"."${t}"`).join(", ");
   await client.query(`TRUNCATE TABLE ${qualified} RESTART IDENTITY CASCADE`);
+}
+
+// Deletes a user by email in the worker's schema. Used by specs that need to
+// sign up the same email across multiple test cases without relying on Playwright
+// landing each case on a different worker — `truncateDomainTables` preserves
+// the `user` table so the admin seed persists, which means a probe user created
+// by one test would otherwise leak into the next if both end up on the same
+// worker. Account and session rows are cascaded via FK.
+export async function deleteUserByEmail(schemaName: string, email: string): Promise<void> {
+  assertSchemaName(schemaName);
+  const client = getResetPool();
+  await client.query(`DELETE FROM "${schemaName}"."user" WHERE email = $1`, [email]);
 }
 
 export async function closeResetPool(): Promise<void> {

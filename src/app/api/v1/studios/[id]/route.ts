@@ -10,32 +10,28 @@ import {
 } from "@/lib/api/responses";
 import { auth } from "@/lib/auth/server";
 import type { Session } from "@/lib/auth/session";
-import { updateEditorSchema } from "@/lib/domain/editor";
-import {
-  EditorEmailAlreadyInUseError,
-  EditorNameAlreadyInUseError,
-  EditorNotFoundError,
-} from "@/lib/errors/editor-errors";
-import { createEditorService } from "@/lib/factories/editor";
-import type { EditorService } from "@/lib/services/editor-service";
+import { updateStudioSchema } from "@/lib/domain/studio";
+import { StudioNameAlreadyInUseError, StudioNotFoundError } from "@/lib/errors/studio-errors";
+import { createStudioService } from "@/lib/factories/studio";
+import type { StudioService } from "@/lib/services/studio-service";
 
-interface EditorByIdDeps {
+interface StudioByIdDeps {
   readonly getSession: (args: { headers: Headers }) => Promise<Session | null>;
-  readonly createService: () => EditorService;
+  readonly createService: () => StudioService;
   readonly headersFn: () => Promise<Headers>;
 }
 
-function defaultDeps(): EditorByIdDeps {
+function defaultDeps(): StudioByIdDeps {
   return {
     getSession: (args) => auth.api.getSession(args) as Promise<Session | null>,
-    createService: createEditorService,
+    createService: createStudioService,
     headersFn: headers,
   };
 }
 
-export async function handleEditorsUpdate(
+export async function handleStudiosUpdate(
   request: Request,
-  deps: EditorByIdDeps,
+  deps: StudioByIdDeps,
   params: { id: string },
 ): Promise<NextResponse> {
   const session = await deps.getSession({ headers: await deps.headersFn() });
@@ -44,31 +40,28 @@ export async function handleEditorsUpdate(
   }
 
   const body: unknown = await request.json();
-  const parsed = updateEditorSchema.safeParse(body);
+  const parsed = updateStudioSchema.safeParse(body);
   if (!parsed.success) {
     return validationErrorResponse(parsed.error);
   }
 
   const service = deps.createService();
   try {
-    const editor = await service.update(params.id, parsed.data);
-    return NextResponse.json({ data: editor }, { headers: NO_STORE_HEADERS });
+    const studio = await service.update(params.id, parsed.data);
+    return NextResponse.json({ data: studio }, { headers: NO_STORE_HEADERS });
   } catch (error: unknown) {
-    if (error instanceof EditorNotFoundError) {
-      return notFoundResponse("EDITOR_NOT_FOUND", "Editor não encontrado");
+    if (error instanceof StudioNotFoundError) {
+      return notFoundResponse("STUDIO_NOT_FOUND", "Estúdio não encontrado");
     }
-    if (error instanceof EditorNameAlreadyInUseError) {
+    if (error instanceof StudioNameAlreadyInUseError) {
       return conflictResponse("NAME_ALREADY_IN_USE", "Nome já cadastrado");
-    }
-    if (error instanceof EditorEmailAlreadyInUseError) {
-      return conflictResponse("EMAIL_ALREADY_IN_USE", "E-mail já cadastrado");
     }
     throw error;
   }
 }
 
-export async function handleEditorsDelete(
-  deps: EditorByIdDeps,
+export async function handleStudiosDelete(
+  deps: StudioByIdDeps,
   params: { id: string },
 ): Promise<NextResponse> {
   const session = await deps.getSession({ headers: await deps.headersFn() });
@@ -81,8 +74,8 @@ export async function handleEditorsDelete(
     await service.delete(params.id);
     return new NextResponse(null, { status: 204, headers: NO_STORE_HEADERS });
   } catch (error: unknown) {
-    if (error instanceof EditorNotFoundError) {
-      return notFoundResponse("EDITOR_NOT_FOUND", "Editor não encontrado");
+    if (error instanceof StudioNotFoundError) {
+      return notFoundResponse("STUDIO_NOT_FOUND", "Estúdio não encontrado");
     }
     throw error;
   }
@@ -93,7 +86,7 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> },
 ): Promise<NextResponse> {
   const params = await context.params;
-  return handleEditorsUpdate(request, defaultDeps(), params);
+  return handleStudiosUpdate(request, defaultDeps(), params);
 }
 
 export async function DELETE(
@@ -101,5 +94,5 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> },
 ): Promise<NextResponse> {
   const params = await context.params;
-  return handleEditorsDelete(defaultDeps(), params);
+  return handleStudiosDelete(defaultDeps(), params);
 }

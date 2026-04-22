@@ -1,4 +1,9 @@
-import { vi } from "vitest";
+import { cleanup } from "@testing-library/react";
+import { afterEach, vi } from "vitest";
+
+afterEach(() => {
+  cleanup();
+});
 
 vi.mock("@/lib/db", () => ({ db: {} }));
 vi.mock("@/lib/env", () => ({

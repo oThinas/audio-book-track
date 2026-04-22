@@ -1,43 +1,38 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 2.9.0 → 2.10.0 (MINOR: Principle XVI rewritten — quality
-checks move from per-phase gate to single final-verification gate;
-Principle V expanded with test isolation and test-database architecture)
+Version change: 2.10.0 → 2.11.0 (MINOR: Principle VII expanded with
+rule forbidding route-colocated `_components/` folders; components
+DEVEM residir em `src/components/features/<feature>/`)
 
 Modified principles:
-  - V. Desenvolvimento Orientado a Testes:
-    - Added "Isolamento de Testes e Banco de Dados de Teste"
-      subsection documenting the cross-layer isolation strategy
-      delivered in feature 016-test-db-isolation
-  - XVI. Qualidade de Código e Verificação:
-    - Removed per-phase/per-task mandatory run of lint/build/tests
-    - Added "Fase final de verificação" as the single mandatory gate
-      before PR / task completion
-    - Clarified that during implementation, tests written for the
-      current change MUST pass locally, but full lint/build/test
-      sweeps are deferred to the final verification phase
-    - Preserved rules on using package.json scripts (not direct CLI)
-  - Development Workflow:
-    - Step 5 reworded: "Verificação de qualidade" is a final phase
-      before code review, not per-phase.
+  - VII. Frontend: Composição, Atomicidade e Mobile First:
+    - Added "Localização de Componentes de Feature" subsection:
+      pastas `_components/` (ou qualquer variante colocada dentro
+      de `src/app/`) são PROIBIDAS. Componentes de feature DEVEM
+      residir em `src/components/features/<feature>/` e serem
+      importados via alias `@/components/features/...`.
+  - XII. Anti-Padrões Proibidos (Frontend):
+    - Added explicit forbidden pattern: criar pasta `_components/`
+      (ou similar) dentro de `src/app/` para colocar componentes
+      de UI junto à rota.
+  - Self-Review Checklist:
+    - Added item em "Anti-Padrões": nenhuma pasta `_components/`
+      dentro de `src/app/`.
 
-Added sections:
-  - Principle V: "Isolamento de Testes e Banco de Dados de Teste" —
-    mandates TEST_DATABASE_URL separation, BEGIN/ROLLBACK for
-    integration, schema-per-worker for E2E, TRUNCATE-based reset
-    preserving the admin, E2E_TEST_MODE flag for auth config, and
-    factory-not-seed rule for new entities.
+Added sections: N/A (amendment within existing principles)
 
 Removed sections: N/A
 
 Templates requiring updates:
   ✅ .specify/memory/constitution.md — this file (updated now)
-  ✅ .specify/templates/tasks-template.md — per-phase Quality Gates
-     replaced by a single final-phase Quality Gate
-  ✅ CLAUDE.md — "Verificação de qualidade" section updated to match;
-     also updated with matching "Isolamento de testes" section
-  ✅ docs/testing-strategy.md — canonical reference, already written
+  ⚠ CLAUDE.md — adicionar regra sobre `_components/` proibido e
+    `src/components/features/` como localização obrigatória de
+    componentes de feature (pendente, para manter alinhamento)
+  ✅ .specify/templates/plan-template.md — sem mudanças necessárias
+     (estrutura de frontend já referencia Princípio VII)
+  ✅ .specify/templates/tasks-template.md — sem mudanças necessárias
+  ✅ .specify/templates/spec-template.md — sem mudanças necessárias
 
 Follow-up TODOs: N/A
 -->
@@ -461,6 +456,25 @@ app/                  → Pages/Layouts (Next.js App Router, SSR por padrão)
 hooks/                → Custom hooks isolam lógica de estado e side effects
 ```
 
+**Localização de Componentes de Feature (obrigatório):**
+
+- Componentes de feature (moléculas compostas, específicas de um
+  domínio como `editors`, `narrators`, `chapters`) DEVEM residir em
+  `src/components/features/<feature>/` e serem importados via alias
+  `@/components/features/<feature>/...`.
+- Pastas `_components/` (ou qualquer variante colocada dentro de
+  `src/app/` para colocar componentes junto à rota via underscore
+  prefix do Next.js) são **PROIBIDAS**. A convenção Next.js de pasta
+  privada NÃO DEVE ser usada para componentes de UI.
+- Route handlers, layouts e páginas em `src/app/` DEVEM importar
+  componentes exclusivamente de `@/components/ui/`,
+  `@/components/layout/` e `@/components/features/<feature>/` —
+  nunca de pastas colocadas dentro da própria árvore de rotas.
+- Caso um componente seja usado por apenas uma rota hoje, ainda
+  assim DEVE residir em `src/components/features/<feature>/`. O
+  custo de mover o arquivo no futuro é maior do que o "ganho" de
+  proximidade à rota.
+
 - Componentes de UI (átomos) DEVEM ser puramente visuais — apenas props e
   renderização, sem useState ou fetch.
 - Lógica de estado e data fetching DEVEM residir em custom hooks ou Server
@@ -612,6 +626,10 @@ Os seguintes padrões são **explicitamente proibidos** neste projeto:
 - Ignorar dark mode — todo componente DEVE funcionar em ambos os temas.
 - Cores hardcoded que não se adaptam ao tema (ex: `text-gray-900`
   sem equivalente dark).
+- Criar pasta `_components/` (ou similar) dentro de `src/app/` para
+  colocar componentes de UI junto à rota. Componentes de feature
+  DEVEM ficar em `src/components/features/<feature>/` (ver
+  Princípio VII).
 
 **Banco de dados:**
 - `float` ou `double` para valores financeiros.
@@ -940,6 +958,7 @@ submeter para review ou merge:
 - [ ] Nenhum `use client` desnecessário (componente poderia ser Server Component)?
 - [ ] Nenhum elemento HTML cru quando existe componente em `ui/`?
 - [ ] Nenhuma página sem `<PageContainer>` e componentes de layout?
+- [ ] Nenhuma pasta `_components/` dentro de `src/app/` (componentes de feature em `src/components/features/<feature>/`)?
 - [ ] Dark mode funciona corretamente em todos os componentes novos?
 - [ ] Erros são tratados explicitamente (sem `catch (e) {}`)?
 ```
@@ -948,4 +967,4 @@ submeter para review ou merge:
 revisar por outros e cria responsabilidade pessoal com os padrões
 definidos nesta constituição.
 
-**Version**: 2.10.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-04-17
+**Version**: 2.11.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-04-21
