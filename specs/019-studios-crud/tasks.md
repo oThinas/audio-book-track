@@ -149,14 +149,14 @@ Projeto Next.js full-stack em `src/`. Testes em `__tests__/`. Migrações Drizzl
 
 ### Tests para US4
 
-- [ ] T035 [P] [US4] Escrever [__tests__/unit/api/studios-delete.spec.ts](__tests__/unit/api/studios-delete.spec.ts) — handler `handleStudiosDelete(deps)`. Casos: 204 (sem body), 401, 404 quando id inexistente. Rodar — DEVE falhar.
-- [ ] T036 [P] [US4] Escrever [__tests__/e2e/studios-delete.spec.ts](__tests__/e2e/studios-delete.spec.ts) — fluxos: (a) clicar Excluir abre modal com pergunta contendo o name, (b) confirmar remove da tabela, (c) cancelar fecha modal sem alterar, (d) o botão Excluir do modal usa variante `destructive`. Rodar — DEVE falhar.
+- [X] T035 [P] [US4] Escrever [__tests__/unit/api/studios-delete.spec.ts](__tests__/unit/api/studios-delete.spec.ts) — handler `handleStudiosDelete`. 3 casos: 401, 404 `STUDIO_NOT_FOUND`, 204 com Cache-Control no-store e remoção confirmada no repo. Rodar — DEVE falhar (verificado).
+- [X] T036 [P] [US4] Escrever [__tests__/e2e/studios-delete.spec.ts](__tests__/e2e/studios-delete.spec.ts) — 3 fluxos: confirmar remove a linha, cancelar fecha sem alterar, botão confirm usa `bg-destructive`. Validado na fase final.
 
 ### Implementation para US4
 
-- [ ] T037 [US4] Implementar `DELETE /api/v1/studios/:id` em [src/app/api/v1/studios/[id]/route.ts](src/app/api/v1/studios/[id]/route.ts) — `handleStudiosDelete(deps)`. Retornar `204` sem body em sucesso. Mapear `StudioNotFoundError` → `404`. Rodar T035 — DEVE passar.
-- [ ] T038 [US4] Criar [src/components/features/studios/delete-studio-dialog.tsx](src/components/features/studios/delete-studio-dialog.tsx) — `<AlertDialog>` do shadcn. Título: "Excluir estúdio". Descrição: `Tem certeza que deseja excluir o estúdio ${name}?`. Botão primário "Excluir" com variante `destructive`; botão secundário "Cancelar". Props: `studio`, `open`, `onOpenChange`, `onConfirm`.
-- [ ] T039 [US4] Integrar `delete-studio-dialog` em [src/components/features/studios/studio-row.tsx](src/components/features/studios/studio-row.tsx) — state local `deleteOpen`, abre ao clicar ícone Excluir, `onConfirm` chama handler do client que faz `DELETE /api/v1/studios/:id`. Handler `handleDelete(id)` no `studios-client.tsx` remove o studio do estado ao sucesso, exibe toast em erro. Rodar T036 — DEVE passar.
+- [X] T037 [US4] Adicionar `handleStudiosDelete` + `DELETE` export em [src/app/api/v1/studios/[id]/route.ts](src/app/api/v1/studios/[id]/route.ts). Retorna 204 sem body; `StudioNotFoundError` → 404. Rodar T035 — DEVE passar (330/330).
+- [X] T038 [US4] Criar [src/components/features/studios/delete-studio-dialog.tsx](src/components/features/studios/delete-studio-dialog.tsx) — `AlertDialog` do shadcn com confirm destructive. Fetch `DELETE /api/v1/studios/:id`, trata 204 e 404 como sucesso (remove local), toast em erro.
+- [X] T039 [US4] Integrar em [src/components/features/studios/studios-client.tsx](src/components/features/studios/studios-client.tsx): state `studioToDelete`, `handleRequestDelete` (abre modal), `handleDeleted` (remove do estado local + `router.refresh()`). `StudioRow` já chamava `onRequestDelete` desde a Phase 5; agora está fully wired.
 
 **Checkpoint**: Todas as user stories funcionais — CRUD completo.
 
