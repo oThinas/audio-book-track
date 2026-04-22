@@ -164,9 +164,12 @@ test.describe("Studios update", () => {
     ).toBeVisible();
     await expect(editing).toHaveCount(1);
 
-    await page
-      .getByTestId("studio-row")
-      .filter({ hasText: "Parallel Two Edited" })
+    // The remaining editing row is the second one — it preserved its typed
+    // value (`"Parallel Two Edited"`) in RHF state even while its sibling
+    // re-rendered after the successful PATCH. Filtering by hasText would miss
+    // it because input values are not part of textContent.
+    await editing
+      .first()
       .getByRole("button", { name: /confirmar/i })
       .click();
     await expect(editing).toHaveCount(0);

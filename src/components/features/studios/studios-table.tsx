@@ -61,6 +61,10 @@ export function StudiosTable({
         header: "Valor/hora",
         enableSorting: true,
         sortingFn: "basic",
+        // Numeric columns default to sortDescFirst=true in TanStack Table.
+        // Match the ascending-first behaviour of the Nome column so a single
+        // click sorts low→high, which is the intuitive "sort by price" default.
+        sortDescFirst: false,
       },
       {
         id: "actions",
