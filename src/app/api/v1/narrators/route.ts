@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
+import { NO_STORE_HEADERS } from "@/lib/api/headers";
 import {
   conflictResponse,
   unauthorizedResponse,
@@ -18,8 +19,6 @@ interface NarratorsDeps {
   readonly createService: () => NarratorService;
   readonly headersFn: () => Promise<Headers>;
 }
-
-const NO_STORE_HEADERS = { "Cache-Control": "no-store" } as const;
 
 function defaultDeps(): NarratorsDeps {
   return {
