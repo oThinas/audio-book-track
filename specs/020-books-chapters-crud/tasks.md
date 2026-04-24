@@ -97,12 +97,12 @@ description: "Task list for feature 020-books-chapters-crud"
 
 ### Factories
 
-- [ ] T036 [P] Criar [src/lib/factories/book.ts](../../src/lib/factories/book.ts) exportando `createBookService()` com dependências concretas (Drizzle repos + recomputeBookStatus).
-- [ ] T037 [P] Criar [src/lib/factories/chapter.ts](../../src/lib/factories/chapter.ts) exportando `createChapterService()`.
+- [X] T036 [P] Criar [src/lib/factories/book.ts](../../src/lib/factories/book.ts) exportando `createBookService()` com dependências concretas (Drizzle repos + recomputeBookStatus).
+- [X] T037 [P] Criar [src/lib/factories/chapter.ts](../../src/lib/factories/chapter.ts) exportando `createChapterService()`.
 
 ### Integration tests — soft-delete unificado (Foundational)
 
-- [ ] T038 Criar [__tests__/integration/soft-delete-unification.spec.ts](../../__tests__/integration/soft-delete-unification.spec.ts) cobrindo (via BEGIN/ROLLBACK): (a) soft-delete seta `deleted_at`; (b) listagem filtra soft-deleted; (c) desarquive-by-name reativa (`deleted_at = null`) e preserva campos originais; (d) `editor_email_unique` continua global. Rodar com `NODE_ENV=test bun run test:integration -- __tests__/integration/soft-delete-unification.spec.ts`.
+- [X] T038 Criar [__tests__/integration/soft-delete-unification.spec.ts](../../__tests__/integration/soft-delete-unification.spec.ts) cobrindo (via BEGIN/ROLLBACK): (a) soft-delete seta `deleted_at`; (b) listagem filtra soft-deleted; (c) desarquive-by-name reativa (`deleted_at = null`) e preserva campos originais; (d) `editor_email_unique` continua global. Rodar com `NODE_ENV=test bun run test:integration -- __tests__/integration/soft-delete-unification.spec.ts`.
 
 **Checkpoint**: Foundation pronta. Schema, migrations, domínio, helpers, repos e services de soft-delete funcionando. Stories podem começar.
 

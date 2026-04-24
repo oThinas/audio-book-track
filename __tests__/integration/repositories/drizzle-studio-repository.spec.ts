@@ -135,12 +135,19 @@ describe("DrizzleStudioRepository", () => {
       expect(await repo.findByName("Sonora")).toEqual(created);
     });
 
-    it("returns null when name does not match (case-sensitive eq)", async () => {
+    it("matches case-insensitively (consistent with the lower(name) partial unique index)", async () => {
+      const repo = createRepo();
+      const created = await repo.create({ name: "Sonora", defaultHourlyRateCents: 8500 });
+
+      expect(await repo.findByName("sonora")).toEqual(created);
+      expect(await repo.findByName("SONORA")).toEqual(created);
+    });
+
+    it("returns null when the name does not exist at all", async () => {
       const repo = createRepo();
       await repo.create({ name: "Sonora", defaultHourlyRateCents: 8500 });
 
-      expect(await repo.findByName("sonora")).toBeNull();
-      expect(await repo.findByName("SONORA")).toBeNull();
+      expect(await repo.findByName("Outro")).toBeNull();
     });
   });
 

@@ -103,11 +103,12 @@ describe("DrizzleEditorRepository", () => {
       expect(found?.name).toBe("Maria");
     });
 
-    it("returns null for a different case (match is case-sensitive)", async () => {
+    it("matches case-insensitively (consistent with the lower(name) partial unique index)", async () => {
       const repo = createRepo();
-      await repo.create({ name: "Maria", email: "m@s.com" });
+      const created = await repo.create({ name: "Maria", email: "m@s.com" });
 
-      expect(await repo.findByName("maria")).toBeNull();
+      expect(await repo.findByName("maria")).toEqual(created);
+      expect(await repo.findByName("MARIA")).toEqual(created);
     });
 
     it("returns null when name does not exist", async () => {
