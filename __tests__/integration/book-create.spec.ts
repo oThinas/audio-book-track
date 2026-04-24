@@ -8,6 +8,8 @@ import { handleBooksCreate } from "@/app/api/v1/books/route";
 import { book, chapter } from "@/lib/db/schema";
 import { DrizzleBookRepository } from "@/lib/repositories/drizzle/drizzle-book-repository";
 import { DrizzleChapterRepository } from "@/lib/repositories/drizzle/drizzle-chapter-repository";
+import { DrizzleEditorRepository } from "@/lib/repositories/drizzle/drizzle-editor-repository";
+import { DrizzleNarratorRepository } from "@/lib/repositories/drizzle/drizzle-narrator-repository";
 import { DrizzleStudioRepository } from "@/lib/repositories/drizzle/drizzle-studio-repository";
 import { BookService } from "@/lib/services/book-service";
 
@@ -17,6 +19,8 @@ function createRouteDeps(session: { user: { id: string } } | null) {
     bookRepo: new DrizzleBookRepository(db),
     chapterRepo: new DrizzleChapterRepository(db),
     studioRepo: new DrizzleStudioRepository(db),
+    narratorRepo: new DrizzleNarratorRepository(db),
+    editorRepo: new DrizzleEditorRepository(db),
     uow: new SavepointUnitOfWork(db),
   });
   return {

@@ -1,6 +1,8 @@
 import { NoOpUnitOfWork } from "@tests/helpers/test-unit-of-work";
 import { InMemoryBookRepository } from "@tests/repositories/in-memory-book-repository";
 import { InMemoryChapterRepository } from "@tests/repositories/in-memory-chapter-repository";
+import { InMemoryEditorRepository } from "@tests/repositories/in-memory-editor-repository";
+import { InMemoryNarratorRepository } from "@tests/repositories/in-memory-narrator-repository";
 import { InMemoryStudioRepository } from "@tests/repositories/in-memory-studio-repository";
 import { beforeEach, describe, expect, it } from "vitest";
 
@@ -10,16 +12,22 @@ describe("BookService.listForUser", () => {
   let bookRepo: InMemoryBookRepository;
   let chapterRepo: InMemoryChapterRepository;
   let studioRepo: InMemoryStudioRepository;
+  let narratorRepo: InMemoryNarratorRepository;
+  let editorRepo: InMemoryEditorRepository;
   let service: BookService;
 
   beforeEach(() => {
     chapterRepo = new InMemoryChapterRepository();
     studioRepo = new InMemoryStudioRepository();
+    narratorRepo = new InMemoryNarratorRepository();
+    editorRepo = new InMemoryEditorRepository();
     bookRepo = new InMemoryBookRepository({ chapterRepo, studioRepo });
     service = new BookService({
       bookRepo,
       chapterRepo,
       studioRepo,
+      narratorRepo,
+      editorRepo,
       uow: new NoOpUnitOfWork(),
     });
   });

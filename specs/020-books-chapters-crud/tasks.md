@@ -169,19 +169,19 @@ description: "Task list for feature 020-books-chapters-crud"
 
 ### Tests for US4 — TDD
 
-- [ ] T058 [P] [US4] Criar [__tests__/unit/services/book-service.findById.spec.ts](../../__tests__/unit/services/book-service.findById.spec.ts): retorna book com chapters + estúdio (mesmo soft-deleted) + agregados.
-- [ ] T059 [P] [US4] Criar [__tests__/integration/book-detail.spec.ts](../../__tests__/integration/book-detail.spec.ts): `GET /api/v1/books/:id` retorna 200 com payload conforme contrato; 404 em ID inexistente.
-- [ ] T060 [P] [US4] Criar [__tests__/e2e/books-detail.spec.ts](../../__tests__/e2e/books-detail.spec.ts): click na linha, navegação, conteúdo do cabeçalho, botão Voltar.
+- [X] T058 [P] [US4] Criar [__tests__/unit/services/book-service.findById.spec.ts](../../__tests__/unit/services/book-service.findById.spec.ts): retorna book com chapters + estúdio (mesmo soft-deleted) + agregados.
+- [X] T059 [P] [US4] Criar [__tests__/integration/book-detail.spec.ts](../../__tests__/integration/book-detail.spec.ts): `GET /api/v1/books/:id` retorna 200 com payload conforme contrato; 404 em ID inexistente.
+- [X] T060 [P] [US4] Criar [__tests__/e2e/books-detail.spec.ts](../../__tests__/e2e/books-detail.spec.ts): click na linha, navegação, conteúdo do cabeçalho, botão Voltar.
 
 ### Implementation for US4
 
-- [ ] T061 [US4] Implementar `BookService.findByIdForUser(bookId, userId)` em [src/lib/services/book-service.ts](../../src/lib/services/book-service.ts): retorna `{ book, studio, chapters (com narrator/editor embutidos), totalEarnings, totalChapters, completedChapters }`.
-- [ ] T062 [US4] Implementar route handler `GET` em [src/app/api/v1/books/[id]/route.ts](../../src/app/api/v1/books/[id]/route.ts) chamando o service. 404 quando o livro não existe (conforme contrato).
-- [ ] T063 [P] [US4] Criar [src/components/features/books/book-header.tsx](../../src/components/features/books/book-header.tsx): cabeçalho com título, estúdio, R$/hora, capítulos, ganho total, status (badge). Botões "Ver PDF", "Editar livro", "Excluir capítulos" como placeholders (`disabled` ou `onClick` vazio) — serão ligados em US5..US9. Mobile-first.
-- [ ] T064 [P] [US4] Criar [src/components/features/chapters/chapters-table.tsx](../../src/components/features/chapters/chapters-table.tsx): tabela com colunas "Nº", "Status" (badge), "Narrador", "Editor", "Horas editadas", "Ações". Exibe ícones "Editar" e "Excluir" por linha (placeholders — handlers em US5/US6).
-- [ ] T065 [P] [US4] Criar [src/components/features/books/book-detail-client.tsx](../../src/components/features/books/book-detail-client.tsx): orquestrador que recebe `{ book, chapters }` e renderiza `<BookHeader>` + `<ChaptersTable>`. Estado inicial do "modo exclusão" e "modo edição" (ambos em false).
-- [ ] T066 [US4] Criar página [src/app/(authenticated)/books/[id]/page.tsx](../../src/app/(authenticated)/books/[id]/page.tsx) como Server Component: chama `GET /api/v1/books/:id`, renderiza `<PageContainer>` + `<BookDetailClient>`. Em 404 usa `notFound()` do Next.js (cai no `not-found.tsx` global).
-- [ ] T067 [US4] Adicionar botão/link "Voltar" no cabeçalho da página de detalhes usando `router.back()` ou `<Link href="/books">`.
+- [X] T061 [US4] Implementar `BookService.findByIdForUser(bookId, userId)` em [src/lib/services/book-service.ts](../../src/lib/services/book-service.ts): retorna `{ book, studio, chapters (com narrator/editor embutidos), totalEarnings, totalChapters, completedChapters }`.
+- [X] T062 [US4] Implementar route handler `GET` em [src/app/api/v1/books/[id]/route.ts](../../src/app/api/v1/books/[id]/route.ts) chamando o service. 404 quando o livro não existe (conforme contrato).
+- [X] T063 [P] [US4] Criar [src/components/features/books/book-header.tsx](../../src/components/features/books/book-header.tsx): cabeçalho com título, estúdio, R$/hora, capítulos, ganho total, status (badge). Botões "Ver PDF", "Editar livro", "Excluir capítulos" como placeholders (`disabled` ou `onClick` vazio) — serão ligados em US5..US9. Mobile-first.
+- [X] T064 [P] [US4] Criar [src/components/features/chapters/chapters-table.tsx](../../src/components/features/chapters/chapters-table.tsx): tabela com colunas "Nº", "Status" (badge), "Narrador", "Editor", "Horas editadas", "Ações". Exibe ícones "Editar" e "Excluir" por linha (placeholders — handlers em US5/US6).
+- [X] T065 [P] [US4] Criar [src/components/features/books/book-detail-client.tsx](../../src/components/features/books/book-detail-client.tsx): orquestrador que recebe `{ book, chapters }` e renderiza `<BookHeader>` + `<ChaptersTable>`. Estado inicial do "modo exclusão" e "modo edição" (ambos em false).
+- [X] T066 [US4] Criar página [src/app/(authenticated)/books/[id]/page.tsx](../../src/app/(authenticated)/books/[id]/page.tsx) como Server Component: chama `GET /api/v1/books/:id`, renderiza `<PageContainer>` + `<BookDetailClient>`. Em 404 usa `notFound()` do Next.js (cai no `not-found.tsx` global).
+- [X] T067 [US4] Adicionar botão/link "Voltar" no cabeçalho da página de detalhes usando `router.back()` ou `<Link href="/books">`.
 
 **Checkpoint**: US4 entregue — produtor navega para detalhes, vê cabeçalho e lista de capítulos (somente leitura neste ponto).
 

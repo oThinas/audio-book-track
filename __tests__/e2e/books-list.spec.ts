@@ -1,62 +1,10 @@
-import type { Page } from "@playwright/test";
-import { Pool } from "pg";
-
 import { expect, test } from "./fixtures/app-server";
 import { login } from "./helpers/auth";
-
-let seedPool: Pool | undefined;
-
-function getSeedPool(): Pool {
-  if (!seedPool) {
-    const url = process.env.TEST_DATABASE_URL;
-    if (!url) throw new Error("TEST_DATABASE_URL is required for E2E seeding.");
-    seedPool = new Pool({ connectionString: url, max: 2 });
-  }
-  return seedPool;
-}
+import { closeSeedPool, seedBook, seedStudio } from "./helpers/seed";
 
 test.afterAll(async () => {
-  if (seedPool) {
-    await seedPool.end();
-    seedPool = undefined;
-  }
+  await closeSeedPool();
 });
-
-async function seedStudio(
-  page: Page,
-  name: string,
-  defaultHourlyRateReais: number,
-): Promise<{ id: string }> {
-  const response = await page.request.post("/api/v1/studios", {
-    data: { name, defaultHourlyRateCents: Math.round(defaultHourlyRateReais * 100) },
-  });
-  if (!response.ok()) {
-    throw new Error(`Failed to seed studio ${name}: ${response.status()}`);
-  }
-  const body = (await response.json()) as { data: { id: string } };
-  return { id: body.data.id };
-}
-
-interface SeedBookOptions {
-  readonly schema: string;
-  readonly title: string;
-  readonly studioId: string;
-  readonly pricePerHourCents: number;
-  readonly createdAt?: Date;
-}
-
-async function seedBook(options: SeedBookOptions): Promise<{ id: string }> {
-  const pool = getSeedPool();
-  const createdAt = options.createdAt ?? new Date();
-  const { rows } = await pool.query<{ id: string }>(
-    `INSERT INTO "${options.schema}"."book"
-       (id, title, studio_id, price_per_hour_cents, status, created_at, updated_at)
-     VALUES (gen_random_uuid(), $1, $2, $3, 'pending', $4, $4)
-     RETURNING id`,
-    [options.title, options.studioId, options.pricePerHourCents, createdAt],
-  );
-  return { id: rows[0].id };
-}
 
 test.describe("Books list", () => {
   test.beforeEach(async ({ page }) => {
