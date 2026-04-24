@@ -1,13 +1,14 @@
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
 import { getUniqueConstraintName } from "@/lib/db/postgres-errors";
 import type * as schema from "@/lib/db/schema";
-import { book } from "@/lib/db/schema";
+import { book, chapter, studio } from "@/lib/db/schema";
 import type { Book, BookStatus } from "@/lib/domain/book";
 import { BookNotFoundError, BookTitleAlreadyInUseError } from "@/lib/errors/book-errors";
 import type {
   BookRepository,
+  BookSummary,
   InsertBookInput,
   RepositoryTx,
   UpdateBookInput,
@@ -65,6 +66,45 @@ export class DrizzleBookRepository implements BookRepository {
       .from(book)
       .orderBy(desc(book.createdAt));
     return rows.map(toDomain);
+  }
+
+  async listSummariesByUser(_userId: string, tx?: RepositoryTx): Promise<BookSummary[]> {
+    // JOIN studio sem filtro de deleted_at — livros históricos precisam resolver
+    // o nome do estúdio mesmo quando o estúdio foi soft-deleted (FR-046 / data-model §8).
+    const rows = await this.executor(tx)
+      .select({
+        id: book.id,
+        title: book.title,
+        pricePerHourCents: book.pricePerHourCents,
+        pdfUrl: book.pdfUrl,
+        status: book.status,
+        createdAt: book.createdAt,
+        updatedAt: book.updatedAt,
+        studioId: studio.id,
+        studioName: studio.name,
+        totalChapters: sql<number>`coalesce(count(${chapter.id}), 0)::int`,
+        completedChapters: sql<number>`coalesce(count(${chapter.id}) filter (where ${chapter.status} in ('completed', 'paid')), 0)::int`,
+        totalEarningsCents: sql<number>`coalesce(sum(round(${chapter.editedSeconds}::numeric * ${book.pricePerHourCents} / 3600))::int, 0)`,
+      })
+      .from(book)
+      .innerJoin(studio, eq(studio.id, book.studioId))
+      .leftJoin(chapter, eq(chapter.bookId, book.id))
+      .groupBy(book.id, studio.id, studio.name)
+      .orderBy(desc(book.createdAt));
+
+    return rows.map((row) => ({
+      id: row.id,
+      title: row.title,
+      studio: { id: row.studioId, name: row.studioName },
+      pricePerHourCents: row.pricePerHourCents,
+      pdfUrl: row.pdfUrl,
+      status: row.status,
+      totalChapters: row.totalChapters,
+      completedChapters: row.completedChapters,
+      totalEarningsCents: row.totalEarningsCents,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+    }));
   }
 
   async findById(id: string, tx?: RepositoryTx): Promise<Book | null> {

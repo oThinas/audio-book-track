@@ -116,14 +116,14 @@ description: "Task list for feature 020-books-chapters-crud"
 
 ### Tests for US1 — TDD
 
-- [ ] T039 [P] [US1] Criar [__tests__/unit/services/book-service.list.spec.ts](../../__tests__/unit/services/book-service.list.spec.ts) cobrindo `listBooksForUser(userId)` com in-memory repos: retorna livros com `totalChapters`, `completedChapters`, `totalEarnings` corretos.
+- [X] T039 [P] [US1] Criar [__tests__/unit/services/book-service.list.spec.ts](../../__tests__/unit/services/book-service.list.spec.ts) cobrindo `listBooksForUser(userId)` com in-memory repos: retorna livros com `totalChapters`, `completedChapters`, `totalEarnings` corretos.
 - [ ] T040 [P] [US1] Criar [__tests__/integration/book-list.spec.ts](../../__tests__/integration/book-list.spec.ts) com DB real: criar 3 livros com capítulos em estados variados; validar que `GET /api/v1/books` retorna agregações corretas.
 - [ ] T041 [P] [US1] Criar [__tests__/e2e/books-list.spec.ts](../../__tests__/e2e/books-list.spec.ts) (Playwright): acessar `/books`, verificar tabela, busca filtrando por título/estúdio, ordenação ASC/DESC nas colunas ordenáveis, ausência da coluna "Ações".
 
 ### Implementation for US1
 
-- [ ] T042 [US1] Implementar `BookService.listForUser` em [src/lib/services/book-service.ts](../../src/lib/services/book-service.ts) (criar o arquivo se ainda não existe): agrega `totalChapters`, `completedChapters` e `totalEarnings` via query com `LEFT JOIN chapter` no repo ([contracts/books.md — GET /books](./contracts/books.md)).
-- [ ] T043 [US1] Implementar rota [src/app/api/v1/books/route.ts](../../src/app/api/v1/books/route.ts) com handler `GET` que chama `createBookService().listForUser(session.user.id)`. Envelope `{ data: [...] }`. Erros via helpers de [src/lib/api/responses.ts](../../src/lib/api/responses.ts).
+- [X] T042 [US1] Implementar `BookService.listForUser` em [src/lib/services/book-service.ts](../../src/lib/services/book-service.ts) (criar o arquivo se ainda não existe): agrega `totalChapters`, `completedChapters` e `totalEarnings` via query com `LEFT JOIN chapter` no repo ([contracts/books.md — GET /books](./contracts/books.md)).
+- [X] T043 [US1] Implementar rota [src/app/api/v1/books/route.ts](../../src/app/api/v1/books/route.ts) com handler `GET` que chama `createBookService().listForUser(session.user.id)`. Envelope `{ data: [...] }`. Erros via helpers de [src/lib/api/responses.ts](../../src/lib/api/responses.ts).
 - [ ] T044 [P] [US1] Criar componente [src/components/features/books/books-table.tsx](../../src/components/features/books/books-table.tsx): client component recebendo `books`, renderiza `<Table>` do shadcn com colunas "Título", "Estúdio", "Capítulos" (`concluídos/totais`), "Status" (badge), "R$/hora", "Ganho total". Sem coluna "Ações". Linha `onClick` navega para `/books/[id]`.
 - [ ] T045 [P] [US1] Criar [src/components/features/books/books-client.tsx](../../src/components/features/books/books-client.tsx): client wrapper com barra de pesquisa (filtra por título OU nome do estúdio, case-insensitive), ordenação client-side via `useMemo`, estado do modal de criação (placeholder para US2).
 - [ ] T046 [US1] Criar [src/app/(authenticated)/books/page.tsx](../../src/app/(authenticated)/books/page.tsx) como Server Component: chama `GET /api/v1/books` server-side e passa `books` ao `<BooksClient>`. Usar `<PageContainer>`, `<PageHeader>`, `<PageTitle>`, `<PageDescription>` de [src/components/layout/page-container.tsx](../../src/components/layout/page-container.tsx).

@@ -9,6 +9,7 @@ export interface ReactivateStudioOverrides {
 export interface StudioRepository {
   findAll(): Promise<Studio[]>;
   findById(id: string): Promise<Studio | null>;
+  findByIdIncludingDeleted(id: string): Promise<Studio | null>;
   findByName(name: string): Promise<Studio | null>;
   findByNameIncludingDeleted(name: string): Promise<Studio | null>;
   create(input: CreateStudioInput, tx?: RepositoryTx): Promise<Studio>;

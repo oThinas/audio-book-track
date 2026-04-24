@@ -67,6 +67,12 @@ export class DrizzleStudioRepository implements StudioRepository {
     return row ? toDomain(row) : null;
   }
 
+  async findByIdIncludingDeleted(id: string): Promise<Studio | null> {
+    const rows = await this.db.select(STUDIO_COLUMNS).from(studio).where(eq(studio.id, id));
+    const row = rows[0];
+    return row ? toDomain(row) : null;
+  }
+
   async findByName(name: string): Promise<Studio | null> {
     const rows = await this.db
       .select(STUDIO_COLUMNS)

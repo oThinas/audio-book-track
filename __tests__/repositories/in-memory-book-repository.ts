@@ -1,17 +1,71 @@
 import type { Book, BookStatus } from "@/lib/domain/book";
+import { sumEarningsCents } from "@/lib/domain/earnings";
 import { BookNotFoundError, BookTitleAlreadyInUseError } from "@/lib/errors/book-errors";
 import type {
   BookRepository,
+  BookSummary,
   InsertBookInput,
   UpdateBookInput,
 } from "@/lib/repositories/book-repository";
+import type { ChapterRepository } from "@/lib/repositories/chapter-repository";
+import type { StudioRepository } from "@/lib/repositories/studio-repository";
+
+const COMPLETED_STATUSES: ReadonlyArray<BookStatus> = ["completed", "paid"];
+
+export interface InMemoryBookAggregationDeps {
+  readonly chapterRepo: Pick<ChapterRepository, "listByBookId">;
+  readonly studioRepo: Pick<StudioRepository, "findByIdIncludingDeleted">;
+}
 
 export class InMemoryBookRepository implements BookRepository {
   private readonly store = new Map<string, Book>();
 
+  constructor(private readonly aggregationDeps?: InMemoryBookAggregationDeps) {}
+
   async listByUser(_userId: string): Promise<Book[]> {
     return Array.from(this.store.values()).sort(
       (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+    );
+  }
+
+  async listSummariesByUser(userId: string): Promise<BookSummary[]> {
+    if (!this.aggregationDeps) {
+      throw new Error(
+        "InMemoryBookRepository.listSummariesByUser requires aggregationDeps — pass { chapterRepo, studioRepo } to the constructor.",
+      );
+    }
+    const { chapterRepo, studioRepo } = this.aggregationDeps;
+    const books = await this.listByUser(userId);
+
+    return Promise.all(
+      books.map(async (book): Promise<BookSummary> => {
+        const [chapters, studio] = await Promise.all([
+          chapterRepo.listByBookId(book.id),
+          studioRepo.findByIdIncludingDeleted(book.studioId),
+        ]);
+        if (!studio) {
+          throw new Error(`Book ${book.id} references missing studio ${book.studioId}`);
+        }
+        const totalEarningsCents = sumEarningsCents(
+          chapters.map((c) => ({
+            editedSeconds: c.editedSeconds,
+            pricePerHourCents: book.pricePerHourCents,
+          })),
+        );
+        return {
+          id: book.id,
+          title: book.title,
+          studio: { id: studio.id, name: studio.name },
+          pricePerHourCents: book.pricePerHourCents,
+          pdfUrl: book.pdfUrl,
+          status: book.status,
+          totalChapters: chapters.length,
+          completedChapters: chapters.filter((c) => COMPLETED_STATUSES.includes(c.status)).length,
+          totalEarningsCents,
+          createdAt: book.createdAt,
+          updatedAt: book.updatedAt,
+        };
+      }),
     );
   }
 

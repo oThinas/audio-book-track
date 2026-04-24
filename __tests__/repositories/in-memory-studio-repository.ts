@@ -27,6 +27,11 @@ export class InMemoryStudioRepository implements StudioRepository {
     return stripDeletedAt(current);
   }
 
+  async findByIdIncludingDeleted(id: string): Promise<Studio | null> {
+    const current = this.store.get(id);
+    return current ? stripDeletedAt(current) : null;
+  }
+
   async findByName(name: string): Promise<Studio | null> {
     const match = this.findActiveByName(name);
     return match ? stripDeletedAt(match) : null;
