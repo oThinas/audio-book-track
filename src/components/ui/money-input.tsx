@@ -10,7 +10,7 @@ import {
   useRef,
 } from "react";
 
-import { cn, formatBRL } from "@/lib/utils";
+import { cn, formatCentsBRL } from "@/lib/utils";
 
 export interface MoneyInputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "type"> {
@@ -29,7 +29,7 @@ export const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(function
   const minCents = Math.round(min * 100);
   const maxCents = Math.round(max * 100);
 
-  const displayValue = useMemo(() => formatBRL(cents / 100), [cents]);
+  const displayValue = useMemo(() => formatCentsBRL(cents), [cents]);
 
   // During typing we clamp only to max: clamping up to min would break the
   // cents-first UX (the user builds up digit by digit — with min=100 and

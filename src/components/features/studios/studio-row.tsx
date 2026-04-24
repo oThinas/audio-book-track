@@ -19,7 +19,7 @@ import {
   type StudioFormValues,
   studioFormSchema,
 } from "@/lib/domain/studio";
-import { formatBRL } from "@/lib/utils";
+import { formatCentsBRL } from "@/lib/utils";
 
 interface StudioRowProps {
   readonly studio: Studio;
@@ -49,7 +49,7 @@ export function StudioRow({ studio, onUpdated, onRequestDelete }: StudioRowProps
         {studio.name}
       </TableCell>
       <TableCell data-testid="studio-hourly-rate" className="text-foreground">
-        {formatBRL(centsToReais(studio.defaultHourlyRateCents))}
+        {formatCentsBRL(studio.defaultHourlyRateCents)}
       </TableCell>
       <TableCell className="w-24">
         <div className="flex items-center justify-end gap-1">
