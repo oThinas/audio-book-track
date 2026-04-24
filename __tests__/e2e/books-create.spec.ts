@@ -42,7 +42,7 @@ test.describe("Books create", () => {
     await page.keyboard.type("7500");
     await expect(priceInput).toHaveValue(/R\$\s*75,00/);
 
-    const chaptersInput = dialog.getByLabel(/quantidade de capítulos/i);
+    const chaptersInput = dialog.getByLabel(/^capítulos$/i);
     await chaptersInput.fill("5");
 
     const [postResponse] = await Promise.all([

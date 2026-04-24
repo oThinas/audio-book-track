@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
+import { ChevronsUpDown, Loader2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -201,19 +201,15 @@ export function BookCreateDialog({
                                   field.onChange(studio.id);
                                   setStudioPickerOpen(false);
                                 }}
+                                data-checked={field.value === studio.id ? true : undefined}
                                 data-testid={`book-studio-item-${studio.id}`}
                               >
-                                <Check
-                                  aria-hidden="true"
-                                  className={cn(
-                                    "mr-2 size-4",
-                                    field.value === studio.id ? "opacity-100" : "opacity-0",
-                                  )}
-                                />
-                                <span className="flex-1">{studio.name}</span>
-                                <span className="ml-2 text-xs text-muted-foreground">
-                                  {formatCentsBRL(studio.defaultHourlyRateCents)}/h
-                                </span>
+                                <div className="flex flex-col">
+                                  <span>{studio.name}</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {formatCentsBRL(studio.defaultHourlyRateCents)}/h
+                                  </span>
+                                </div>
                               </CommandItem>
                             ))}
                           </CommandGroup>
@@ -226,46 +222,48 @@ export function BookCreateDialog({
               <FieldError>{errors.studioId?.message}</FieldError>
             </Field>
 
-            <Field data-invalid={errors.pricePerHourCents ? true : undefined}>
-              <FieldLabel htmlFor="book-price">Valor/hora</FieldLabel>
-              <Controller
-                name="pricePerHourCents"
-                control={control}
-                render={({ field }) => (
-                  <MoneyInput
-                    id="book-price"
-                    value={field.value ?? 0}
-                    onChange={field.onChange}
-                    onBlur={field.onBlur}
-                    min={PRICE_PER_HOUR_MIN_CENTS}
-                    max={PRICE_PER_HOUR_MAX_CENTS}
-                    disabled={isSubmitting}
-                    aria-invalid={errors.pricePerHourCents ? true : undefined}
-                  />
-                )}
-              />
-              <FieldError>{errors.pricePerHourCents?.message}</FieldError>
-            </Field>
+            <div className="grid grid-cols-[auto_1fr] gap-4">
+              <Field data-invalid={errors.pricePerHourCents ? true : undefined}>
+                <FieldLabel htmlFor="book-price">Valor/hora</FieldLabel>
+                <Controller
+                  name="pricePerHourCents"
+                  control={control}
+                  render={({ field }) => (
+                    <MoneyInput
+                      id="book-price"
+                      value={field.value ?? 0}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      min={PRICE_PER_HOUR_MIN_CENTS}
+                      max={PRICE_PER_HOUR_MAX_CENTS}
+                      disabled={isSubmitting}
+                      aria-invalid={errors.pricePerHourCents ? true : undefined}
+                    />
+                  )}
+                />
+                <FieldError>{errors.pricePerHourCents?.message}</FieldError>
+              </Field>
 
-            <Field data-invalid={errors.numChapters ? true : undefined}>
-              <FieldLabel htmlFor="book-chapters">Quantidade de capítulos</FieldLabel>
-              <Controller
-                name="numChapters"
-                control={control}
-                render={({ field }) => (
-                  <ChapterCountInput
-                    id="book-chapters"
-                    value={field.value ?? CHAPTER_COUNT_MIN}
-                    onChange={field.onChange}
-                    min={CHAPTER_COUNT_MIN}
-                    max={CHAPTER_COUNT_MAX}
-                    disabled={isSubmitting}
-                    aria-invalid={errors.numChapters ? true : undefined}
-                  />
-                )}
-              />
-              <FieldError>{errors.numChapters?.message}</FieldError>
-            </Field>
+              <Field data-invalid={errors.numChapters ? true : undefined}>
+                <FieldLabel htmlFor="book-chapters">Capítulos</FieldLabel>
+                <Controller
+                  name="numChapters"
+                  control={control}
+                  render={({ field }) => (
+                    <ChapterCountInput
+                      id="book-chapters"
+                      value={field.value ?? CHAPTER_COUNT_MIN}
+                      onChange={field.onChange}
+                      min={CHAPTER_COUNT_MIN}
+                      max={CHAPTER_COUNT_MAX}
+                      disabled={isSubmitting}
+                      aria-invalid={errors.numChapters ? true : undefined}
+                    />
+                  )}
+                />
+                <FieldError>{errors.numChapters?.message}</FieldError>
+              </Field>
+            </div>
           </FieldGroup>
 
           <DialogFooter className="mt-6">
