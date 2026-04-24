@@ -212,9 +212,9 @@ export function BooksTable({ books }: BooksTableProps) {
                   data-testid="books-empty-state"
                   className="flex flex-col items-center justify-center py-16 text-center"
                 >
-                  <p className="text-sm font-medium text-foreground">Nenhum livro encontrado</p>
+                  <p className="text-sm font-medium text-foreground">Nenhum livro cadastrado</p>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Ajuste a busca ou clique em &quot;+ Novo Livro&quot; para adicionar.
+                    Clique em &quot;+ Novo Livro&quot; para adicionar o primeiro.
                   </p>
                 </div>
               </TableCell>

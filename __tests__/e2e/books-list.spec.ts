@@ -63,12 +63,12 @@ test.describe("Books list", () => {
     await login(page);
   });
 
-  test("shows initial empty state when no books exist", async ({ page }) => {
+  test("shows in-table empty state when no books exist", async ({ page }) => {
     await page.goto("/books");
 
     await expect(page.getByRole("heading", { name: /^livros$/i })).toBeVisible();
-    await expect(page.getByTestId("books-initial-empty-state")).toBeVisible();
-    await expect(page.getByTestId("books-empty-cta")).toBeVisible();
+    await expect(page.getByTestId("books-empty-state")).toBeVisible();
+    await expect(page.getByTestId("books-empty-state")).toContainText(/nenhum livro cadastrado/i);
   });
 
   test("page uses PageContainer layout with New button", async ({ page }) => {

@@ -27,14 +27,12 @@ export function BooksClient({ initialBooks }: BooksClientProps) {
   }, [books, search]);
 
   function handleNewClick() {
-    // For now, toggle state as a placeholder.
+    // Placeholder until US2 wires the create dialog (T057).
     setIsCreateDialogOpen((open) => !open);
   }
 
-  const hasNoBooks = books.length === 0;
-
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col">
       <PageHeader className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
         <div>
           <PageTitle>Livros</PageTitle>
@@ -53,46 +51,23 @@ export function BooksClient({ initialBooks }: BooksClientProps) {
         </Button>
       </PageHeader>
 
-      {hasNoBooks ? (
-        <div
-          data-testid="books-initial-empty-state"
-          className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16 text-center"
-        >
-          <p className="text-sm font-medium text-foreground">Nenhum livro cadastrado</p>
-          <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-            Clique em &quot;+ Novo Livro&quot; para começar a acompanhar capítulos e ganhos.
-          </p>
-          <Button
-            type="button"
-            variant="secondary"
-            className="mt-4"
-            onClick={handleNewClick}
-            data-testid="books-empty-cta"
-          >
-            <Plus aria-hidden="true" />
-            Novo Livro
-          </Button>
-        </div>
-      ) : (
-        <>
-          <div className="relative max-w-sm">
-            <Search
-              aria-hidden="true"
-              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
-            />
-            <Input
-              type="search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Buscar por título ou estúdio"
-              aria-label="Buscar livros"
-              className="pl-9"
-              data-testid="books-search-input"
-            />
-          </div>
-          <BooksTable books={filteredBooks} />
-        </>
-      )}
+      <div className="relative mb-3 max-w-sm">
+        <Search
+          aria-hidden="true"
+          className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+        />
+        <Input
+          type="search"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="Buscar por título ou estúdio"
+          aria-label="Buscar livros"
+          className="pl-9"
+          data-testid="books-search-input"
+        />
+      </div>
+
+      <BooksTable books={filteredBooks} />
     </div>
   );
 }
