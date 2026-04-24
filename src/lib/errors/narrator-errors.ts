@@ -11,3 +11,15 @@ export class NarratorNotFoundError extends Error {
     this.name = "NarratorNotFoundError";
   }
 }
+
+export class NarratorLinkedToActiveChaptersError extends Error {
+  constructor(
+    id: string,
+    readonly activeChaptersCount: number,
+  ) {
+    super(
+      `Narrador ${id} está vinculado a ${activeChaptersCount} capítulo(s) ativo(s) — soft-delete bloqueado.`,
+    );
+    this.name = "NarratorLinkedToActiveChaptersError";
+  }
+}

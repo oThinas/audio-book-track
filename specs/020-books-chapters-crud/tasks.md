@@ -91,9 +91,9 @@ description: "Task list for feature 020-books-chapters-crud"
 
 ### Soft-delete + desarquive services (Foundational — precondição para US3, US10, US11)
 
-- [ ] T033 Atualizar [src/lib/services/studio-service.ts](../../src/lib/services/studio-service.ts): (a) `softDeleteStudio(id)` com pré-condição "sem livros com capítulos ativos" (placeholder — a query full vive em chapterRepo/bookRepo, pode inicialmente lançar `409 STUDIO_HAS_ACTIVE_BOOKS` stub que será preenchido em US10); (b) `createStudio(input)` reescrito para detectar colisão com soft-deleted e reativar (FR-046a); (c) todos os `list`/`findByName` já via T028 filtram soft-deleted.
-- [ ] T034 [P] Atualizar [src/lib/services/narrator-service.ts](../../src/lib/services/narrator-service.ts) simétrico a T033 (soft-delete + desarquive; pré-condição de US11 como stub a preencher depois).
-- [ ] T035 [P] Atualizar [src/lib/services/editor-service.ts](../../src/lib/services/editor-service.ts) simétrico a T033; preservar unicidade global de `email` (não compartilhada com regra de desarquive por nome).
+- [X] T033 Atualizar [src/lib/services/studio-service.ts](../../src/lib/services/studio-service.ts): (a) `softDeleteStudio(id)` com pré-condição "sem livros com capítulos ativos" (placeholder — a query full vive em chapterRepo/bookRepo, pode inicialmente lançar `409 STUDIO_HAS_ACTIVE_BOOKS` stub que será preenchido em US10); (b) `createStudio(input)` reescrito para detectar colisão com soft-deleted e reativar (FR-046a); (c) todos os `list`/`findByName` já via T028 filtram soft-deleted.
+- [X] T034 [P] Atualizar [src/lib/services/narrator-service.ts](../../src/lib/services/narrator-service.ts) simétrico a T033 (soft-delete + desarquive; pré-condição de US11 como stub a preencher depois).
+- [X] T035 [P] Atualizar [src/lib/services/editor-service.ts](../../src/lib/services/editor-service.ts) simétrico a T033; preservar unicidade global de `email` (não compartilhada com regra de desarquive por nome).
 
 ### Factories
 

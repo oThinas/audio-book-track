@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import {
   EditorEmailAlreadyInUseError,
+  EditorLinkedToActiveChaptersError,
   EditorNameAlreadyInUseError,
   EditorNotFoundError,
 } from "@/lib/errors/editor-errors";
@@ -23,8 +24,8 @@ describe("EditorService", () => {
     });
 
     it("returns editors ordered by createdAt ASC", async () => {
-      const first = await service.create({ name: "Primeiro", email: "1@s.com" });
-      const second = await service.create({ name: "Segundo", email: "2@s.com" });
+      const { editor: first } = await service.create({ name: "Primeiro", email: "1@s.com" });
+      const { editor: second } = await service.create({ name: "Segundo", email: "2@s.com" });
 
       const result = await service.list();
 
@@ -33,18 +34,19 @@ describe("EditorService", () => {
   });
 
   describe("create", () => {
-    it("creates an editor with trimmed name and normalized email", async () => {
-      const created = await service.create({
+    it("creates an editor with trimmed name and normalized email and reactivated=false", async () => {
+      const result = await service.create({
         name: "  Carla  ",
         email: "  Carla@Studio.com  ",
       });
 
-      expect(created.name).toBe("Carla");
-      expect(created.email).toBe("carla@studio.com");
-      expect(created.id).toEqual(expect.any(String));
+      expect(result.editor.name).toBe("Carla");
+      expect(result.editor.email).toBe("carla@studio.com");
+      expect(result.editor.id).toEqual(expect.any(String));
+      expect(result.reactivated).toBe(false);
     });
 
-    it("propagates EditorNameAlreadyInUseError on duplicate name", async () => {
+    it("propagates EditorNameAlreadyInUseError on duplicate of ACTIVE editor", async () => {
       await service.create({ name: "Duplicado", email: "a@s.com" });
 
       await expect(service.create({ name: "Duplicado", email: "b@s.com" })).rejects.toBeInstanceOf(
@@ -59,11 +61,28 @@ describe("EditorService", () => {
         EditorEmailAlreadyInUseError,
       );
     });
+
+    it("reactivates a soft-deleted editor on name collision, preserving original email", async () => {
+      const { editor: original } = await service.create({
+        name: "Carla",
+        email: "carla@s.com",
+      });
+      await service.softDelete(original.id);
+
+      const result = await service.create({ name: "Carla", email: "new@s.com" });
+
+      expect(result.reactivated).toBe(true);
+      expect(result.editor.id).toBe(original.id);
+      expect(result.editor.email).toBe("carla@s.com");
+    });
   });
 
   describe("update", () => {
     it("updates the name (trimmed)", async () => {
-      const created = await service.create({ name: "Original", email: "orig@s.com" });
+      const { editor: created } = await service.create({
+        name: "Original",
+        email: "orig@s.com",
+      });
 
       const updated = await service.update(created.id, { name: "  Novo  " });
 
@@ -72,7 +91,7 @@ describe("EditorService", () => {
     });
 
     it("updates the email (trimmed + lowercased)", async () => {
-      const created = await service.create({ name: "Carla", email: "orig@s.com" });
+      const { editor: created } = await service.create({ name: "Carla", email: "orig@s.com" });
 
       const updated = await service.update(created.id, { email: "  Novo@S.COM  " });
 
@@ -81,7 +100,7 @@ describe("EditorService", () => {
     });
 
     it("accepts an empty update (no-op)", async () => {
-      const created = await service.create({ name: "Carla", email: "c@s.com" });
+      const { editor: created } = await service.create({ name: "Carla", email: "c@s.com" });
 
       const updated = await service.update(created.id, {});
 
@@ -90,7 +109,7 @@ describe("EditorService", () => {
     });
 
     it("is idempotent when renaming to the same name", async () => {
-      const created = await service.create({ name: "Mesmo", email: "m@s.com" });
+      const { editor: created } = await service.create({ name: "Mesmo", email: "m@s.com" });
 
       const updated = await service.update(created.id, { name: "Mesmo" });
 
@@ -99,7 +118,10 @@ describe("EditorService", () => {
     });
 
     it("is idempotent when the email differs only in casing", async () => {
-      const created = await service.create({ name: "Carla", email: "carla@s.com" });
+      const { editor: created } = await service.create({
+        name: "Carla",
+        email: "carla@s.com",
+      });
 
       const updated = await service.update(created.id, { email: "Carla@S.COM" });
 
@@ -115,7 +137,7 @@ describe("EditorService", () => {
 
     it("propagates EditorNameAlreadyInUseError on name clash", async () => {
       await service.create({ name: "Primeiro", email: "1@s.com" });
-      const second = await service.create({ name: "Segundo", email: "2@s.com" });
+      const { editor: second } = await service.create({ name: "Segundo", email: "2@s.com" });
 
       await expect(service.update(second.id, { name: "Primeiro" })).rejects.toBeInstanceOf(
         EditorNameAlreadyInUseError,
@@ -124,7 +146,7 @@ describe("EditorService", () => {
 
     it("propagates EditorEmailAlreadyInUseError on email clash (case-insensitive)", async () => {
       await service.create({ name: "Primeiro", email: "same@s.com" });
-      const second = await service.create({ name: "Segundo", email: "other@s.com" });
+      const { editor: second } = await service.create({ name: "Segundo", email: "other@s.com" });
 
       await expect(service.update(second.id, { email: "SAME@S.COM" })).rejects.toBeInstanceOf(
         EditorEmailAlreadyInUseError,
@@ -132,9 +154,36 @@ describe("EditorService", () => {
     });
   });
 
-  describe("delete", () => {
+  describe("softDelete", () => {
+    it("soft-deletes an editor with no active chapters", async () => {
+      const { editor: created } = await service.create({ name: "Carla", email: "c@s.com" });
+
+      await service.softDelete(created.id);
+
+      expect(await repo.findById(created.id)).toBeNull();
+      expect(await repo.findByNameIncludingDeleted("Carla")).not.toBeNull();
+    });
+
+    it("throws EditorLinkedToActiveChaptersError when active chapters are present", async () => {
+      const { editor: created } = await service.create({ name: "Carla", email: "c@s.com" });
+
+      await expect(
+        service.softDelete(created.id, { getActiveChaptersCount: async () => 4 }),
+      ).rejects.toBeInstanceOf(EditorLinkedToActiveChaptersError);
+
+      expect(await repo.findById(created.id)).not.toBeNull();
+    });
+
+    it("propagates EditorNotFoundError when id does not exist", async () => {
+      await expect(service.softDelete(crypto.randomUUID())).rejects.toBeInstanceOf(
+        EditorNotFoundError,
+      );
+    });
+  });
+
+  describe("delete (hard delete — legacy)", () => {
     it("removes the editor", async () => {
-      const created = await service.create({ name: "Carla", email: "c@s.com" });
+      const { editor: created } = await service.create({ name: "Carla", email: "c@s.com" });
 
       await service.delete(created.id);
 

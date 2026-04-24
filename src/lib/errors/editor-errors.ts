@@ -18,3 +18,15 @@ export class EditorNotFoundError extends Error {
     this.name = "EditorNotFoundError";
   }
 }
+
+export class EditorLinkedToActiveChaptersError extends Error {
+  constructor(
+    id: string,
+    readonly activeChaptersCount: number,
+  ) {
+    super(
+      `Editor ${id} está vinculado a ${activeChaptersCount} capítulo(s) ativo(s) — soft-delete bloqueado.`,
+    );
+    this.name = "EditorLinkedToActiveChaptersError";
+  }
+}

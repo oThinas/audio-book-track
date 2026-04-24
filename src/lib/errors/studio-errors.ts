@@ -11,3 +11,15 @@ export class StudioNotFoundError extends Error {
     this.name = "StudioNotFoundError";
   }
 }
+
+export class StudioHasActiveBooksError extends Error {
+  constructor(
+    id: string,
+    readonly activeBooksCount: number,
+  ) {
+    super(
+      `Estúdio ${id} possui ${activeBooksCount} livro(s) com capítulos ativos — soft-delete bloqueado.`,
+    );
+    this.name = "StudioHasActiveBooksError";
+  }
+}

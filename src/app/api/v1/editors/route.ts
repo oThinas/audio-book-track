@@ -60,11 +60,11 @@ export async function handleEditorsCreate(
 
   const service = deps.createService();
   try {
-    const editor = await service.create(parsed.data);
+    const { editor, reactivated } = await service.create(parsed.data);
     return NextResponse.json(
-      { data: editor },
+      { data: editor, meta: { reactivated } },
       {
-        status: 201,
+        status: reactivated ? 200 : 201,
         headers: {
           ...NO_STORE_HEADERS,
           Location: `/api/v1/editors/${editor.id}`,

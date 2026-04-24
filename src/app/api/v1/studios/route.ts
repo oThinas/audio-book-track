@@ -57,11 +57,17 @@ export async function handleStudiosCreate(
 
   const service = deps.createService();
   try {
-    const studio = await service.create(parsed.data);
+    const { studio, reactivated, rateResetForInline } = await service.create(parsed.data);
     return NextResponse.json(
-      { data: studio },
       {
-        status: 201,
+        data: studio,
+        meta: {
+          reactivated,
+          ...(rateResetForInline ? { rateResetForInline: true } : {}),
+        },
+      },
+      {
+        status: reactivated ? 200 : 201,
         headers: {
           ...NO_STORE_HEADERS,
           Location: `/api/v1/studios/${studio.id}`,
