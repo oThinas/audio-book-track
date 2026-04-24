@@ -78,11 +78,11 @@ description: "Task list for feature 020-books-chapters-crud"
 
 ### Repositories Drizzle
 
-- [ ] T026 Criar [src/lib/repositories/drizzle/drizzle-book-repository.ts](../../src/lib/repositories/drizzle/drizzle-book-repository.ts) implementando `BookRepository`. Todas as queries selecionam colunas explícitas (proibido `SELECT *`). Operações multi-tabela recebem `tx` como parâmetro opcional (default `db`).
-- [ ] T027 Criar [src/lib/repositories/drizzle/drizzle-chapter-repository.ts](../../src/lib/repositories/drizzle/drizzle-chapter-repository.ts) implementando `ChapterRepository` com idem convenção de `tx`.
-- [ ] T028 [P] Atualizar [src/lib/repositories/drizzle/drizzle-studio-repository.ts](../../src/lib/repositories/drizzle/drizzle-studio-repository.ts) para: (a) filtrar `deleted_at IS NULL` em todos os `list`/`findByName` padrão; (b) adicionar `findByNameIncludingDeleted(name)` para a lógica de desarquive; (c) adicionar `softDelete(id, tx)` que seta `deleted_at = now()`; (d) adicionar `reactivate(id, overrides?, tx)` que seta `deleted_at = null` (+ eventuais overrides).
-- [ ] T029 [P] Atualizar [src/lib/repositories/drizzle/drizzle-narrator-repository.ts](../../src/lib/repositories/drizzle/drizzle-narrator-repository.ts) simétrico a T028.
-- [ ] T030 [P] Atualizar [src/lib/repositories/drizzle/drizzle-editor-repository.ts](../../src/lib/repositories/drizzle/drizzle-editor-repository.ts) simétrico a T028, preservando unicidade global de `email` (inclui soft-deleted).
+- [X] T026 Criar [src/lib/repositories/drizzle/drizzle-book-repository.ts](../../src/lib/repositories/drizzle/drizzle-book-repository.ts) implementando `BookRepository`. Todas as queries selecionam colunas explícitas (proibido `SELECT *`). Operações multi-tabela recebem `tx` como parâmetro opcional (default `db`).
+- [X] T027 Criar [src/lib/repositories/drizzle/drizzle-chapter-repository.ts](../../src/lib/repositories/drizzle/drizzle-chapter-repository.ts) implementando `ChapterRepository` com idem convenção de `tx`.
+- [X] T028 [P] Atualizar [src/lib/repositories/drizzle/drizzle-studio-repository.ts](../../src/lib/repositories/drizzle/drizzle-studio-repository.ts) para: (a) filtrar `deleted_at IS NULL` em todos os `list`/`findByName` padrão; (b) adicionar `findByNameIncludingDeleted(name)` para a lógica de desarquive; (c) adicionar `softDelete(id, tx)` que seta `deleted_at = now()`; (d) adicionar `reactivate(id, overrides?, tx)` que seta `deleted_at = null` (+ eventuais overrides).
+- [X] T029 [P] Atualizar [src/lib/repositories/drizzle/drizzle-narrator-repository.ts](../../src/lib/repositories/drizzle/drizzle-narrator-repository.ts) simétrico a T028.
+- [X] T030 [P] Atualizar [src/lib/repositories/drizzle/drizzle-editor-repository.ts](../../src/lib/repositories/drizzle/drizzle-editor-repository.ts) simétrico a T028, preservando unicidade global de `email` (inclui soft-deleted).
 
 ### Services — book-status-recompute (usado por todos os demais services de mutação)
 

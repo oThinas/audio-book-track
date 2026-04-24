@@ -1,11 +1,18 @@
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq, isNull, sql } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
+import { getUniqueConstraintName } from "@/lib/db/postgres-errors";
 import type * as schema from "@/lib/db/schema";
 import { studio } from "@/lib/db/schema";
 import type { CreateStudioInput, Studio, UpdateStudioInput } from "@/lib/domain/studio";
 import { StudioNameAlreadyInUseError, StudioNotFoundError } from "@/lib/errors/studio-errors";
-import type { StudioRepository } from "@/lib/repositories/studio-repository";
+import type { RepositoryTx } from "@/lib/repositories/book-repository";
+import type {
+  ReactivateStudioOverrides,
+  StudioRepository,
+} from "@/lib/repositories/studio-repository";
+
+type Executor = NodePgDatabase<typeof schema>;
 
 const STUDIO_COLUMNS = {
   id: studio.id,
@@ -15,32 +22,9 @@ const STUDIO_COLUMNS = {
   updatedAt: studio.updatedAt,
 } as const;
 
-const POSTGRES_UNIQUE_VIOLATION = "23505";
 const STUDIO_NAME_CONSTRAINT = "studio_name_unique_active";
 
-function getUniqueConstraintName(error: unknown): string | null {
-  const direct = extractConstraint(error);
-  if (direct !== null) {
-    return direct;
-  }
-  if (error instanceof Error && error.cause !== undefined) {
-    return extractConstraint(error.cause);
-  }
-  return null;
-}
-
-function extractConstraint(candidate: unknown): string | null {
-  if (typeof candidate !== "object" || candidate === null) {
-    return null;
-  }
-  const record = candidate as { code?: unknown; constraint?: unknown };
-  if (record.code !== POSTGRES_UNIQUE_VIOLATION) {
-    return null;
-  }
-  return typeof record.constraint === "string" ? record.constraint : null;
-}
-
-type DrizzleStudioRow = {
+type StudioRow = {
   id: string;
   name: string;
   defaultHourlyRateCents: number;
@@ -48,7 +32,7 @@ type DrizzleStudioRow = {
   updatedAt: Date;
 };
 
-function toDomain(row: DrizzleStudioRow): Studio {
+function toDomain(row: StudioRow): Studio {
   return {
     id: row.id,
     name: row.name,
@@ -59,28 +43,51 @@ function toDomain(row: DrizzleStudioRow): Studio {
 }
 
 export class DrizzleStudioRepository implements StudioRepository {
-  constructor(private readonly db: NodePgDatabase<typeof schema>) {}
+  constructor(private readonly db: Executor) {}
+
+  private executor(tx?: RepositoryTx): Executor {
+    return (tx as Executor | undefined) ?? this.db;
+  }
 
   async findAll(): Promise<Studio[]> {
-    const rows = await this.db.select(STUDIO_COLUMNS).from(studio).orderBy(asc(studio.createdAt));
+    const rows = await this.db
+      .select(STUDIO_COLUMNS)
+      .from(studio)
+      .where(isNull(studio.deletedAt))
+      .orderBy(asc(studio.createdAt));
     return rows.map(toDomain);
   }
 
   async findById(id: string): Promise<Studio | null> {
-    const rows = await this.db.select(STUDIO_COLUMNS).from(studio).where(eq(studio.id, id));
+    const rows = await this.db
+      .select(STUDIO_COLUMNS)
+      .from(studio)
+      .where(and(eq(studio.id, id), isNull(studio.deletedAt)));
     const row = rows[0];
     return row ? toDomain(row) : null;
   }
 
   async findByName(name: string): Promise<Studio | null> {
-    const rows = await this.db.select(STUDIO_COLUMNS).from(studio).where(eq(studio.name, name));
+    const rows = await this.db
+      .select(STUDIO_COLUMNS)
+      .from(studio)
+      .where(and(sql`lower(${studio.name}) = lower(${name})`, isNull(studio.deletedAt)));
     const row = rows[0];
     return row ? toDomain(row) : null;
   }
 
-  async create(input: CreateStudioInput): Promise<Studio> {
+  async findByNameIncludingDeleted(name: string): Promise<Studio | null> {
+    const rows = await this.db
+      .select(STUDIO_COLUMNS)
+      .from(studio)
+      .where(sql`lower(${studio.name}) = lower(${name})`);
+    const row = rows[0];
+    return row ? toDomain(row) : null;
+  }
+
+  async create(input: CreateStudioInput, tx?: RepositoryTx): Promise<Studio> {
     try {
-      const [row] = await this.db
+      const [row] = await this.executor(tx)
         .insert(studio)
         .values({
           name: input.name,
@@ -89,17 +96,16 @@ export class DrizzleStudioRepository implements StudioRepository {
         .returning(STUDIO_COLUMNS);
       return toDomain(row);
     } catch (error) {
-      const constraint = getUniqueConstraintName(error);
-      if (constraint === STUDIO_NAME_CONSTRAINT) {
+      if (getUniqueConstraintName(error) === STUDIO_NAME_CONSTRAINT) {
         throw new StudioNameAlreadyInUseError(input.name);
       }
       throw error;
     }
   }
 
-  async update(id: string, input: UpdateStudioInput): Promise<Studio> {
+  async update(id: string, input: UpdateStudioInput, tx?: RepositoryTx): Promise<Studio> {
     try {
-      const [row] = await this.db
+      const [row] = await this.executor(tx)
         .update(studio)
         .set({
           ...(input.name !== undefined ? { name: input.name } : {}),
@@ -107,7 +113,7 @@ export class DrizzleStudioRepository implements StudioRepository {
             ? { defaultHourlyRateCents: input.defaultHourlyRateCents }
             : {}),
         })
-        .where(eq(studio.id, id))
+        .where(and(eq(studio.id, id), isNull(studio.deletedAt)))
         .returning(STUDIO_COLUMNS);
 
       if (!row) {
@@ -118,16 +124,49 @@ export class DrizzleStudioRepository implements StudioRepository {
       if (error instanceof StudioNotFoundError) {
         throw error;
       }
-      const constraint = getUniqueConstraintName(error);
-      if (constraint === STUDIO_NAME_CONSTRAINT && input.name !== undefined) {
+      if (getUniqueConstraintName(error) === STUDIO_NAME_CONSTRAINT && input.name !== undefined) {
         throw new StudioNameAlreadyInUseError(input.name);
       }
       throw error;
     }
   }
 
-  async delete(id: string): Promise<void> {
-    const deleted = await this.db
+  async softDelete(id: string, tx?: RepositoryTx): Promise<void> {
+    const [row] = await this.executor(tx)
+      .update(studio)
+      .set({ deletedAt: new Date() })
+      .where(and(eq(studio.id, id), isNull(studio.deletedAt)))
+      .returning({ id: studio.id });
+
+    if (!row) {
+      throw new StudioNotFoundError(id);
+    }
+  }
+
+  async reactivate(
+    id: string,
+    overrides?: ReactivateStudioOverrides,
+    tx?: RepositoryTx,
+  ): Promise<Studio> {
+    const [row] = await this.executor(tx)
+      .update(studio)
+      .set({
+        deletedAt: null,
+        ...(overrides?.defaultHourlyRateCents !== undefined
+          ? { defaultHourlyRateCents: overrides.defaultHourlyRateCents }
+          : {}),
+      })
+      .where(eq(studio.id, id))
+      .returning(STUDIO_COLUMNS);
+
+    if (!row) {
+      throw new StudioNotFoundError(id);
+    }
+    return toDomain(row);
+  }
+
+  async delete(id: string, tx?: RepositoryTx): Promise<void> {
+    const deleted = await this.executor(tx)
       .delete(studio)
       .where(eq(studio.id, id))
       .returning({ id: studio.id });

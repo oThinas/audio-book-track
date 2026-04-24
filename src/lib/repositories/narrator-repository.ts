@@ -1,10 +1,15 @@
 import type { CreateNarratorInput, Narrator, UpdateNarratorInput } from "@/lib/domain/narrator";
 
+import type { RepositoryTx } from "./book-repository";
+
 export interface NarratorRepository {
   findAll(): Promise<Narrator[]>;
   findById(id: string): Promise<Narrator | null>;
   findByName(name: string): Promise<Narrator | null>;
-  create(input: CreateNarratorInput): Promise<Narrator>;
-  update(id: string, input: UpdateNarratorInput): Promise<Narrator>;
-  delete(id: string): Promise<void>;
+  findByNameIncludingDeleted(name: string): Promise<Narrator | null>;
+  create(input: CreateNarratorInput, tx?: RepositoryTx): Promise<Narrator>;
+  update(id: string, input: UpdateNarratorInput, tx?: RepositoryTx): Promise<Narrator>;
+  softDelete(id: string, tx?: RepositoryTx): Promise<void>;
+  reactivate(id: string, tx?: RepositoryTx): Promise<Narrator>;
+  delete(id: string, tx?: RepositoryTx): Promise<void>;
 }

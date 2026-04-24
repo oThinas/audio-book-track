@@ -4,25 +4,43 @@ import {
   EditorNameAlreadyInUseError,
   EditorNotFoundError,
 } from "@/lib/errors/editor-errors";
-import type { EditorRepository } from "@/lib/repositories/editor-repository";
+import type {
+  EditorRepository,
+  ReactivateEditorOverrides,
+} from "@/lib/repositories/editor-repository";
+
+interface InternalEditor extends Editor {
+  readonly deletedAt: Date | null;
+}
 
 export class InMemoryEditorRepository implements EditorRepository {
-  private readonly store = new Map<string, Editor>();
+  private readonly store = new Map<string, InternalEditor>();
 
   async findAll(): Promise<Editor[]> {
-    return Array.from(this.store.values()).sort(
-      (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
-    );
+    return Array.from(this.store.values())
+      .filter((current) => current.deletedAt === null)
+      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+      .map(stripDeletedAt);
   }
 
   async findById(id: string): Promise<Editor | null> {
-    return this.store.get(id) ?? null;
+    const current = this.store.get(id);
+    if (!current || current.deletedAt !== null) {
+      return null;
+    }
+    return stripDeletedAt(current);
   }
 
   async findByName(name: string): Promise<Editor | null> {
+    const match = this.findActiveByName(name);
+    return match ? stripDeletedAt(match) : null;
+  }
+
+  async findByNameIncludingDeleted(name: string): Promise<Editor | null> {
+    const lower = name.toLowerCase();
     for (const current of this.store.values()) {
-      if (current.name === name) {
-        return current;
+      if (current.name.toLowerCase() === lower) {
+        return stripDeletedAt(current);
       }
     }
     return null;
@@ -31,7 +49,7 @@ export class InMemoryEditorRepository implements EditorRepository {
   async findByEmail(email: string): Promise<Editor | null> {
     for (const current of this.store.values()) {
       if (current.email === email) {
-        return current;
+        return stripDeletedAt(current);
       }
     }
     return null;
@@ -41,35 +59,36 @@ export class InMemoryEditorRepository implements EditorRepository {
     const name = input.name.trim();
     const email = input.email.trim().toLowerCase();
 
-    if (await this.findByName(name)) {
+    if (this.findActiveByName(name)) {
       throw new EditorNameAlreadyInUseError(name);
     }
-    if (await this.findByEmail(email)) {
+    if (this.findAnyByEmail(email)) {
       throw new EditorEmailAlreadyInUseError(email);
     }
 
     const now = new Date();
-    const newEditor: Editor = {
+    const newEditor: InternalEditor = {
       id: crypto.randomUUID(),
       name,
       email,
+      deletedAt: null,
       createdAt: now,
       updatedAt: now,
     };
     this.store.set(newEditor.id, newEditor);
-    return newEditor;
+    return stripDeletedAt(newEditor);
   }
 
   async update(id: string, input: UpdateEditorInput): Promise<Editor> {
     const existing = this.store.get(id);
-    if (!existing) {
+    if (!existing || existing.deletedAt !== null) {
       throw new EditorNotFoundError(id);
     }
 
     if (input.name !== undefined) {
       const trimmedName = input.name.trim();
       if (trimmedName !== existing.name) {
-        const duplicate = await this.findByName(trimmedName);
+        const duplicate = this.findActiveByName(trimmedName);
         if (duplicate && duplicate.id !== id) {
           throw new EditorNameAlreadyInUseError(trimmedName);
         }
@@ -79,21 +98,55 @@ export class InMemoryEditorRepository implements EditorRepository {
     if (input.email !== undefined) {
       const normalizedEmail = input.email.trim().toLowerCase();
       if (normalizedEmail !== existing.email) {
-        const duplicate = await this.findByEmail(normalizedEmail);
+        const duplicate = this.findAnyByEmail(normalizedEmail);
         if (duplicate && duplicate.id !== id) {
           throw new EditorEmailAlreadyInUseError(normalizedEmail);
         }
       }
     }
 
-    const updated: Editor = {
+    const updated: InternalEditor = {
       ...existing,
       name: input.name !== undefined ? input.name.trim() : existing.name,
       email: input.email !== undefined ? input.email.trim().toLowerCase() : existing.email,
       updatedAt: new Date(),
     };
     this.store.set(id, updated);
-    return updated;
+    return stripDeletedAt(updated);
+  }
+
+  async softDelete(id: string): Promise<void> {
+    const existing = this.store.get(id);
+    if (!existing || existing.deletedAt !== null) {
+      throw new EditorNotFoundError(id);
+    }
+    this.store.set(id, { ...existing, deletedAt: new Date(), updatedAt: new Date() });
+  }
+
+  async reactivate(id: string, overrides?: ReactivateEditorOverrides): Promise<Editor> {
+    const existing = this.store.get(id);
+    if (!existing) {
+      throw new EditorNotFoundError(id);
+    }
+
+    if (overrides?.email !== undefined) {
+      const normalizedEmail = overrides.email.trim().toLowerCase();
+      if (normalizedEmail !== existing.email) {
+        const duplicate = this.findAnyByEmail(normalizedEmail);
+        if (duplicate && duplicate.id !== id) {
+          throw new EditorEmailAlreadyInUseError(normalizedEmail);
+        }
+      }
+    }
+
+    const reactivated: InternalEditor = {
+      ...existing,
+      deletedAt: null,
+      ...(overrides?.email !== undefined ? { email: overrides.email.trim().toLowerCase() } : {}),
+      updatedAt: new Date(),
+    };
+    this.store.set(id, reactivated);
+    return stripDeletedAt(reactivated);
   }
 
   async delete(id: string): Promise<void> {
@@ -106,4 +159,28 @@ export class InMemoryEditorRepository implements EditorRepository {
   clear(): void {
     this.store.clear();
   }
+
+  private findActiveByName(name: string): InternalEditor | null {
+    const lower = name.toLowerCase();
+    for (const current of this.store.values()) {
+      if (current.deletedAt === null && current.name.toLowerCase() === lower) {
+        return current;
+      }
+    }
+    return null;
+  }
+
+  private findAnyByEmail(email: string): InternalEditor | null {
+    for (const current of this.store.values()) {
+      if (current.email === email) {
+        return current;
+      }
+    }
+    return null;
+  }
+}
+
+function stripDeletedAt(current: InternalEditor): Editor {
+  const { deletedAt: _omit, ...rest } = current;
+  return rest;
 }
