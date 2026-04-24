@@ -43,6 +43,13 @@
       "when": 1776804601605,
       "tag": "0005_sad_landau",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1777003704171,
+      "tag": "0006_petite_toad_men",
+      "breakpoints": true
     }
   ]
 }

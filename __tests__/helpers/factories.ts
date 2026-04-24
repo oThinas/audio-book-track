@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { hashPassword } from "better-auth/crypto";
-import { account, editor, narrator, session, studio, user } from "@/lib/db/schema";
+import { account, book, chapter, editor, narrator, session, studio, user } from "@/lib/db/schema";
 import type { TestDb } from "./db";
 
 interface CreateTestUserOptions {
@@ -168,6 +168,94 @@ export async function createTestStudio(
     studio: {
       ...createdStudio,
       defaultHourlyRate: Number(createdStudio.defaultHourlyRate),
+    },
+  };
+}
+
+type BookStatus = "pending" | "editing" | "reviewing" | "retake" | "completed" | "paid";
+
+interface CreateTestBookOptions {
+  readonly title?: string;
+  readonly studioId?: string;
+  readonly pricePerHour?: number;
+  readonly pdfUrl?: string | null;
+  readonly status?: BookStatus;
+}
+
+interface CreateTestBookResult {
+  readonly book: Omit<typeof book.$inferSelect, "pricePerHour"> & {
+    readonly pricePerHour: number;
+  };
+}
+
+export async function createTestBook(
+  db: TestDb,
+  overrides: CreateTestBookOptions = {},
+): Promise<CreateTestBookResult> {
+  const suffix = randomUUID().slice(0, 8);
+
+  const studioId =
+    overrides.studioId ??
+    (await createTestStudio(db, { name: `Studio for Book ${suffix}` })).studio.id;
+
+  const price = overrides.pricePerHour ?? 85;
+
+  const [createdBook] = await db
+    .insert(book)
+    .values({
+      title: overrides.title ?? `Book ${suffix}`,
+      studioId,
+      pricePerHour: price.toFixed(2),
+      pdfUrl: overrides.pdfUrl ?? null,
+      status: overrides.status ?? "pending",
+    })
+    .returning();
+
+  return {
+    book: {
+      ...createdBook,
+      pricePerHour: Number(createdBook.pricePerHour),
+    },
+  };
+}
+
+interface CreateTestChapterOptions {
+  readonly bookId?: string;
+  readonly number?: number;
+  readonly status?: BookStatus;
+  readonly narratorId?: string | null;
+  readonly editorId?: string | null;
+  readonly editedHours?: number;
+}
+
+interface CreateTestChapterResult {
+  readonly chapter: Omit<typeof chapter.$inferSelect, "editedHours"> & {
+    readonly editedHours: number;
+  };
+}
+
+export async function createTestChapter(
+  db: TestDb,
+  overrides: CreateTestChapterOptions = {},
+): Promise<CreateTestChapterResult> {
+  const bookId = overrides.bookId ?? (await createTestBook(db)).book.id;
+
+  const [createdChapter] = await db
+    .insert(chapter)
+    .values({
+      bookId,
+      number: overrides.number ?? 1,
+      status: overrides.status ?? "pending",
+      narratorId: overrides.narratorId ?? null,
+      editorId: overrides.editorId ?? null,
+      editedHours: (overrides.editedHours ?? 0).toFixed(2),
+    })
+    .returning();
+
+  return {
+    chapter: {
+      ...createdChapter,
+      editedHours: Number(createdChapter.editedHours),
     },
   };
 }
