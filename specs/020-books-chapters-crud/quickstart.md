@@ -64,7 +64,7 @@ Autenticar como admin seed e:
 4. Clicar em uma linha do livro → `/books/:id`:
    - Cabeçalho com título, estúdio, R$/hora, capítulos concluídos/totais, ganho total, status, botões "Ver PDF", "Editar livro", "Excluir capítulos".
    - Tabela de capítulos com edição inline.
-   - Testar `pago → concluido` (ver modal de confirmação aparecendo).
+   - Testar `paid → completed` (ver modal de confirmação aparecendo).
    - Entrar no modo de exclusão em lote (ícones somem, barra superior aparece).
    - Popover "Ver PDF": colar URL, salvar, abrir em nova guia.
 
@@ -149,20 +149,20 @@ Durante dev, rodar mentalmente os 4 cenários abaixo — são os de maior risco:
 3. Criar novamente estúdio "ArquivarTeste" com valor/hora R$ 80,00.
 4. Verificar: toast "desarquivado"; `default_hourly_rate` permanece R$ 50,00 (criação normal via `/studios` **preserva** rate histórico); `id` é o mesmo do original.
 
-### Cenário C — Reversão `pago → concluido`
+### Cenário C — Reversão `paid → completed`
 
 1. Criar livro com 1 capítulo.
-2. Avançar capítulo até `pago` (atribuir narrador, horas, editor, concluir, pagar).
+2. Avançar capítulo até `paid` (atribuir narrador, horas, editor, concluir, pagar).
 3. Verificar em "Editar livro" → campos "Valor/hora" e "Estúdio" bloqueados.
-4. Abrir edição do capítulo, tentar status `concluido` → modal de confirmação aparece.
-5. Confirmar → status volta a `concluido`; campos do capítulo voltam a ser editáveis; "Valor/hora" do livro volta a ser editável.
+4. Abrir edição do capítulo, tentar status `completed` → modal de confirmação aparece.
+5. Confirmar → status volta a `completed`; campos do capítulo voltam a ser editáveis; "Valor/hora" do livro volta a ser editável.
 
 ### Cenário D — Recomputação de `book.status` em exclusão
 
 1. Criar livro com 2 capítulos.
-2. Avançar capítulo 1 até `pago`; deixar capítulo 2 em `pendente`. `book.status` = `pendente`.
+2. Avançar capítulo 1 até `paid`; deixar capítulo 2 em `pending`. `book.status` = `pending`.
 3. Excluir capítulo 2 (em modo normal, ícone excluir).
-4. Após confirmar: `book.status` muda para `pago` em `/books` (sem refresh manual — resposta da API já reflete).
+4. Após confirmar: `book.status` muda para `paid` em `/books` (sem refresh manual — resposta da API já reflete).
 
 ---
 

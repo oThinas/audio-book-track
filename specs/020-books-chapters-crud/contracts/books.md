@@ -26,7 +26,7 @@ Sem body. Sem query params no MVP.
       "studio": { "id": "uuid", "name": "Sonora Studio" },
       "pricePerHour": "75.00",
       "pdfUrl": null,
-      "status": "em_edicao",
+      "status": "editing",
       "totalChapters": 10,
       "completedChapters": 3,
       "totalEarnings": "450.00",
@@ -43,7 +43,7 @@ Ordenação: por `created_at DESC`. Filtragem e ordenação adicionais são clie
 
 ## `POST /api/v1/books`
 
-Cria um novo livro com N capítulos em `pendente`. Suporta propagação transacional de `price_per_hour` para um estúdio criado inline.
+Cria um novo livro com N capítulos em `pending`. Suporta propagação transacional de `price_per_hour` para um estúdio criado inline.
 
 ### Request body
 
@@ -83,12 +83,12 @@ z.object({
     "studioId": "uuid",
     "pricePerHour": "75.00",
     "pdfUrl": null,
-    "status": "pendente",
+    "status": "pending",
     "createdAt": "2026-04-23T09:00:00.000Z",
     "updatedAt": "2026-04-23T09:00:00.000Z",
     "chapters": [
-      { "id": "uuid", "numero": 1, "status": "pendente", ... },
-      { "id": "uuid", "numero": 2, "status": "pendente", ... }
+      { "id": "uuid", "number": 1, "status": "pending", ... },
+      { "id": "uuid", "number": 2, "status": "pending", ... }
     ]
   }
 }
@@ -107,9 +107,9 @@ z.object({
 ### Side effects transacionais
 
 1. `INSERT INTO book`.
-2. Gera `numChapters` linhas em `chapter` com `numero = 1..N`, todas `pendente`.
+2. Gera `numChapters` linhas em `chapter` com `number = 1..N`, todas `pending`.
 3. Se `inlineStudioId` presente e válido: `UPDATE studio SET default_hourly_rate = :pricePerHour WHERE id = :inlineStudioId`.
-4. `recomputeBookStatus(book.id, tx)` → cache do `book.status` = `pendente`.
+4. `recomputeBookStatus(book.id, tx)` → cache do `book.status` = `pending`.
 
 Falha em qualquer etapa ⇒ rollback total. O estúdio criado via fluxo anterior de FR-012 **não** é revertido — ele persiste com `default_hourly_rate = 0.01` (FR-014).
 
@@ -129,7 +129,7 @@ Retorna o livro com capítulos embutidos e o estúdio resolvido.
     "studio": { "id": "uuid", "name": "Sonora Studio" },
     "pricePerHour": "75.00",
     "pdfUrl": "https://example.com/book.pdf",
-    "status": "em_edicao",
+    "status": "editing",
     "totalChapters": 10,
     "completedChapters": 3,
     "totalEarnings": "450.00",
@@ -138,11 +138,11 @@ Retorna o livro com capítulos embutidos e o estúdio resolvido.
     "chapters": [
       {
         "id": "uuid",
-        "numero": 1,
-        "status": "concluido",
+        "number": 1,
+        "status": "completed",
         "narrator": { "id": "uuid", "name": "Ana Silva" },
         "editor": { "id": "uuid", "name": "Bruno Gomes" },
-        "horasEditadas": "2.50",
+        "editedHours": "2.50",
         "createdAt": "...",
         "updatedAt": "..."
       }
@@ -180,8 +180,8 @@ Edita título/estúdio/valor-hora/quantidade de capítulos. Aumentar capítulos 
 ### Zod validações específicas
 
 - `numChapters` — se presente, deve ser `>= currentTotalChapters`. Se menor, erro `CANNOT_REDUCE_CHAPTERS`.
-- `pricePerHour` — bloqueado se existe algum capítulo `pago`. Erro `BOOK_PAID_PRICE_LOCKED`.
-- `studioId` — bloqueado se existe capítulo `pago`. Erro `BOOK_PAID_STUDIO_LOCKED`.
+- `pricePerHour` — bloqueado se existe algum capítulo `paid`. Erro `BOOK_PAID_PRICE_LOCKED`.
+- `studioId` — bloqueado se existe capítulo `paid`. Erro `BOOK_PAID_STUDIO_LOCKED`.
 
 ### Response `200 OK`
 
@@ -195,14 +195,14 @@ Mesma forma de `GET /books/:id` atualizada.
 | `NOT_FOUND` | 404 | Livro não existe. |
 | `TITLE_ALREADY_IN_USE` | 409 | Novo título colide no estúdio. |
 | `CANNOT_REDUCE_CHAPTERS` | 422 | `numChapters < total atual`. |
-| `BOOK_PAID_PRICE_LOCKED` | 409 | Tentou alterar `pricePerHour` com capítulo `pago`. |
-| `BOOK_PAID_STUDIO_LOCKED` | 409 | Tentou alterar `studioId` com capítulo `pago`. |
+| `BOOK_PAID_PRICE_LOCKED` | 409 | Tentou alterar `pricePerHour` com capítulo `paid`. |
+| `BOOK_PAID_STUDIO_LOCKED` | 409 | Tentou alterar `studioId` com capítulo `paid`. |
 | `STUDIO_NOT_FOUND` | 422 | Novo `studioId` não existe ou está soft-deleted. |
 
 ### Side effects transacionais (quando `numChapters > current`)
 
 1. `UPDATE book SET ... WHERE id = :id`.
-2. `delta = numChapters - current`; cria `delta` novos capítulos com `numero = MAX(numero) + 1 ... + delta`, status `pendente`.
+2. `delta = numChapters - current`; cria `delta` novos capítulos com `number = MAX(number) + 1 ... + delta`, status `pending`.
 3. `recomputeBookStatus(book.id, tx)`.
 
 ---
@@ -218,13 +218,13 @@ Remove o livro e cascata em capítulos (via FK `ON DELETE CASCADE`). UI não exp
 | Code | Status | Quando |
 |------|--------|--------|
 | `NOT_FOUND` | 404 | Livro não existe. |
-| `BOOK_HAS_PAID_CHAPTERS` | 409 | Livro ainda tem capítulos `pago` (proteção extra — normalmente UI nunca dispara DELETE quando há pagos, mas o backend recusa). |
+| `BOOK_HAS_PAID_CHAPTERS` | 409 | Livro ainda tem capítulos `paid` (proteção extra — normalmente a UI nunca dispara DELETE quando há capítulos `paid`, mas o backend recusa). |
 
 ---
 
 ## `POST /api/v1/books/:id/chapters/bulk-delete`
 
-Exclui atomicamente múltiplos capítulos. Se todos os capítulos não-`pago` forem removidos e não sobrar capítulo `pago`, o livro é removido também.
+Exclui atomicamente múltiplos capítulos. Se todos os capítulos não-`paid` forem removidos e não sobrar capítulo `paid`, o livro é removido também.
 
 ### Request body
 
@@ -249,12 +249,12 @@ Header `X-Book-Deleted: true` quando o livro foi removido como efeito.
 | `VALIDATION_ERROR` | 422 | Lista vazia ou malformada. |
 | `NOT_FOUND` | 404 | Livro não existe. |
 | `CHAPTERS_NOT_IN_BOOK` | 422 | Algum `chapterId` não pertence ao `book_id`. |
-| `CHAPTER_PAID_LOCKED` | 409 | Algum dos IDs está em status `pago` (atomic — nada é excluído). |
+| `CHAPTER_PAID_LOCKED` | 409 | Algum dos IDs está em status `paid` (atomic — nada é excluído). |
 
 ### Side effects transacionais
 
 1. Valida ownership (capítulos pertencem ao `book_id`).
-2. Valida nenhum é `pago`.
+2. Valida nenhum é `paid`.
 3. `DELETE FROM chapter WHERE id = ANY(...)`.
 4. Conta capítulos remanescentes: se `0`, `DELETE FROM book WHERE id = :bookId` e seta header `X-Book-Deleted: true`.
 5. Se livro persiste, `recomputeBookStatus(book.id, tx)`.

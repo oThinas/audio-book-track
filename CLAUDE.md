@@ -11,15 +11,15 @@
 ### Domínio
 
 - **Capítulo é a unidade central** — atribuição, cálculo de ganho e status operam sempre no nível do capítulo, nunca no livro ou estúdio.
-- **Preço/hora é imutável quando o livro está `pago`** — vinculado ao livro, nunca ao estúdio; não pode ser recalculado retroativamente após esse status.
-- **Fórmula de ganho**: `horas_editadas × preço_hora_do_livro` — determinística, auditável, sem derivação dinâmica.
-- **Ciclo de vida do capítulo**: `pendente` → `em edição` → `em revisão` → [`edição retake`] → `concluído` → `pago`. Nenhuma etapa obrigatória pode ser pulada.
-  - `em edição` exige narrador atribuído.
-  - `em revisão` exige editor + horas_editadas registrados.
-  - `edição retake` é opcional — ativado somente por reprovação em `em revisão`; retorna a `em revisão`.
-  - `concluído` exige revisão aprovada.
-  - `pago` torna os dados financeiros imutáveis e desabilita edição do livro.
-- **Capítulo marcado como `pago` não pode ter dados financeiros alterados.**
+- **Preço/hora é imutável quando o livro está `paid`** — vinculado ao livro, nunca ao estúdio; não pode ser recalculado retroativamente após esse status.
+- **Fórmula de ganho**: `chapter.edited_hours × book.price_per_hour` — determinística, auditável, sem derivação dinâmica. Nomes de campos/colunas/enum são **em inglês** no código; labels de UI em português são resolvidas na camada de apresentação.
+- **Ciclo de vida do capítulo** (valor no DB / rótulo em UI): `pending` (Pendente) → `editing` (Em edição) → `reviewing` (Em revisão) → [`retake` (Retake)] → `completed` (Concluído) → `paid` (Pago). Nenhuma etapa obrigatória pode ser pulada.
+  - `editing` exige narrador atribuído.
+  - `reviewing` exige editor + `edited_hours > 0` registrados.
+  - `retake` é opcional — ativado somente por reprovação em `reviewing`; retorna a `reviewing`.
+  - `completed` exige revisão aprovada.
+  - `paid` torna os dados financeiros imutáveis e desabilita edição do livro.
+- **Capítulo marcado como `paid` não pode ter dados financeiros alterados.**
 
 ### Arquitetura
 
@@ -279,8 +279,8 @@ task — isso é ruído desproporcional.
 | Entidade   | Pertence a | Campo crítico                        |
 |------------|------------|--------------------------------------|
 | Estúdio    | —          | nome                                 |
-| Livro      | Estúdio    | `preço_por_hora` (imutável quando `pago`), `pdf_url` (opcional) |
-| Capítulo   | Livro      | status, narrador, editor, horas_editadas, num_paginas |
+| Livro      | Estúdio    | `price_per_hour` (imutável quando `paid`), `pdf_url` (opcional) |
+| Capítulo   | Livro      | `status`, `narrator_id`, `editor_id`, `edited_hours` |
 | Narrador   | —          | `name` único (case-sensitive, após `trim`); responsável pela gravação dos capítulos |
 | Editor     | —          | recebe pagamento por horas em capítulos atribuídos |
 

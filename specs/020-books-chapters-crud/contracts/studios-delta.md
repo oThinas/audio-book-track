@@ -93,7 +93,7 @@ Novo: soft-delete (`UPDATE studio SET deleted_at = now() WHERE id = :id`).
 SELECT COUNT(*) FROM book b
 JOIN chapter c ON c.book_id = b.id
 WHERE b.studio_id = :id
-AND c.status IN ('pendente', 'em_edicao', 'em_revisao', 'edicao_retake');
+AND c.status IN ('pending', 'editing', 'reviewing', 'retake');
 ```
 
 Se `> 0` ⇒ `409 STUDIO_HAS_ACTIVE_BOOKS` com detalhes sobre quantos livros/capítulos estão bloqueando.

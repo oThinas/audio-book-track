@@ -37,31 +37,31 @@ description: "Task list for feature 020-books-chapters-crud"
 
 ### Schema — refatoração arquivo-por-entidade (FR-052)
 
-- [ ] T004 Criar diretório [src/lib/db/schema/](../../src/lib/db/schema/) e mover o conteúdo de [src/lib/db/schema.ts](../../src/lib/db/schema.ts) para `src/lib/db/schema/auth.ts` (user, session, account, verification) e `src/lib/db/schema/user-preference.ts` (userPreference). Criar [src/lib/db/schema/index.ts](../../src/lib/db/schema/index.ts) como barrel (`export * from "./auth"` etc.). Manter as importações em [src/lib/db/index.ts](../../src/lib/db/index.ts) apontando para `./schema` (resolvido transparentemente para o novo `index.ts`).
-- [ ] T005 Mover a definição de `studio` para [src/lib/db/schema/studio.ts](../../src/lib/db/schema/studio.ts), adicionando a coluna `deletedAt: timestamp("deleted_at", { withTimezone: true })` (nullable). Substituir o índice único `studio_name_unique` por `studio_name_unique_active` (case-insensitive via `lower()`, parcial `WHERE deleted_at IS NULL`). Adicionar índice de apoio `studio_deleted_at_idx` parcial em `deleted_at IS NOT NULL`.
-- [ ] T006 [P] Mover `narrator` para [src/lib/db/schema/narrator.ts](../../src/lib/db/schema/narrator.ts) com as mesmas mudanças de T005 (coluna `deleted_at` + índice único parcial case-insensitive + índice de apoio).
-- [ ] T007 [P] Mover `editor` para [src/lib/db/schema/editor.ts](../../src/lib/db/schema/editor.ts) com as mesmas mudanças (preservar `editor_email_unique` como está).
-- [ ] T008 Criar [src/lib/db/schema/book.ts](../../src/lib/db/schema/book.ts) conforme [data-model.md §2](./data-model.md) (colunas + índices + checks). Garantir `references(() => studio.id, { onDelete: "restrict" })`.
-- [ ] T009 Criar [src/lib/db/schema/chapter.ts](../../src/lib/db/schema/chapter.ts) conforme [data-model.md §3](./data-model.md), incluindo `num_paginas integer NOT NULL DEFAULT 0` (preservado para Princípio XIII embora não exposto em UI nesta feature). Referências `book_id` (`cascade`), `narrator_id`/`editor_id` (`restrict`).
-- [ ] T010 Atualizar [src/lib/db/schema/index.ts](../../src/lib/db/schema/index.ts) exportando todas as entidades e acrescentar definições `relations()` em arquivo novo [src/lib/db/schema/relations.ts](../../src/lib/db/schema/relations.ts) conforme [data-model.md §7](./data-model.md) (`bookRelations`, `chapterRelations`).
-- [ ] T011 Remover [src/lib/db/schema.ts](../../src/lib/db/schema.ts) original (arquivo único legado) após garantir que `src/lib/db/index.ts` e demais consumidores resolvem para `./schema/index.ts`. Rodar `bun run lint` localmente só neste arquivo para confirmar resolução de imports (não é o gate final).
-- [ ] T012 Gerar migration com `bun run db:generate` (drizzle-kit generate) e revisar o SQL produzido em [src/lib/db/migrations/](../../src/lib/db/migrations/). Verificar: (a) `ALTER TABLE` aditivo para `deleted_at` em studio/narrator/editor; (b) DROP + CREATE do índice único substituído pelo case-insensitive parcial; (c) `CREATE TABLE book` e `CREATE TABLE chapter` com todos os constraints da `data-model.md`.
-- [ ] T013 Aplicar a migration em DEV e TEST: `bun run db:migrate` e `NODE_ENV=test bun run db:migrate`. Confirmar via `psql` que as tabelas e índices existem.
-- [ ] T002 [P] Adicionar factories de teste `createTestBook` e `createTestChapter` ao [__tests__/helpers/factories.ts](../../__tests__/helpers/factories.ts) seguindo o padrão dos testes existentes (aceitam `overrides` parciais; usam UUIDs; não tocam `seed-test.ts`). _(Realocada de Phase 1 — depende do schema `book`/`chapter` criado em T008/T009 e exportado pelo barrel em T010.)_
+- [X] T004 Criar diretório [src/lib/db/schema/](../../src/lib/db/schema/) e mover o conteúdo de [src/lib/db/schema.ts](../../src/lib/db/schema.ts) para `src/lib/db/schema/auth.ts` (user, session, account, verification) e `src/lib/db/schema/user-preference.ts` (userPreference). Criar [src/lib/db/schema/index.ts](../../src/lib/db/schema/index.ts) como barrel (`export * from "./auth"` etc.). Manter as importações em [src/lib/db/index.ts](../../src/lib/db/index.ts) apontando para `./schema` (resolvido transparentemente para o novo `index.ts`).
+- [X] T005 Mover a definição de `studio` para [src/lib/db/schema/studio.ts](../../src/lib/db/schema/studio.ts), adicionando a coluna `deletedAt: timestamp("deleted_at", { withTimezone: true })` (nullable). Substituir o índice único `studio_name_unique` por `studio_name_unique_active` (case-insensitive via `lower()`, parcial `WHERE deleted_at IS NULL`). Adicionar índice de apoio `studio_deleted_at_idx` parcial em `deleted_at IS NOT NULL`.
+- [X] T006 [P] Mover `narrator` para [src/lib/db/schema/narrator.ts](../../src/lib/db/schema/narrator.ts) com as mesmas mudanças de T005 (coluna `deleted_at` + índice único parcial case-insensitive + índice de apoio).
+- [X] T007 [P] Mover `editor` para [src/lib/db/schema/editor.ts](../../src/lib/db/schema/editor.ts) com as mesmas mudanças (preservar `editor_email_unique` como está).
+- [X] T008 Criar [src/lib/db/schema/book.ts](../../src/lib/db/schema/book.ts) conforme [data-model.md §2](./data-model.md) (colunas + índices + checks). Garantir `references(() => studio.id, { onDelete: "restrict" })`.
+- [X] T009 Criar [src/lib/db/schema/chapter.ts](../../src/lib/db/schema/chapter.ts) conforme [data-model.md §3](./data-model.md). Referências `book_id` (`cascade`), `narrator_id`/`editor_id` (`restrict`).
+- [X] T010 Atualizar [src/lib/db/schema/index.ts](../../src/lib/db/schema/index.ts) exportando todas as entidades e acrescentar definições `relations()` em arquivo novo [src/lib/db/schema/relations.ts](../../src/lib/db/schema/relations.ts) conforme [data-model.md §7](./data-model.md) (`bookRelations`, `chapterRelations`).
+- [X] T011 Remover [src/lib/db/schema.ts](../../src/lib/db/schema.ts) original (arquivo único legado) após garantir que `src/lib/db/index.ts` e demais consumidores resolvem para `./schema/index.ts`. Rodar `bun run lint` localmente só neste arquivo para confirmar resolução de imports (não é o gate final).
+- [X] T012 Gerar migration com `bun run db:generate` (drizzle-kit generate) e revisar o SQL produzido em [src/lib/db/migrations/](../../src/lib/db/migrations/). Verificar: (a) `ALTER TABLE` aditivo para `deleted_at` em studio/narrator/editor; (b) DROP + CREATE do índice único substituído pelo case-insensitive parcial; (c) `CREATE TABLE book` e `CREATE TABLE chapter` com todos os constraints da `data-model.md`.
+- [X] T013 Aplicar a migration em DEV e TEST: `bun run db:migrate` e `NODE_ENV=test bun run db:migrate`. Confirmar via `psql` que as tabelas e índices existem.
+- [X] T002 [P] Adicionar factories de teste `createTestBook` e `createTestChapter` ao [__tests__/helpers/factories.ts](../../__tests__/helpers/factories.ts) seguindo o padrão dos testes existentes (aceitam `overrides` parciais; usam UUIDs; não tocam `seed-test.ts`). _(Realocada de Phase 1 — depende do schema `book`/`chapter` criado em T008/T009 e exportado pelo barrel em T010.)_
 
 ### Domínio — tipos, entidades, interfaces
 
-- [ ] T014 [P] Criar [src/lib/domain/book.ts](../../src/lib/domain/book.ts) com o tipo `Book` (POJO), o enum compartilhado `BookStatus` (`"pendente" | "em_edicao" | "em_revisao" | "edicao_retake" | "concluido" | "pago"`) e helper `formatPriceBRL(value)`. Nenhum import de framework.
-- [ ] T015 [P] Criar [src/lib/domain/chapter.ts](../../src/lib/domain/chapter.ts) com o tipo `Chapter` (POJO), re-exportando `ChapterStatus = BookStatus` (mesmos valores) e valor `PAID_LOCKED_FIELDS = ["narratorId", "editorId", "horasEditadas"] as const`.
+- [ ] T014 [P] Criar [src/lib/domain/book.ts](../../src/lib/domain/book.ts) com o tipo `Book` (POJO), o enum compartilhado `BookStatus` (`"pending" | "editing" | "reviewing" | "retake" | "completed" | "paid"`) e helper `formatPriceBRL(value)`. Nenhum import de framework.
+- [ ] T015 [P] Criar [src/lib/domain/chapter.ts](../../src/lib/domain/chapter.ts) com o tipo `Chapter` (POJO), re-exportando `ChapterStatus = BookStatus` (mesmos valores) e valor `PAID_LOCKED_FIELDS = ["narratorId", "editorId", "editedHours"] as const`.
 - [ ] T016 [P] Criar [src/lib/domain/book-status.ts](../../src/lib/domain/book-status.ts) exportando `computeBookStatus(chapters)` conforme [data-model.md §4](./data-model.md) — função pura, lança erro se `chapters.length === 0`.
-- [ ] T017 [P] Criar [src/lib/domain/chapter-state-machine.ts](../../src/lib/domain/chapter-state-machine.ts) exportando `isValidTransition(from, to, ctx)` com as regras do FR-025 (narrador obrigatório, editor+horas obrigatórios, reversão `pago → concluido` apenas com `confirmReversion`).
+- [ ] T017 [P] Criar [src/lib/domain/chapter-state-machine.ts](../../src/lib/domain/chapter-state-machine.ts) exportando `isValidTransition(from, to, ctx)` com as regras do FR-025 (narrador obrigatório, editor+horas obrigatórios, reversão `paid → completed` apenas com `confirmReversion`).
 - [ ] T018 [P] Criar [src/lib/domain/book-repository.ts](../../src/lib/domain/book-repository.ts) com a interface `BookRepository` (`listByUser`, `findById`, `insert`, `update`, `updateStatus`, `delete`).
 - [ ] T019 [P] Criar [src/lib/domain/chapter-repository.ts](../../src/lib/domain/chapter-repository.ts) com a interface `ChapterRepository` (`listByBookId`, `findById`, `insertMany`, `update`, `delete`, `deleteMany`, `countByBookId`, `maxNumeroByBookId`).
 - [ ] T003 [P] Criar [__tests__/repositories/in-memory-book-repository.ts](../../__tests__/repositories/in-memory-book-repository.ts) e [__tests__/repositories/in-memory-chapter-repository.ts](../../__tests__/repositories/in-memory-chapter-repository.ts) como fakes injetáveis (classes), seguindo o modelo de `in-memory-user-preference-repository.ts`. _(Realocada de Phase 1 — depende dos tipos de domínio T014/T015 e das interfaces `BookRepository`/`ChapterRepository` definidas em T018/T019.)_
 
 ### Unit tests — domínio puro (TDD: escrever ANTES do helper)
 
-- [ ] T020 [P] Criar [__tests__/unit/domain/book-status.spec.ts](../../__tests__/unit/domain/book-status.spec.ts) com table-driven tests cobrindo 100% da função `computeBookStatus`: (a) todos pago; (b) todos concluido/pago com 1 concluido; (c) algum em_revisao/edicao_retake; (d) algum em_edicao; (e) default pendente; (f) erro quando lista vazia; (g) cenário US5.13 (após excluir `pendente`, sobra `pago`); (h) cenário US5.14 (após adicionar `pendente` a livro com 1 `pago`, resulta `pendente`).
+- [ ] T020 [P] Criar [__tests__/unit/domain/book-status.spec.ts](../../__tests__/unit/domain/book-status.spec.ts) com table-driven tests cobrindo 100% da função `computeBookStatus`: (a) todos paid; (b) todos completed/paid com 1 completed; (c) algum reviewing/retake; (d) algum editing; (e) default pending; (f) erro quando lista vazia; (g) cenário US5.13 (após excluir `pending`, sobra `paid`); (h) cenário US5.14 (após adicionar `pending` a livro com 1 `paid`, resulta `pending`).
 - [ ] T021 [P] Criar [__tests__/unit/domain/chapter-state-machine.spec.ts](../../__tests__/unit/domain/chapter-state-machine.spec.ts) cobrindo 100% de `isValidTransition`: cada transição válida aceita, cada inválida rejeita, pré-condições (narrador/editor/horas/confirmReversion) testadas.
 
 ### Zod schemas
@@ -72,7 +72,7 @@ description: "Task list for feature 020-books-chapters-crud"
 ### Unit tests — Zod schemas
 
 - [ ] T024 [P] Criar [__tests__/unit/schemas/book-schema.spec.ts](../../__tests__/unit/schemas/book-schema.spec.ts) cobrindo: campos obrigatórios, trim, faixa `pricePerHour`, faixa `numChapters`, `inlineStudioId ≠ studioId` rejeitado.
-- [ ] T025 [P] Criar [__tests__/unit/schemas/chapter-schema.spec.ts](../../__tests__/unit/schemas/chapter-schema.spec.ts): exige ≥ 1 campo, valida UUIDs, valida regex de `horasEditadas`, aceita `confirmReversion`.
+- [ ] T025 [P] Criar [__tests__/unit/schemas/chapter-schema.spec.ts](../../__tests__/unit/schemas/chapter-schema.spec.ts): exige ≥ 1 campo, valida UUIDs, valida regex de `editedHours`, aceita `confirmReversion`.
 
 ### Repositories Drizzle
 
@@ -134,19 +134,19 @@ description: "Task list for feature 020-books-chapters-crud"
 
 ## Phase 4: User Story 2 — Criar livro via modal (Priority: P1) 🎯 MVP
 
-**Goal**: Produtor abre `/books`, clica "+ Novo Livro", preenche modal (Título, Estúdio, Valor/hora, Quantidade de capítulos), confirma. Livro + N capítulos em `pendente` são criados atomicamente.
+**Goal**: Produtor abre `/books`, clica "+ Novo Livro", preenche modal (Título, Estúdio, Valor/hora, Quantidade de capítulos), confirma. Livro + N capítulos em `pending` são criados atomicamente.
 
-**Independent Test**: Em uma DB com estúdios existentes, clicar "+ Novo Livro", preencher todos os campos, confirmar; verificar que o livro aparece na listagem + N capítulos em `pendente` persistidos.
+**Independent Test**: Em uma DB com estúdios existentes, clicar "+ Novo Livro", preencher todos os campos, confirmar; verificar que o livro aparece na listagem + N capítulos em `pending` persistidos.
 
 ### Tests for US2 — TDD
 
-- [ ] T049 [P] [US2] Criar [__tests__/unit/services/book-service.create.spec.ts](../../__tests__/unit/services/book-service.create.spec.ts): unit com in-memory repos — criar livro com N capítulos; falha por título duplicado no mesmo estúdio; recalcula `book.status = pendente`.
+- [ ] T049 [P] [US2] Criar [__tests__/unit/services/book-service.create.spec.ts](../../__tests__/unit/services/book-service.create.spec.ts): unit com in-memory repos — criar livro com N capítulos; falha por título duplicado no mesmo estúdio; recalcula `book.status = pending`.
 - [ ] T050 [P] [US2] Criar [__tests__/integration/book-create.spec.ts](../../__tests__/integration/book-create.spec.ts): DB real, transação atômica, `UNIQUE (lower(title), studio_id)` dispara `409 TITLE_ALREADY_IN_USE`, rollback em falha.
 - [ ] T051 [P] [US2] Criar [__tests__/e2e/books-create.spec.ts](../../__tests__/e2e/books-create.spec.ts): abrir modal, preencher todos os campos, confirmar, ver linha na tabela. Casos de validação (título vazio, valor fora da faixa, quantidade < 1).
 
 ### Implementation for US2
 
-- [ ] T052 [US2] Implementar `BookService.create(input, userId)` em [src/lib/services/book-service.ts](../../src/lib/services/book-service.ts): transação Drizzle; insere `book`, gera N capítulos numerados 1..N em `pendente`, chama `recomputeBookStatus` (resultado = `pendente`); retorna `book` com `chapters`. Trata conflito `lower(title)+studio_id` como `409 TITLE_ALREADY_IN_USE`. Ignora `inlineStudioId` nesta fase (será ligado em US3).
+- [ ] T052 [US2] Implementar `BookService.create(input, userId)` em [src/lib/services/book-service.ts](../../src/lib/services/book-service.ts): transação Drizzle; insere `book`, gera N capítulos numerados 1..N em `pending`, chama `recomputeBookStatus` (resultado = `pending`); retorna `book` com `chapters`. Trata conflito `lower(title)+studio_id` como `409 TITLE_ALREADY_IN_USE`. Ignora `inlineStudioId` nesta fase (será ligado em US3).
 - [ ] T053 [US2] Implementar handler `POST` em [src/app/api/v1/books/route.ts](../../src/app/api/v1/books/route.ts) usando `createBookSchema` de T022. Retorna `201` com header `Location`. Mapear erros para helpers de `responses.ts`.
 - [ ] T054 [P] [US2] Criar componente [src/components/features/books/book-create-dialog.tsx](../../src/components/features/books/book-create-dialog.tsx): `<Dialog>` shadcn com campos (RHF + Zod resolver). Seletor de estúdio implementado como combobox pesquisável (`<Popover>` + `<Command>` com `<CommandInput>` para busca por nome, `<CommandList>`/`<CommandGroup>`/`<CommandItem>` para as opções) listando estúdios ativos com `default_hourly_rate` formatado em BRL, ordenados por nome ASC (FR-011). Escolha do Command sobre `<Select>` nativo se justifica porque este não tem campo de busca e a base de estúdios pode crescer. Nesta task, apenas a listagem + busca + seleção são ligadas — a ação "+ Novo Estúdio" ao final do `<CommandList>` (que abre o subformulário inline sem fechar o modal, FR-011a) é adicionada em T086/US3 para manter o escopo de US2 focado em criação com estúdios já existentes. Botão Confirmar fica `disabled` até o form estar válido.
 - [ ] T055 [P] [US2] Criar [src/components/features/books/chapter-count-input.tsx](../../src/components/features/books/chapter-count-input.tsx): input numérico com botões `-`/`+`, limites [1, 999], aceita só dígitos na digitação livre. Composto sobre `<Input>` + `<Button>` do shadcn. Propagar valor via `onChange`.
@@ -185,26 +185,26 @@ description: "Task list for feature 020-books-chapters-crud"
 
 ## Phase 6: User Story 5 — Editar capítulo inline (Priority: P1) 🎯 MVP
 
-**Goal**: Cada linha de capítulo tem 3 estados (view/edit/select). No estado `edit`, quatro campos editáveis: Narrador, Editor, Status (com máquina de estados), Horas editadas. Reversão `pago → concluido` exige modal de confirmação dupla. `book.status` recomputado após toda mutação.
+**Goal**: Cada linha de capítulo tem 3 estados (view/edit/select). No estado `edit`, quatro campos editáveis: Narrador, Editor, Status (com máquina de estados), Horas editadas. Reversão `paid → completed` exige modal de confirmação dupla. `book.status` recomputado após toda mutação.
 
-**Independent Test**: Editar um capítulo em `pendente`, atribuir narrador e mudar para `em_edicao` → persiste; tentar `em_edicao → em_revisao` sem editor/horas → validação falha; reverter `pago → concluido` via modal → status volta e price/hour do livro destrava.
+**Independent Test**: Editar um capítulo em `pending`, atribuir narrador e mudar para `editing` → persiste; tentar `editing → reviewing` sem editor/horas → validação falha; reverter `paid → completed` via modal → status volta e price/hour do livro destrava.
 
 ### Tests for US5 — TDD
 
 - [ ] T068 [P] [US5] Criar [__tests__/unit/services/chapter-service.update.spec.ts](../../__tests__/unit/services/chapter-service.update.spec.ts) cobrindo todas as transições (válidas e inválidas), `CHAPTER_PAID_LOCKED`, `REVERSION_CONFIRMATION_REQUIRED`, recomputação de `book.status` após cada update.
-- [ ] T069 [P] [US5] Criar [__tests__/integration/chapter-update.spec.ts](../../__tests__/integration/chapter-update.spec.ts): DB real, valida `PATCH /api/v1/chapters/:id` com cada transição (incluindo reversão `pago → concluido` com e sem flag).
+- [ ] T069 [P] [US5] Criar [__tests__/integration/chapter-update.spec.ts](../../__tests__/integration/chapter-update.spec.ts): DB real, valida `PATCH /api/v1/chapters/:id` com cada transição (incluindo reversão `paid → completed` com e sem flag).
 - [ ] T070 [P] [US5] Criar [__tests__/integration/book-status-recompute.spec.ts](../../__tests__/integration/book-status-recompute.spec.ts) codificando explicitamente US5.13 e US5.14 como testes de integração (conforme FR-019 "testes de integração DEVEM validar...").
-- [ ] T071 [P] [US5] Criar [__tests__/e2e/chapters-edit-inline.spec.ts](../../__tests__/e2e/chapters-edit-inline.spec.ts): entrar em edit mode, editar narrador/status, confirmar, ver update + badge de status do livro mudando. Cenário de reversão pago→concluído com modal. **Incluir cenário US5.15**: livro 100% `pago` → reverter todos → abrir "Editar livro" e confirmar que "Valor/hora" + "Estúdio" destravam (resolve U1 do analyze).
+- [ ] T071 [P] [US5] Criar [__tests__/e2e/chapters-edit-inline.spec.ts](../../__tests__/e2e/chapters-edit-inline.spec.ts): entrar em edit mode, editar narrador/status, confirmar, ver update + badge de status do livro mudando. Cenário de reversão `paid → completed` com modal. **Incluir cenário US5.15**: livro 100% `paid` → reverter todos → abrir "Editar livro" e confirmar que "Valor/hora" + "Estúdio" destravam (resolve U1 do analyze).
 
 ### Implementation for US5
 
-- [ ] T072 [US5] Implementar `ChapterService.update(chapterId, input, userId)` em [src/lib/services/chapter-service.ts](../../src/lib/services/chapter-service.ts): valida via `isValidTransition`, bloqueia mutações não-status em `pago` (`409 CHAPTER_PAID_LOCKED`), exige `confirmReversion: true` para `pago → concluido` (`422 REVERSION_CONFIRMATION_REQUIRED`), tudo em transação com chamada final a `recomputeBookStatus`.
+- [ ] T072 [US5] Implementar `ChapterService.update(chapterId, input, userId)` em [src/lib/services/chapter-service.ts](../../src/lib/services/chapter-service.ts): valida via `isValidTransition`, bloqueia mutações não-status em `paid` (`409 CHAPTER_PAID_LOCKED`), exige `confirmReversion: true` para `paid → completed` (`422 REVERSION_CONFIRMATION_REQUIRED`), tudo em transação com chamada final a `recomputeBookStatus`.
 - [ ] T073 [US5] Implementar route handler `PATCH` em [src/app/api/v1/chapters/[id]/route.ts](../../src/app/api/v1/chapters/[id]/route.ts) usando `updateChapterSchema`. Resposta inclui `meta.bookStatus` com o novo status recomputado.
 - [ ] T074 [P] [US5] Criar [src/components/features/chapters/chapter-row.tsx](../../src/components/features/chapters/chapter-row.tsx): componente da linha com estado local `"view" | "edit"` (modo select é passado por prop — US7). No `edit`: inputs/selects em-place, botões Cancelar/Confirmar substituem os ícones.
-- [ ] T075 [P] [US5] Criar [src/components/features/chapters/chapter-status-select.tsx](../../src/components/features/chapters/chapter-status-select.tsx): `<Select>` limitado às transições válidas a partir do `currentStatus` (derivado via `isValidTransition`). Se `currentStatus === 'pago'`, apenas `concluido` disponível.
-- [ ] T076 [P] [US5] Criar [src/components/features/chapters/chapter-paid-reversion-dialog.tsx](../../src/components/features/chapters/chapter-paid-reversion-dialog.tsx): `<AlertDialog>` disparado quando o produtor confirma um `pago → concluido`. Envia o PATCH com `confirmReversion: true` ao aceitar.
+- [ ] T075 [P] [US5] Criar [src/components/features/chapters/chapter-status-select.tsx](../../src/components/features/chapters/chapter-status-select.tsx): `<Select>` limitado às transições válidas a partir do `currentStatus` (derivado via `isValidTransition`). Se `currentStatus === 'paid'`, apenas `completed` disponível.
+- [ ] T076 [P] [US5] Criar [src/components/features/chapters/chapter-paid-reversion-dialog.tsx](../../src/components/features/chapters/chapter-paid-reversion-dialog.tsx): `<AlertDialog>` disparado quando o produtor confirma um `paid → completed`. Envia o PATCH com `confirmReversion: true` ao aceitar.
 - [ ] T077 [US5] Integrar `<ChapterRow>` em `<ChaptersTable>` (de T064) com callbacks de edição que chamam o endpoint PATCH. Após sucesso, aplicar `router.refresh()` para recarregar o cabeçalho (com novo `book.status`, ganho total e capítulos completados).
-- [ ] T078 [US5] Atualizar `<BookHeader>` (T063) para consumir o `book.status` recomputado — badge muda de cor/label. Verificar que "Editar livro" desbloqueia após reversão total de `pago`.
+- [ ] T078 [US5] Atualizar `<BookHeader>` (T063) para consumir o `book.status` recomputado — badge muda de cor/label. Verificar que "Editar livro" desbloqueia após reversão total de `paid`.
 
 **Checkpoint**: MVP (US1+US2+US4+US5) concluído — produtor lista, cria, detalha e edita capítulos. Fluxo operacional básico pronto.
 
@@ -236,19 +236,19 @@ description: "Task list for feature 020-books-chapters-crud"
 
 ## Phase 8: User Story 6 — Excluir capítulo individualmente (Priority: P2)
 
-**Goal**: Ícone "Excluir" por linha abre modal de confirmação; ao confirmar, capítulo é removido. Se é o último capítulo não-pago e não há `pago`, livro é excluído em cascata (header `X-Book-Deleted: true`) e produtor é redirecionado para `/books`.
+**Goal**: Ícone "Excluir" por linha abre modal de confirmação; ao confirmar, capítulo é removido. Se é o último capítulo não-`paid` e não há `paid`, livro é excluído em cascata (header `X-Book-Deleted: true`) e produtor é redirecionado para `/books`.
 
-**Independent Test**: Excluir capítulo comum → reduz contagem. Excluir o último capítulo de um livro sem `pago` → livro é deletado, produtor redirecionado.
+**Independent Test**: Excluir capítulo comum → reduz contagem. Excluir o último capítulo de um livro sem `paid` → livro é deletado, produtor redirecionado.
 
 ### Tests for US6 — TDD
 
-- [ ] T087 [P] [US6] Criar [__tests__/unit/services/chapter-service.delete.spec.ts](../../__tests__/unit/services/chapter-service.delete.spec.ts): bloqueia `CHAPTER_PAID_LOCKED`; recomputa `book.status`; cascade-delete do livro quando last não-pago e sem pago.
+- [ ] T087 [P] [US6] Criar [__tests__/unit/services/chapter-service.delete.spec.ts](../../__tests__/unit/services/chapter-service.delete.spec.ts): bloqueia `CHAPTER_PAID_LOCKED`; recomputa `book.status`; cascade-delete do livro quando last não-`paid` e sem `paid`.
 - [ ] T088 [P] [US6] Criar [__tests__/integration/chapter-delete.spec.ts](../../__tests__/integration/chapter-delete.spec.ts): DB real, cascade-delete atômico, header `X-Book-Deleted: true`.
 - [ ] T089 [P] [US6] Criar [__tests__/e2e/chapter-delete-single.spec.ts](../../__tests__/e2e/chapter-delete-single.spec.ts): modal de confirmação, contagem reduz, cenário de cascade-delete (último capítulo → redirect).
 
 ### Implementation for US6
 
-- [ ] T090 [US6] Implementar `ChapterService.delete(chapterId, userId)` em [src/lib/services/chapter-service.ts](../../src/lib/services/chapter-service.ts): transação; valida não-pago; `DELETE FROM chapter`; `COUNT` restante; se zero, `DELETE FROM book`; senão `recomputeBookStatus`.
+- [ ] T090 [US6] Implementar `ChapterService.delete(chapterId, userId)` em [src/lib/services/chapter-service.ts](../../src/lib/services/chapter-service.ts): transação; valida não-`paid`; `DELETE FROM chapter`; `COUNT` restante; se zero, `DELETE FROM book`; senão `recomputeBookStatus`.
 - [ ] T091 [US6] Implementar route handler `DELETE` em [src/app/api/v1/chapters/[id]/route.ts](../../src/app/api/v1/chapters/[id]/route.ts): `204` com header `X-Book-Deleted: true` quando aplicável.
 - [ ] T092 [P] [US6] Criar [src/components/features/chapters/chapter-delete-dialog.tsx](../../src/components/features/chapters/chapter-delete-dialog.tsx): `<AlertDialog>` de confirmação com copy ("Excluir capítulo X? Esta ação não pode ser desfeita").
 - [ ] T093 [US6] Integrar ícone "Excluir" em `<ChapterRow>` (T074) para abrir o dialog e disparar o DELETE. Ao receber `X-Book-Deleted: true`, redirecionar para `/books` com toast "Último capítulo removido — livro excluído".
@@ -259,24 +259,24 @@ description: "Task list for feature 020-books-chapters-crud"
 
 ## Phase 9: User Story 7 — Modo de exclusão em lote (Priority: P2)
 
-**Goal**: Botão "Excluir capítulos" no cabeçalho ativa modo de exclusão: barra superior sticky com contador, checkboxes por linha (pagos desabilitados), "Confirmar" dispara modal final. Ao aceitar, exclusão atômica; se sobraram apenas `pago` ou zero, livro é preservado ou excluído conforme regra. Ícones por linha e botão "Editar livro" são **ocultados** (não apenas desabilitados).
+**Goal**: Botão "Excluir capítulos" no cabeçalho ativa modo de exclusão: barra superior sticky com contador, checkboxes por linha (capítulos `paid` desabilitados), "Confirmar" dispara modal final. Ao aceitar, exclusão atômica; se sobraram apenas `paid` ou zero, livro é preservado ou excluído conforme regra. Ícones por linha e botão "Editar livro" são **ocultados** (não apenas desabilitados).
 
-**Independent Test**: Entrar no modo, marcar 3 capítulos, confirmar → 3 removidos, `book.status` recomputado. Marcar todos (`select all`) com 1 `pago` → só não-pagos selecionam. Confirmar → livro permanece com 1 `pago`.
+**Independent Test**: Entrar no modo, marcar 3 capítulos, confirmar → 3 removidos, `book.status` recomputado. Marcar todos (`select all`) com 1 `paid` → só não-`paid` selecionam. Confirmar → livro permanece com 1 `paid`.
 
 ### Tests for US7 — TDD
 
-- [ ] T094 [P] [US7] Criar [__tests__/unit/services/chapter-service.bulk-delete.spec.ts](../../__tests__/unit/services/chapter-service.bulk-delete.spec.ts): bloqueia atomicamente se qualquer ID é `pago`, recomputa `book.status`, cascade-delete do livro quando aplicável.
-- [ ] T095 [P] [US7] Criar [__tests__/integration/chapter-bulk-delete.spec.ts](../../__tests__/integration/chapter-bulk-delete.spec.ts): DB real, `POST /api/v1/books/:id/chapters/bulk-delete`, cenário com paid preservado e sem paid com cascade-delete do livro.
+- [ ] T094 [P] [US7] Criar [__tests__/unit/services/chapter-service.bulk-delete.spec.ts](../../__tests__/unit/services/chapter-service.bulk-delete.spec.ts): bloqueia atomicamente se qualquer ID é `paid`, recomputa `book.status`, cascade-delete do livro quando aplicável.
+- [ ] T095 [P] [US7] Criar [__tests__/integration/chapter-bulk-delete.spec.ts](../../__tests__/integration/chapter-bulk-delete.spec.ts): DB real, `POST /api/v1/books/:id/chapters/bulk-delete`, cenário com `paid` preservado e sem `paid` com cascade-delete do livro.
 - [ ] T096 [P] [US7] Criar [__tests__/e2e/chapters-bulk-delete.spec.ts](../../__tests__/e2e/chapters-bulk-delete.spec.ts): ativa o modo, checkboxes, ícones ocultos, barra sticky, modal final, resultado.
 
 ### Implementation for US7
 
-- [ ] T097 [US7] Implementar `ChapterService.bulkDelete(bookId, chapterIds, userId)` em [src/lib/services/chapter-service.ts](../../src/lib/services/chapter-service.ts): valida ownership e ausência de `pago`, executa `DELETE ... WHERE id IN (...)` em transação, aplica cascade-delete do livro quando apropriado, recomputa `book.status` caso contrário.
+- [ ] T097 [US7] Implementar `ChapterService.bulkDelete(bookId, chapterIds, userId)` em [src/lib/services/chapter-service.ts](../../src/lib/services/chapter-service.ts): valida ownership e ausência de `paid`, executa `DELETE ... WHERE id IN (...)` em transação, aplica cascade-delete do livro quando apropriado, recomputa `book.status` caso contrário.
 - [ ] T098 [US7] Implementar route handler `POST` em [src/app/api/v1/books/[id]/chapters/bulk-delete/route.ts](../../src/app/api/v1/books/[id]/chapters/bulk-delete/route.ts) com `bulkDeleteChaptersSchema`. Retorna `204` com `X-Book-Deleted: true` quando aplicável.
 - [ ] T099 [P] [US7] Criar [src/components/features/chapters/chapters-bulk-delete-bar.tsx](../../src/components/features/chapters/chapters-bulk-delete-bar.tsx): barra sticky top com contador "N capítulos selecionados", botão "Confirmar" (disabled se N=0), botão "Cancelar". Usa tokens de cor semânticos (destructive).
 - [ ] T100 [US7] Estender [src/components/features/books/book-detail-client.tsx](../../src/components/features/books/book-detail-client.tsx) (T065) com estado `isSelectionMode: boolean`. Quando `true`: (a) renderizar `<ChaptersBulkDeleteBar>`; (b) ocultar ícones/botão "Editar livro" via className condicional; (c) passar `isSelectionMode` para `<ChaptersTable>` que passa para `<ChapterRow>`.
-- [ ] T101 [US7] Estender `<ChaptersTable>` (T064) e `<ChapterRow>` (T074) para receber `isSelectionMode`. Quando `true`: renderizar `<Checkbox>` em vez do `RowActions`. Capítulos `pago` ficam com checkbox `disabled`. Checkbox no header seleciona todos os não-pagos.
-- [ ] T102 [US7] Adicionar modal final de confirmação em [src/components/features/chapters/chapters-bulk-delete-confirm.tsx](../../src/components/features/chapters/chapters-bulk-delete-confirm.tsx): `<AlertDialog>` com contagem, aviso "capítulos pagos são preservados", botão "Excluir". Ao aceitar, chama `POST .../bulk-delete`; ao receber `X-Book-Deleted: true`, redireciona para `/books` com toast.
+- [ ] T101 [US7] Estender `<ChaptersTable>` (T064) e `<ChapterRow>` (T074) para receber `isSelectionMode`. Quando `true`: renderizar `<Checkbox>` em vez do `RowActions`. Capítulos `paid` ficam com checkbox `disabled`. Checkbox no header seleciona todos os não-`paid`.
+- [ ] T102 [US7] Adicionar modal final de confirmação em [src/components/features/chapters/chapters-bulk-delete-confirm.tsx](../../src/components/features/chapters/chapters-bulk-delete-confirm.tsx): `<AlertDialog>` com contagem, aviso "capítulos `paid` são preservados", botão "Excluir". Ao aceitar, chama `POST .../bulk-delete`; ao receber `X-Book-Deleted: true`, redireciona para `/books` com toast.
 
 **Checkpoint**: US7 entregue.
 
@@ -284,21 +284,21 @@ description: "Task list for feature 020-books-chapters-crud"
 
 ## Phase 10: User Story 8 — Editar livro + aumentar capítulos (Priority: P2)
 
-**Goal**: Botão "Editar livro" no cabeçalho abre modal com campos pré-preenchidos. `price_per_hour` desabilitado se ≥ 1 capítulo `pago`. `studio` idem. Quantidade de capítulos não aceita redução (dica orientando a usar exclusão). Ao aumentar de X para Y, Y-X novos capítulos em `pendente` são criados atomicamente, numerados após `MAX(numero)`.
+**Goal**: Botão "Editar livro" no cabeçalho abre modal com campos pré-preenchidos. `price_per_hour` desabilitado se ≥ 1 capítulo `paid`. `studio` idem. Quantidade de capítulos não aceita redução (dica orientando a usar exclusão). Ao aumentar de X para Y, Y-X novos capítulos em `pending` são criados atomicamente, numerados após `MAX(number)`.
 
 **Independent Test**: Editar título → persiste. Tentar reduzir quantidade → dica aparece. Aumentar quantidade → novos capítulos aparecem com números sequenciais após o maior atual.
 
 ### Tests for US8 — TDD
 
-- [ ] T103 [P] [US8] Criar [__tests__/unit/services/book-service.update.spec.ts](../../__tests__/unit/services/book-service.update.spec.ts): aumenta capítulos, bloqueios de price/studio com `pago`, regra de numeração após `MAX(numero)+1`.
+- [ ] T103 [P] [US8] Criar [__tests__/unit/services/book-service.update.spec.ts](../../__tests__/unit/services/book-service.update.spec.ts): aumenta capítulos, bloqueios de price/studio com `paid`, regra de numeração após `MAX(number)+1`.
 - [ ] T104 [P] [US8] Criar [__tests__/integration/book-update.spec.ts](../../__tests__/integration/book-update.spec.ts): DB real, `PATCH /api/v1/books/:id`, atomicidade de aumento de capítulos, conflict `TITLE_ALREADY_IN_USE`.
-- [ ] T105 [P] [US8] Criar [__tests__/e2e/book-edit.spec.ts](../../__tests__/e2e/book-edit.spec.ts): modal pré-preenchido, dica de redução, aumento visível na lista, bloqueios com capítulo pago.
+- [ ] T105 [P] [US8] Criar [__tests__/e2e/book-edit.spec.ts](../../__tests__/e2e/book-edit.spec.ts): modal pré-preenchido, dica de redução, aumento visível na lista, bloqueios com capítulo paid.
 
 ### Implementation for US8
 
 - [ ] T106 [US8] Implementar `BookService.update(bookId, input, userId)` em [src/lib/services/book-service.ts](../../src/lib/services/book-service.ts): valida bloqueios (`BOOK_PAID_PRICE_LOCKED`, `BOOK_PAID_STUDIO_LOCKED`, `CANNOT_REDUCE_CHAPTERS`, `TITLE_ALREADY_IN_USE`), cria delta de capítulos em transação, recomputa `book.status`.
 - [ ] T107 [US8] Implementar route handler `PATCH` em [src/app/api/v1/books/[id]/route.ts](../../src/app/api/v1/books/[id]/route.ts) com `updateBookSchema`.
-- [ ] T108 [P] [US8] Criar [src/components/features/books/book-edit-dialog.tsx](../../src/components/features/books/book-edit-dialog.tsx): modal similar ao de criação, pré-preenchido. `price_per_hour` e `studio` ficam `disabled` com tooltip explicativo quando há capítulo pago (lê da prop `hasPaidChapter` derivada do livro). `chapter-count-input` com min atual; ao tentar reduzir, exibir dica inline "Para reduzir, use 'Excluir capítulos'".
+- [ ] T108 [P] [US8] Criar [src/components/features/books/book-edit-dialog.tsx](../../src/components/features/books/book-edit-dialog.tsx): modal similar ao de criação, pré-preenchido. `price_per_hour` e `studio` ficam `disabled` com tooltip explicativo quando há capítulo paid (lê da prop `hasPaidChapter` derivada do livro). `chapter-count-input` com min atual; ao tentar reduzir, exibir dica inline "Para reduzir, use 'Excluir capítulos'".
 - [ ] T109 [US8] Conectar o botão "Editar livro" no `<BookHeader>` (T063) para abrir `<BookEditDialog>`. Após sucesso, `router.refresh()` e toast de sucesso.
 
 **Checkpoint**: US8 entregue.
@@ -307,9 +307,9 @@ description: "Task list for feature 020-books-chapters-crud"
 
 ## Phase 11: User Story 10 — Bloquear exclusão de estúdio com livros ativos (Priority: P2)
 
-**Goal**: Em `/studios`, ao tentar excluir estúdio com ≥ 1 livro com capítulo ativo → `409 STUDIO_HAS_ACTIVE_BOOKS`. Caso todos os capítulos dos livros do estúdio estejam em `concluido`/`pago`, soft-delete é aceito. Desarquive automático ao recriar com mesmo nome já está em Foundational (T033).
+**Goal**: Em `/studios`, ao tentar excluir estúdio com ≥ 1 livro com capítulo ativo → `409 STUDIO_HAS_ACTIVE_BOOKS`. Caso todos os capítulos dos livros do estúdio estejam em `completed`/`paid`, soft-delete é aceito. Desarquive automático ao recriar com mesmo nome já está em Foundational (T033).
 
-**Independent Test**: Criar estúdio → criar livro com capítulo `pendente` → tentar excluir estúdio → erro. Mover todos para `concluido` → excluir → soft-delete aceito; estúdio some de `/studios` mas o livro histórico continua exibindo-o.
+**Independent Test**: Criar estúdio → criar livro com capítulo `pending` → tentar excluir estúdio → erro. Mover todos para `completed` → excluir → soft-delete aceito; estúdio some de `/studios` mas o livro histórico continua exibindo-o.
 
 ### Tests for US10 — TDD
 
@@ -331,7 +331,7 @@ description: "Task list for feature 020-books-chapters-crud"
 
 **Goal**: Simétrica a US10 para `/narrators` e `/editors`. Bloqueia se vinculado a ≥ 1 capítulo cujo livro tem capítulo ativo. Desarquive automático também em T034/T035.
 
-**Independent Test**: Atribuir narrador a capítulo em `em_edicao` → excluir narrador → erro. Após concluir todos os capítulos → excluir → soft-delete aceito.
+**Independent Test**: Atribuir narrador a capítulo em `editing` → excluir narrador → erro. Após concluir todos os capítulos → excluir → soft-delete aceito.
 
 ### Tests for US11 — TDD
 
@@ -502,7 +502,7 @@ Com 2 devs após Foundational:
 
 - Dev A: US1 → US4 → US5 → US8 → US9.
 - Dev B: US2 → US3 → US6 → US7 → US12.
-- US10 e US11 (independentes, backend-heavy): ficam para quem terminar antes; paralelizáveis.
+- US10 e US11 (independings, backend-heavy): ficam para quem terminar antes; paralelizáveis.
 
 ---
 
@@ -510,8 +510,8 @@ Com 2 devs após Foundational:
 
 - Todas as mutações multi-tabela DEVEM estar em transação (Princípio XI).
 - `recomputeBookStatus` é invocado **sempre** na mesma transação após qualquer mudança em capítulo (criar, editar, excluir, bulk-delete, aumentar capítulos).
-- `num_paginas` permanece no schema (DEFAULT 0) por Princípio XIII mas NÃO é exposto na UI nem no Zod desta feature.
-- `pago` **não é terminal absoluto**: reversão `pago → concluido` é a única exceção, exigindo flag `confirmReversion: true` no backend + `<AlertDialog>` na UI.
+- KPI 4 ("Minutagem média por capítulo" — Princípio XIII v2.12.0) é calculado on-read a partir de `AVG(chapter.edited_hours) * 60` nos capítulos com status ∈ {`reviewing`, `retake`, `completed`, `paid`}. Nenhum campo dedicado é necessário — a feature 020 já coleta `edited_hours` em US5 e é suficiente para alimentar o KPI em feature futura.
+- `paid` **não é terminal absoluto**: reversão `paid → completed` é a única exceção, exigindo flag `confirmReversion: true` no backend + `<AlertDialog>` na UI.
 - Soft-delete unificado (estúdio, narrador, editor): o UI NUNCA hard-deleta. Hard-delete fica para manutenção manual em banco.
 - Desarquive automático por colisão de nome é implementado nos `*-Service.create()`: ao detectar soft-deleted, reativa em vez de retornar 409 — resposta `200 OK` com `meta.reactivated: true`.
 - Princípio XV: antes de usar APIs específicas de lib (Drizzle transactions, RHF, shadcn Dialog/AlertDialog/Popover), consultar Context7 MCP.

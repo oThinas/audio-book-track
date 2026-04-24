@@ -6,6 +6,17 @@
 
 Este documento descreve o modelo físico PostgreSQL que suporta a feature. É a base para: (i) migrations Drizzle; (ii) repositories; (iii) testes de integração; (iv) contratos de API. Todo valor entre aspas é SQL PostgreSQL real.
 
+**Convenção de nomenclatura**: nomes de tabela, coluna e valor de enum no banco são **em inglês**. Labels/strings exibidas ao usuário (português brasileiro) são resolvidas na camada de apresentação (componentes React), nunca no banco nem na API. Tradução canônica de status:
+
+| Status (DB / API) | Rótulo UI (pt-BR) |
+|---|---|
+| `pending` | Pendente |
+| `editing` | Em edição |
+| `reviewing` | Em revisão |
+| `retake` | Retake |
+| `completed` | Concluído |
+| `paid` | Pago |
+
 ---
 
 ## 1. Resumo das mudanças
@@ -40,8 +51,8 @@ CREATE TABLE book (
   studio_id       text NOT NULL REFERENCES studio (id) ON DELETE RESTRICT,
   price_per_hour  numeric(10, 2) NOT NULL CHECK (price_per_hour >= 0.01 AND price_per_hour <= 9999.99),
   pdf_url         text NULL CHECK (pdf_url IS NULL OR (length(pdf_url) <= 2048 AND pdf_url ~* '^https?://')),
-  status          text NOT NULL DEFAULT 'pendente'
-                  CHECK (status IN ('pendente', 'em_edicao', 'em_revisao', 'edicao_retake', 'concluido', 'pago')),
+  status          text NOT NULL DEFAULT 'pending'
+                  CHECK (status IN ('pending', 'editing', 'reviewing', 'retake', 'completed', 'paid')),
   created_at      timestamptz NOT NULL DEFAULT now(),
   updated_at      timestamptz NOT NULL DEFAULT now()
 );
@@ -60,7 +71,7 @@ CREATE INDEX book_created_at_idx ON book (created_at DESC);
 | `studio_id` | `text` FK→studio | Sim | Livro sempre pertence a um estúdio ativo (veja regra de desarquive). |
 | `price_per_hour` | `numeric(10,2)` | Sim | Preço por hora de edição, faixa `[0.01, 9999.99]` (constituição + FR-010). |
 | `pdf_url` | `text` | Não | URL do PDF original; deve começar com `http://`/`https://`. |
-| `status` | `text` | Sim (default `pendente`) | Cache materializado do status agregado (ver seção 4). |
+| `status` | `text` | Sim (default `pending`) | Cache materializado do status agregado (ver seção 4). |
 | `created_at` | `timestamptz` | Sim | Preenchido automaticamente. |
 | `updated_at` | `timestamptz` | Sim | Atualizado via `onUpdateNow()` do Drizzle. |
 
@@ -88,23 +99,22 @@ CREATE INDEX book_created_at_idx ON book (created_at DESC);
 CREATE TABLE chapter (
   id              text PRIMARY KEY DEFAULT gen_random_uuid()::text,
   book_id         text NOT NULL REFERENCES book (id) ON DELETE CASCADE,
-  numero          integer NOT NULL CHECK (numero >= 1),
-  status          text NOT NULL DEFAULT 'pendente'
-                  CHECK (status IN ('pendente', 'em_edicao', 'em_revisao', 'edicao_retake', 'concluido', 'pago')),
+  number          integer NOT NULL CHECK (number >= 1),
+  status          text NOT NULL DEFAULT 'pending'
+                  CHECK (status IN ('pending', 'editing', 'reviewing', 'retake', 'completed', 'paid')),
   narrator_id     text NULL REFERENCES narrator (id) ON DELETE RESTRICT,
   editor_id       text NULL REFERENCES editor (id) ON DELETE RESTRICT,
-  horas_editadas  numeric(5, 2) NOT NULL DEFAULT 0
-                  CHECK (horas_editadas >= 0 AND horas_editadas <= 999.99),
-  num_paginas     integer NOT NULL DEFAULT 0 CHECK (num_paginas >= 0),  -- mantido no schema (Princípio XIII), não exposto nesta feature
+  edited_hours    numeric(5, 2) NOT NULL DEFAULT 0
+                  CHECK (edited_hours >= 0 AND edited_hours <= 999.99),
   created_at      timestamptz NOT NULL DEFAULT now(),
   updated_at      timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE UNIQUE INDEX chapter_book_numero_unique ON chapter (book_id, numero);
+CREATE UNIQUE INDEX chapter_book_number_unique ON chapter (book_id, number);
 CREATE INDEX chapter_book_id_idx ON chapter (book_id);
 CREATE INDEX chapter_narrator_id_idx ON chapter (narrator_id) WHERE narrator_id IS NOT NULL;
 CREATE INDEX chapter_editor_id_idx ON chapter (editor_id) WHERE editor_id IS NOT NULL;
-CREATE INDEX chapter_status_idx ON chapter (book_id, status);
+CREATE INDEX chapter_book_status_idx ON chapter (book_id, status);
 ```
 
 ### Campos
@@ -113,41 +123,42 @@ CREATE INDEX chapter_status_idx ON chapter (book_id, status);
 |-------|------|-------------|-----------|
 | `id` | `text` | Sim | UUID. |
 | `book_id` | `text` FK→book | Sim | Capítulo pertence a um livro. Cascade no delete. |
-| `numero` | `integer` | Sim | Número do capítulo dentro do livro. Único por livro. |
-| `status` | `text` | Sim (default `pendente`) | Status operacional do capítulo. |
-| `narrator_id` | `text` FK→narrator | Não (nullable) | Narrador atribuído. Obrigatório para sair de `pendente`. |
-| `editor_id` | `text` FK→editor | Não (nullable) | Editor atribuído. Obrigatório para sair de `em_edicao`. |
-| `horas_editadas` | `numeric(5,2)` | Sim (default 0) | Horas de edição registradas. Obrigatório `> 0` para sair de `em_edicao`. |
-| `num_paginas` | `integer` | Sim (default 0) | **Preservado no schema** por Princípio XIII/KPI 4; não editável nesta feature (clarificação Q6). |
+| `number` | `integer` | Sim | Número do capítulo dentro do livro. Único por livro. |
+| `status` | `text` | Sim (default `pending`) | Status operacional do capítulo. |
+| `narrator_id` | `text` FK→narrator | Não (nullable) | Narrador atribuído. Obrigatório para sair de `pending`. |
+| `editor_id` | `text` FK→editor | Não (nullable) | Editor atribuído. Obrigatório para sair de `editing`. |
+| `edited_hours` | `numeric(5,2)` | Sim (default 0) | Horas de edição registradas. Obrigatório `> 0` para sair de `editing`. |
 | `created_at`, `updated_at` | `timestamptz` | Sim | Timestamps. |
+
+> ℹ️ Sobre KPIs de produção: o KPI 4 do Princípio XIII foi redefinido (constitution v2.12.0) como "Minutagem média por capítulo" = `AVG(chapter.edited_hours) * 60` sobre capítulos com status ∈ {`reviewing`, `retake`, `completed`, `paid`}. Nenhum campo adicional (`num_pages`, `duration_minutes`, etc.) é necessário — `edited_hours` já é coletado em US5 desta feature e é suficiente para alimentar o KPI em feature futura.
 
 ### Constraints e invariantes
 
-- `UNIQUE (book_id, numero)` — números únicos dentro do livro.
-- `numero` **nunca é reindexado** após exclusão (rastreabilidade histórica, A2). Novos capítulos recebem `MAX(numero) + 1`.
-- Machine state enforcement é no service (`isValidTransition(from, to, ctx)`), não no CHECK do banco — regras dependem de `narrator_id`, `editor_id`, `horas_editadas`.
-- `narrator_id` e `editor_id` nullable porque um capítulo nasce em `pendente` sem atribuição.
+- `UNIQUE (book_id, number)` — números únicos dentro do livro.
+- `number` **nunca é reindexado** após exclusão (rastreabilidade histórica, A2). Novos capítulos recebem `MAX(number) + 1`.
+- Machine state enforcement é no service (`isValidTransition(from, to, ctx)`), não no CHECK do banco — regras dependem de `narrator_id`, `editor_id`, `edited_hours`.
+- `narrator_id` e `editor_id` nullable porque um capítulo nasce em `pending` sem atribuição.
 - FK `ON DELETE RESTRICT`: na prática, nunca dispara, porque narrador/editor usam soft-delete.
 
 ### Máquina de estados (ref. FR-025)
 
 ```text
-pendente ──narrator attribuído──▶ em_edicao
-em_edicao ──editor + horas > 0──▶ em_revisao
-em_revisao ────────────────────▶ edicao_retake  (reprovação opcional)
-edicao_retake ─────────────────▶ em_revisao     (após nova edição)
-em_revisao ────────────────────▶ concluido      (aprovação)
-concluido ─────────────────────▶ pago
-pago ──confirmReversion=true──▶ concluido      (única reversão permitida; FR-026)
+pending   ──narrator attribuído──▶ editing
+editing   ──editor + edited_hours > 0──▶ reviewing
+reviewing ──────────────────────▶ retake      (reprovação opcional)
+retake    ──────────────────────▶ reviewing   (após nova edição)
+reviewing ──────────────────────▶ completed   (aprovação)
+completed ──────────────────────▶ paid
+paid      ──confirmReversion=true──▶ completed (única reversão permitida; FR-026)
 ```
 
 Qualquer outra transição → `422 INVALID_STATUS_TRANSITION`.
 
-### Imutabilidade parcial em `pago`
+### Imutabilidade parcial em `paid`
 
-- Enquanto `status = 'pago'`:
-  - `narrator_id`, `editor_id`, `horas_editadas`, `num_paginas`: rejeitados em PATCH com `409 CHAPTER_PAID_LOCKED`.
-  - `status`: aceito **apenas** valor `concluido` **e somente se** payload contém `confirmReversion: true`; caso contrário `422 REVERSION_CONFIRMATION_REQUIRED`.
+- Enquanto `status = 'paid'`:
+  - `narrator_id`, `editor_id`, `edited_hours`: rejeitados em PATCH com `409 CHAPTER_PAID_LOCKED`.
+  - `status`: aceito **apenas** valor `completed` **e somente se** payload contém `confirmReversion: true`; caso contrário `422 REVERSION_CONFIRMATION_REQUIRED`.
   - DELETE rejeitado com `409 CHAPTER_PAID_LOCKED`.
 
 ---
@@ -157,18 +168,28 @@ Qualquer outra transição → `422 INVALID_STATUS_TRANSITION`.
 Helper puro de domínio (`src/lib/domain/book-status.ts`):
 
 ```ts
-export type BookStatus = "pendente" | "em_edicao" | "em_revisao" | "edicao_retake" | "concluido" | "pago";
+export type BookStatus =
+  | "pending"
+  | "editing"
+  | "reviewing"
+  | "retake"
+  | "completed"
+  | "paid";
 
 export function computeBookStatus(chapters: Array<{ status: BookStatus }>): BookStatus {
   if (chapters.length === 0) {
     throw new Error("computeBookStatus: invariante violada — livro sem capítulos.");
   }
-  if (chapters.every((c) => c.status === "pago")) return "pago";
-  if (chapters.every((c) => c.status === "concluido" || c.status === "pago")
-      && chapters.some((c) => c.status === "concluido")) return "concluido";
-  if (chapters.some((c) => c.status === "em_revisao" || c.status === "edicao_retake")) return "em_revisao";
-  if (chapters.some((c) => c.status === "em_edicao")) return "em_edicao";
-  return "pendente";
+  if (chapters.every((c) => c.status === "paid")) return "paid";
+  if (
+    chapters.every((c) => c.status === "completed" || c.status === "paid") &&
+    chapters.some((c) => c.status === "completed")
+  ) {
+    return "completed";
+  }
+  if (chapters.some((c) => c.status === "reviewing" || c.status === "retake")) return "reviewing";
+  if (chapters.some((c) => c.status === "editing")) return "editing";
+  return "pending";
 }
 ```
 
@@ -189,7 +210,7 @@ export async function recomputeBookStatus(
 ```
 
 Chamado obrigatoriamente após:
-- Criação do livro com N capítulos (status final inicial = `pendente`).
+- Criação do livro com N capítulos (status final inicial = `pending`).
 - PATCH de capítulo (status change, narrador, editor, horas).
 - DELETE individual de capítulo (antes do cascade-delete do livro se aplicável).
 - Bulk delete de capítulos.
@@ -281,8 +302,8 @@ src/lib/db/schema/
 Exemplo `src/lib/db/schema/book.ts`:
 
 ```ts
-import { check, index, numeric, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
+import { check, index, numeric, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { studio } from "./studio";
 
 export const book = pgTable(
@@ -296,10 +317,10 @@ export const book = pgTable(
     pricePerHour: numeric("price_per_hour", { precision: 10, scale: 2 }).notNull(),
     pdfUrl: text("pdf_url"),
     status: text("status", {
-      enum: ["pendente", "em_edicao", "em_revisao", "edicao_retake", "concluido", "pago"],
+      enum: ["pending", "editing", "reviewing", "retake", "completed", "paid"],
     })
       .notNull()
-      .default("pendente"),
+      .default("pending"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .defaultNow()
@@ -319,11 +340,11 @@ export const book = pgTable(
 Exemplo `src/lib/db/schema/chapter.ts`:
 
 ```ts
-import { check, index, integer, numeric, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
+import { check, index, integer, numeric, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { book } from "./book";
-import { narrator } from "./narrator";
 import { editor } from "./editor";
+import { narrator } from "./narrator";
 
 export const chapter = pgTable(
   "chapter",
@@ -332,16 +353,15 @@ export const chapter = pgTable(
     bookId: text("book_id")
       .notNull()
       .references(() => book.id, { onDelete: "cascade" }),
-    numero: integer("numero").notNull(),
+    number: integer("number").notNull(),
     status: text("status", {
-      enum: ["pendente", "em_edicao", "em_revisao", "edicao_retake", "concluido", "pago"],
+      enum: ["pending", "editing", "reviewing", "retake", "completed", "paid"],
     })
       .notNull()
-      .default("pendente"),
+      .default("pending"),
     narratorId: text("narrator_id").references(() => narrator.id, { onDelete: "restrict" }),
     editorId: text("editor_id").references(() => editor.id, { onDelete: "restrict" }),
-    horasEditadas: numeric("horas_editadas", { precision: 5, scale: 2 }).notNull().default("0"),
-    numPaginas: integer("num_paginas").notNull().default(0),
+    editedHours: numeric("edited_hours", { precision: 5, scale: 2 }).notNull().default("0"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .defaultNow()
@@ -349,14 +369,13 @@ export const chapter = pgTable(
       .notNull(),
   },
   (table) => [
-    uniqueIndex("chapter_book_numero_unique").on(table.bookId, table.numero),
+    uniqueIndex("chapter_book_number_unique").on(table.bookId, table.number),
     index("chapter_book_id_idx").on(table.bookId),
-    index("chapter_narrator_id_idx").on(table.narratorId),
-    index("chapter_editor_id_idx").on(table.editorId),
+    index("chapter_narrator_id_idx").on(table.narratorId).where(sql`${table.narratorId} IS NOT NULL`),
+    index("chapter_editor_id_idx").on(table.editorId).where(sql`${table.editorId} IS NOT NULL`),
     index("chapter_book_status_idx").on(table.bookId, table.status),
-    check("chapter_numero_positive", sql`${table.numero} >= 1`),
-    check("chapter_horas_range", sql`${table.horasEditadas} >= 0 AND ${table.horasEditadas} <= 999.99`),
-    check("chapter_num_paginas_non_negative", sql`${table.numPaginas} >= 0`),
+    check("chapter_number_positive", sql`${table.number} >= 1`),
+    check("chapter_edited_hours_range", sql`${table.editedHours} >= 0 AND ${table.editedHours} <= 999.99`),
   ],
 );
 ```
@@ -365,7 +384,7 @@ export const chapter = pgTable(
 
 ## 7. Relações Drizzle (`relations()`)
 
-Definidas em `src/lib/db/schema/index.ts` ou arquivo dedicado:
+Definidas em `src/lib/db/schema/relations.ts`:
 
 ```ts
 import { relations } from "drizzle-orm";
@@ -394,7 +413,7 @@ export const chapterRelations = relations(chapter, ({ one }) => ({
 **Não** há coluna persistida para `book.total_earnings` — Princípio II exige cálculo auditável e determinístico, recomputado em leitura:
 
 ```sql
-SELECT COALESCE(SUM(ch.horas_editadas * b.price_per_hour), 0) AS total_earnings
+SELECT COALESCE(SUM(ch.edited_hours * b.price_per_hour), 0) AS total_earnings
 FROM book b
 JOIN chapter ch ON ch.book_id = b.id
 WHERE b.id = :bookId;
@@ -403,9 +422,9 @@ WHERE b.id = :bookId;
 Para a listagem `/books` (todos os livros com seus totais):
 
 ```sql
-SELECT b.*,
-       COALESCE(SUM(ch.horas_editadas * b.price_per_hour), 0) AS total_earnings,
-       COUNT(ch.id) FILTER (WHERE ch.status IN ('concluido', 'pago')) AS completed_chapters,
+SELECT b.id, b.title, b.studio_id, b.price_per_hour, b.pdf_url, b.status, b.created_at, b.updated_at,
+       COALESCE(SUM(ch.edited_hours * b.price_per_hour), 0) AS total_earnings,
+       COUNT(ch.id) FILTER (WHERE ch.status IN ('completed', 'paid')) AS completed_chapters,
        COUNT(ch.id) AS total_chapters
 FROM book b
 LEFT JOIN chapter ch ON ch.book_id = b.id
@@ -423,12 +442,12 @@ Selecionar colunas específicas; **proibido** `SELECT *`.
 |---|------------|-------------|
 | I1 | Todo livro tem ≥ 1 capítulo | Service layer (criação + cascade de exclusão) |
 | I2 | `book.status` = `computeBookStatus(chapters)` em qualquer snapshot | `recomputeBookStatus` chamado após toda mutação |
-| I3 | `numero` único por `book_id` | `UNIQUE (book_id, numero)` |
+| I3 | `number` único por `book_id` | `UNIQUE (book_id, number)` |
 | I4 | Títulos únicos por estúdio (case-insensitive) | `UNIQUE (lower(title), studio_id)` |
 | I5 | Nenhum narrador/editor/estúdio ativo com mesmo nome | `UNIQUE (lower(name)) WHERE deleted_at IS NULL` |
 | I6 | `price_per_hour ∈ [0.01, 9999.99]` | CHECK no banco + Zod |
-| I7 | `horas_editadas ∈ [0, 999.99]` | CHECK + Zod |
-| I8 | Capítulo `pago` imutável exceto status reversível com flag | Service layer + API `confirmReversion` flag |
+| I7 | `edited_hours ∈ [0, 999.99]` | CHECK + Zod |
+| I8 | Capítulo `paid` imutável exceto status reversível com flag | Service layer + API `confirmReversion` flag |
 | I9 | Nenhuma operação multi-tabela fora de transação | Service usa `db.transaction(tx => ...)` |
 | I10 | `pdf_url` formato HTTP(S) ou NULL | CHECK + Zod |
 

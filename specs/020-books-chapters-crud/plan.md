@@ -5,7 +5,7 @@
 
 ## Summary
 
-Esta feature introduz o núcleo operacional do AudioBook Track: o CRUD completo de **Livros** e **Capítulos**. Enquanto as features anteriores (estúdios, narradores, editores) construíram o cadastro de entidades-suporte, esta é a primeira feature em que os artefatos centrais da produção (capítulo = unidade de trabalho, conforme Princípio I) ganham forma. Cobre: (i) listagem `/books` com barra de pesquisa, ordenação e status agregado; (ii) modal de criação de livro com criação inline de estúdio e propagação transacional de `price_per_hour → studio.default_hourly_rate`; (iii) tela de detalhes `/books/:id` com cabeçalho informativo, listagem de capítulos com edição inline e máquina de estados validada; (iv) edição de livro (aumentar capítulos, trocar estúdio, atualizar preço/hora quando não há capítulo `pago`); (v) exclusão em lote de capítulos (oculta affordances normais); (vi) popover "Ver PDF" que persiste `book.pdf_url` e abre em nova guia; (vii) constraints de exclusão via **soft-delete unificado** para estúdio, narrador e editor, com **desarquive automático por colisão de nome**; (viii) colunas derivadas "Livros" e "Capítulos" nas listagens existentes; (ix) refatoração do schema Drizzle em um arquivo por entidade.
+Esta feature introduz o núcleo operacional do AudioBook Track: o CRUD completo de **Livros** e **Capítulos**. Enquanto as features anteriores (estúdios, narradores, editores) construíram o cadastro de entidades-suporte, esta é a primeira feature em que os artefatos centrais da produção (capítulo = unidade de trabalho, conforme Princípio I) ganham forma. Cobre: (i) listagem `/books` com barra de pesquisa, ordenação e status agregado; (ii) modal de criação de livro com criação inline de estúdio e propagação transacional de `price_per_hour → studio.default_hourly_rate`; (iii) tela de detalhes `/books/:id` com cabeçalho informativo, listagem de capítulos com edição inline e máquina de estados validada; (iv) edição de livro (aumentar capítulos, trocar estúdio, atualizar preço/hora quando não há capítulo `paid`); (v) exclusão em lote de capítulos (oculta affordances normais); (vi) popover "Ver PDF" que persiste `book.pdf_url` e abre em nova guia; (vii) constraints de exclusão via **soft-delete unificado** para estúdio, narrador e editor, com **desarquive automático por colisão de nome**; (viii) colunas derivadas "Livros" e "Capítulos" nas listagens existentes; (ix) refatoração do schema Drizzle em um arquivo por entidade.
 
 Abordagem técnica: acrescentar as tabelas `book` e `chapter` e a coluna `deleted_at` às tabelas `studio`/`narrator`/`editor`, mantendo Clean Architecture (domain → repositories → services → factories → api). O status do livro (`book.status`) é um **cache materializado** recomputado pelo helper `recomputeBookStatus` a cada mutação de capítulo dentro da mesma transação. Todo fluxo que muta capítulos garante atomicidade via transação Drizzle. O frontend reutiliza o padrão shadcn/ui + composição já consolidado em `/studios`, `/editors`, `/narrators` — com adições específicas: novo modal de livro (`BookCreateDialog`), tela de detalhes (`app/(authenticated)/books/[id]/page.tsx`), edição inline de capítulo, modo de exclusão em lote, popover de PDF. Todas as novas telas seguem mobile-first e dark mode.
 
@@ -18,7 +18,7 @@ Abordagem técnica: acrescentar as tabelas `book` e `chapter` e a coluna `delete
 **Target Platform**: Web (Next.js SSR/Server Components) — produto acessado via navegador desktop e mobile
 **Project Type**: Web application (fullstack Next.js monorepo em `src/`)
 **Performance Goals**: LCP < 1s (Princípio VIII); listagem `/books` com ≤ 500 livros em < 200ms de filtro/ordenação cliente (SC-005); transição de status de capítulo aplicada sem recarregar página em < 15s (SC-003); COUNT das colunas derivadas em `/studios`/`/narrators`/`/editors` adicionando < 100ms à leitura (SC-011)
-**Constraints**: Pagamento (chapter `pago`) imutável exceto via reversão com dupla confirmação; `book.price_per_hour` bloqueado enquanto ≥ 1 capítulo `pago`; soft-delete unificado (nenhuma FK `ON DELETE SET NULL`); livro sempre tem ≥ 1 capítulo (invariante absoluta); preço monetário em `numeric(10,2)`; queries selecionam colunas explícitas (proibido `SELECT *`); toda FK com índice
+**Constraints**: Pagamento (chapter `paid`) imutável exceto via reversão com dupla confirmação; `book.price_per_hour` bloqueado enquanto ≥ 1 capítulo `paid`; soft-delete unificado (nenhuma FK `ON DELETE SET NULL`); livro sempre tem ≥ 1 capítulo (invariante absoluta); preço monetário em `numeric(10,2)`; queries selecionam colunas explícitas (proibido `SELECT *`); toda FK com índice
 **Scale/Scope**: Sistema de uso pessoal/pequeno time; ≤ 500 livros por produtor, ≤ 999 capítulos por livro, até dezenas de estúdios/narradores/editores
 
 ## Constitution Check
@@ -30,8 +30,8 @@ Abordagem técnica: acrescentar as tabelas `book` e `chapter` e a coluna `delete
 | Princípio | Status | Observação |
 |-----------|--------|------------|
 | I. Capítulo como unidade de trabalho | ✅ PASS | Atribuições de narrador/editor, horas e status operam no capítulo. `book.status` é cache materializado — capítulo permanece fonte da verdade. |
-| II. Precisão financeira | ⚠ DEVIATION (justificada) | FR-026 permite `pago → concluido` mediante dupla confirmação + flag `confirmReversion`. Não altera dados financeiros (horas/preço), apenas o status para corrigir "marcação errada de pago". Ver Complexity Tracking #1. |
-| III. Integridade do ciclo de vida | ⚠ DEVIATION (justificada) | Constituição diz `pago` é terminal. Spec FR-025 adiciona `pago → concluido` explícito (único retrocesso permitido, com dupla confirmação). Ver Complexity Tracking #1. |
+| II. Precisão financeira | ⚠ DEVIATION (justificada) | FR-026 permite `paid → completed` mediante dupla confirmação + flag `confirmReversion`. Não altera dados financeiros (horas/preço), apenas o status para corrigir "marcação errada de paid". Ver Complexity Tracking #1. |
+| III. Integridade do ciclo de vida | ⚠ DEVIATION (justificada) | Constituição diz `paid` é terminal. Spec FR-025 adiciona `paid → completed` explícito (único retrocesso permitido, com dupla confirmação). Ver Complexity Tracking #1. |
 | IV. Simplicidade primeiro (YAGNI) | ✅ PASS | Nenhuma abstração especulativa. Todas as extensões de UI (modo de exclusão, reversão, desarquive) são requeridas por Stories P1/P2. |
 | V. TDD | ✅ PASS (plano abaixo impõe) | `recomputeBookStatus`, máquina de estados e cálculo de ganho terão cobertura 100%. Cobertura geral ≥ 80% (SC-010). |
 | VI. Clean Architecture | ✅ PASS | Novas entidades seguem o padrão existente: `domain/book.ts`, `domain/chapter.ts`, `domain/book-repository.ts`, `domain/chapter-repository.ts`, `repositories/drizzle/drizzle-book-repository.ts`, `services/book-service.ts`, `services/chapter-service.ts`, `factories/book.ts`, `factories/chapter.ts`, `api/v1/books/*`, `api/v1/chapters/*`. |
@@ -41,7 +41,7 @@ Abordagem técnica: acrescentar as tabelas `book` e `chapter` e a coluna `delete
 | X. Padrões REST | ✅ PASS | Endpoints plural kebab-case, status codes corretos, envelope `{ data }`/`{ error }`, Zod em toda entrada (FR-056). |
 | XI. PostgreSQL | ✅ PASS | `numeric(10,2)` para preço, `numeric(5,2)` para horas, toda FK com índice, transações nas mutações multi-tabela, `drizzle-kit generate` + `migrate` (sem `push`). |
 | XII. Anti-padrões proibidos | ✅ PASS | Sem `any`, sem `SELECT *`, sem `useEffect` para derivar estado, sem HTML cru, sem `_components/` em `src/app/`. |
-| XIII. Métricas e KPIs | ⚠ DEVIATION (documentada) | KPI 4 "Média de duração por página" depende de `num_paginas`. Spec atual (FR-054/Q6) remove `num_paginas` do modelo. **Resolução adotada no plano** (ver Complexity Tracking #2): adicionar a coluna `num_paginas integer DEFAULT 0` a `chapter` **apenas no schema** (não exposta em UI desta feature), preservando a possibilidade de KPI 4 em feature futura sem conflitar com o escopo visual decidido na clarificação. |
+| XIII. Métricas e KPIs | ✅ PASS | Constitution v2.12.0 redefiniu o KPI 4 como "Minutagem média por capítulo" = `AVG(chapter.edited_hours) * 60`. Nenhum campo novo é necessário — `edited_hours` (já coletado em US5) alimenta o cálculo. Sem deviation. |
 | XIV. Visualização de PDF | ⚠ SCOPE-SPLIT (justificado) | Princípio XIV descreve viewer completo (lazy, paginação, zoom). Esta feature implementa **apenas a persistência** de `book.pdf_url` + link para nova guia (US9). O **viewer** permanece fora de escopo e será tratado em feature futura, sem bloquear esta entrega. Ver Complexity Tracking #3. |
 | XV. Ferramentas e skills obrigatórias | ✅ PASS | `/speckit-specify` já executado; `/speckit-clarify` rodado com 11 pontos resolvidos; Pencil MCP será consultado para Node ID YeFYS antes de construir tela de detalhes; Context7 MCP consultado para cada lib antes de usar API. |
 | XVI. Qualidade de código e verificação | ✅ PASS | Fase final única com `bun run lint` + `test:unit` + `test:integration` + `test:e2e` + `build` antes do PR. |
@@ -50,7 +50,7 @@ Abordagem técnica: acrescentar as tabelas `book` e `chapter` e a coluna `delete
 
 ### Post-design gate (2026-04-23, pós-Phase 1)
 
-Re-executado após geração de `research.md`, `data-model.md`, `contracts/` e `quickstart.md`. Nenhum novo desvio introduzido. Decisões do design respeitam o soft-delete unificado, a invariante `book ≥ 1 capítulo`, a máquina de estados estendida com `pago → concluido` controlada e a refatoração de schema em arquivos por entidade. Status: ✅ PASS.
+Re-executado após geração de `research.md`, `data-model.md`, `contracts/` e `quickstart.md`. Nenhum novo desvio introduzido. Decisões do design respeitam o soft-delete unificado, a invariante `book ≥ 1 capítulo`, a máquina de estados estendida com `paid → completed` controlada e a refatoração de schema em arquivos por entidade. Status: ✅ PASS.
 
 ## Project Structure
 
@@ -117,7 +117,7 @@ src/
 │           ├── chapters-table.tsx               # tabela com edição inline + checkboxes (select mode)
 │           ├── chapter-row.tsx                  # linha com estados: view / edit / select
 │           ├── chapter-status-select.tsx        # select limitado à transições válidas
-│           ├── chapter-paid-reversion-dialog.tsx # modal de alerta "pago → concluído"
+│           ├── chapter-paid-reversion-dialog.tsx # modal de alerta "paid → concluído"
 │           └── chapters-bulk-delete-bar.tsx     # barra superior com contador + confirm/cancel
 │
 ├── lib/
@@ -185,9 +185,9 @@ __tests__/
 ├── e2e/
 │   ├── books-create-flow.spec.ts                # criar livro via modal, estúdio inline, propagação
 │   ├── books-detail.spec.ts                     # abrir detalhes, navegar, voltar
-│   ├── chapters-edit-inline.spec.ts             # editar capítulo, transições válidas, modal de reversão pago → concluído
+│   ├── chapters-edit-inline.spec.ts             # editar capítulo, transições válidas, modal de reversão paid → concluído
 │   ├── chapters-bulk-delete.spec.ts             # modo exclusão, all-with-paid preserva, last chapter delete redireciona
-│   ├── book-edit-increase.spec.ts               # aumentar capítulos em +N, bloqueio de redução, bloqueio de price_per_hour com pago
+│   ├── book-edit-increase.spec.ts               # aumentar capítulos em +N, bloqueio de redução, bloqueio de price_per_hour com paid
 │   ├── book-pdf.spec.ts                         # popover salvar URL, abrir em nova guia, validação
 │   └── soft-delete-unarchive.spec.ts            # excluir estúdio, recriar com mesmo nome → desarquive
 └── helpers/
@@ -200,8 +200,8 @@ __tests__/
 
 | Violation | Why Needed | Simpler Alternative Rejected Because |
 |-----------|------------|-------------------------------------|
-| **#1 — Reversão `pago → concluido` com dupla confirmação** (Princípios II + III) | O produtor precisa corrigir erros operacionais (ex: marcou capítulo como `pago` por engano). Sem essa reversão, a única saída seria UPDATE manual no banco, o que é mais perigoso (sem trilha de UI/auditoria) e contradiz o princípio de manter operações no produto. A reversão preserva dados financeiros (horas, preço) — muda apenas o status. | "Bloquear 100% após `pago`" foi descartado porque o caso de "erro de marcação" é real e recorrente; forçar escape via banco cria risco operacional maior. "Permitir reversão livre" foi descartado porque remove o guard-rail — a dupla confirmação (`confirmReversion: true` no backend + modal em UI) mantém a reversão como ação consciente, explícita e auditável. |
-| **#2 — Manter `chapter.num_paginas` no schema mesmo removendo da UI** (Princípio XIII) | Princípio XIII define `num_paginas` como campo obrigatório para o KPI 4 ("Média de duração por página"). A clarificação Q6 da spec removeu o campo da UI desta feature a pedido do produtor. Para preservar a possibilidade de KPI 4 em feature futura sem migração destrutiva, a coluna é mantida no schema com `DEFAULT 0` — invisível nesta feature, mas existente. | "Remover a coluna por completo" foi descartado porque criaria migração destrutiva para reintroduzir o campo depois (e perderia qualquer dado populado por script). "Expor na UI ainda que o produtor pediu para esconder" foi descartado porque contradiz a clarificação explícita Q6. A solução "schema sim, UI não" é mínima e não bloqueante. |
+| **#1 — Reversão `paid → completed` com dupla confirmação** (Princípios II + III) | O produtor precisa corrigir erros operacionais (ex: marcou capítulo como `paid` por engano). Sem essa reversão, a única saída seria UPDATE manual no banco, o que é mais perigoso (sem trilha de UI/auditoria) e contradiz o princípio de manter operações no produto. A reversão preserva dados financeiros (horas, preço) — muda apenas o status. | "Bloquear 100% após `paid`" foi descartado porque o caso de "erro de marcação" é real e recorrente; forçar escape via banco cria risco operacional maior. "Permitir reversão livre" foi descartado porque remove o guard-rail — a dupla confirmação (`confirmReversion: true` no backend + modal em UI) mantém a reversão como ação consciente, explícita e auditável. |
+| **#2 — Resolvido pela constitution v2.12.0** | O desvio anterior (Princípio XIII dependia de `num_paginas`) foi resolvido a montante: a constituição redefiniu o KPI 4 como "Minutagem média por capítulo" = `AVG(chapter.edited_hours) * 60`, eliminando a necessidade de um campo dedicado. Nenhum desvio permanece nesta feature em relação ao Princípio XIII. | N/A — deixou de ser desvio. |
 | **#3 — PDF apenas como persistência de URL + link** (Princípio XIV) | Princípio XIV descreve um PDF viewer completo (lazy, paginação, zoom). A spec US9/FR-042–045 entrega apenas a primeira metade (persistir `book.pdf_url` e abrir em nova guia). Construir o viewer completo nesta feature explode o escopo e adiciona dependências pesadas ao bundle antes de haver necessidade validada. | "Entregar o viewer completo agora" foi descartado por custo (dependência de PDF.js, UX de paginação/zoom, testes de accessibility) contra benefício atual (link em nova guia resolve 80% do uso). O viewer completo é feature de seguimento — esta entrega fornece a **URL estável** que ele consumirá. |
 
 ## Artefatos gerados (Phase 0 + Phase 1)

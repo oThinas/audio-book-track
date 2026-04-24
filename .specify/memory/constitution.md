@@ -1,40 +1,51 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 2.10.0 → 2.11.0 (MINOR: Principle VII expanded with
-rule forbidding route-colocated `_components/` folders; components
-DEVEM residir em `src/components/features/<feature>/`)
+Version change: 2.11.0 → 2.12.0 (MINOR: Principle XIII — KPI 4 resolved
+from TBD to concrete definition. KPI 4 renamed from "Média de duração
+por página" to "Minutagem média por capítulo" and re-founded on the
+existing `chapter.edited_hours` field (converted to minutes at
+render time — `edited_hours * 60`). No new column is required; the
+previously-proposed `num_paginas` subsection is removed from the
+principle. Also carries nomenclature alignment PT→EN for field/enum
+names in formulas across the constitution — DB/code values in English,
+UI labels remain PT.)
 
 Modified principles:
-  - VII. Frontend: Composição, Atomicidade e Mobile First:
-    - Added "Localização de Componentes de Feature" subsection:
-      pastas `_components/` (ou qualquer variante colocada dentro
-      de `src/app/`) são PROIBIDAS. Componentes de feature DEVEM
-      residir em `src/components/features/<feature>/` e serem
-      importados via alias `@/components/features/...`.
-  - XII. Anti-Padrões Proibidos (Frontend):
-    - Added explicit forbidden pattern: criar pasta `_components/`
-      (ou similar) dentro de `src/app/` para colocar componentes
-      de UI junto à rota.
-  - Self-Review Checklist:
-    - Added item em "Anti-Padrões": nenhuma pasta `_components/`
-      dentro de `src/app/`.
+  - XIII. Métricas e KPIs de Produção:
+    - KPI 4 redefined: "Minutagem média por capítulo" computed as
+      AVG(chapter.edited_hours) * 60 over chapters with status
+      ∈ {reviewing, retake, completed, paid} and edited_hours > 0.
+      No new column; reuses the same source that feeds KPI 1 and 5.
+    - Subsection "Campo `num_paginas`" removed — não há campo
+      dedicado. `edited_hours` é suficiente para todos os KPIs.
+    - Formula references in KPIs 1/5 aligned to English
+      (`chapter.edited_hours × book.price_per_hour`).
+    - Self-Review item XIII updated: division-by-zero guard in
+      KPI 4 references edited_hours = 0 exclusion.
+  - XIV. Visualização de PDF do Livro:
+    - Clarified: PDF metadata (page count) does NOT overwrite
+      chapter-level production fields (`edited_hours`, `num_pages`
+      was never a dependency).
+  - Domain entities block:
+    - Chapter entry: no schema addition — status + narrator_id +
+      editor_id + edited_hours are enough.
 
-Added sections: N/A (amendment within existing principles)
+Added sections: N/A
 
-Removed sections: N/A
+Removed sections: "Campo `num_paginas`" subsection under XIII
+(não era necessário; `edited_hours` supre o KPI 4).
 
 Templates requiring updates:
   ✅ .specify/memory/constitution.md — this file (updated now)
-  ⚠ CLAUDE.md — adicionar regra sobre `_components/` proibido e
-    `src/components/features/` como localização obrigatória de
-    componentes de feature (pendente, para manter alinhamento)
-  ✅ .specify/templates/plan-template.md — sem mudanças necessárias
-     (estrutura de frontend já referencia Princípio VII)
-  ✅ .specify/templates/tasks-template.md — sem mudanças necessárias
-  ✅ .specify/templates/spec-template.md — sem mudanças necessárias
+  ✅ CLAUDE.md — already aligned (EN field names)
+  ✅ specs/020-books-chapters-crud/* — feature 020 já coleta
+    edited_hours em US5; KPI 4 é consumidor posterior, sem
+    dependência de schema. Notas de "migration aditiva para
+    num_pages/duration_minutes" serão removidas dos docs.
+  ✅ .specify/templates/{plan,tasks,spec}-template.md — no change
 
-Follow-up TODOs: N/A
+Follow-up TODOs: N/A (KPI 4 unblocked; no schema migration required).
 -->
 
 # AudioBook Track Constitution
@@ -63,7 +74,7 @@ persistidos — nunca derivado dinamicamente de valores que podem mudar.
 - O preço/hora DEVE ser vinculado ao **livro**, não ao estúdio. Ele é editável
   enquanto o livro não estiver `pago`. Uma vez que o livro atinge o status
   `pago`, o preço torna-se imutável para preservar o histórico financeiro.
-- A fórmula de ganho é: `horas_editadas × preço_hora_do_livro`.
+- A fórmula de ganho é: `chapter.edited_hours × book.price_per_hour`. (Os nomes dos campos em inglês no código; labels em português na UI.)
 - Ganhos calculados DEVEM ser auditáveis: todas as entradas do cálculo
   (horas, preço, responsável, data) DEVEM estar disponíveis para consulta.
 - Relatórios de ganho por período DEVEM ser filtráveis por capítulo, livro e
@@ -89,7 +100,7 @@ pendente → em edição → em revisão → concluído → pago
 |---|---|---|
 | `pendente` | Gravação não iniciada | — |
 | `em edição` | Gravação finalizada, edição pendente | narrador atribuído |
-| `em revisão` | Edição finalizada, revisão pendente | editor + horas_editadas registrados |
+| `em revisão` | Edição finalizada, revisão pendente | editor + `edited_hours` registrados |
 | `edição retake` | Revisão reprovada, nova edição necessária | revisão explicitamente reprovada |
 | `concluído` | Revisão aprovada, aguarda decisão do estúdio | revisão aprovada (de `em revisão`) |
 | `pago` | Histórico imutável, edição do livro desabilitada | aprovação do estúdio |
@@ -655,19 +666,22 @@ apoiar decisões do estúdio. Todos os dados DEVEM ser calculados no servidor.
 
 | # | KPI | Definição |
 |---|---|---|
-| 1 | **Ganho do período** | Soma de `horas_editadas × preço_hora_livro` dos capítulos com status `pago` no intervalo selecionado |
-| 2 | **Capítulos concluídos do período** | Contagem de capítulos que atingiram `concluído` ou `pago` no intervalo selecionado |
-| 3 | **Livros em andamento** | Contagem de livros com ao menos 1 capítulo em status diferente de `pendente` e diferente de `pago`, agrupados também por número de estúdios distintos |
-| 4 | **Média de duração por página** | `SUM(horas_editadas) ÷ SUM(num_paginas)` dos capítulos com status ≥ `em revisão` e `num_paginas > 0` |
-| 5 | **Previsão de receita a receber** | Soma de `(horas_editadas × preço_hora_livro)` dos capítulos com status entre `em edição` e `concluído` (não `pago`) — receita pendente caso todos sejam concluídos |
+| 1 | **Ganho do período** | Soma de `chapter.edited_hours × book.price_per_hour` dos capítulos com status `paid` no intervalo selecionado |
+| 2 | **Capítulos concluídos do período** | Contagem de capítulos que atingiram `completed` ou `paid` no intervalo selecionado |
+| 3 | **Livros em andamento** | Contagem de livros com ao menos 1 capítulo em status diferente de `pending` e diferente de `paid`, agrupados também por número de estúdios distintos |
+| 4 | **Minutagem média por capítulo** | `AVG(chapter.edited_hours) * 60` dos capítulos com status ∈ {`reviewing`, `retake`, `completed`, `paid`} e `edited_hours > 0`. Unidade: minutos. A conversão horas→minutos acontece na camada de apresentação; nenhum campo novo é necessário — reusa a mesma fonte dos KPIs 1 e 5 |
+| 5 | **Previsão de receita a receber** | Soma de `(chapter.edited_hours × book.price_per_hour)` dos capítulos com status entre `editing` e `completed` (não `paid`) — receita pendente caso todos sejam concluídos |
 
 **Regras dos KPIs:**
 - KPI 1 e 2: filtráveis por intervalo de datas (padrão: mês corrente).
 - KPI 3: exibe `N livros em andamento de M estúdio(s)`.
-- KPI 4: `num_paginas = 0` ou nulo são excluídos do denominador para evitar
-  divisão por zero. Exibido também na página individual do livro.
-- KPI 5: exclui capítulos `pago` e `pendente`; considera apenas capítulos
-  com editor atribuído e `horas_editadas > 0`.
+- KPI 4: capítulos com `edited_hours = 0` DEVEM ser excluídos do cálculo
+  para evitar viés (representam capítulos ainda não cronometrados) e para
+  prevenir divisão por zero em agregações relacionadas. Capítulos em status
+  `pending` ou `editing` também não contam — a minutagem só é confiável a
+  partir de `reviewing`.
+- KPI 5: exclui capítulos `paid` e `pending`; considera apenas capítulos
+  com editor atribuído e `edited_hours > 0`.
 
 #### Gráficos do Dashboard (versão inicial)
 
@@ -678,17 +692,12 @@ apoiar decisões do estúdio. Todos os dados DEVEM ser calculados no servidor.
 | 3 | **Ganho por editor** | Barras horizontais | Eixo X: valor em R$; Eixo Y: nome do editor; filtro de período |
 
 **Regras dos gráficos:**
-- Todos os gráficos consideram apenas capítulos com status `pago` no período.
+- Todos os gráficos consideram apenas capítulos com status `paid` no período.
 - Gráfico 1: agrupamento padrão por semana; opção de alternar para mês.
 - Gráfico 2: período sincronizado com o filtro global do dashboard.
 - Gráfico 3: ordenado por ganho decrescente.
 - Dados dos gráficos DEVEM ser servidos via API route dedicada com
   paginação/agregação no banco — nunca carregar todos os registros no cliente.
-
-#### Campo `num_paginas`
-
-- Cada capítulo DEVE ter um campo `num_paginas` (inteiro, configurável na
-  criação ou edição do capítulo enquanto não estiver `pago`).
 
 **Rationale**: KPIs e gráficos bem definidos permitem ao estúdio tomar
 decisões baseadas em dados reais de produção e previsibilidade financeira.
@@ -705,8 +714,9 @@ original. O PDF viewer é uma funcionalidade de leitura — não de edição.
 - A URL do PDF DEVE ser validada no upload (tipo MIME `application/pdf`).
 - Acesso ao PDF DEVE respeitar as mesmas permissões de acesso ao livro.
 - O viewer DEVE suportar navegação por página e zoom básico.
-- Dados do PDF (metadados, número de páginas) NÃO devem sobrescrever
-  configurações manuais do capítulo (`num_paginas`).
+- Dados do PDF (metadados, número de páginas, duração estimada) NÃO devem
+  sobrescrever configurações manuais do capítulo (`edited_hours`,
+  `narrator_id`, `editor_id`).
 
 **Rationale**: O PDF serve como referência para narradores e revisores
 sem necessidade de arquivos externos ao sistema.
@@ -817,15 +827,18 @@ Restrições que se aplicam ao modelo de dados e às entidades do sistema:
 
 - **Estúdio**: entidade mestre com nome e lista de livros. Estúdios não são
   frequentemente criados — o foco do sistema não é gestão de estúdios.
-- **Livro**: pertence a um estúdio; carrega o `preço_por_hora` (editável até
-  o livro atingir o status `pago`, imutável a partir daí para preservar
+- **Livro**: pertence a um estúdio; carrega o `price_per_hour` (editável até
+  o livro atingir o status `paid`, imutável a partir daí para preservar
   histórico financeiro). O número de capítulos é definido na criação do livro.
   Pode ter um `pdf_url` associado (opcional).
-- **Capítulo**: pertence a um livro; tem `status`, `narrador` (responsável
-  pela gravação), `editor` (responsável pela edição), `horas_editadas` e
-  `num_paginas`. É a entidade central do sistema.
-  Status possíveis: `pendente`, `em edição`, `em revisão`, `edição retake`,
-  `concluído`, `pago`.
+- **Capítulo**: pertence a um livro; tem `status`, `narrator_id`
+  (responsável pela gravação), `editor_id` (responsável pela edição) e
+  `edited_hours` (tempo registrado em horas — alimenta a fórmula de ganho
+  e o KPI 4 "Minutagem média por capítulo" via conversão `× 60`). É a
+  entidade central do sistema.
+  Status possíveis (valor no DB / rótulo em UI): `pending` (Pendente),
+  `editing` (Em edição), `reviewing` (Em revisão), `retake` (Retake),
+  `completed` (Concluído), `paid` (Pago).
 - **Narrador**: responsável pela gravação dos capítulos.
 - **Editor**: identificado pelo nome; recebe pagamentos baseados em horas
   editadas em capítulos atribuídos a ele.
@@ -934,7 +947,7 @@ submeter para review ou merge:
 - [ ] XI.   Queries selecionam apenas colunas necessárias (sem SELECT *)?
 - [ ] XI.   Novos foreign keys têm índice?
 - [ ] XI.   Valores monetários usam `numeric`, não `float`?
-- [ ] XIII. KPIs calculados no servidor? Divisão por zero (num_paginas) prevenida?
+- [ ] XIII. KPIs calculados no servidor? Divisão por zero no KPI 4 prevenida (capítulos com `edited_hours = 0` excluídos)?
 - [ ] XIII. Gráficos servidos via API route com agregação no banco (não no cliente)?
 - [ ] XIII. KPI 5 (previsão) exclui capítulos `pago` e `pendente`?
 - [ ] XIV.  PDF viewer carregado via lazy loading? URL validada no upload?
@@ -967,4 +980,4 @@ submeter para review ou merge:
 revisar por outros e cria responsabilidade pessoal com os padrões
 definidos nesta constituição.
 
-**Version**: 2.11.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-04-21
+**Version**: 2.12.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-04-24

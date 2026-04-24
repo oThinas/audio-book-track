@@ -76,7 +76,7 @@ WHERE c.editor_id = :id
 AND EXISTS (
   SELECT 1 FROM chapter c2
   WHERE c2.book_id = b.id
-  AND c2.status IN ('pendente', 'em_edicao', 'em_revisao', 'edicao_retake')
+  AND c2.status IN ('pending', 'editing', 'reviewing', 'retake')
 );
 ```
 

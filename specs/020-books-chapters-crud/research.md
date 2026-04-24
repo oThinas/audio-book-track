@@ -29,7 +29,7 @@ Este documento agrupa decisões técnicas para os pontos que saíram da spec (11
 **Decision**: Adicionar coluna `deleted_at timestamptz NULL` às três tabelas (`studio`, `narrator`, `editor`). Todas as listagens e seletores filtram `WHERE deleted_at IS NULL`. FKs (`book.studio_id`, `chapter.narrator_id`, `chapter.editor_id`) permanecem `ON DELETE RESTRICT` — na prática nunca disparam porque o UI nunca hard-deleta.
 
 **Rationale**:
-- Preserva histórico financeiro e de auditoria (Princípio II): capítulos pagos continuam referenciando o nome original do estúdio/narrador/editor mesmo após soft-delete.
+- Preserva histórico financeiro e de auditoria (Princípio II): capítulos `paid` continuam referenciando o nome original do estúdio/narrador/editor mesmo após soft-delete.
 - Comportamento unificado evita dissonância cognitiva: o produtor aprende uma única regra ("excluir = soft-delete + precondição de não-atividade").
 - Permite desarquive automático (ver ponto 3) sem complexidade extra.
 - Índice parcial `WHERE deleted_at IS NULL` (conforme Princípio XI) acelera as listagens sem penalizar a escrita.
@@ -63,22 +63,22 @@ Este documento agrupa decisões técnicas para os pontos que saíram da spec (11
 **Decision**: Algoritmo `computeBookStatus(chapters: Chapter[]): BookStatus` com precedência de cima para baixo:
 
 ```ts
-if (chapters.every(c => c.status === "pago")) return "pago";
-if (chapters.every(c => c.status === "concluido" || c.status === "pago")
-    && chapters.some(c => c.status === "concluido")) return "concluido";
-if (chapters.some(c => c.status === "em_revisao" || c.status === "edicao_retake")) return "em_revisao";
-if (chapters.some(c => c.status === "em_edicao")) return "em_edicao";
-return "pendente";
+if (chapters.every(c => c.status === "paid")) return "paid";
+if (chapters.every(c => c.status === "completed" || c.status === "paid")
+    && chapters.some(c => c.status === "completed")) return "completed";
+if (chapters.some(c => c.status === "reviewing" || c.status === "retake")) return "reviewing";
+if (chapters.some(c => c.status === "editing")) return "editing";
+return "pending";
 ```
 
 **Rationale**:
 - Reflete exatamente os dois cenários que o produtor codificou (US5.13 e US5.14):
-  - 2 capítulos (1 `pago` + 1 `pendente`) → excluir `pendente` → sobra `pago` apenas → `book.status = pago` ✓
-  - 1 `pago` → adicionar 1 `pendente` → não-todos-pago, sem `em_revisao`/`em_edicao`, mas `pendente` existe → `pendente` ✓
+  - 2 capítulos (1 `paid` + 1 `pending`) → excluir `pending` → sobra `paid` apenas → `book.status = paid` ✓
+  - 1 `paid` → adicionar 1 `pending` → não-todos-paid, sem `reviewing`/`editing`, mas `pending` existe → `pending` ✓
 - A função é **pura**, livre de IO, testável por unit test com table-driven cases. 100% de cobertura exigida por SC-010.
 
 **Alternatives considered**:
-- **Lógica baseada em "menor status da lista"** (ex: ordenar e pegar o primeiro): rejeitado porque não diferencia os casos de aprovação parcial vs. revisão pendente.
+- **Lógica baseada em "menor status da lista"** (ex: ordenar e pegar o primeiro): rejeitado porque não diferencia os casos de aprovação parcial vs. revisão pending.
 - **Fórmula SQL no repository**: rejeitado pelo ponto 1 (separação de lógica da infra).
 
 ---
@@ -101,14 +101,14 @@ return "pendente";
 
 ---
 
-## 6. Reversão `pago → concluido` com dupla confirmação
+## 6. Reversão `paid → completed` com dupla confirmação
 
-**Decision**: `PATCH /api/v1/chapters/:id` com body incluindo `status: "concluido"` e flag obrigatória `confirmReversion: true` quando o estado atual é `pago`. Sem o flag, resposta `422 REVERSION_CONFIRMATION_REQUIRED`. UI exibe `AlertDialog` (shadcn) com copy explícita antes de enviar o flag.
+**Decision**: `PATCH /api/v1/chapters/:id` com body incluindo `status: "completed"` e flag obrigatória `confirmReversion: true` quando o estado atual é `paid`. Sem o flag, resposta `422 REVERSION_CONFIRMATION_REQUIRED`. UI exibe `AlertDialog` (shadcn) com copy explícita antes de enviar o flag.
 
 **Rationale**:
-- Não é uma "mudança financeira" strictu sensu — horas e preço permanecem; apenas o status volta a `concluido`, permitindo edição (útil para corrigir marcação errônea de "pago").
+- Não é uma "mudança financeira" strictu sensu — horas e preço permanecem; apenas o status volta a `completed`, permitindo edição (útil para corrigir marcação errônea de "paid").
 - Dupla barreira (UI + backend flag) garante que uma requisição acidental via curl/script também precise enviar o flag explícito.
-- Consistência com o helper `recomputeBookStatus`: após a reversão, `book.status` é recomputado — se nenhum outro capítulo estiver `pago`, `price_per_hour` volta a ser editável (FR-037).
+- Consistência com o helper `recomputeBookStatus`: após a reversão, `book.status` é recomputado — se nenhum outro capítulo estiver `paid`, `price_per_hour` volta a ser editável (FR-037).
 
 **Alternatives considered**:
 - **Endpoint separado** `POST /api/v1/chapters/:id/revert-paid`: rejeitado por criar superfície extra; o PATCH cobre o caso com uma flag extra.
@@ -148,14 +148,14 @@ O arquivo `src/lib/db/index.ts` (db client) continua importando `./schema` — a
 **Decision**: Usar `text` + Zod enum + CHECK constraint em PostgreSQL (não `pgEnum`).
 
 ```sql
-status text NOT NULL CHECK (status IN ('pendente','em_edicao','em_revisao','edicao_retake','concluido','pago'))
+status text NOT NULL CHECK (status IN ('pending','editing','reviewing','retake','completed','paid'))
 ```
 
 **Rationale**:
 - `pgEnum` do Drizzle cria um tipo enum real no PostgreSQL, o que dificulta adicionar/remover valores depois (migrations frágeis). Adicionar um novo status no futuro exige `ALTER TYPE ... ADD VALUE` que é transacional-restrito em PostgreSQL < 12 e ainda assim requer cuidado.
 - `text + CHECK` é mais flexível: uma nova migration pode `DROP CONSTRAINT + ADD CONSTRAINT` com o conjunto atualizado.
 - Zod no payload garante validação semântica — o CHECK é a rede de segurança final no DB.
-- Valores em `snake_case` sem acentuação (`em_edicao`, `concluido`) para compatibilidade com strings SQL sem escapes e previsibilidade em logs.
+- Valores em `snake_case` sem acentuação (`editing`, `completed`) para compatibilidade com strings SQL sem escapes e previsibilidade em logs.
 
 **Alternatives considered**:
 - **pgEnum**: rejeitado pela rigidez de evolução.
@@ -185,12 +185,12 @@ status text NOT NULL CHECK (status IN ('pendente','em_edicao','em_revisao','edic
 2. **edit**: substitui células por inputs/selects; ícones viram "Cancelar" e "Confirmar".
 3. **select** (quando o modo de exclusão em lote está ativo em toda a tela): checkbox substitui qualquer ícone.
 
-Estado por linha é gerenciado pelo `<ChapterRow>` via `useState` local (`"view" | "edit" | "select"`) com prop de override do modo global de exclusão. Edições simultâneas em linhas diferentes coexistem (cada linha é independente).
+Estado por linha é gerenciado pelo `<ChapterRow>` via `useState` local (`"view" | "edit" | "select"`) com prop de override do modo global de exclusão. Edições simultâneas em linhas diferentes coexistem (cada linha é independing).
 
 **Rationale**:
 - Reusa a convenção já consolidada em `/studios`, `/narrators`, `/editors`.
 - Mantém shape de layout estável (sem mudança de altura/lineshift durante a edição — inputs substituem textos in-place).
-- A reversão `pago → concluido` abre um `AlertDialog` controlado pelo próprio `<ChapterRow>` quando o produtor tenta confirmar um status-change desse tipo.
+- A reversão `paid → completed` abre um `AlertDialog` controlado pelo próprio `<ChapterRow>` quando o produtor tenta confirmar um status-change desse tipo.
 
 **Alternatives considered**:
 - **Drawer lateral de edição completa**: rejeitado por quebrar o padrão já usado.
@@ -205,7 +205,7 @@ Estado por linha é gerenciado pelo `<ChapterRow>` via `useState` local (`"view"
 **Rationale**:
 - Clarificação Q8: o produtor prefere ocultar (interface limpa) a desabilitar (afford sugere que poderia ser clicado em outro contexto).
 - Reduz ruído cognitivo do modo especial.
-- Capítulos `pago` ficam com checkbox **desabilitado visualmente** (não oculto) — é informação útil ("este existe mas não pode ser removido").
+- Capítulos `paid` ficam com checkbox **desabilitado visualmente** (não oculto) — é informação útil ("este existe mas não pode ser removido").
 
 **Alternatives considered**:
 - **Desabilitar + tooltip**: rejeitado pela clarificação.
@@ -226,7 +226,7 @@ Estado por linha é gerenciado pelo `<ChapterRow>` via `useState` local (`"view"
 | DELETE | `/api/v1/books/:id` | Remove livro (cascata em capítulos via FK `ON DELETE CASCADE`) |
 | POST | `/api/v1/books/:id/chapters/bulk-delete` | Recebe `{ chapterIds: string[] }` e executa exclusão atômica |
 | PATCH | `/api/v1/chapters/:id` | Atualiza status/narrador/editor/horas; inclui `confirmReversion?: boolean` |
-| DELETE | `/api/v1/chapters/:id` | Remove capítulo individual (cascade-delete livro se último não-pago sem pagos remanescentes) |
+| DELETE | `/api/v1/chapters/:id` | Remove capítulo individual (cascade-delete livro se último não-`paid` sem `paid` remanescentes) |
 
 **Rationale**:
 - Único POST especial (`bulk-delete`) em vez de `DELETE` com body (pouco padrão HTTP) ou múltiplos DELETEs (não atômico).
@@ -297,7 +297,7 @@ Consultas previstas na fase de implementação (Princípio XV — obrigatório a
 - **Drizzle ORM 0.45**: `relations()`, composite unique indexes com `lower()`, transactions, migrations workflow `generate → migrate`.
 - **Next.js 16.2.1**: App Router Server Components + Route Handlers, `revalidatePath`, `next/cache`, streaming.
 - **better-auth 1.5**: como estender session context para validar owner em operações mutáveis.
-- **Zod 4.3**: `z.string().trim().min(1)`, `superRefine` para regras transacionais (ex: `confirmReversion` quando status = pago).
+- **Zod 4.3**: `z.string().trim().min(1)`, `superRefine` para regras transacionais (ex: `confirmReversion` quando status = paid).
 - **React Hook Form 7.72** + `@hookform/resolvers/zod` 5.2.2: padrão de controlled fields com validação Zod, `useFieldArray` se necessário.
 - **shadcn/ui 4.1**: AlertDialog (reversão), Dialog (modais de livro), Popover (PDF), Checkbox, Command (combobox de estúdio — `<Popover>` + `<Command>` para busca por nome + opção "+ Novo Estúdio" ao final do `<CommandList>` que abre o subformulário inline sem fechar o modal; escolhido sobre `<Select>` nativo porque este não tem campo de busca e a base de estúdios pode crescer), Tooltip (explicações em campos bloqueados).
 - **@tanstack/react-table 8.21**: column sorting, row selection (modo exclusão).
@@ -322,7 +322,7 @@ Consultas previstas na fase de implementação (Princípio XV — obrigatório a
 | 3 | Desarquive automático por colisão | FR-046a, FR-047a, FR-048a |
 | 4 | Regra de precedência `computeBookStatus` | FR-019, US5.13, US5.14 |
 | 5 | Propagação transacional de rate | FR-012, FR-012a, US3 |
-| 6 | Reversão `pago → concluido` com flag | FR-026, US5.7, US5.8 |
+| 6 | Reversão `paid → completed` com flag | FR-026, US5.7, US5.8 |
 | 7 | Schema Drizzle arquivo-por-entidade | FR-052 |
 | 8 | Status como `text + CHECK` | FR-025 (implementação) |
 | 9 | Unicidade `UNIQUE (lower(title), studio_id)` | FR-015, A4 |
