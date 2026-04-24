@@ -1,10 +1,10 @@
 import type { Book, BookStatus } from "@/lib/domain/book";
+import { BookNotFoundError, BookTitleAlreadyInUseError } from "@/lib/errors/book-errors";
 import type {
   BookRepository,
   InsertBookInput,
   UpdateBookInput,
-} from "@/lib/domain/book-repository";
-import { BookNotFoundError, BookTitleAlreadyInUseError } from "@/lib/errors/book-errors";
+} from "@/lib/repositories/book-repository";
 
 export class InMemoryBookRepository implements BookRepository {
   private readonly store = new Map<string, Book>();

@@ -4,8 +4,8 @@ import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import type * as schema from "@/lib/db/schema";
 import { studio } from "@/lib/db/schema";
 import type { CreateStudioInput, Studio, UpdateStudioInput } from "@/lib/domain/studio";
-import type { StudioRepository } from "@/lib/domain/studio-repository";
 import { StudioNameAlreadyInUseError, StudioNotFoundError } from "@/lib/errors/studio-errors";
+import type { StudioRepository } from "@/lib/repositories/studio-repository";
 
 const STUDIO_COLUMNS = {
   id: studio.id,

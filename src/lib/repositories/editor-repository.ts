@@ -1,4 +1,4 @@
-import type { CreateEditorInput, Editor, UpdateEditorInput } from "./editor";
+import type { CreateEditorInput, Editor, UpdateEditorInput } from "@/lib/domain/editor";
 
 export interface EditorRepository {
   findAll(): Promise<Editor[]>;

@@ -1,10 +1,10 @@
 import type { CreateEditorInput, Editor, UpdateEditorInput } from "@/lib/domain/editor";
-import type { EditorRepository } from "@/lib/domain/editor-repository";
 import {
   EditorEmailAlreadyInUseError,
   EditorNameAlreadyInUseError,
   EditorNotFoundError,
 } from "@/lib/errors/editor-errors";
+import type { EditorRepository } from "@/lib/repositories/editor-repository";
 
 export class InMemoryEditorRepository implements EditorRepository {
   private readonly store = new Map<string, Editor>();

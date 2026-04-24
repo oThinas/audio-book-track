@@ -1,4 +1,4 @@
-import type { CreateStudioInput, Studio, UpdateStudioInput } from "./studio";
+import type { CreateStudioInput, Studio, UpdateStudioInput } from "@/lib/domain/studio";
 
 export interface StudioRepository {
   findAll(): Promise<Studio[]>;

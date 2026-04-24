@@ -1,5 +1,5 @@
 import type { CreateStudioInput, Studio, UpdateStudioInput } from "@/lib/domain/studio";
-import type { StudioRepository } from "@/lib/domain/studio-repository";
+import type { StudioRepository } from "@/lib/repositories/studio-repository";
 
 export class StudioService {
   constructor(private readonly repository: StudioRepository) {}

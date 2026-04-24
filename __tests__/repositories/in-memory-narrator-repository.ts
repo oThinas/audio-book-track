@@ -1,6 +1,6 @@
 import type { CreateNarratorInput, Narrator, UpdateNarratorInput } from "@/lib/domain/narrator";
-import type { NarratorRepository } from "@/lib/domain/narrator-repository";
 import { NarratorNameAlreadyInUseError, NarratorNotFoundError } from "@/lib/errors/narrator-errors";
+import type { NarratorRepository } from "@/lib/repositories/narrator-repository";
 
 export class InMemoryNarratorRepository implements NarratorRepository {
   private readonly store = new Map<string, Narrator>();

@@ -1,6 +1,6 @@
 import type { CreateStudioInput, Studio, UpdateStudioInput } from "@/lib/domain/studio";
-import type { StudioRepository } from "@/lib/domain/studio-repository";
 import { StudioNameAlreadyInUseError, StudioNotFoundError } from "@/lib/errors/studio-errors";
+import type { StudioRepository } from "@/lib/repositories/studio-repository";
 
 export class InMemoryStudioRepository implements StudioRepository {
   private readonly store = new Map<string, Studio>();

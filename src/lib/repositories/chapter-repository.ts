@@ -1,5 +1,6 @@
+import type { Chapter, ChapterStatus } from "@/lib/domain/chapter";
+
 import type { RepositoryTx } from "./book-repository";
-import type { Chapter, ChapterStatus } from "./chapter";
 
 export interface InsertChapterInput {
   readonly bookId: string;

@@ -1,4 +1,4 @@
-import type { Book, BookStatus } from "./book";
+import type { Book, BookStatus } from "@/lib/domain/book";
 
 export type RepositoryTx = unknown;
 

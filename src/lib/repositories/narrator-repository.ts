@@ -1,4 +1,4 @@
-import type { CreateNarratorInput, Narrator, UpdateNarratorInput } from "./narrator";
+import type { CreateNarratorInput, Narrator, UpdateNarratorInput } from "@/lib/domain/narrator";
 
 export interface NarratorRepository {
   findAll(): Promise<Narrator[]>;

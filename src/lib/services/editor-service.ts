@@ -1,5 +1,5 @@
 import type { CreateEditorInput, Editor, UpdateEditorInput } from "@/lib/domain/editor";
-import type { EditorRepository } from "@/lib/domain/editor-repository";
+import type { EditorRepository } from "@/lib/repositories/editor-repository";
 
 export class EditorService {
   constructor(private readonly repository: EditorRepository) {}

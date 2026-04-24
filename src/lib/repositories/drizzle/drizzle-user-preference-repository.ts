@@ -4,7 +4,7 @@ import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import type * as schema from "@/lib/db/schema";
 import { userPreference } from "@/lib/db/schema";
 import type { UpdateUserPreference, UserPreference } from "@/lib/domain/user-preference";
-import type { UserPreferenceRepository } from "@/lib/domain/user-preference-repository";
+import type { UserPreferenceRepository } from "@/lib/repositories/user-preference-repository";
 
 const PREFERENCE_COLUMNS = {
   theme: userPreference.theme,

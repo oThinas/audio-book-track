@@ -1,5 +1,5 @@
 import type { CreateNarratorInput, Narrator, UpdateNarratorInput } from "@/lib/domain/narrator";
-import type { NarratorRepository } from "@/lib/domain/narrator-repository";
+import type { NarratorRepository } from "@/lib/repositories/narrator-repository";
 
 export class NarratorService {
   constructor(private readonly repository: NarratorRepository) {}

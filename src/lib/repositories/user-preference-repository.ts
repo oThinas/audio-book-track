@@ -1,4 +1,4 @@
-import type { UpdateUserPreference, UserPreference } from "./user-preference";
+import type { UpdateUserPreference, UserPreference } from "@/lib/domain/user-preference";
 
 export interface UserPreferenceRepository {
   findByUserId(userId: string): Promise<UserPreference | null>;

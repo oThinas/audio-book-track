@@ -1,41 +1,25 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 2.12.0 → 2.13.0 (MINOR: unit/representation refactor
-for financial and duration fields. Principle II formula re-expressed
-in integer arithmetic; Principle XI monetary-type rule extended to
-allow `integer` cents alongside `numeric(10,2)`, with integer cents
-now preferred for new fields. `chapter.edited_hours` becomes
-`chapter.edited_seconds` (integer seconds) and `book.price_per_hour`
-becomes `book.price_per_hour_cents` (integer cents). The related
-studio field `studio.default_hourly_rate` follows the same rule as
-`default_hourly_rate_cents`. No new principle added; no principle
-removed. This is a representation change — domain semantics
-(capítulo é a unidade, preço/hora imutável em `paid`, fórmula
-auditável) are unchanged.)
+Version change: 2.13.0 → 2.14.0 (MINOR: Clean Architecture clarification.
+Principle VI amended to relocate repository interfaces (ports) from
+`lib/domain/` to the root of `lib/repositories/`, alongside their
+concrete adapters in subpastas como `lib/repositories/drizzle/`. The
+domain layer (`lib/domain/`) agora é estritamente livre de
+preocupações de persistência — somente entities, value objects, enums
+e funções puras. Nenhum princípio novo adicionado; nenhum removido.
+Mudança estrutural sem impacto em semântica de domínio ou fluxo de
+dados — apenas local físico dos ports. Todos os imports existentes
+foram realocados no mesmo commit.)
 
 Modified principles:
-  - II. Precisão Financeira:
-    - Formula re-expressed in integer units:
-      `round(chapter.edited_seconds × book.price_per_hour_cents / 3600)`
-      → valor em centavos. Resultado ainda em centavos; conversão
-      para reais é responsabilidade da camada de apresentação.
-    - Preço/hora continua vinculado ao livro e imutável em `paid`.
-  - III. Integridade do Ciclo de Vida do Capítulo:
-    - Pré-condição de `em revisão`: editor + `edited_seconds > 0`
-      (antes: `edited_hours > 0`).
-  - XI. PostgreSQL e Banco de Dados:
-    - Tipo monetário: `integer` em centavos (preferido) OU
-      `numeric(10,2)` (legado/compatibilidade). `float`/`double`
-      continuam proibidos.
-    - Nova regra: campos de duração que alimentam cálculo financeiro
-      DEVEM ser `integer` em segundos (não `numeric` em horas).
-  - XIII. Métricas e KPIs de Produção:
-    - KPIs 1 e 5 usam a fórmula integer-cents (resultado em centavos,
-      formatado na UI).
-    - KPI 4 ("Minutagem média por capítulo") agora é
-      `AVG(edited_seconds) / 60`; capítulos com `edited_seconds = 0`
-      continuam excluídos.
+  - VI. Arquitetura Limpa no Backend:
+    - Repository interfaces (ports) DEVEM residir em
+      `lib/repositories/<entidade>-repository.ts` (raiz).
+    - `lib/domain/` DEVE ficar livre de interfaces de persistência —
+      conterá apenas entities, value objects, enums e regras puras.
+    - Adapters concretos continuam em subpastas nomeadas pelo
+      mecanismo (ex: `lib/repositories/drizzle/`).
 
 Added sections: N/A
 
@@ -43,14 +27,11 @@ Removed sections: N/A
 
 Templates requiring updates:
   ✅ .specify/memory/constitution.md — este arquivo (atualizado agora)
-  ✅ CLAUDE.md — atualizado para refletir nova representação
-  ✅ specs/020-books-chapters-crud/* — renomeação de campos e
-     adoção de cents/seconds em spec, plan, research, data-model,
-     contracts, checklists, quickstart e tasks
-  ✅ src/lib/db/schema/{book,chapter,studio}.ts — colunas
-     reescritas com `integer` + nomes em cents/seconds
-  ✅ drizzle/0006_* — migration regenerada
-  ✅ __tests__/helpers/factories.ts — inputs em inteiros
+  ✅ CLAUDE.md — atualizado para refletir a nova localização das
+     interfaces de repositório
+  ✅ src/lib/domain/ — interfaces `*-repository.ts` removidas
+  ✅ src/lib/repositories/ — interfaces realocadas na raiz; imports
+     dos services, adapters Drizzle e in-memory fakes atualizados
 
 Follow-up TODOs: N/A.
 -->
@@ -358,8 +339,8 @@ Dependências apontam sempre de fora para dentro — nunca o contrário.
 app/api/          → Controllers/Route Handlers (HTTP, entrada/saída)
 lib/factories/    → Composition Root (instanciam services com dependências concretas)
 lib/services/     → Use Cases / Application Services (orquestração)
-lib/repositories/ → Implementações concretas de repositories (dados)
-lib/domain/       → Entities, value objects, regras de negócio puras, interfaces de repositories
+lib/repositories/ → Ports (interfaces) na raiz + adapters concretos em subpastas (drizzle/, …)
+lib/domain/       → Entities, value objects, enums e regras de negócio puras
 ```
 
 - Controllers DEVEM ser finos: validam input, chamam uma factory para obter
@@ -368,8 +349,12 @@ lib/domain/       → Entities, value objects, regras de negócio puras, interfa
   reutilizáveis de `lib/api/responses.ts` — nunca construir o envelope de
   erro inline no controller.
 - Services contêm toda a orquestração: não conhecem HTTP nem SQL diretamente.
-- Repositories encapsulam todo acesso a dados; a interface DEVE ser definida
-  no domínio e implementada fora dele.
+- Repositories encapsulam todo acesso a dados. A **interface (port)** DEVE
+  residir em `lib/repositories/<entidade>-repository.ts` (raiz da camada de
+  repositórios); **adapters concretos** DEVEM residir em subpastas nomeadas
+  pelo mecanismo (ex: `lib/repositories/drizzle/`). A camada de domínio
+  (`lib/domain/`) fica LIVRE de preocupações de persistência — nenhuma
+  interface de repositório pode ser declarada ali.
 - Entities do domínio são POJOs puros — sem imports de framework.
 - Injeção de dependência via construtor; nunca instanciar dependências dentro
   de uma classe.
@@ -1007,4 +992,4 @@ submeter para review ou merge:
 revisar por outros e cria responsabilidade pessoal com os padrões
 definidos nesta constituição.
 
-**Version**: 2.12.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-04-24
+**Version**: 2.14.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-04-24

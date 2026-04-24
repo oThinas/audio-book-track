@@ -4,8 +4,8 @@ import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import type * as schema from "@/lib/db/schema";
 import { narrator } from "@/lib/db/schema";
 import type { CreateNarratorInput, Narrator, UpdateNarratorInput } from "@/lib/domain/narrator";
-import type { NarratorRepository } from "@/lib/domain/narrator-repository";
 import { NarratorNameAlreadyInUseError, NarratorNotFoundError } from "@/lib/errors/narrator-errors";
+import type { NarratorRepository } from "@/lib/repositories/narrator-repository";
 
 const NARRATOR_COLUMNS = {
   id: narrator.id,

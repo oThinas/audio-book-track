@@ -1,10 +1,10 @@
 import type { Chapter } from "@/lib/domain/chapter";
+import { ChapterNotFoundError, ChapterNumberAlreadyInUseError } from "@/lib/errors/chapter-errors";
 import type {
   ChapterRepository,
   InsertChapterInput,
   UpdateChapterInput,
-} from "@/lib/domain/chapter-repository";
-import { ChapterNotFoundError, ChapterNumberAlreadyInUseError } from "@/lib/errors/chapter-errors";
+} from "@/lib/repositories/chapter-repository";
 
 export class InMemoryChapterRepository implements ChapterRepository {
   private readonly store = new Map<string, Chapter>();

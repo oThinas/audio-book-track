@@ -31,8 +31,8 @@
   app/api/          → Controllers (HTTP apenas, sem lógica de negócio)
   lib/factories/    → Composition Root (instanciam services com deps concretas)
   lib/services/     → Use Cases (orquestração, sem SQL/HTTP direto)
-  lib/repositories/ → Implementações concretas de repositories (dados)
-  lib/domain/       → Entidades, regras puras e interfaces de repositories
+  lib/repositories/ → Ports (interfaces) na raiz + adapters concretos em subpastas (drizzle/, …)
+  lib/domain/       → Entidades, value objects, enums e regras de negócio puras (SEM interfaces de persistência)
   lib/api/          → Helpers de resposta HTTP reutilizáveis (responses.ts)
   ```
 - **Injeção de dependência via construtor** — nunca instanciar dependências dentro de uma classe.
@@ -40,7 +40,8 @@
 - **Respostas de erro padronizadas** — usar helpers de `lib/api/responses.ts` (ex: `unauthorizedResponse`, `validationErrorResponse`).
 - **Interfaces em arquivos separados** — nunca co-localizadas com implementações ou tipos de domínio.
 - **Sem prefixo `I` em interfaces** — usar `UserPreferenceRepository`, não `IUserPreferenceRepository`.
-- **Repositories concretos prefixados com o adaptador** — ex: `DrizzleUserPreferenceRepository` implementa `UserPreferenceRepository`.
+- **Interfaces de repositório (ports) vivem em `src/lib/repositories/<entidade>-repository.ts`** (raiz da pasta). **NUNCA** em `src/lib/domain/` — a camada de domínio fica livre de preocupações de persistência.
+- **Repositories concretos prefixados com o adaptador** — ex: `DrizzleUserPreferenceRepository` implementa `UserPreferenceRepository`, morando em `src/lib/repositories/drizzle/`.
 - **shadcn/ui é a biblioteca de componentes padrão** — usar `bunx --bun shadcn@latest add <component>` antes de construir primitivos do zero. A flag `--bun` é obrigatória com Bun runtime.
 - **Componentes UI (`components/ui/`)** são shadcn/ui primitivos, puramente visuais: sem `useState` de negócio, sem `fetch`.
 - **Componentes de feature DEVEM residir em `src/components/features/<feature>/`** e ser importados via alias `@/components/features/<feature>/...`. Pastas `_components/` (ou qualquer variante colocada dentro de `src/app/`) são **PROIBIDAS**, mesmo quando o componente é usado por uma única rota.

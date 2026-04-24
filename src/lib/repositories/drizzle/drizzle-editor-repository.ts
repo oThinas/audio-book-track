@@ -4,12 +4,12 @@ import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import type * as schema from "@/lib/db/schema";
 import { editor } from "@/lib/db/schema";
 import type { CreateEditorInput, Editor, UpdateEditorInput } from "@/lib/domain/editor";
-import type { EditorRepository } from "@/lib/domain/editor-repository";
 import {
   EditorEmailAlreadyInUseError,
   EditorNameAlreadyInUseError,
   EditorNotFoundError,
 } from "@/lib/errors/editor-errors";
+import type { EditorRepository } from "@/lib/repositories/editor-repository";
 
 const EDITOR_COLUMNS = {
   id: editor.id,

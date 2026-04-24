@@ -1,6 +1,6 @@
 import type { UpdateUserPreference, UserPreference } from "@/lib/domain/user-preference";
 import { DEFAULT_USER_PREFERENCE } from "@/lib/domain/user-preference";
-import type { UserPreferenceRepository } from "@/lib/domain/user-preference-repository";
+import type { UserPreferenceRepository } from "@/lib/repositories/user-preference-repository";
 
 export class UserPreferenceService {
   constructor(private readonly repository: UserPreferenceRepository) {}
