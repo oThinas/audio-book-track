@@ -86,8 +86,8 @@ description: "Task list for feature 020-books-chapters-crud"
 
 ### Services — book-status-recompute (usado por todos os demais services de mutação)
 
-- [ ] T031 Criar [src/lib/services/book-status-recompute.ts](../../src/lib/services/book-status-recompute.ts) exportando `recomputeBookStatus(bookId, deps, tx)` onde `deps = { bookRepo, chapterRepo }`. Lê capítulos do livro, chama `computeBookStatus`, grava via `bookRepo.updateStatus`.
-- [ ] T032 [P] Criar [__tests__/unit/services/book-status-recompute.spec.ts](../../__tests__/unit/services/book-status-recompute.spec.ts) usando os in-memory repos de T003: cenários US5.13 e US5.14 + caminho de erro (livro sem capítulos lança).
+- [X] T031 Criar [src/lib/services/book-status-recompute.ts](../../src/lib/services/book-status-recompute.ts) exportando `recomputeBookStatus(bookId, deps, tx)` onde `deps = { bookRepo, chapterRepo }`. Lê capítulos do livro, chama `computeBookStatus`, grava via `bookRepo.updateStatus`.
+- [X] T032 [P] Criar [__tests__/unit/services/book-status-recompute.spec.ts](../../__tests__/unit/services/book-status-recompute.spec.ts) usando os in-memory repos de T003: cenários US5.13 e US5.14 + caminho de erro (livro sem capítulos lança).
 
 ### Soft-delete + desarquive services (Foundational — precondição para US3, US10, US11)
 
