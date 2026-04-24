@@ -36,7 +36,7 @@ export async function handleBooksList(deps: BooksDeps): Promise<NextResponse> {
   }
 
   const service = deps.createService();
-  const data = await service.listForUser(session.user.id);
+  const data = await service.list();
 
   return NextResponse.json({ data }, { headers: NO_STORE_HEADERS });
 }
@@ -64,7 +64,7 @@ export async function handleBooksCreate(request: Request, deps: BooksDeps): Prom
 
   const service = deps.createService();
   try {
-    const { book, chapters } = await service.create(parsed.data, session.user.id);
+    const { book, chapters } = await service.create(parsed.data);
     return NextResponse.json(
       {
         data: {

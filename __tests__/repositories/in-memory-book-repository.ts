@@ -22,20 +22,20 @@ export class InMemoryBookRepository implements BookRepository {
 
   constructor(private readonly aggregationDeps?: InMemoryBookAggregationDeps) {}
 
-  async listByUser(_userId: string): Promise<Book[]> {
+  async list(): Promise<Book[]> {
     return Array.from(this.store.values()).sort(
       (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
     );
   }
 
-  async listSummariesByUser(userId: string): Promise<BookSummary[]> {
+  async listSummaries(): Promise<BookSummary[]> {
     if (!this.aggregationDeps) {
       throw new Error(
-        "InMemoryBookRepository.listSummariesByUser requires aggregationDeps — pass { chapterRepo, studioRepo } to the constructor.",
+        "InMemoryBookRepository.listSummaries requires aggregationDeps — pass { chapterRepo, studioRepo } to the constructor.",
       );
     }
     const { chapterRepo, studioRepo } = this.aggregationDeps;
-    const books = await this.listByUser(userId);
+    const books = await this.list();
 
     return Promise.all(
       books.map(async (book): Promise<BookSummary> => {

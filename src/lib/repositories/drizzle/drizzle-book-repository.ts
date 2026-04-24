@@ -60,7 +60,7 @@ export class DrizzleBookRepository implements BookRepository {
     return (tx as Executor | undefined) ?? this.db;
   }
 
-  async listByUser(_userId: string, tx?: RepositoryTx): Promise<Book[]> {
+  async list(tx?: RepositoryTx): Promise<Book[]> {
     const rows = await this.executor(tx)
       .select(BOOK_COLUMNS)
       .from(book)
@@ -68,7 +68,7 @@ export class DrizzleBookRepository implements BookRepository {
     return rows.map(toDomain);
   }
 
-  async listSummariesByUser(_userId: string, tx?: RepositoryTx): Promise<BookSummary[]> {
+  async listSummaries(tx?: RepositoryTx): Promise<BookSummary[]> {
     // JOIN studio sem filtro de deleted_at — livros históricos precisam resolver
     // o nome do estúdio mesmo quando o estúdio foi soft-deleted.
     const rows = await this.executor(tx)

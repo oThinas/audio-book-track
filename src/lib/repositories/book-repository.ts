@@ -31,8 +31,8 @@ export interface BookSummary {
 }
 
 export interface BookRepository {
-  listByUser(userId: string, tx?: RepositoryTx): Promise<Book[]>;
-  listSummariesByUser(userId: string, tx?: RepositoryTx): Promise<BookSummary[]>;
+  list(tx?: RepositoryTx): Promise<Book[]>;
+  listSummaries(tx?: RepositoryTx): Promise<BookSummary[]>;
   findById(id: string, tx?: RepositoryTx): Promise<Book | null>;
   insert(input: InsertBookInput, tx?: RepositoryTx): Promise<Book>;
   update(id: string, input: UpdateBookInput, tx?: RepositoryTx): Promise<Book>;

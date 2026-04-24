@@ -8,7 +8,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { BookService } from "@/lib/services/book-service";
 
-describe("BookService.listForUser", () => {
+describe("BookService.list", () => {
   let bookRepo: InMemoryBookRepository;
   let chapterRepo: InMemoryChapterRepository;
   let studioRepo: InMemoryStudioRepository;
@@ -32,8 +32,8 @@ describe("BookService.listForUser", () => {
     });
   });
 
-  it("returns an empty array when the user has no books", async () => {
-    expect(await service.listForUser(crypto.randomUUID())).toEqual([]);
+  it("returns an empty array when there are no books", async () => {
+    expect(await service.list()).toEqual([]);
   });
 
   it("resolves studio, totalChapters, completedChapters and totalEarningsCents for each book", async () => {
@@ -52,7 +52,7 @@ describe("BookService.listForUser", () => {
       { bookId: book.id, number: 3, status: "pending", editedSeconds: 0 }, // 0 cents
     ]);
 
-    const [summary] = await service.listForUser(crypto.randomUUID());
+    const [summary] = await service.list();
 
     expect(summary.id).toBe(book.id);
     expect(summary.title).toBe("Dom Casmurro");
@@ -76,7 +76,7 @@ describe("BookService.listForUser", () => {
       { bookId: book.id, number: 2, status: "paid", editedSeconds: 3600 },
     ]);
 
-    const [summary] = await service.listForUser(crypto.randomUUID());
+    const [summary] = await service.list();
 
     expect(summary.completedChapters).toBe(2);
     expect(summary.totalEarningsCents).toBe(15_000);
@@ -95,7 +95,7 @@ describe("BookService.listForUser", () => {
 
     await studioRepo.softDelete(studio.id);
 
-    const [summary] = await service.listForUser(crypto.randomUUID());
+    const [summary] = await service.list();
 
     expect(summary.studio).toEqual({ id: studio.id, name: "Legacy" });
   });
@@ -118,7 +118,7 @@ describe("BookService.listForUser", () => {
     });
     await chapterRepo.insertMany([{ bookId: newer.id, number: 1, status: "pending" }]);
 
-    const result = await service.listForUser(crypto.randomUUID());
+    const result = await service.list();
 
     expect(result.map((s) => s.title)).toEqual(["Newer", "Older"]);
   });

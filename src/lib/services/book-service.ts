@@ -63,11 +63,11 @@ const COMPLETED_STATUSES: ReadonlyArray<ChapterStatus> = ["completed", "paid"];
 export class BookService {
   constructor(protected readonly deps: BookServiceDeps) {}
 
-  async listForUser(userId: string): Promise<BookSummary[]> {
-    return this.deps.bookRepo.listSummariesByUser(userId);
+  async list(): Promise<BookSummary[]> {
+    return this.deps.bookRepo.listSummaries();
   }
 
-  async findByIdForUser(bookId: string, _userId: string): Promise<BookDetail | null> {
+  async findById(bookId: string): Promise<BookDetail | null> {
     const book = await this.deps.bookRepo.findById(bookId);
     if (!book) {
       return null;
@@ -139,7 +139,7 @@ export class BookService {
     };
   }
 
-  async create(input: CreateBookServiceInput, _userId: string): Promise<CreateBookResult> {
+  async create(input: CreateBookServiceInput): Promise<CreateBookResult> {
     const studio = await this.deps.studioRepo.findById(input.studioId);
     if (!studio) {
       throw new BookStudioNotFoundError(input.studioId);

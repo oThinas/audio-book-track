@@ -46,15 +46,12 @@ describe("BookService.create", () => {
   it("creates a book with N chapters numbered 1..N, all pending", async () => {
     const studio = await makeStudio(studioRepo);
 
-    const result = await service.create(
-      {
-        title: "Dom Casmurro",
-        studioId: studio.id,
-        pricePerHourCents: 7500,
-        numChapters: 5,
-      },
-      "user-id",
-    );
+    const result = await service.create({
+      title: "Dom Casmurro",
+      studioId: studio.id,
+      pricePerHourCents: 7500,
+      numChapters: 5,
+    });
 
     expect(result.book.title).toBe("Dom Casmurro");
     expect(result.book.studioId).toBe(studio.id);
@@ -69,15 +66,12 @@ describe("BookService.create", () => {
   it("recomputes book.status = pending after chapter creation", async () => {
     const studio = await makeStudio(studioRepo);
 
-    const { book } = await service.create(
-      {
-        title: "Memórias Póstumas",
-        studioId: studio.id,
-        pricePerHourCents: 6000,
-        numChapters: 3,
-      },
-      "user-id",
-    );
+    const { book } = await service.create({
+      title: "Memórias Póstumas",
+      studioId: studio.id,
+      pricePerHourCents: 6000,
+      numChapters: 3,
+    });
 
     const persisted = await bookRepo.findById(book.id);
     expect(persisted?.status).toBe("pending");
@@ -85,26 +79,20 @@ describe("BookService.create", () => {
 
   it("throws BookTitleAlreadyInUseError when title collides (case-insensitive) in the same studio", async () => {
     const studio = await makeStudio(studioRepo);
-    await service.create(
-      {
-        title: "Dom Casmurro",
-        studioId: studio.id,
-        pricePerHourCents: 7500,
-        numChapters: 1,
-      },
-      "user-id",
-    );
+    await service.create({
+      title: "Dom Casmurro",
+      studioId: studio.id,
+      pricePerHourCents: 7500,
+      numChapters: 1,
+    });
 
     await expect(
-      service.create(
-        {
-          title: "dom casmurro",
-          studioId: studio.id,
-          pricePerHourCents: 6000,
-          numChapters: 1,
-        },
-        "user-id",
-      ),
+      service.create({
+        title: "dom casmurro",
+        studioId: studio.id,
+        pricePerHourCents: 6000,
+        numChapters: 1,
+      }),
     ).rejects.toBeInstanceOf(BookTitleAlreadyInUseError);
   });
 
@@ -112,40 +100,31 @@ describe("BookService.create", () => {
     const sonora = await makeStudio(studioRepo, { name: "Sonora" });
     const outro = await makeStudio(studioRepo, { name: "Outro" });
 
-    await service.create(
-      {
-        title: "Dom Casmurro",
-        studioId: sonora.id,
-        pricePerHourCents: 7500,
-        numChapters: 1,
-      },
-      "user-id",
-    );
+    await service.create({
+      title: "Dom Casmurro",
+      studioId: sonora.id,
+      pricePerHourCents: 7500,
+      numChapters: 1,
+    });
 
-    const second = await service.create(
-      {
-        title: "Dom Casmurro",
-        studioId: outro.id,
-        pricePerHourCents: 6000,
-        numChapters: 1,
-      },
-      "user-id",
-    );
+    const second = await service.create({
+      title: "Dom Casmurro",
+      studioId: outro.id,
+      pricePerHourCents: 6000,
+      numChapters: 1,
+    });
 
     expect(second.book.studioId).toBe(outro.id);
   });
 
   it("throws BookStudioNotFoundError when studioId does not exist", async () => {
     await expect(
-      service.create(
-        {
-          title: "Dom Casmurro",
-          studioId: crypto.randomUUID(),
-          pricePerHourCents: 7500,
-          numChapters: 1,
-        },
-        "user-id",
-      ),
+      service.create({
+        title: "Dom Casmurro",
+        studioId: crypto.randomUUID(),
+        pricePerHourCents: 7500,
+        numChapters: 1,
+      }),
     ).rejects.toBeInstanceOf(BookStudioNotFoundError);
   });
 
@@ -154,15 +133,12 @@ describe("BookService.create", () => {
     await studioRepo.softDelete(studio.id);
 
     await expect(
-      service.create(
-        {
-          title: "Dom Casmurro",
-          studioId: studio.id,
-          pricePerHourCents: 7500,
-          numChapters: 1,
-        },
-        "user-id",
-      ),
+      service.create({
+        title: "Dom Casmurro",
+        studioId: studio.id,
+        pricePerHourCents: 7500,
+        numChapters: 1,
+      }),
     ).rejects.toBeInstanceOf(BookStudioNotFoundError);
   });
 
@@ -185,30 +161,24 @@ describe("BookService.create", () => {
     };
 
     await expect(
-      service.create(
-        {
-          title: "Falha Atômica",
-          studioId: studio.id,
-          pricePerHourCents: 7500,
-          numChapters: 3,
-        },
-        "user-id",
-      ),
+      service.create({
+        title: "Falha Atômica",
+        studioId: studio.id,
+        pricePerHourCents: 7500,
+        numChapters: 3,
+      }),
     ).rejects.toThrow("simulated chapter insert failure");
 
     // With NoOpUnitOfWork the book insertion is NOT rolled back (in-memory has
     // no real transaction), but we verify the happy path is still reachable.
     calls = 0;
     chapterRepo.insertMany = originalInsertMany;
-    const result = await service.create(
-      {
-        title: "Sucesso Posterior",
-        studioId: studio.id,
-        pricePerHourCents: 7500,
-        numChapters: 2,
-      },
-      "user-id",
-    );
+    const result = await service.create({
+      title: "Sucesso Posterior",
+      studioId: studio.id,
+      pricePerHourCents: 7500,
+      numChapters: 2,
+    });
     expect(result.chapters).toHaveLength(2);
   });
 });

@@ -39,7 +39,7 @@ export async function handleBookDetail(rawId: string, deps: BookByIdDeps): Promi
   }
 
   const service = deps.createService();
-  const detail = await service.findByIdForUser(parsed.data.id, session.user.id);
+  const detail = await service.findById(parsed.data.id);
   if (!detail) {
     return notFoundResponse("NOT_FOUND", "Livro não encontrado");
   }

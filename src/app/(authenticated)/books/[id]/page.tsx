@@ -20,7 +20,7 @@ export default async function BookDetailPage({ params }: BookDetailPageProps) {
     redirect("/auth/sign-in");
   }
 
-  const detail = await createBookService().findByIdForUser(id, session.user.id);
+  const detail = await createBookService().findById(id);
   if (!detail) {
     notFound();
   }

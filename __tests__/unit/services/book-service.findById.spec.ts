@@ -8,7 +8,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { BookService } from "@/lib/services/book-service";
 
-describe("BookService.findByIdForUser", () => {
+describe("BookService.findById", () => {
   let bookRepo: InMemoryBookRepository;
   let chapterRepo: InMemoryChapterRepository;
   let studioRepo: InMemoryStudioRepository;
@@ -33,7 +33,7 @@ describe("BookService.findByIdForUser", () => {
   });
 
   it("returns null when the book does not exist", async () => {
-    expect(await service.findByIdForUser(crypto.randomUUID(), crypto.randomUUID())).toBeNull();
+    expect(await service.findById(crypto.randomUUID())).toBeNull();
   });
 
   it("returns the book with studio, aggregates and chapters with embedded narrator/editor", async () => {
@@ -64,7 +64,7 @@ describe("BookService.findByIdForUser", () => {
       { bookId: book.id, number: 3, status: "pending" },
     ]);
 
-    const detail = await service.findByIdForUser(book.id, crypto.randomUUID());
+    const detail = await service.findById(book.id);
 
     expect(detail).not.toBeNull();
     if (!detail) return;
@@ -104,7 +104,7 @@ describe("BookService.findByIdForUser", () => {
       { bookId: book.id, number: 2, status: "pending" },
     ]);
 
-    const detail = await service.findByIdForUser(book.id, crypto.randomUUID());
+    const detail = await service.findById(book.id);
 
     expect(detail?.chapters.map((c) => c.number)).toEqual([1, 2, 3]);
   });
@@ -117,7 +117,7 @@ describe("BookService.findByIdForUser", () => {
       pricePerHourCents: 7500,
     });
 
-    const detail = await service.findByIdForUser(book.id, crypto.randomUUID());
+    const detail = await service.findById(book.id);
 
     expect(detail).not.toBeNull();
     if (!detail) return;
@@ -139,7 +139,7 @@ describe("BookService.findByIdForUser", () => {
     ]);
     await studioRepo.softDelete(studio.id);
 
-    const detail = await service.findByIdForUser(book.id, crypto.randomUUID());
+    const detail = await service.findById(book.id);
 
     expect(detail?.studio).toEqual({ id: studio.id, name: "Legacy" });
   });
