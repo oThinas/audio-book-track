@@ -35,9 +35,9 @@ function getInput(): HTMLInputElement {
   return screen.getByLabelText(/valor/i) as HTMLInputElement;
 }
 
-describe("MoneyInput", () => {
+describe("MoneyInput (cents-first)", () => {
   it("renders the formatted BRL value from the prop (controlled)", () => {
-    render(<Harness initial={85} />);
+    render(<Harness initial={8500} />);
     expect(getInput().value).toMatch(/R\$\s*85,00/);
   });
 
@@ -51,7 +51,7 @@ describe("MoneyInput", () => {
     render(<Harness />);
     const input = getInput();
     await user.type(input, "8");
-    expect(screen.getByTestId("value").textContent).toBe("0.08");
+    expect(screen.getByTestId("value").textContent).toBe("8");
     expect(input.value).toMatch(/R\$\s*0,08/);
   });
 
@@ -60,7 +60,7 @@ describe("MoneyInput", () => {
     render(<Harness />);
     const input = getInput();
     await user.type(input, "8500");
-    expect(screen.getByTestId("value").textContent).toBe("85");
+    expect(screen.getByTestId("value").textContent).toBe("8500");
     expect(input.value).toMatch(/R\$\s*85,00/);
   });
 
@@ -74,7 +74,7 @@ describe("MoneyInput", () => {
 
   it("clamps to max when additional digits would exceed it", async () => {
     const user = userEvent.setup();
-    render(<Harness max={9999.99} />);
+    render(<Harness max={999_999} />);
     const input = getInput();
     await user.type(input, "9999999");
     expect(input.value).toMatch(/R\$\s*9\.999,99/);
@@ -118,16 +118,16 @@ describe("MoneyInput", () => {
 
   it("paste containing no digits is a no-op", async () => {
     const user = userEvent.setup();
-    render(<Harness initial={50} />);
+    render(<Harness initial={5000} />);
     const input = getInput();
     await user.click(input);
     await user.paste("abc");
     expect(input.value).toMatch(/R\$\s*50,00/);
   });
 
-  it("paste clamps to max (studios: 9999.99)", async () => {
+  it("paste clamps to max (studios: 999_999 cents)", async () => {
     const user = userEvent.setup();
-    render(<Harness max={9999.99} />);
+    render(<Harness max={999_999} />);
     const input = getInput();
     await user.click(input);
     await user.paste("12345678");
@@ -136,21 +136,21 @@ describe("MoneyInput", () => {
 
   it("does not clamp to min during typing (cents-first UX preserved)", async () => {
     const user = userEvent.setup();
-    render(<Harness min={1} />);
+    render(<Harness min={100} />);
     const input = getInput();
     await user.type(input, "5");
-    // Typing "5" builds up 5 cents; clamping to min=R$ 1,00 at this point
-    // would skip the R$ 0,05 → R$ 0,50 → R$ 5,00 progression. The display
-    // must follow the user's digits.
+    // Typing "5" builds up 5 cents; clamping to min=100 at this point would
+    // skip the R$ 0,05 → R$ 0,50 → R$ 5,00 progression. The display must
+    // follow the user's digits.
     expect(input.value).toMatch(/R\$\s*0,05/);
-    expect(screen.getByTestId("value").textContent).toBe("0.05");
+    expect(screen.getByTestId("value").textContent).toBe("5");
   });
 
   it("snaps to min on blur when value is non-zero and below min", async () => {
     const user = userEvent.setup();
     render(
       <>
-        <Harness min={1} />
+        <Harness min={100} />
         <button type="button">other</button>
       </>,
     );
@@ -165,7 +165,7 @@ describe("MoneyInput", () => {
     const user = userEvent.setup();
     render(
       <>
-        <Harness min={1} />
+        <Harness min={100} />
         <button type="button">other</button>
       </>,
     );
@@ -179,7 +179,7 @@ describe("MoneyInput", () => {
     const user = userEvent.setup();
     render(
       <>
-        <Harness initial={5} min={1} />
+        <Harness initial={500} min={100} />
         <button type="button">other</button>
       </>,
     );
@@ -228,7 +228,7 @@ describe("MoneyInput", () => {
   });
 
   it("is disabled when disabled prop is true", () => {
-    render(<MoneyInput value={10} onChange={() => {}} disabled aria-label="v" />);
+    render(<MoneyInput value={1000} onChange={() => {}} disabled aria-label="v" />);
     expect((screen.getByLabelText(/v/i) as HTMLInputElement).disabled).toBe(true);
   });
 });

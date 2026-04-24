@@ -12,13 +12,7 @@ import { Label } from "@/components/ui/label";
 import { MoneyInput } from "@/components/ui/money-input";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { ApiErrorBody } from "@/lib/api/error-response";
-import {
-  centsToReais,
-  reaisToCents,
-  type Studio,
-  type StudioFormValues,
-  studioFormSchema,
-} from "@/lib/domain/studio";
+import { type Studio, type StudioFormValues, studioFormSchema } from "@/lib/domain/studio";
 import { formatCentsBRL } from "@/lib/utils";
 
 interface StudioRowProps {
@@ -101,7 +95,7 @@ function StudioRowEditMode({ studio, onCancel, onUpdated }: StudioRowEditModePro
     resolver: zodResolver(studioFormSchema),
     defaultValues: {
       name: studio.name,
-      defaultHourlyRateReais: centsToReais(studio.defaultHourlyRateCents),
+      defaultHourlyRateCents: studio.defaultHourlyRateCents,
     },
   });
 
@@ -110,14 +104,10 @@ function StudioRowEditMode({ studio, onCancel, onUpdated }: StudioRowEditModePro
   }, []);
 
   async function onSubmit(values: StudioFormValues) {
-    const payload = {
-      name: values.name,
-      defaultHourlyRateCents: reaisToCents(values.defaultHourlyRateReais),
-    };
     const response = await fetch(`/api/v1/studios/${studio.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(values),
     });
 
     if (response.status === 200) {
@@ -132,7 +122,7 @@ function StudioRowEditMode({ studio, onCancel, onUpdated }: StudioRowEditModePro
         if (detail.field === "name") {
           setError("name", { message: detail.message });
         } else if (detail.field === "defaultHourlyRateCents") {
-          setError("defaultHourlyRateReais", { message: detail.message });
+          setError("defaultHourlyRateCents", { message: detail.message });
         }
       }
       return;
@@ -183,24 +173,24 @@ function StudioRowEditMode({ studio, onCancel, onUpdated }: StudioRowEditModePro
           Valor/hora
         </Label>
         <Controller
-          name="defaultHourlyRateReais"
+          name="defaultHourlyRateCents"
           control={control}
           render={({ field }) => (
             <MoneyInput
               id={rateFieldId}
               form={formId}
-              min={0.01}
-              max={9999.99}
+              min={1}
+              max={999_999}
               value={field.value ?? 0}
               onChange={field.onChange}
               onBlur={field.onBlur}
-              aria-invalid={errors.defaultHourlyRateReais ? true : undefined}
+              aria-invalid={errors.defaultHourlyRateCents ? true : undefined}
               disabled={isSubmitting}
             />
           )}
         />
-        {errors.defaultHourlyRateReais && (
-          <p className="mt-1 text-xs text-destructive">{errors.defaultHourlyRateReais.message}</p>
+        {errors.defaultHourlyRateCents && (
+          <p className="mt-1 text-xs text-destructive">{errors.defaultHourlyRateCents.message}</p>
         )}
       </TableCell>
       <TableCell className="w-24">

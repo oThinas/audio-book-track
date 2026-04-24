@@ -15,19 +15,30 @@ import { cn, formatCentsBRL } from "@/lib/utils";
 export interface MoneyInputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "type"> {
   readonly value: number;
-  readonly onChange: (value: number) => void;
+  readonly onChange: (cents: number) => void;
   readonly min?: number;
   readonly max?: number;
 }
 
+/**
+ * Cents-first monetary input. Callers pass and receive integer cents —
+ * the canonical representation of money in this codebase. The component
+ * formats BRL on screen and accumulates digits cents-first (typing "8500"
+ * yields R$ 85,00).
+ */
 export const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(function MoneyInput(
-  { value, onChange, min = 0, max = Number.MAX_SAFE_INTEGER, className, onBlur, ...rest },
+  {
+    value: cents,
+    onChange,
+    min: minCents = 0,
+    max: maxCents = Number.MAX_SAFE_INTEGER,
+    className,
+    onBlur,
+    ...rest
+  },
   forwardedRef,
 ) {
   const innerRef = useRef<HTMLInputElement | null>(null);
-  const cents = Math.round(value * 100);
-  const minCents = Math.round(min * 100);
-  const maxCents = Math.round(max * 100);
 
   const displayValue = useMemo(() => formatCentsBRL(cents), [cents]);
 
@@ -38,9 +49,8 @@ export const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(function
   // value below min, we snap to min. Zero stays valid as an empty state.
   function commit(nextCents: number) {
     const clamped = Math.max(0, Math.min(nextCents, maxCents));
-    const asReais = clamped / 100;
-    if (asReais === value) return;
-    onChange(asReais);
+    if (clamped === cents) return;
+    onChange(clamped);
   }
 
   // React 19's synthetic onBeforeInput does not fire in jsdom (delegated

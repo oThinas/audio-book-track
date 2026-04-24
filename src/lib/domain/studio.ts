@@ -30,32 +30,5 @@ export const updateStudioSchema = studioSchema.partial();
 export type CreateStudioInput = z.infer<typeof createStudioSchema>;
 export type UpdateStudioInput = z.infer<typeof updateStudioSchema>;
 
-const MIN_HOURLY_RATE_REAIS = 0.01;
-const MAX_HOURLY_RATE_REAIS = 9999.99;
-const DECIMAL_TOLERANCE = 1e-9;
-
-export const studioFormSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(2, "Nome deve ter no mínimo 2 caracteres")
-    .max(100, "Nome deve ter no máximo 100 caracteres"),
-  defaultHourlyRateReais: z
-    .number({ error: "Valor/hora é obrigatório" })
-    .min(MIN_HOURLY_RATE_REAIS, "Valor/hora mínimo é R$ 0,01")
-    .max(MAX_HOURLY_RATE_REAIS, "Valor/hora máximo é R$ 9.999,99")
-    .refine(
-      (value) => Math.abs(value * 100 - Math.round(value * 100)) < DECIMAL_TOLERANCE,
-      "Valor/hora deve ter no máximo 2 casas decimais",
-    ),
-});
-
+export const studioFormSchema = studioSchema;
 export type StudioFormValues = z.infer<typeof studioFormSchema>;
-
-export function reaisToCents(reais: number): number {
-  return Math.round(reais * 100);
-}
-
-export function centsToReais(cents: number): number {
-  return cents / 100;
-}
