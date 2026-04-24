@@ -5,6 +5,7 @@ import { BooksClient } from "@/components/features/books/books-client";
 import { PageContainer } from "@/components/layout/page-container";
 import { auth } from "@/lib/auth/server";
 import { createBookService } from "@/lib/factories/book";
+import { createStudioService } from "@/lib/factories/studio";
 
 export const dynamic = "force-dynamic";
 
@@ -14,12 +15,14 @@ export default async function BooksPage() {
     redirect("/auth/sign-in");
   }
 
-  const service = createBookService();
-  const books = await service.listForUser(session.user.id);
+  const [books, studios] = await Promise.all([
+    createBookService().listForUser(session.user.id),
+    createStudioService().list(),
+  ]);
 
   return (
     <PageContainer>
-      <BooksClient initialBooks={books} />
+      <BooksClient initialBooks={books} studios={studios} />
     </PageContainer>
   );
 }

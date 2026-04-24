@@ -1,20 +1,25 @@
 "use client";
 
 import { Plus, Search } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import { PageDescription, PageHeader, PageTitle } from "@/components/layout/page-container";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import type { Studio } from "@/lib/domain/studio";
 
+import { BookCreateDialog, type CreatedBook } from "./book-create-dialog";
 import { type BookSummaryRow, BooksTable } from "./books-table";
 
 interface BooksClientProps {
   readonly initialBooks: readonly BookSummaryRow[];
+  readonly studios: readonly Studio[];
 }
 
-export function BooksClient({ initialBooks }: BooksClientProps) {
-  const [books] = useState<readonly BookSummaryRow[]>(initialBooks);
+export function BooksClient({ initialBooks, studios }: BooksClientProps) {
+  const router = useRouter();
+  const [books, setBooks] = useState<readonly BookSummaryRow[]>(initialBooks);
   const [search, setSearch] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
@@ -26,9 +31,21 @@ export function BooksClient({ initialBooks }: BooksClientProps) {
     );
   }, [books, search]);
 
-  function handleNewClick() {
-    // Placeholder until US2 wires the create dialog (T057).
-    setIsCreateDialogOpen((open) => !open);
+  function handleCreated(created: CreatedBook) {
+    const studio = studios.find((s) => s.id === created.studioId);
+    const optimistic: BookSummaryRow = {
+      id: created.id,
+      title: created.title,
+      studio: { id: created.studioId, name: studio?.name ?? "" },
+      pricePerHourCents: created.pricePerHourCents,
+      status: "pending",
+      totalChapters: created.chapters.length,
+      completedChapters: 0,
+      totalEarningsCents: 0,
+    };
+    setBooks((current) => [optimistic, ...current]);
+    setIsCreateDialogOpen(false);
+    router.refresh();
   }
 
   return (
@@ -43,7 +60,7 @@ export function BooksClient({ initialBooks }: BooksClientProps) {
           aria-label="Novo livro"
           aria-expanded={isCreateDialogOpen}
           className="p-5"
-          onClick={handleNewClick}
+          onClick={() => setIsCreateDialogOpen(true)}
           data-testid="books-new-button"
         >
           <Plus aria-hidden="true" />
@@ -68,6 +85,13 @@ export function BooksClient({ initialBooks }: BooksClientProps) {
       </div>
 
       <BooksTable books={filteredBooks} />
+
+      <BookCreateDialog
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        studios={studios}
+        onCreated={handleCreated}
+      />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { getTestDb } from "@tests/helpers/db";
 import { createTestBook, createTestChapter, createTestStudio } from "@tests/helpers/factories";
+import { SavepointUnitOfWork } from "@tests/helpers/test-unit-of-work";
 import { describe, expect, it, vi } from "vitest";
 
 import { handleBooksList } from "@/app/api/v1/books/route";
@@ -162,6 +163,7 @@ describe("GET /api/v1/books (handleBooksList, real DB)", () => {
       bookRepo: new DrizzleBookRepository(db),
       chapterRepo: new DrizzleChapterRepository(db),
       studioRepo: new DrizzleStudioRepository(db),
+      uow: new SavepointUnitOfWork(db),
     });
     return {
       getSession: vi.fn().mockResolvedValue(session),

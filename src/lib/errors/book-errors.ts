@@ -11,3 +11,10 @@ export class BookTitleAlreadyInUseError extends Error {
     this.name = "BookTitleAlreadyInUseError";
   }
 }
+
+export class BookStudioNotFoundError extends Error {
+  constructor(studioId: string) {
+    super(`Estúdio não encontrado ou arquivado: ${studioId}`);
+    this.name = "BookStudioNotFoundError";
+  }
+}

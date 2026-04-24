@@ -1,3 +1,4 @@
+import { NoOpUnitOfWork } from "@tests/helpers/test-unit-of-work";
 import { InMemoryBookRepository } from "@tests/repositories/in-memory-book-repository";
 import { InMemoryChapterRepository } from "@tests/repositories/in-memory-chapter-repository";
 import { InMemoryStudioRepository } from "@tests/repositories/in-memory-studio-repository";
@@ -24,7 +25,12 @@ describe("GET /api/v1/books (handleBooksList)", () => {
     chapterRepo = new InMemoryChapterRepository();
     studioRepo = new InMemoryStudioRepository();
     bookRepo = new InMemoryBookRepository({ chapterRepo, studioRepo });
-    service = new BookService({ bookRepo, chapterRepo, studioRepo });
+    service = new BookService({
+      bookRepo,
+      chapterRepo,
+      studioRepo,
+      uow: new NoOpUnitOfWork(),
+    });
   });
 
   it("returns 401 when there is no session", async () => {

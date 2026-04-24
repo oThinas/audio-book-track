@@ -27,3 +27,7 @@ export function notFoundResponse(code: string, message: string): NextResponse {
 export function conflictResponse(code: string, message: string): NextResponse {
   return NextResponse.json({ error: { code, message } }, { status: 409 });
 }
+
+export function unprocessableEntityResponse(code: string, message: string): NextResponse {
+  return NextResponse.json({ error: { code, message } }, { status: 422 });
+}
