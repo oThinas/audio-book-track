@@ -24,12 +24,12 @@ Sem body. Sem query params no MVP.
       "id": "uuid",
       "title": "Dom Casmurro",
       "studio": { "id": "uuid", "name": "Sonora Studio" },
-      "pricePerHour": "75.00",
+      "pricePerHourCents": 7500,
       "pdfUrl": null,
       "status": "editing",
       "totalChapters": 10,
       "completedChapters": 3,
-      "totalEarnings": "450.00",
+      "totalEarningsCents": 45000,
       "createdAt": "2026-04-20T12:00:00.000Z",
       "updatedAt": "2026-04-23T08:30:00.000Z"
     }
@@ -43,7 +43,7 @@ Ordenação: por `created_at DESC`. Filtragem e ordenação adicionais são clie
 
 ## `POST /api/v1/books`
 
-Cria um novo livro com N capítulos em `pending`. Suporta propagação transacional de `price_per_hour` para um estúdio criado inline.
+Cria um novo livro com N capítulos em `pending`. Suporta propagação transacional de `price_per_hour_cents` para um estúdio criado inline.
 
 ### Request body
 
@@ -51,7 +51,7 @@ Cria um novo livro com N capítulos em `pending`. Suporta propagação transacio
 {
   "title": "Dom Casmurro",
   "studioId": "uuid-do-estudio",
-  "pricePerHour": "75.00",
+  "pricePerHourCents": 7500,
   "numChapters": 10,
   "inlineStudioId": "uuid-do-estudio-criado-inline"  // OPCIONAL
 }
@@ -63,8 +63,7 @@ Cria um novo livro com N capítulos em `pending`. Suporta propagação transacio
 z.object({
   title: z.string().trim().min(1).max(255),
   studioId: z.string().uuid(),
-  pricePerHour: z.string().regex(/^\d+\.\d{2}$/)
-    .refine((v) => Number(v) >= 0.01 && Number(v) <= 9999.99),
+  pricePerHourCents: z.number().int().min(1).max(999_999),
   numChapters: z.number().int().min(1).max(999),
   inlineStudioId: z.string().uuid().optional(),
 })
@@ -72,6 +71,8 @@ z.object({
   message: "inlineStudioId must match studioId when provided",
 });
 ```
+
+`pricePerHourCents` é **integer** (centavos). A UI converte `"75.00"` digitado no formulário via `Math.round(value * 100)` antes de enviar.
 
 ### Response `201 Created` + `Location: /api/v1/books/:id`
 
@@ -81,7 +82,7 @@ z.object({
     "id": "uuid",
     "title": "Dom Casmurro",
     "studioId": "uuid",
-    "pricePerHour": "75.00",
+    "pricePerHourCents": 7500,
     "pdfUrl": null,
     "status": "pending",
     "createdAt": "2026-04-23T09:00:00.000Z",
@@ -100,7 +101,7 @@ z.object({
 |------|--------|--------|
 | `VALIDATION_ERROR` | 422 | Input falhou Zod. |
 | `STUDIO_NOT_FOUND` | 422 | `studioId` não existe ou está soft-deleted. |
-| `INLINE_STUDIO_INVALID` | 422 | `inlineStudioId` não existe, não tem `default_hourly_rate = 0.01`, ou usuário autenticado não é owner. |
+| `INLINE_STUDIO_INVALID` | 422 | `inlineStudioId` não existe, não tem `default_hourly_rate_cents = 1`, ou usuário autenticado não é owner. |
 | `TITLE_ALREADY_IN_USE` | 409 | Já existe livro com mesmo `lower(title)` no `studioId`. |
 | `UNAUTHORIZED` | 401 | Sem sessão. |
 
@@ -108,10 +109,10 @@ z.object({
 
 1. `INSERT INTO book`.
 2. Gera `numChapters` linhas em `chapter` com `number = 1..N`, todas `pending`.
-3. Se `inlineStudioId` presente e válido: `UPDATE studio SET default_hourly_rate = :pricePerHour WHERE id = :inlineStudioId`.
+3. Se `inlineStudioId` presente e válido: `UPDATE studio SET default_hourly_rate_cents = :pricePerHourCents WHERE id = :inlineStudioId`.
 4. `recomputeBookStatus(book.id, tx)` → cache do `book.status` = `pending`.
 
-Falha em qualquer etapa ⇒ rollback total. O estúdio criado via fluxo anterior de FR-012 **não** é revertido — ele persiste com `default_hourly_rate = 0.01` (FR-014).
+Falha em qualquer etapa ⇒ rollback total. O estúdio criado via fluxo anterior de FR-012 **não** é revertido — ele persiste com `default_hourly_rate_cents = 1` (FR-014).
 
 ---
 
@@ -127,12 +128,12 @@ Retorna o livro com capítulos embutidos e o estúdio resolvido.
     "id": "uuid",
     "title": "Dom Casmurro",
     "studio": { "id": "uuid", "name": "Sonora Studio" },
-    "pricePerHour": "75.00",
+    "pricePerHourCents": 7500,
     "pdfUrl": "https://example.com/book.pdf",
     "status": "editing",
     "totalChapters": 10,
     "completedChapters": 3,
-    "totalEarnings": "450.00",
+    "totalEarningsCents": 45000,
     "createdAt": "...",
     "updatedAt": "...",
     "chapters": [
@@ -142,7 +143,7 @@ Retorna o livro com capítulos embutidos e o estúdio resolvido.
         "status": "completed",
         "narrator": { "id": "uuid", "name": "Ana Silva" },
         "editor": { "id": "uuid", "name": "Bruno Gomes" },
-        "editedHours": "2.50",
+        "editedSeconds": 9000,
         "createdAt": "...",
         "updatedAt": "..."
       }
@@ -172,7 +173,7 @@ Edita título/estúdio/valor-hora/quantidade de capítulos. Aumentar capítulos 
 {
   "title": "Dom Casmurro (2ª edição)",
   "studioId": "uuid-diferente",
-  "pricePerHour": "85.00",
+  "pricePerHourCents": 8500,
   "numChapters": 12
 }
 ```
@@ -180,7 +181,7 @@ Edita título/estúdio/valor-hora/quantidade de capítulos. Aumentar capítulos 
 ### Zod validações específicas
 
 - `numChapters` — se presente, deve ser `>= currentTotalChapters`. Se menor, erro `CANNOT_REDUCE_CHAPTERS`.
-- `pricePerHour` — bloqueado se existe algum capítulo `paid`. Erro `BOOK_PAID_PRICE_LOCKED`.
+- `pricePerHourCents` — bloqueado se existe algum capítulo `paid`. Erro `BOOK_PAID_PRICE_LOCKED`.
 - `studioId` — bloqueado se existe capítulo `paid`. Erro `BOOK_PAID_STUDIO_LOCKED`.
 
 ### Response `200 OK`
@@ -195,7 +196,7 @@ Mesma forma de `GET /books/:id` atualizada.
 | `NOT_FOUND` | 404 | Livro não existe. |
 | `TITLE_ALREADY_IN_USE` | 409 | Novo título colide no estúdio. |
 | `CANNOT_REDUCE_CHAPTERS` | 422 | `numChapters < total atual`. |
-| `BOOK_PAID_PRICE_LOCKED` | 409 | Tentou alterar `pricePerHour` com capítulo `paid`. |
+| `BOOK_PAID_PRICE_LOCKED` | 409 | Tentou alterar `pricePerHourCents` com capítulo `paid`. |
 | `BOOK_PAID_STUDIO_LOCKED` | 409 | Tentou alterar `studioId` com capítulo `paid`. |
 | `STUDIO_NOT_FOUND` | 422 | Novo `studioId` não existe ou está soft-deleted. |
 

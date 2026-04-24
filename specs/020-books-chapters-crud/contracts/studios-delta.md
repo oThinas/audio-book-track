@@ -20,7 +20,7 @@ Listagem filtra `WHERE deleted_at IS NULL`.
     {
       "id": "uuid",
       "name": "Sonora Studio",
-      "defaultHourlyRate": "75.00",
+      "defaultHourlyRateCents": 7500,
       "booksCount": 3,
       "createdAt": "...",
       "updatedAt": "..."
@@ -28,6 +28,8 @@ Listagem filtra `WHERE deleted_at IS NULL`.
   ]
 }
 ```
+
+> **Breaking change sobre 019**: a coluna `default_hourly_rate` (`numeric(10,2)`) é substituída por `default_hourly_rate_cents` (`integer`), com backfill `old_value * 100`. Payload anterior (`"75.00"`) não é mais aceito — clients DEVEM enviar `7500`.
 
 `booksCount` é calculado server-side via `LEFT JOIN book GROUP BY studio.id`. Estúdios com `deleted_at IS NOT NULL` nem aparecem.
 
@@ -45,7 +47,7 @@ Novo: se o `name` colidir com um estúdio soft-deleted existente, **reativa** o 
   "data": {
     "id": "uuid-do-registro-original",
     "name": "Sonora Studio",
-    "defaultHourlyRate": "75.00",  // preservado do registro original
+    "defaultHourlyRateCents": 7500,  // preservado do registro original
     "createdAt": "2025-12-15T10:00:00.000Z",  // original
     "updatedAt": "2026-04-23T11:00:00.000Z"   // atualizado na reativação
   },
@@ -71,14 +73,14 @@ Novo: se o `name` colidir com um estúdio soft-deleted existente, **reativa** o 
 
 ### Integração com modal de livro (US3/FR-012)
 
-Quando `POST /studios` é chamado a partir do subformulário inline no modal de livro, o client passa `{ name, defaultHourlyRate: "0.01" }`. Se for reativação e o fluxo for o inline-no-modal, o `default_hourly_rate` do registro reativado é **sobrescrito** para `0.01` — a regra é aplicada apenas quando o client explicita `inline: true` no payload:
+Quando `POST /studios` é chamado a partir do subformulário inline no modal de livro, o client passa `{ name, defaultHourlyRateCents: 1 }`. Se for reativação e o fluxo for o inline-no-modal, o `default_hourly_rate_cents` do registro reativado é **sobrescrito** para `1` — a regra é aplicada apenas quando o client explicita `inline: true` no payload:
 
 ```json
 POST /api/v1/studios
-{ "name": "Sonora Studio", "defaultHourlyRate": "0.01", "inline": true }
+{ "name": "Sonora Studio", "defaultHourlyRateCents": 1, "inline": true }
 ```
 
-`inline: true` no payload sinaliza que a reativação deve sobrescrever `default_hourly_rate` (em vez de preservar) e que o `meta.rateResetForInline: true` deve ser adicionado à resposta — o client usa isso para exibir o toast extra explicando a redefinição.
+`inline: true` no payload sinaliza que a reativação deve sobrescrever `default_hourly_rate_cents` (em vez de preservar) e que o `meta.rateResetForInline: true` deve ser adicionado à resposta — o client usa isso para exibir o toast extra explicando a redefinição.
 
 ---
 

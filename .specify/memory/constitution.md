@@ -1,51 +1,58 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 2.11.0 → 2.12.0 (MINOR: Principle XIII — KPI 4 resolved
-from TBD to concrete definition. KPI 4 renamed from "Média de duração
-por página" to "Minutagem média por capítulo" and re-founded on the
-existing `chapter.edited_hours` field (converted to minutes at
-render time — `edited_hours * 60`). No new column is required; the
-previously-proposed `num_paginas` subsection is removed from the
-principle. Also carries nomenclature alignment PT→EN for field/enum
-names in formulas across the constitution — DB/code values in English,
-UI labels remain PT.)
+Version change: 2.12.0 → 2.13.0 (MINOR: unit/representation refactor
+for financial and duration fields. Principle II formula re-expressed
+in integer arithmetic; Principle XI monetary-type rule extended to
+allow `integer` cents alongside `numeric(10,2)`, with integer cents
+now preferred for new fields. `chapter.edited_hours` becomes
+`chapter.edited_seconds` (integer seconds) and `book.price_per_hour`
+becomes `book.price_per_hour_cents` (integer cents). The related
+studio field `studio.default_hourly_rate` follows the same rule as
+`default_hourly_rate_cents`. No new principle added; no principle
+removed. This is a representation change — domain semantics
+(capítulo é a unidade, preço/hora imutável em `paid`, fórmula
+auditável) are unchanged.)
 
 Modified principles:
+  - II. Precisão Financeira:
+    - Formula re-expressed in integer units:
+      `round(chapter.edited_seconds × book.price_per_hour_cents / 3600)`
+      → valor em centavos. Resultado ainda em centavos; conversão
+      para reais é responsabilidade da camada de apresentação.
+    - Preço/hora continua vinculado ao livro e imutável em `paid`.
+  - III. Integridade do Ciclo de Vida do Capítulo:
+    - Pré-condição de `em revisão`: editor + `edited_seconds > 0`
+      (antes: `edited_hours > 0`).
+  - XI. PostgreSQL e Banco de Dados:
+    - Tipo monetário: `integer` em centavos (preferido) OU
+      `numeric(10,2)` (legado/compatibilidade). `float`/`double`
+      continuam proibidos.
+    - Nova regra: campos de duração que alimentam cálculo financeiro
+      DEVEM ser `integer` em segundos (não `numeric` em horas).
   - XIII. Métricas e KPIs de Produção:
-    - KPI 4 redefined: "Minutagem média por capítulo" computed as
-      AVG(chapter.edited_hours) * 60 over chapters with status
-      ∈ {reviewing, retake, completed, paid} and edited_hours > 0.
-      No new column; reuses the same source that feeds KPI 1 and 5.
-    - Subsection "Campo `num_paginas`" removed — não há campo
-      dedicado. `edited_hours` é suficiente para todos os KPIs.
-    - Formula references in KPIs 1/5 aligned to English
-      (`chapter.edited_hours × book.price_per_hour`).
-    - Self-Review item XIII updated: division-by-zero guard in
-      KPI 4 references edited_hours = 0 exclusion.
-  - XIV. Visualização de PDF do Livro:
-    - Clarified: PDF metadata (page count) does NOT overwrite
-      chapter-level production fields (`edited_hours`, `num_pages`
-      was never a dependency).
-  - Domain entities block:
-    - Chapter entry: no schema addition — status + narrator_id +
-      editor_id + edited_hours are enough.
+    - KPIs 1 e 5 usam a fórmula integer-cents (resultado em centavos,
+      formatado na UI).
+    - KPI 4 ("Minutagem média por capítulo") agora é
+      `AVG(edited_seconds) / 60`; capítulos com `edited_seconds = 0`
+      continuam excluídos.
 
 Added sections: N/A
 
-Removed sections: "Campo `num_paginas`" subsection under XIII
-(não era necessário; `edited_hours` supre o KPI 4).
+Removed sections: N/A
 
 Templates requiring updates:
-  ✅ .specify/memory/constitution.md — this file (updated now)
-  ✅ CLAUDE.md — already aligned (EN field names)
-  ✅ specs/020-books-chapters-crud/* — feature 020 já coleta
-    edited_hours em US5; KPI 4 é consumidor posterior, sem
-    dependência de schema. Notas de "migration aditiva para
-    num_pages/duration_minutes" serão removidas dos docs.
-  ✅ .specify/templates/{plan,tasks,spec}-template.md — no change
+  ✅ .specify/memory/constitution.md — este arquivo (atualizado agora)
+  ✅ CLAUDE.md — atualizado para refletir nova representação
+  ✅ specs/020-books-chapters-crud/* — renomeação de campos e
+     adoção de cents/seconds em spec, plan, research, data-model,
+     contracts, checklists, quickstart e tasks
+  ✅ src/lib/db/schema/{book,chapter,studio}.ts — colunas
+     reescritas com `integer` + nomes em cents/seconds
+  ✅ drizzle/0006_* — migration regenerada
+  ✅ __tests__/helpers/factories.ts — inputs em inteiros
 
-Follow-up TODOs: N/A (KPI 4 unblocked; no schema migration required).
+Follow-up TODOs: N/A.
 -->
 
 # AudioBook Track Constitution
@@ -74,7 +81,16 @@ persistidos — nunca derivado dinamicamente de valores que podem mudar.
 - O preço/hora DEVE ser vinculado ao **livro**, não ao estúdio. Ele é editável
   enquanto o livro não estiver `pago`. Uma vez que o livro atinge o status
   `pago`, o preço torna-se imutável para preservar o histórico financeiro.
-- A fórmula de ganho é: `chapter.edited_hours × book.price_per_hour`. (Os nomes dos campos em inglês no código; labels em português na UI.)
+- Campos de origem (inteiros, persistidos): `chapter.edited_seconds`
+  (integer, segundos) e `book.price_per_hour_cents` (integer, centavos).
+- A fórmula de ganho é:
+  `round(chapter.edited_seconds × book.price_per_hour_cents / 3600)` →
+  **valor em centavos**. A conversão centavos → reais (`÷ 100` +
+  formatação BRL) acontece na camada de apresentação. Nomes de campos
+  e colunas em inglês no código; labels em português na UI.
+- Arredondamento DEVE ser determinístico (`Math.round` half-away-from-zero
+  aplicado ao divisor inteiro 3600). A fórmula DEVE ser implementada em
+  helper puro (`lib/domain/earnings.ts`) com cobertura unitária de 100%.
 - Ganhos calculados DEVEM ser auditáveis: todas as entradas do cálculo
   (horas, preço, responsável, data) DEVEM estar disponíveis para consulta.
 - Relatórios de ganho por período DEVEM ser filtráveis por capítulo, livro e
@@ -100,7 +116,7 @@ pendente → em edição → em revisão → concluído → pago
 |---|---|---|
 | `pendente` | Gravação não iniciada | — |
 | `em edição` | Gravação finalizada, edição pendente | narrador atribuído |
-| `em revisão` | Edição finalizada, revisão pendente | editor + `edited_hours` registrados |
+| `em revisão` | Edição finalizada, revisão pendente | editor + `edited_seconds > 0` registrados |
 | `edição retake` | Revisão reprovada, nova edição necessária | revisão explicitamente reprovada |
 | `concluído` | Revisão aprovada, aguarda decisão do estúdio | revisão aprovada (de `em revisão`) |
 | `pago` | Histórico imutável, edição do livro desabilitada | aprovação do estúdio |
@@ -587,7 +603,14 @@ O banco de dados DEVE ser PostgreSQL. Todas as interações DEVEM passar
 pelo Repository Pattern definido no Princípio VI.
 
 - Tipos corretos: `bigint` para IDs, `text` para strings, `timestamptz`
-  para datas, `numeric(10,2)` para valores financeiros (NUNCA `float`).
+  para datas, **`integer` em centavos para valores monetários (preferido)
+  OU `numeric(10,2)` (legado/compatibilidade)** — `float`/`double` são
+  proibidos.
+- Durações que alimentam cálculo financeiro DEVEM ser `integer` em
+  segundos (ex: `edited_seconds`), não `numeric` em horas. Conversão
+  para unidades apresentáveis (horas, minutos) ocorre na UI.
+- Nomes de colunas monetárias e de duração DEVEM explicitar a unidade
+  no sufixo: `_cents` para centavos, `_seconds` para segundos.
 - Todo foreign key DEVE ter índice correspondente.
 - Índices compostos: colunas de igualdade primeiro, range depois.
 - Índice parcial para registros ativos:
@@ -605,7 +628,9 @@ pelo Repository Pattern definido no Princípio VI.
   do banco e o journal de migrações.
 
 **Rationale**: Valores financeiros em `float` introduzem erros de ponto
-flutuante. Índices inadequados causam degradação sob volume real de dados.
+flutuante. Inteiros em centavos dão aritmética exata e cálculos
+determinísticos (Princípio II). Índices inadequados causam degradação
+sob volume real de dados.
 
 ### XII. Anti-Padrões Proibidos
 
@@ -666,22 +691,22 @@ apoiar decisões do estúdio. Todos os dados DEVEM ser calculados no servidor.
 
 | # | KPI | Definição |
 |---|---|---|
-| 1 | **Ganho do período** | Soma de `chapter.edited_hours × book.price_per_hour` dos capítulos com status `paid` no intervalo selecionado |
+| 1 | **Ganho do período** | Soma de `round(chapter.edited_seconds × book.price_per_hour_cents / 3600)` dos capítulos com status `paid` no intervalo selecionado. Resultado em centavos; formatação BRL na UI |
 | 2 | **Capítulos concluídos do período** | Contagem de capítulos que atingiram `completed` ou `paid` no intervalo selecionado |
 | 3 | **Livros em andamento** | Contagem de livros com ao menos 1 capítulo em status diferente de `pending` e diferente de `paid`, agrupados também por número de estúdios distintos |
-| 4 | **Minutagem média por capítulo** | `AVG(chapter.edited_hours) * 60` dos capítulos com status ∈ {`reviewing`, `retake`, `completed`, `paid`} e `edited_hours > 0`. Unidade: minutos. A conversão horas→minutos acontece na camada de apresentação; nenhum campo novo é necessário — reusa a mesma fonte dos KPIs 1 e 5 |
-| 5 | **Previsão de receita a receber** | Soma de `(chapter.edited_hours × book.price_per_hour)` dos capítulos com status entre `editing` e `completed` (não `paid`) — receita pendente caso todos sejam concluídos |
+| 4 | **Minutagem média por capítulo** | `AVG(chapter.edited_seconds) / 60` dos capítulos com status ∈ {`reviewing`, `retake`, `completed`, `paid`} e `edited_seconds > 0`. Unidade: minutos. A conversão segundos→minutos acontece na camada de apresentação; nenhum campo novo é necessário — reusa a mesma fonte dos KPIs 1 e 5 |
+| 5 | **Previsão de receita a receber** | Soma de `round(chapter.edited_seconds × book.price_per_hour_cents / 3600)` dos capítulos com status entre `editing` e `completed` (não `paid`) — receita pendente caso todos sejam concluídos. Resultado em centavos |
 
 **Regras dos KPIs:**
 - KPI 1 e 2: filtráveis por intervalo de datas (padrão: mês corrente).
 - KPI 3: exibe `N livros em andamento de M estúdio(s)`.
-- KPI 4: capítulos com `edited_hours = 0` DEVEM ser excluídos do cálculo
+- KPI 4: capítulos com `edited_seconds = 0` DEVEM ser excluídos do cálculo
   para evitar viés (representam capítulos ainda não cronometrados) e para
   prevenir divisão por zero em agregações relacionadas. Capítulos em status
   `pending` ou `editing` também não contam — a minutagem só é confiável a
   partir de `reviewing`.
 - KPI 5: exclui capítulos `paid` e `pending`; considera apenas capítulos
-  com editor atribuído e `edited_hours > 0`.
+  com editor atribuído e `edited_seconds > 0`.
 
 #### Gráficos do Dashboard (versão inicial)
 
@@ -715,7 +740,7 @@ original. O PDF viewer é uma funcionalidade de leitura — não de edição.
 - Acesso ao PDF DEVE respeitar as mesmas permissões de acesso ao livro.
 - O viewer DEVE suportar navegação por página e zoom básico.
 - Dados do PDF (metadados, número de páginas, duração estimada) NÃO devem
-  sobrescrever configurações manuais do capítulo (`edited_hours`,
+  sobrescrever configurações manuais do capítulo (`edited_seconds`,
   `narrator_id`, `editor_id`).
 
 **Rationale**: O PDF serve como referência para narradores e revisores
@@ -827,14 +852,15 @@ Restrições que se aplicam ao modelo de dados e às entidades do sistema:
 
 - **Estúdio**: entidade mestre com nome e lista de livros. Estúdios não são
   frequentemente criados — o foco do sistema não é gestão de estúdios.
-- **Livro**: pertence a um estúdio; carrega o `price_per_hour` (editável até
-  o livro atingir o status `paid`, imutável a partir daí para preservar
-  histórico financeiro). O número de capítulos é definido na criação do livro.
-  Pode ter um `pdf_url` associado (opcional).
+- **Livro**: pertence a um estúdio; carrega o `price_per_hour_cents`
+  (integer, centavos — editável até o livro atingir o status `paid`,
+  imutável a partir daí para preservar histórico financeiro). O número de
+  capítulos é definido na criação do livro. Pode ter um `pdf_url`
+  associado (opcional).
 - **Capítulo**: pertence a um livro; tem `status`, `narrator_id`
   (responsável pela gravação), `editor_id` (responsável pela edição) e
-  `edited_hours` (tempo registrado em horas — alimenta a fórmula de ganho
-  e o KPI 4 "Minutagem média por capítulo" via conversão `× 60`). É a
+  `edited_seconds` (integer, segundos — alimenta a fórmula de ganho e o
+  KPI 4 "Minutagem média por capítulo" via conversão `÷ 60`). É a
   entidade central do sistema.
   Status possíveis (valor no DB / rótulo em UI): `pending` (Pendente),
   `editing` (Em edição), `reviewing` (Em revisão), `retake` (Retake),
@@ -946,8 +972,9 @@ submeter para review ou merge:
 - [ ] X.    Input validado com Zod? Erros não expõem detalhes internos?
 - [ ] XI.   Queries selecionam apenas colunas necessárias (sem SELECT *)?
 - [ ] XI.   Novos foreign keys têm índice?
-- [ ] XI.   Valores monetários usam `numeric`, não `float`?
-- [ ] XIII. KPIs calculados no servidor? Divisão por zero no KPI 4 prevenida (capítulos com `edited_hours = 0` excluídos)?
+- [ ] XI.   Valores monetários usam `integer` em centavos (preferido) ou `numeric(10,2)` (legado)? Nunca `float`/`double`?
+- [ ] XI.   Durações que alimentam cálculo financeiro usam `integer` em segundos, com sufixo `_seconds` no nome?
+- [ ] XIII. KPIs calculados no servidor? Divisão por zero no KPI 4 prevenida (capítulos com `edited_seconds = 0` excluídos)?
 - [ ] XIII. Gráficos servidos via API route com agregação no banco (não no cliente)?
 - [ ] XIII. KPI 5 (previsão) exclui capítulos `pago` e `pendente`?
 - [ ] XIV.  PDF viewer carregado via lazy loading? URL validada no upload?

@@ -35,9 +35,9 @@
   - Q1 — status do livro: campo `book.status` persistido como cache materializado (Opção C).
   - Q2 — exclusão de estúdio: soft-delete (`studio.deleted_at`).
   - Q3 — exclusão de narrador/editor: soft-delete simétrico.
-  - Q4 — `default_hourly_rate` em criação inline: placeholder R$ 0,01 + propagação transacional do `price_per_hour` do livro; toast de alerta se livro não for criado.
+  - Q4 — `default_hourly_rate_cents` em criação inline: placeholder `1` (R$ 0,01) + propagação transacional do `price_per_hour_cents` do livro; toast de alerta se livro não for criado.
   - Q5 — livro sem capítulos: proibido (invariante absoluta ≥ 1 capítulo).
-  - Q6 — colunas editáveis do capítulo: narrador, editor, status, horas editadas (4 campos); o KPI 4 (constitution v2.12.0) usa `edited_hours` convertido para minutos, sem campo adicional.
+  - Q6 — colunas editáveis do capítulo: narrador, editor, status, `edited_seconds` (4 campos; UI aceita entrada em horas e converte); o KPI 4 (constitution v2.13.0) usa `edited_seconds ÷ 60` para minutos, sem campo adicional.
   - Q7 — reversão `paid → concluído`: permitida mediante modal de confirmação dupla e flag `confirmReversion: true` no payload.
   - Q8 — modo de exclusão em lote: ícones/botão ocultados (não apenas desabilitados).
   - Q9 — desarquive: automático por colisão de nome (aplicável a estúdio, narrador e editor).

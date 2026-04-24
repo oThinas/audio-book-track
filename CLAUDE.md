@@ -12,10 +12,13 @@
 
 - **Capítulo é a unidade central** — atribuição, cálculo de ganho e status operam sempre no nível do capítulo, nunca no livro ou estúdio.
 - **Preço/hora é imutável quando o livro está `paid`** — vinculado ao livro, nunca ao estúdio; não pode ser recalculado retroativamente após esse status.
-- **Fórmula de ganho**: `chapter.edited_hours × book.price_per_hour` — determinística, auditável, sem derivação dinâmica. Nomes de campos/colunas/enum são **em inglês** no código; labels de UI em português são resolvidas na camada de apresentação.
+- **Representação integer-only** para valores monetários e duração financeira:
+  - Monetário: **`integer` em centavos** com sufixo `_cents` — `book.price_per_hour_cents`, `studio.default_hourly_rate_cents`. `numeric(10,2)` é legado; `float`/`double` são proibidos.
+  - Duração que alimenta cálculo de ganho: **`integer` em segundos** com sufixo `_seconds` — `chapter.edited_seconds`. Conversão para horas/minutos ocorre apenas na UI.
+- **Fórmula de ganho**: `round(chapter.edited_seconds × book.price_per_hour_cents / 3600)` → **valor em centavos**. Determinística, auditável, sem derivação dinâmica. Arredondamento half-away-from-zero; conversão para reais (÷ 100) e formatação BRL ficam na camada de apresentação. Nomes de campos/colunas/enum em **inglês** no código; labels de UI em português.
 - **Ciclo de vida do capítulo** (valor no DB / rótulo em UI): `pending` (Pendente) → `editing` (Em edição) → `reviewing` (Em revisão) → [`retake` (Retake)] → `completed` (Concluído) → `paid` (Pago). Nenhuma etapa obrigatória pode ser pulada.
   - `editing` exige narrador atribuído.
-  - `reviewing` exige editor + `edited_hours > 0` registrados.
+  - `reviewing` exige editor + `edited_seconds > 0` registrados.
   - `retake` é opcional — ativado somente por reprovação em `reviewing`; retorna a `reviewing`.
   - `completed` exige revisão aprovada.
   - `paid` torna os dados financeiros imutáveis e desabilita edição do livro.
@@ -50,7 +53,8 @@
 
 ### Banco de dados
 
-- **Valores financeiros**: `numeric(10,2)` — `float` e `double` são proibidos.
+- **Valores financeiros**: **`integer` em centavos** (preferido, sufixo `_cents`) OU `numeric(10,2)` (legado). `float`/`double` são proibidos.
+- **Durações que alimentam cálculo financeiro**: `integer` em segundos, sufixo `_seconds`.
 - **Todo foreign key deve ter índice** correspondente.
 - **`SELECT *` é proibido** em código de produção.
 - **Transações obrigatórias** para operações que afetam múltiplas tabelas.
@@ -266,7 +270,7 @@ task — isso é ruído desproporcional.
 - [ ] VIII. Sem peso desnecessário no bundle do cliente?
 - [ ] IX.   Valores visuais via design tokens (sem hardcode)?
 - [ ] X.    Endpoints REST corretos (URL, método, status, envelope, Zod)?
-- [ ] XI.   Sem SELECT *? Foreign keys com índice? Monetário em numeric?
+- [ ] XI.   Sem SELECT *? Foreign keys com índice? Monetário em `integer` cents (preferido) ou `numeric(10,2)` (legado)? Durações de cálculo em `integer` segundos?
 - [ ] XII.  Nenhum anti-padrão proibido presente?
 - [ ] XV.   Context7 MCP consultado? design.pen referenciado para telas?
 - [ ] XVI.  Fase final de verificação executada (lint + testes + build) antes do PR?
@@ -279,8 +283,8 @@ task — isso é ruído desproporcional.
 | Entidade   | Pertence a | Campo crítico                        |
 |------------|------------|--------------------------------------|
 | Estúdio    | —          | nome                                 |
-| Livro      | Estúdio    | `price_per_hour` (imutável quando `paid`), `pdf_url` (opcional) |
-| Capítulo   | Livro      | `status`, `narrator_id`, `editor_id`, `edited_hours` |
+| Livro      | Estúdio    | `price_per_hour_cents` (imutável quando `paid`), `pdf_url` (opcional) |
+| Capítulo   | Livro      | `status`, `narrator_id`, `editor_id`, `edited_seconds` |
 | Narrador   | —          | `name` único (case-sensitive, após `trim`); responsável pela gravação dos capítulos |
 | Editor     | —          | recebe pagamento por horas em capítulos atribuídos |
 

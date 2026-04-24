@@ -49,7 +49,7 @@ Este documento agrupa decisões técnicas para os pontos que saíram da spec (11
 - Single path para o produtor: "criar pelo nome" é a interface natural e já existente — não precisa ensinar um conceito novo de "desarquivar".
 - Preserva identidade (`id`) do registro original, mantendo trilha de auditoria coerente sem nova entidade.
 - Simetria com as três entidades reduz superfície mental.
-- Exceção controlada: quando o desarquive ocorre via criação inline no modal de livro (US3), o `default_hourly_rate` é sobrescrito para `R$ 0,01` e segue a propagação FR-012a (idêntico ao fluxo de estúdio novo). Esse caso é raro e documentado via toast adicional, evitando surpresa.
+- Exceção controlada: quando o desarquive ocorre via criação inline no modal de livro (US3), o `default_hourly_rate_cents` é sobrescrito para `1` (R$ 0,01) e segue a propagação FR-012a (idêntico ao fluxo de estúdio novo). Esse caso é raro e documentado via toast adicional, evitando surpresa.
 
 **Alternatives considered**:
 - **Toggle "Mostrar arquivados"**: rejeitado (Q9 da clarificação) — adiciona estado de UI persistente em três telas, ícones de "Desarquivar" por linha, e lógica adicional.
@@ -83,16 +83,16 @@ return "pending";
 
 ---
 
-## 5. Propagação transacional de `price_per_hour` para estúdio criado inline
+## 5. Propagação transacional de `price_per_hour_cents` para estúdio criado inline
 
 **Decision**: O payload de `POST /api/v1/books` aceita um campo opcional `inlineStudioId` (UUID). Quando presente, o service:
-1. Verifica que `inlineStudioId` existe, pertence ao usuário autenticado (ownership via auth já aplicada em `PATCH /studios`) e está atualmente com `default_hourly_rate = 0.01`. A combinação rate-placeholder + ownership é o guard anti-abuso — não há janela temporal.
-2. Na mesma transação que cria o livro + N capítulos, faz `UPDATE studio SET default_hourly_rate = :price_per_hour WHERE id = :inlineStudioId`.
+1. Verifica que `inlineStudioId` existe, pertence ao usuário autenticado (ownership via auth já aplicada em `PATCH /studios`) e está atualmente com `default_hourly_rate_cents = 1`. A combinação rate-placeholder + ownership é o guard anti-abuso — não há janela temporal.
+2. Na mesma transação que cria o livro + N capítulos, faz `UPDATE studio SET default_hourly_rate_cents = :price_per_hour_cents WHERE id = :inlineStudioId`.
 
 **Rationale**:
-- Satisfaz FR-012a: apenas estúdios criados inline na sessão atual recebem propagação. Estúdios pré-existentes mantêm o `default_hourly_rate` original.
+- Satisfaz FR-012a: apenas estúdios criados inline na sessão atual recebem propagação. Estúdios pré-existentes mantêm o `default_hourly_rate_cents` original.
 - Transação atômica garante que ou tudo persiste (livro + capítulos + estúdio com rate propagado) ou nada.
-- O guard "rate placeholder + ownership" evita que um atacante abuse do endpoint para sobrescrever rates de estúdios arbitrários: qualquer estúdio cujo rate já foi propagado (`≠ 0.01`) é rejeitado, e ownership impede acesso a estúdios de outros usuários.
+- O guard "rate placeholder + ownership" evita que um atacante abuse do endpoint para sobrescrever rates de estúdios arbitrários: qualquer estúdio cujo rate já foi propagado (`≠ 1`) é rejeitado, e ownership impede acesso a estúdios de outros usuários.
 
 **Alternatives considered**:
 - **Sempre propagar (inclusive para estúdios pré-existentes)**: rejeitado porque contradiz a intenção da clarificação e pode sobrescrever valores intencionalmente diferentes.
@@ -108,7 +108,7 @@ return "pending";
 **Rationale**:
 - Não é uma "mudança financeira" strictu sensu — horas e preço permanecem; apenas o status volta a `completed`, permitindo edição (útil para corrigir marcação errônea de "paid").
 - Dupla barreira (UI + backend flag) garante que uma requisição acidental via curl/script também precise enviar o flag explícito.
-- Consistência com o helper `recomputeBookStatus`: após a reversão, `book.status` é recomputado — se nenhum outro capítulo estiver `paid`, `price_per_hour` volta a ser editável (FR-037).
+- Consistência com o helper `recomputeBookStatus`: após a reversão, `book.status` é recomputado — se nenhum outro capítulo estiver `paid`, `price_per_hour_cents` volta a ser editável (FR-037).
 
 **Alternatives considered**:
 - **Endpoint separado** `POST /api/v1/chapters/:id/revert-paid`: rejeitado por criar superfície extra; o PATCH cobre o caso com uma flag extra.
@@ -313,6 +313,50 @@ Consultas previstas na fase de implementação (Princípio XV — obrigatório a
 
 ---
 
+## 18. Representação integer-cents e integer-seconds para valores financeiros
+
+**Decision**: Adotar **`integer` cents** para campos monetários (`book.price_per_hour_cents`, `studio.default_hourly_rate_cents`) e **`integer` seconds** para duração editada (`chapter.edited_seconds`). A fórmula de ganho passa a operar sobre inteiros:
+
+```ts
+// lib/domain/earnings.ts — helper puro, 100% de cobertura
+export function computeEarningsCents(editedSeconds: number, pricePerHourCents: number): number {
+  return Math.round((editedSeconds * pricePerHourCents) / 3600);
+}
+```
+
+SQL equivalente (cast para `numeric` evita overflow de `integer × integer`):
+
+```sql
+SUM(ROUND((ch.edited_seconds::numeric * b.price_per_hour_cents) / 3600))::bigint AS total_earnings_cents
+```
+
+**Rationale**:
+- **Precisão aritmética**: inteiros eliminam toda a superfície de erros de ponto flutuante em multiplicações e agregações. `numeric(10,2)` do Postgres também seria exato, mas em JS retorna como `string` (drizzle), obrigando `Number()`/`parseFloat` em todo acesso — fonte clássica de bugs.
+- **Alinhamento com constitution v2.13.0**: o Princípio XI foi estendido para permitir integer cents como representação preferida. Sufixos `_cents` e `_seconds` explicitam a unidade no nome do campo, satisfazendo o novo requisito do Princípio XI.
+- **Auditabilidade**: Princípio II exige cálculo determinístico. `Math.round` (JS) e `ROUND(numeric)` (Postgres) concordam para valores não-negativos — a fórmula é reproduzível linha-a-linha em ambos os lados.
+- **Faixas expressáveis em `int4`**: `price_per_hour_cents ≤ 999_999` (R$ 9.999,99/h) e `edited_seconds ≤ 3_600_000` (~1000 h/capítulo) ficam muito abaixo do teto `int4` (`~2.1B`). Produto `edited_seconds × price_per_hour_cents` pode ultrapassar `int4` — por isso a fórmula SQL faz `::numeric` antes da multiplicação.
+- **UX preservada**: a UI continua aceitando "R$ 75,00" e "1.5h". Conversão acontece nos boundaries (form → API: `× 100` / `× 3600`; API → UI: `÷ 100` / `÷ 3600` + formatação pt-BR).
+
+**Alternatives considered**:
+- **Manter `numeric(10,2)` para preço + `numeric(5,2)` para horas**: rejeitado — obriga `Number()` em todo acesso (drizzle retorna `string`) e perpetua a armadilha de flutuante ao somar via JS no fallback de qualquer agregação fora do banco.
+- **`bigint` em cents**: rejeitado por ser desnecessário no domínio (valores cabem folgadamente em `int4`) e introduzir custo de serialização JS (`BigInt` vs `number`).
+- **`interval` para `edited_seconds`**: rejeitado — PostgreSQL `interval` é rico mas não integral; operações aritméticas com preço exigiriam conversão explícita, anulando o ganho.
+
+**Migration strategy** (aplicada ao studio pré-existente):
+```sql
+ALTER TABLE studio
+  ADD COLUMN default_hourly_rate_cents integer;
+UPDATE studio
+  SET default_hourly_rate_cents = (default_hourly_rate * 100)::integer;
+ALTER TABLE studio
+  ALTER COLUMN default_hourly_rate_cents SET NOT NULL,
+  DROP COLUMN default_hourly_rate;
+```
+
+Como a feature 020 ainda não foi aplicada em produção, a migration de studio pode fundir a renomeação com a remoção da coluna antiga em uma única passada (`drizzle-kit generate` gera a sequência acima automaticamente).
+
+---
+
 ## Consolidated decision index
 
 | # | Decisão | FR/Story vinculado |
@@ -332,5 +376,6 @@ Consultas previstas na fase de implementação (Princípio XV — obrigatório a
 | 13 | Migrations aditivas de `deleted_at` + índice parcial | FR-046/047/048 |
 | 14 | Cobertura por camada | Princípio V, SC-010 |
 | 15 | Cascade delete do livro quando capítulos zeram | FR-028, FR-033 |
+| 18 | Integer cents / integer seconds | FR-054, Princípio II, Princípio XI |
 
 Todas as decisões acima são entrada direta para `data-model.md`, `contracts/*` e `quickstart.md` na próxima fase.

@@ -58,8 +58,8 @@ Autenticar como admin seed e:
    - Tabela vazia + botão "+ Novo Livro".
    - Clicar em "+ Novo Livro" → modal abre com campos Título, Estúdio, Valor/hora, Quantidade de capítulos.
    - No seletor de Estúdio, "+ Novo Estúdio" → subformulário inline.
-   - Confirmar o subformulário cria o estúdio com `default_hourly_rate = 0.01` imediatamente.
-   - Confirmar o livro cria o livro + N capítulos + propaga o `price_per_hour` para o `default_hourly_rate` do estúdio inline (na mesma transação).
+   - Confirmar o subformulário cria o estúdio com `default_hourly_rate_cents = 1` imediatamente.
+   - Confirmar o livro cria o livro + N capítulos + propaga o `price_per_hour_cents` para o `default_hourly_rate_cents` do estúdio inline (na mesma transação).
 
 4. Clicar em uma linha do livro → `/books/:id`:
    - Cabeçalho com título, estúdio, R$/hora, capítulos concluídos/totais, ganho total, status, botões "Ver PDF", "Editar livro", "Excluir capítulos".
@@ -147,7 +147,7 @@ Durante dev, rodar mentalmente os 4 cenários abaixo — são os de maior risco:
 1. Criar estúdio "ArquivarTeste" com valor/hora R$ 50,00.
 2. Excluir "ArquivarTeste" em `/studios` → some da lista.
 3. Criar novamente estúdio "ArquivarTeste" com valor/hora R$ 80,00.
-4. Verificar: toast "desarquivado"; `default_hourly_rate` permanece R$ 50,00 (criação normal via `/studios` **preserva** rate histórico); `id` é o mesmo do original.
+4. Verificar: toast "desarquivado"; `default_hourly_rate_cents` permanece `5000` (R$ 50,00 — criação normal via `/studios` **preserva** rate histórico); `id` é o mesmo do original.
 
 ### Cenário C — Reversão `paid → completed`
 
