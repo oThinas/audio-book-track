@@ -68,13 +68,13 @@ description: "Task list for feature 020-books-chapters-crud"
 
 ### Zod schemas
 
-- [ ] T022 [P] Criar [src/lib/schemas/book.ts](../../src/lib/schemas/book.ts) com `createBookSchema`, `updateBookSchema` e `bookIdParamsSchema` conforme [contracts/books.md](./contracts/books.md). Usar `trim()` em `title`, `z.number().int().min(1).max(999_999)` em `pricePerHourCents`, `refine` para `inlineStudioId`.
-- [ ] T023 [P] Criar [src/lib/schemas/chapter.ts](../../src/lib/schemas/chapter.ts) com `updateChapterSchema` e `bulkDeleteChaptersSchema` conforme [contracts/chapters.md](./contracts/chapters.md) e [contracts/books.md](./contracts/books.md). Campo `editedSeconds: z.number().int().min(0).max(3_600_000).optional()` e `confirmReversion: z.boolean().optional()`.
+- [X] T022 [P] Criar [src/lib/schemas/book.ts](../../src/lib/schemas/book.ts) com `createBookSchema`, `updateBookSchema` e `bookIdParamsSchema` conforme [contracts/books.md](./contracts/books.md). Usar `trim()` em `title`, `z.number().int().min(1).max(999_999)` em `pricePerHourCents`, `refine` para `inlineStudioId`.
+- [X] T023 [P] Criar [src/lib/schemas/chapter.ts](../../src/lib/schemas/chapter.ts) com `updateChapterSchema` e `bulkDeleteChaptersSchema` conforme [contracts/chapters.md](./contracts/chapters.md) e [contracts/books.md](./contracts/books.md). Campo `editedSeconds: z.number().int().min(0).max(3_600_000).optional()` e `confirmReversion: z.boolean().optional()`.
 
 ### Unit tests — Zod schemas
 
-- [ ] T024 [P] Criar [__tests__/unit/schemas/book-schema.spec.ts](../../__tests__/unit/schemas/book-schema.spec.ts) cobrindo: campos obrigatórios, trim, faixa `pricePerHourCents ∈ [1, 999999]`, faixa `numChapters`, `inlineStudioId ≠ studioId` rejeitado, strings não-inteiras em `pricePerHourCents` rejeitadas.
-- [ ] T025 [P] Criar [__tests__/unit/schemas/chapter-schema.spec.ts](../../__tests__/unit/schemas/chapter-schema.spec.ts): exige ≥ 1 campo, valida UUIDs, valida faixa `editedSeconds ∈ [0, 3_600_000]`, rejeita floats em `editedSeconds` (`z.number().int()`), aceita `confirmReversion`.
+- [X] T024 [P] Criar [__tests__/unit/schemas/book-schema.spec.ts](../../__tests__/unit/schemas/book-schema.spec.ts) cobrindo: campos obrigatórios, trim, faixa `pricePerHourCents ∈ [1, 999999]`, faixa `numChapters`, `inlineStudioId ≠ studioId` rejeitado, strings não-inteiras em `pricePerHourCents` rejeitadas.
+- [X] T025 [P] Criar [__tests__/unit/schemas/chapter-schema.spec.ts](../../__tests__/unit/schemas/chapter-schema.spec.ts): exige ≥ 1 campo, valida UUIDs, valida faixa `editedSeconds ∈ [0, 3_600_000]`, rejeita floats em `editedSeconds` (`z.number().int()`), aceita `confirmReversion`.
 
 ### Repositories Drizzle
 
