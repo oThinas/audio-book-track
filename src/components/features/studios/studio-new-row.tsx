@@ -12,7 +12,12 @@ import { Label } from "@/components/ui/label";
 import { MoneyInput } from "@/components/ui/money-input";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { ApiErrorBody } from "@/lib/api/error-response";
-import { createStudioSchema, type Studio, type StudioFormValues } from "@/lib/domain/studio";
+import {
+  reaisToCents,
+  type Studio,
+  type StudioFormValues,
+  studioFormSchema,
+} from "@/lib/domain/studio";
 
 interface StudioNewRowProps {
   readonly onCreated: (studio: Studio) => void;
@@ -32,8 +37,8 @@ export function StudioNewRow({ onCreated, onCancelled }: StudioNewRowProps) {
     formState: { errors, isSubmitting },
     setError,
   } = useForm<StudioFormValues>({
-    resolver: zodResolver(createStudioSchema),
-    defaultValues: { name: "", defaultHourlyRate: 0 },
+    resolver: zodResolver(studioFormSchema),
+    defaultValues: { name: "", defaultHourlyRateReais: 0 },
   });
 
   useEffect(() => {
@@ -41,10 +46,14 @@ export function StudioNewRow({ onCreated, onCancelled }: StudioNewRowProps) {
   }, []);
 
   async function onSubmit(values: StudioFormValues) {
+    const payload = {
+      name: values.name,
+      defaultHourlyRateCents: reaisToCents(values.defaultHourlyRateReais),
+    };
     const response = await fetch("/api/v1/studios", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values),
+      body: JSON.stringify(payload),
     });
 
     if (response.status === 201) {
@@ -56,8 +65,10 @@ export function StudioNewRow({ onCreated, onCancelled }: StudioNewRowProps) {
     if (response.status === 422) {
       const body = (await response.json()) as ApiErrorBody;
       for (const detail of body.error.details ?? []) {
-        if (detail.field === "name" || detail.field === "defaultHourlyRate") {
-          setError(detail.field, { message: detail.message });
+        if (detail.field === "name") {
+          setError("name", { message: detail.message });
+        } else if (detail.field === "defaultHourlyRateCents") {
+          setError("defaultHourlyRateReais", { message: detail.message });
         }
       }
       return;
@@ -102,7 +113,7 @@ export function StudioNewRow({ onCreated, onCancelled }: StudioNewRowProps) {
           Valor/hora
         </Label>
         <Controller
-          name="defaultHourlyRate"
+          name="defaultHourlyRateReais"
           control={control}
           render={({ field }) => (
             <MoneyInput
@@ -113,13 +124,13 @@ export function StudioNewRow({ onCreated, onCancelled }: StudioNewRowProps) {
               value={field.value ?? 0}
               onChange={field.onChange}
               onBlur={field.onBlur}
-              aria-invalid={errors.defaultHourlyRate ? true : undefined}
+              aria-invalid={errors.defaultHourlyRateReais ? true : undefined}
               disabled={isSubmitting}
             />
           )}
         />
-        {errors.defaultHourlyRate && (
-          <p className="mt-1 text-xs text-destructive">{errors.defaultHourlyRate.message}</p>
+        {errors.defaultHourlyRateReais && (
+          <p className="mt-1 text-xs text-destructive">{errors.defaultHourlyRateReais.message}</p>
         )}
       </TableCell>
       <TableCell className="w-24">

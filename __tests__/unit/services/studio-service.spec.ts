@@ -19,8 +19,8 @@ describe("StudioService", () => {
     });
 
     it("returns studios ordered by createdAt ASC", async () => {
-      const first = await service.create({ name: "Primeiro", defaultHourlyRate: 50 });
-      const second = await service.create({ name: "Segundo", defaultHourlyRate: 60 });
+      const first = await service.create({ name: "Primeiro", defaultHourlyRateCents: 5000 });
+      const second = await service.create({ name: "Segundo", defaultHourlyRateCents: 6000 });
 
       const result = await service.list();
 
@@ -32,36 +32,36 @@ describe("StudioService", () => {
     it("creates a studio with trimmed name", async () => {
       const created = await service.create({
         name: "  Sonora Studio  ",
-        defaultHourlyRate: 85,
+        defaultHourlyRateCents: 8500,
       });
 
       expect(created.name).toBe("Sonora Studio");
-      expect(created.defaultHourlyRate).toBe(85);
+      expect(created.defaultHourlyRateCents).toBe(8500);
       expect(created.id).toEqual(expect.any(String));
     });
 
     it("does not normalize name case (preserves case-sensitive)", async () => {
-      const created = await service.create({ name: "SONORA", defaultHourlyRate: 85 });
+      const created = await service.create({ name: "SONORA", defaultHourlyRateCents: 8500 });
       expect(created.name).toBe("SONORA");
     });
 
-    it("passes defaultHourlyRate through unchanged", async () => {
-      const created = await service.create({ name: "Sonora", defaultHourlyRate: 85.5 });
-      expect(created.defaultHourlyRate).toBe(85.5);
+    it("passes defaultHourlyRateCents through unchanged", async () => {
+      const created = await service.create({ name: "Sonora", defaultHourlyRateCents: 8550 });
+      expect(created.defaultHourlyRateCents).toBe(8550);
     });
 
     it("propagates StudioNameAlreadyInUseError on duplicate name", async () => {
-      await service.create({ name: "Duplicado", defaultHourlyRate: 50 });
+      await service.create({ name: "Duplicado", defaultHourlyRateCents: 5000 });
 
       await expect(
-        service.create({ name: "Duplicado", defaultHourlyRate: 100 }),
+        service.create({ name: "Duplicado", defaultHourlyRateCents: 10000 }),
       ).rejects.toBeInstanceOf(StudioNameAlreadyInUseError);
     });
   });
 
   describe("update", () => {
     it("updates name with trim", async () => {
-      const created = await service.create({ name: "Sonora", defaultHourlyRate: 85 });
+      const created = await service.create({ name: "Sonora", defaultHourlyRateCents: 8500 });
 
       const updated = await service.update(created.id, { name: "  Sonora Plus  " });
 
@@ -69,20 +69,20 @@ describe("StudioService", () => {
     });
 
     it("updates only the fields provided", async () => {
-      const created = await service.create({ name: "Sonora", defaultHourlyRate: 85 });
+      const created = await service.create({ name: "Sonora", defaultHourlyRateCents: 8500 });
 
-      const updated = await service.update(created.id, { defaultHourlyRate: 100 });
+      const updated = await service.update(created.id, { defaultHourlyRateCents: 10000 });
 
       expect(updated.name).toBe("Sonora");
-      expect(updated.defaultHourlyRate).toBe(100);
+      expect(updated.defaultHourlyRateCents).toBe(10000);
     });
 
     it("is idempotent when values are unchanged", async () => {
-      const created = await service.create({ name: "Sonora", defaultHourlyRate: 85 });
+      const created = await service.create({ name: "Sonora", defaultHourlyRateCents: 8500 });
 
       const updated = await service.update(created.id, {
         name: "Sonora",
-        defaultHourlyRate: 85,
+        defaultHourlyRateCents: 8500,
       });
 
       expect(updated.id).toBe(created.id);
@@ -95,8 +95,8 @@ describe("StudioService", () => {
     });
 
     it("propagates StudioNameAlreadyInUseError on duplicate name via rename", async () => {
-      await service.create({ name: "Existente", defaultHourlyRate: 85 });
-      const other = await service.create({ name: "Outro", defaultHourlyRate: 90 });
+      await service.create({ name: "Existente", defaultHourlyRateCents: 8500 });
+      const other = await service.create({ name: "Outro", defaultHourlyRateCents: 9000 });
 
       await expect(service.update(other.id, { name: "Existente" })).rejects.toBeInstanceOf(
         StudioNameAlreadyInUseError,
@@ -106,7 +106,7 @@ describe("StudioService", () => {
 
   describe("delete", () => {
     it("removes a studio by id", async () => {
-      const created = await service.create({ name: "Sonora", defaultHourlyRate: 85 });
+      const created = await service.create({ name: "Sonora", defaultHourlyRateCents: 8500 });
 
       await service.delete(created.id);
 

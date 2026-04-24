@@ -31,12 +31,13 @@ describe("DrizzleNarratorRepository", () => {
       );
     });
 
-    it("accepts two narrators whose names differ only in case (case-sensitive unique)", async () => {
+    it("rejects two narrators whose names differ only in case (case-insensitive partial unique on lower(name))", async () => {
       const repo = createRepo();
-      const lower = await repo.create({ name: "joão" });
-      const upper = await repo.create({ name: "JOÃO" });
+      await repo.create({ name: "joão" });
 
-      expect(lower.id).not.toBe(upper.id);
+      await expect(repo.create({ name: "JOÃO" })).rejects.toBeInstanceOf(
+        NarratorNameAlreadyInUseError,
+      );
     });
   });
 

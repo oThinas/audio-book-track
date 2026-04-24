@@ -20,7 +20,7 @@ const EDITOR_COLUMNS = {
 } as const;
 
 const POSTGRES_UNIQUE_VIOLATION = "23505";
-const EDITOR_NAME_CONSTRAINT = "editor_name_unique";
+const EDITOR_NAME_CONSTRAINT = "editor_name_unique_active";
 const EDITOR_EMAIL_CONSTRAINT = "editor_email_unique";
 
 function getUniqueConstraintName(error: unknown): string | null {

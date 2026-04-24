@@ -43,23 +43,23 @@ describe("GET /api/v1/studios (handleStudiosList)", () => {
     expect(body).toEqual({ data: [] });
   });
 
-  it("returns 200 with studios payload including numeric defaultHourlyRate", async () => {
-    const first = await repo.create({ name: "Sonora", defaultHourlyRate: 85 });
-    const second = await repo.create({ name: "Voz & Arte", defaultHourlyRate: 90.5 });
+  it("returns 200 with studios payload including integer defaultHourlyRateCents", async () => {
+    const first = await repo.create({ name: "Sonora", defaultHourlyRateCents: 8500 });
+    const second = await repo.create({ name: "Voz & Arte", defaultHourlyRateCents: 9050 });
 
     const deps = createDeps({ session: { user: { id: "user-1" } }, service });
 
     const response = await handleStudiosList(deps);
     const body = (await response.json()) as {
-      data: Array<{ id: string; name: string; defaultHourlyRate: number }>;
+      data: Array<{ id: string; name: string; defaultHourlyRateCents: number }>;
     };
 
     expect(response.status).toBe(200);
     expect(body.data.map((s) => s.id).sort()).toEqual([first.id, second.id].sort());
     const sonora = body.data.find((s) => s.name === "Sonora");
     const vozArte = body.data.find((s) => s.name === "Voz & Arte");
-    expect(sonora?.defaultHourlyRate).toBe(85);
-    expect(vozArte?.defaultHourlyRate).toBe(90.5);
+    expect(sonora?.defaultHourlyRateCents).toBe(8500);
+    expect(vozArte?.defaultHourlyRateCents).toBe(9050);
   });
 
   it("sets Cache-Control: no-store header", async () => {

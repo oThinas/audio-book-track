@@ -10,13 +10,13 @@ import { StudioNameAlreadyInUseError, StudioNotFoundError } from "@/lib/errors/s
 const STUDIO_COLUMNS = {
   id: studio.id,
   name: studio.name,
-  defaultHourlyRate: studio.defaultHourlyRate,
+  defaultHourlyRateCents: studio.defaultHourlyRateCents,
   createdAt: studio.createdAt,
   updatedAt: studio.updatedAt,
 } as const;
 
 const POSTGRES_UNIQUE_VIOLATION = "23505";
-const STUDIO_NAME_CONSTRAINT = "studio_name_unique";
+const STUDIO_NAME_CONSTRAINT = "studio_name_unique_active";
 
 function getUniqueConstraintName(error: unknown): string | null {
   const direct = extractConstraint(error);
@@ -43,7 +43,7 @@ function extractConstraint(candidate: unknown): string | null {
 type DrizzleStudioRow = {
   id: string;
   name: string;
-  defaultHourlyRate: string;
+  defaultHourlyRateCents: number;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -52,7 +52,7 @@ function toDomain(row: DrizzleStudioRow): Studio {
   return {
     id: row.id,
     name: row.name,
-    defaultHourlyRate: Number(row.defaultHourlyRate),
+    defaultHourlyRateCents: row.defaultHourlyRateCents,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -84,7 +84,7 @@ export class DrizzleStudioRepository implements StudioRepository {
         .insert(studio)
         .values({
           name: input.name,
-          defaultHourlyRate: input.defaultHourlyRate.toFixed(2),
+          defaultHourlyRateCents: input.defaultHourlyRateCents,
         })
         .returning(STUDIO_COLUMNS);
       return toDomain(row);
@@ -103,8 +103,8 @@ export class DrizzleStudioRepository implements StudioRepository {
         .update(studio)
         .set({
           ...(input.name !== undefined ? { name: input.name } : {}),
-          ...(input.defaultHourlyRate !== undefined
-            ? { defaultHourlyRate: input.defaultHourlyRate.toFixed(2) }
+          ...(input.defaultHourlyRateCents !== undefined
+            ? { defaultHourlyRateCents: input.defaultHourlyRateCents }
             : {}),
         })
         .where(eq(studio.id, id))

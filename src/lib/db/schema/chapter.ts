@@ -1,14 +1,5 @@
 import { sql } from "drizzle-orm";
-import {
-  check,
-  index,
-  integer,
-  numeric,
-  pgTable,
-  text,
-  timestamp,
-  uniqueIndex,
-} from "drizzle-orm/pg-core";
+import { check, index, integer, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { book } from "./book";
 import { editor } from "./editor";
 import { narrator } from "./narrator";
@@ -30,7 +21,7 @@ export const chapter = pgTable(
       .default("pending"),
     narratorId: text("narrator_id").references(() => narrator.id, { onDelete: "restrict" }),
     editorId: text("editor_id").references(() => editor.id, { onDelete: "restrict" }),
-    editedHours: numeric("edited_hours", { precision: 5, scale: 2 }).notNull().default("0"),
+    editedSeconds: integer("edited_seconds").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .defaultNow()
@@ -47,8 +38,8 @@ export const chapter = pgTable(
     index("chapter_book_status_idx").on(table.bookId, table.status),
     check("chapter_number_positive", sql`${table.number} >= 1`),
     check(
-      "chapter_edited_hours_range",
-      sql`${table.editedHours} >= 0 AND ${table.editedHours} <= 999.99`,
+      "chapter_edited_seconds_range",
+      sql`${table.editedSeconds} >= 0 AND ${table.editedSeconds} <= 3600000`,
     ),
   ],
 );

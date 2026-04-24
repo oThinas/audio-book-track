@@ -140,13 +140,11 @@ export async function createTestEditor(
 
 interface CreateTestStudioOptions {
   readonly name?: string;
-  readonly defaultHourlyRate?: number;
+  readonly defaultHourlyRateCents?: number;
 }
 
 interface CreateTestStudioResult {
-  readonly studio: Omit<typeof studio.$inferSelect, "defaultHourlyRate"> & {
-    readonly defaultHourlyRate: number;
-  };
+  readonly studio: typeof studio.$inferSelect;
 }
 
 export async function createTestStudio(
@@ -154,22 +152,16 @@ export async function createTestStudio(
   overrides: CreateTestStudioOptions = {},
 ): Promise<CreateTestStudioResult> {
   const suffix = randomUUID().slice(0, 8);
-  const rate = overrides.defaultHourlyRate ?? 85;
 
   const [createdStudio] = await db
     .insert(studio)
     .values({
       name: overrides.name ?? `Studio ${suffix}`,
-      defaultHourlyRate: rate.toFixed(2),
+      defaultHourlyRateCents: overrides.defaultHourlyRateCents ?? 8500,
     })
     .returning();
 
-  return {
-    studio: {
-      ...createdStudio,
-      defaultHourlyRate: Number(createdStudio.defaultHourlyRate),
-    },
-  };
+  return { studio: createdStudio };
 }
 
 type BookStatus = "pending" | "editing" | "reviewing" | "retake" | "completed" | "paid";
@@ -177,15 +169,13 @@ type BookStatus = "pending" | "editing" | "reviewing" | "retake" | "completed" |
 interface CreateTestBookOptions {
   readonly title?: string;
   readonly studioId?: string;
-  readonly pricePerHour?: number;
+  readonly pricePerHourCents?: number;
   readonly pdfUrl?: string | null;
   readonly status?: BookStatus;
 }
 
 interface CreateTestBookResult {
-  readonly book: Omit<typeof book.$inferSelect, "pricePerHour"> & {
-    readonly pricePerHour: number;
-  };
+  readonly book: typeof book.$inferSelect;
 }
 
 export async function createTestBook(
@@ -198,25 +188,18 @@ export async function createTestBook(
     overrides.studioId ??
     (await createTestStudio(db, { name: `Studio for Book ${suffix}` })).studio.id;
 
-  const price = overrides.pricePerHour ?? 85;
-
   const [createdBook] = await db
     .insert(book)
     .values({
       title: overrides.title ?? `Book ${suffix}`,
       studioId,
-      pricePerHour: price.toFixed(2),
+      pricePerHourCents: overrides.pricePerHourCents ?? 8500,
       pdfUrl: overrides.pdfUrl ?? null,
       status: overrides.status ?? "pending",
     })
     .returning();
 
-  return {
-    book: {
-      ...createdBook,
-      pricePerHour: Number(createdBook.pricePerHour),
-    },
-  };
+  return { book: createdBook };
 }
 
 interface CreateTestChapterOptions {
@@ -225,13 +208,11 @@ interface CreateTestChapterOptions {
   readonly status?: BookStatus;
   readonly narratorId?: string | null;
   readonly editorId?: string | null;
-  readonly editedHours?: number;
+  readonly editedSeconds?: number;
 }
 
 interface CreateTestChapterResult {
-  readonly chapter: Omit<typeof chapter.$inferSelect, "editedHours"> & {
-    readonly editedHours: number;
-  };
+  readonly chapter: typeof chapter.$inferSelect;
 }
 
 export async function createTestChapter(
@@ -248,14 +229,9 @@ export async function createTestChapter(
       status: overrides.status ?? "pending",
       narratorId: overrides.narratorId ?? null,
       editorId: overrides.editorId ?? null,
-      editedHours: (overrides.editedHours ?? 0).toFixed(2),
+      editedSeconds: overrides.editedSeconds ?? 0,
     })
     .returning();
 
-  return {
-    chapter: {
-      ...createdChapter,
-      editedHours: Number(createdChapter.editedHours),
-    },
-  };
+  return { chapter: createdChapter };
 }

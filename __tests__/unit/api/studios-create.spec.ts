@@ -31,7 +31,7 @@ describe("POST /api/v1/studios (handleStudiosCreate)", () => {
 
   it("returns 401 when there is no session", async () => {
     const deps = createDeps({ session: null, service });
-    const request = buildRequest({ name: "Sonora", defaultHourlyRate: 85 });
+    const request = buildRequest({ name: "Sonora", defaultHourlyRateCents: 8500 });
 
     const response = await handleStudiosCreate(request, deps);
     const body = await response.json();
@@ -42,7 +42,7 @@ describe("POST /api/v1/studios (handleStudiosCreate)", () => {
 
   it("returns 422 when name is too short", async () => {
     const deps = createDeps({ session: { user: { id: "u1" } }, service });
-    const request = buildRequest({ name: "a", defaultHourlyRate: 85 });
+    const request = buildRequest({ name: "a", defaultHourlyRateCents: 8500 });
 
     const response = await handleStudiosCreate(request, deps);
     const body = (await response.json()) as {
@@ -54,9 +54,9 @@ describe("POST /api/v1/studios (handleStudiosCreate)", () => {
     expect(body.error.details.some((d) => d.field === "name")).toBe(true);
   });
 
-  it("returns 422 when defaultHourlyRate is below minimum (0)", async () => {
+  it("returns 422 when defaultHourlyRateCents is below minimum (0)", async () => {
     const deps = createDeps({ session: { user: { id: "u1" } }, service });
-    const request = buildRequest({ name: "Sonora", defaultHourlyRate: 0 });
+    const request = buildRequest({ name: "Sonora", defaultHourlyRateCents: 0 });
 
     const response = await handleStudiosCreate(request, deps);
     const body = (await response.json()) as {
@@ -65,12 +65,12 @@ describe("POST /api/v1/studios (handleStudiosCreate)", () => {
 
     expect(response.status).toBe(422);
     expect(body.error.code).toBe("VALIDATION_ERROR");
-    expect(body.error.details.some((d) => d.field === "defaultHourlyRate")).toBe(true);
+    expect(body.error.details.some((d) => d.field === "defaultHourlyRateCents")).toBe(true);
   });
 
-  it("returns 422 when defaultHourlyRate exceeds maximum (10000)", async () => {
+  it("returns 422 when defaultHourlyRateCents exceeds maximum (1000000)", async () => {
     const deps = createDeps({ session: { user: { id: "u1" } }, service });
-    const request = buildRequest({ name: "Sonora", defaultHourlyRate: 10000 });
+    const request = buildRequest({ name: "Sonora", defaultHourlyRateCents: 1000000 });
 
     const response = await handleStudiosCreate(request, deps);
     const body = (await response.json()) as {
@@ -78,12 +78,12 @@ describe("POST /api/v1/studios (handleStudiosCreate)", () => {
     };
 
     expect(response.status).toBe(422);
-    expect(body.error.details.some((d) => d.field === "defaultHourlyRate")).toBe(true);
+    expect(body.error.details.some((d) => d.field === "defaultHourlyRateCents")).toBe(true);
   });
 
-  it("returns 422 when defaultHourlyRate has more than 2 decimals", async () => {
+  it("returns 422 when defaultHourlyRateCents is not an integer", async () => {
     const deps = createDeps({ session: { user: { id: "u1" } }, service });
-    const request = buildRequest({ name: "Sonora", defaultHourlyRate: 85.555 });
+    const request = buildRequest({ name: "Sonora", defaultHourlyRateCents: 85.5 });
 
     const response = await handleStudiosCreate(request, deps);
     const body = (await response.json()) as {
@@ -91,10 +91,10 @@ describe("POST /api/v1/studios (handleStudiosCreate)", () => {
     };
 
     expect(response.status).toBe(422);
-    expect(body.error.details.some((d) => d.field === "defaultHourlyRate")).toBe(true);
+    expect(body.error.details.some((d) => d.field === "defaultHourlyRateCents")).toBe(true);
   });
 
-  it("returns 422 when defaultHourlyRate is missing", async () => {
+  it("returns 422 when defaultHourlyRateCents is missing", async () => {
     const deps = createDeps({ session: { user: { id: "u1" } }, service });
     const request = buildRequest({ name: "Sonora" });
 
@@ -104,13 +104,13 @@ describe("POST /api/v1/studios (handleStudiosCreate)", () => {
     };
 
     expect(response.status).toBe(422);
-    expect(body.error.details.some((d) => d.field === "defaultHourlyRate")).toBe(true);
+    expect(body.error.details.some((d) => d.field === "defaultHourlyRateCents")).toBe(true);
   });
 
   it("returns 409 NAME_ALREADY_IN_USE when name is duplicate", async () => {
-    await repo.create({ name: "Duplicado", defaultHourlyRate: 50 });
+    await repo.create({ name: "Duplicado", defaultHourlyRateCents: 5000 });
     const deps = createDeps({ session: { user: { id: "u1" } }, service });
-    const request = buildRequest({ name: "Duplicado", defaultHourlyRate: 90 });
+    const request = buildRequest({ name: "Duplicado", defaultHourlyRateCents: 9000 });
 
     const response = await handleStudiosCreate(request, deps);
     const body = await response.json();
@@ -121,31 +121,31 @@ describe("POST /api/v1/studios (handleStudiosCreate)", () => {
 
   it("returns 201 with Location header and studio payload on success", async () => {
     const deps = createDeps({ session: { user: { id: "u1" } }, service });
-    const request = buildRequest({ name: "  Sonora  ", defaultHourlyRate: 85 });
+    const request = buildRequest({ name: "  Sonora  ", defaultHourlyRateCents: 8500 });
 
     const response = await handleStudiosCreate(request, deps);
     const body = (await response.json()) as {
-      data: { id: string; name: string; defaultHourlyRate: number };
+      data: { id: string; name: string; defaultHourlyRateCents: number };
     };
 
     expect(response.status).toBe(201);
     expect(body.data.name).toBe("Sonora");
-    expect(body.data.defaultHourlyRate).toBe(85);
+    expect(body.data.defaultHourlyRateCents).toBe(8500);
     expect(response.headers.get("Location")).toBe(`/api/v1/studios/${body.data.id}`);
     expect(response.headers.get("Cache-Control")).toBe("no-store");
   });
 
-  it("accepts boundary values (0.01 and 9999.99)", async () => {
+  it("accepts boundary values (1 and 999999)", async () => {
     const deps = createDeps({ session: { user: { id: "u1" } }, service });
 
     const min = await handleStudiosCreate(
-      buildRequest({ name: "Min", defaultHourlyRate: 0.01 }),
+      buildRequest({ name: "Min", defaultHourlyRateCents: 1 }),
       deps,
     );
     expect(min.status).toBe(201);
 
     const max = await handleStudiosCreate(
-      buildRequest({ name: "Max", defaultHourlyRate: 9999.99 }),
+      buildRequest({ name: "Max", defaultHourlyRateCents: 999999 }),
       deps,
     );
     expect(max.status).toBe(201);
@@ -155,7 +155,7 @@ describe("POST /api/v1/studios (handleStudiosCreate)", () => {
     const deps = createDeps({ session: { user: { id: "u1" } }, service });
     const request = buildRequest({
       name: "Sonora",
-      defaultHourlyRate: 85,
+      defaultHourlyRateCents: 8500,
       extra: "ignored",
     });
 

@@ -4,9 +4,9 @@ import { expect, test } from "./fixtures/app-server";
 import { checkAccessibility } from "./helpers/accessibility";
 import { login } from "./helpers/auth";
 
-async function seedStudio(page: Page, name: string, defaultHourlyRate: number) {
+async function seedStudio(page: Page, name: string, defaultHourlyRateReais: number) {
   const response = await page.request.post("/api/v1/studios", {
-    data: { name, defaultHourlyRate },
+    data: { name, defaultHourlyRateCents: Math.round(defaultHourlyRateReais * 100) },
   });
   if (!response.ok()) {
     throw new Error(`Failed to seed studio ${name}: ${response.status()}`);

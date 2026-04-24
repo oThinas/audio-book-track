@@ -56,8 +56,8 @@ export function StudiosTable({
         enableSorting: true,
       },
       {
-        id: "defaultHourlyRate",
-        accessorKey: "defaultHourlyRate",
+        id: "defaultHourlyRateCents",
+        accessorKey: "defaultHourlyRateCents",
         header: "Valor/hora",
         enableSorting: true,
         sortingFn: "basic",
@@ -100,7 +100,7 @@ export function StudiosTable({
                 const widthClass =
                   columnId === "actions"
                     ? "w-24 text-right"
-                    : columnId === "defaultHourlyRate"
+                    : columnId === "defaultHourlyRateCents"
                       ? "w-56"
                       : "w-auto";
                 const ariaSort = canSort

@@ -11,15 +11,15 @@ export class StudioService {
   async create(input: CreateStudioInput): Promise<Studio> {
     return this.repository.create({
       name: input.name.trim(),
-      defaultHourlyRate: input.defaultHourlyRate,
+      defaultHourlyRateCents: input.defaultHourlyRateCents,
     });
   }
 
   async update(id: string, input: UpdateStudioInput): Promise<Studio> {
     return this.repository.update(id, {
       ...(input.name !== undefined ? { name: input.name.trim() } : {}),
-      ...(input.defaultHourlyRate !== undefined
-        ? { defaultHourlyRate: input.defaultHourlyRate }
+      ...(input.defaultHourlyRateCents !== undefined
+        ? { defaultHourlyRateCents: input.defaultHourlyRateCents }
         : {}),
     });
   }

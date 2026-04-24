@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { check, index, numeric, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { check, index, integer, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { studio } from "./studio";
 
 export const book = pgTable(
@@ -12,7 +12,7 @@ export const book = pgTable(
     studioId: text("studio_id")
       .notNull()
       .references(() => studio.id, { onDelete: "restrict" }),
-    pricePerHour: numeric("price_per_hour", { precision: 10, scale: 2 }).notNull(),
+    pricePerHourCents: integer("price_per_hour_cents").notNull(),
     pdfUrl: text("pdf_url"),
     status: text("status", {
       enum: ["pending", "editing", "reviewing", "retake", "completed", "paid"],
@@ -30,8 +30,8 @@ export const book = pgTable(
     uniqueIndex("book_title_studio_unique").on(sql`lower(${table.title})`, table.studioId),
     index("book_created_at_idx").on(table.createdAt),
     check(
-      "book_price_per_hour_range",
-      sql`${table.pricePerHour} >= 0.01 AND ${table.pricePerHour} <= 9999.99`,
+      "book_price_per_hour_cents_range",
+      sql`${table.pricePerHourCents} >= 1 AND ${table.pricePerHourCents} <= 999999`,
     ),
     check(
       "book_pdf_url_format",

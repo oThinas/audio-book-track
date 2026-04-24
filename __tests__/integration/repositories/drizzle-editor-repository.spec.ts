@@ -44,12 +44,13 @@ describe("DrizzleEditorRepository", () => {
       ).rejects.toBeInstanceOf(EditorEmailAlreadyInUseError);
     });
 
-    it("accepts two editors whose names differ only in case (case-sensitive unique on name)", async () => {
+    it("rejects two editors whose names differ only in case (case-insensitive partial unique on lower(name))", async () => {
       const repo = createRepo();
-      const lower = await repo.create({ name: "carla", email: "lower@studio.com" });
-      const upper = await repo.create({ name: "CARLA", email: "upper@studio.com" });
+      await repo.create({ name: "carla", email: "lower@studio.com" });
 
-      expect(lower.id).not.toBe(upper.id);
+      await expect(
+        repo.create({ name: "CARLA", email: "upper@studio.com" }),
+      ).rejects.toBeInstanceOf(EditorNameAlreadyInUseError);
     });
   });
 

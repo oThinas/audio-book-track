@@ -5,9 +5,9 @@ import { login } from "./helpers/auth";
 
 const PRIMARY_COLORS = ["blue", "orange", "green", "red", "amber"] as const;
 
-async function seedStudio(page: Page, name: string, defaultHourlyRate: number) {
+async function seedStudio(page: Page, name: string, defaultHourlyRateReais: number) {
   const response = await page.request.post("/api/v1/studios", {
-    data: { name, defaultHourlyRate },
+    data: { name, defaultHourlyRateCents: Math.round(defaultHourlyRateReais * 100) },
   });
   if (!response.ok()) {
     throw new Error(`Failed to seed studio ${name}: ${response.status()}`);

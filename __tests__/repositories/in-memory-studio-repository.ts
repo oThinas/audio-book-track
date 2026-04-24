@@ -35,7 +35,7 @@ export class InMemoryStudioRepository implements StudioRepository {
     const newStudio: Studio = {
       id: crypto.randomUUID(),
       name,
-      defaultHourlyRate: input.defaultHourlyRate,
+      defaultHourlyRateCents: input.defaultHourlyRateCents,
       createdAt: now,
       updatedAt: now,
     };
@@ -59,8 +59,8 @@ export class InMemoryStudioRepository implements StudioRepository {
     const updated: Studio = {
       ...existing,
       ...(input.name !== undefined ? { name: input.name } : {}),
-      ...(input.defaultHourlyRate !== undefined
-        ? { defaultHourlyRate: input.defaultHourlyRate }
+      ...(input.defaultHourlyRateCents !== undefined
+        ? { defaultHourlyRateCents: input.defaultHourlyRateCents }
         : {}),
       updatedAt: new Date(),
     };

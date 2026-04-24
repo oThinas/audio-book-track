@@ -12,7 +12,13 @@ import { Label } from "@/components/ui/label";
 import { MoneyInput } from "@/components/ui/money-input";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { ApiErrorBody } from "@/lib/api/error-response";
-import { type Studio, type StudioFormValues, studioFormSchema } from "@/lib/domain/studio";
+import {
+  centsToReais,
+  reaisToCents,
+  type Studio,
+  type StudioFormValues,
+  studioFormSchema,
+} from "@/lib/domain/studio";
 import { formatBRL } from "@/lib/utils";
 
 interface StudioRowProps {
@@ -43,7 +49,7 @@ export function StudioRow({ studio, onUpdated, onRequestDelete }: StudioRowProps
         {studio.name}
       </TableCell>
       <TableCell data-testid="studio-hourly-rate" className="text-foreground">
-        {formatBRL(studio.defaultHourlyRate)}
+        {formatBRL(centsToReais(studio.defaultHourlyRateCents))}
       </TableCell>
       <TableCell className="w-24">
         <div className="flex items-center justify-end gap-1">
@@ -95,7 +101,7 @@ function StudioRowEditMode({ studio, onCancel, onUpdated }: StudioRowEditModePro
     resolver: zodResolver(studioFormSchema),
     defaultValues: {
       name: studio.name,
-      defaultHourlyRate: studio.defaultHourlyRate,
+      defaultHourlyRateReais: centsToReais(studio.defaultHourlyRateCents),
     },
   });
 
@@ -104,10 +110,14 @@ function StudioRowEditMode({ studio, onCancel, onUpdated }: StudioRowEditModePro
   }, []);
 
   async function onSubmit(values: StudioFormValues) {
+    const payload = {
+      name: values.name,
+      defaultHourlyRateCents: reaisToCents(values.defaultHourlyRateReais),
+    };
     const response = await fetch(`/api/v1/studios/${studio.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values),
+      body: JSON.stringify(payload),
     });
 
     if (response.status === 200) {
@@ -119,8 +129,10 @@ function StudioRowEditMode({ studio, onCancel, onUpdated }: StudioRowEditModePro
     if (response.status === 422) {
       const body = (await response.json()) as ApiErrorBody;
       for (const detail of body.error.details ?? []) {
-        if (detail.field === "name" || detail.field === "defaultHourlyRate") {
-          setError(detail.field, { message: detail.message });
+        if (detail.field === "name") {
+          setError("name", { message: detail.message });
+        } else if (detail.field === "defaultHourlyRateCents") {
+          setError("defaultHourlyRateReais", { message: detail.message });
         }
       }
       return;
@@ -171,7 +183,7 @@ function StudioRowEditMode({ studio, onCancel, onUpdated }: StudioRowEditModePro
           Valor/hora
         </Label>
         <Controller
-          name="defaultHourlyRate"
+          name="defaultHourlyRateReais"
           control={control}
           render={({ field }) => (
             <MoneyInput
@@ -182,13 +194,13 @@ function StudioRowEditMode({ studio, onCancel, onUpdated }: StudioRowEditModePro
               value={field.value ?? 0}
               onChange={field.onChange}
               onBlur={field.onBlur}
-              aria-invalid={errors.defaultHourlyRate ? true : undefined}
+              aria-invalid={errors.defaultHourlyRateReais ? true : undefined}
               disabled={isSubmitting}
             />
           )}
         />
-        {errors.defaultHourlyRate && (
-          <p className="mt-1 text-xs text-destructive">{errors.defaultHourlyRate.message}</p>
+        {errors.defaultHourlyRateReais && (
+          <p className="mt-1 text-xs text-destructive">{errors.defaultHourlyRateReais.message}</p>
         )}
       </TableCell>
       <TableCell className="w-24">
