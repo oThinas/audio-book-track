@@ -12,7 +12,7 @@ export const narrator = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .defaultNow()
-      .$onUpdate(() => new Date())
+      .$onUpdate(() => sql`now()`)
       .notNull(),
   },
   (table) => [

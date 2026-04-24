@@ -2,6 +2,7 @@ import { getTestDb } from "@tests/helpers/db";
 import { createTestBook, createTestChapter, createTestStudio } from "@tests/helpers/factories";
 import { describe, expect, it } from "vitest";
 
+import { book } from "@/lib/db/schema";
 import { DrizzleBookRepository } from "@/lib/repositories/drizzle/drizzle-book-repository";
 import { DrizzleStudioRepository } from "@/lib/repositories/drizzle/drizzle-studio-repository";
 
@@ -99,9 +100,29 @@ describe("DrizzleBookRepository.listSummariesByUser (SQL aggregation)", () => {
 
   it("orders results by createdAt DESC", async () => {
     const db = getTestDb();
-    const { book: older } = await createTestBook(db, { title: "Older" });
-    await new Promise((r) => setTimeout(r, 5));
-    const { book: newer } = await createTestBook(db, { title: "Newer" });
+    const { studio } = await createTestStudio(db);
+    // createdAt explícito: evita depender de ordering por timing — sob BEGIN/ROLLBACK
+    // todos os INSERTs recebem o mesmo now() (transaction-start timestamp).
+    const [older] = await db
+      .insert(book)
+      .values({
+        title: "Older",
+        studioId: studio.id,
+        pricePerHourCents: 7500,
+        createdAt: new Date("2026-01-01T00:00:00Z"),
+        updatedAt: new Date("2026-01-01T00:00:00Z"),
+      })
+      .returning();
+    const [newer] = await db
+      .insert(book)
+      .values({
+        title: "Newer",
+        studioId: studio.id,
+        pricePerHourCents: 7500,
+        createdAt: new Date("2026-06-01T00:00:00Z"),
+        updatedAt: new Date("2026-06-01T00:00:00Z"),
+      })
+      .returning();
 
     const summaries = await createRepo().listSummariesByUser("any-user-id");
 

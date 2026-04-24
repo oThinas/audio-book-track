@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import { pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 
@@ -29,7 +30,7 @@ export const userPreference = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .defaultNow()
-      .$onUpdate(() => new Date())
+      .$onUpdate(() => sql`now()`)
       .notNull(),
   },
   (table) => [uniqueIndex("user_preference_user_id_idx").on(table.userId)],

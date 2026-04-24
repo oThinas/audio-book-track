@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import { boolean, index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
@@ -11,7 +12,7 @@ export const user = pgTable("user", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .defaultNow()
-    .$onUpdate(() => new Date())
+    .$onUpdate(() => sql`now()`)
     .notNull(),
 });
 
@@ -24,7 +25,7 @@ export const session = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .defaultNow()
-      .$onUpdate(() => new Date())
+      .$onUpdate(() => sql`now()`)
       .notNull(),
     ipAddress: text("ip_address"),
     userAgent: text("user_agent"),
@@ -54,7 +55,7 @@ export const account = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .defaultNow()
-      .$onUpdate(() => new Date())
+      .$onUpdate(() => sql`now()`)
       .notNull(),
   },
   (table) => [index("account_user_id_idx").on(table.userId)],
@@ -70,7 +71,7 @@ export const verification = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .defaultNow()
-      .$onUpdate(() => new Date())
+      .$onUpdate(() => sql`now()`)
       .notNull(),
   },
   (table) => [index("verification_identifier_idx").on(table.identifier)],
