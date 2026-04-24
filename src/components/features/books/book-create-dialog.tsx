@@ -23,8 +23,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { MoneyInput } from "@/components/ui/money-input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { ApiErrorBody } from "@/lib/api/error-response";
@@ -142,9 +142,9 @@ export function BookCreateDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="mt-4 flex flex-col gap-4">
-            <div>
-              <Label htmlFor="book-title">Título</Label>
+          <FieldGroup className="mt-4">
+            <Field data-invalid={errors.title ? true : undefined}>
+              <FieldLabel htmlFor="book-title">Título</FieldLabel>
               <Input
                 id="book-title"
                 placeholder="Dom Casmurro"
@@ -153,13 +153,11 @@ export function BookCreateDialog({
                 disabled={isSubmitting}
                 {...register("title")}
               />
-              {errors.title && (
-                <p className="mt-1 text-xs text-destructive">{errors.title.message}</p>
-              )}
-            </div>
+              <FieldError>{errors.title?.message}</FieldError>
+            </Field>
 
-            <div>
-              <Label htmlFor="book-studio">Estúdio</Label>
+            <Field data-invalid={errors.studioId ? true : undefined}>
+              <FieldLabel htmlFor="book-studio">Estúdio</FieldLabel>
               <Controller
                 name="studioId"
                 control={control}
@@ -225,13 +223,11 @@ export function BookCreateDialog({
                   </Popover>
                 )}
               />
-              {errors.studioId && (
-                <p className="mt-1 text-xs text-destructive">{errors.studioId.message}</p>
-              )}
-            </div>
+              <FieldError>{errors.studioId?.message}</FieldError>
+            </Field>
 
-            <div>
-              <Label htmlFor="book-price">Valor/hora</Label>
+            <Field data-invalid={errors.pricePerHourCents ? true : undefined}>
+              <FieldLabel htmlFor="book-price">Valor/hora</FieldLabel>
               <Controller
                 name="pricePerHourCents"
                 control={control}
@@ -248,13 +244,11 @@ export function BookCreateDialog({
                   />
                 )}
               />
-              {errors.pricePerHourCents && (
-                <p className="mt-1 text-xs text-destructive">{errors.pricePerHourCents.message}</p>
-              )}
-            </div>
+              <FieldError>{errors.pricePerHourCents?.message}</FieldError>
+            </Field>
 
-            <div>
-              <Label htmlFor="book-chapters">Quantidade de capítulos</Label>
+            <Field data-invalid={errors.numChapters ? true : undefined}>
+              <FieldLabel htmlFor="book-chapters">Quantidade de capítulos</FieldLabel>
               <Controller
                 name="numChapters"
                 control={control}
@@ -270,11 +264,9 @@ export function BookCreateDialog({
                   />
                 )}
               />
-              {errors.numChapters && (
-                <p className="mt-1 text-xs text-destructive">{errors.numChapters.message}</p>
-              )}
-            </div>
-          </div>
+              <FieldError>{errors.numChapters?.message}</FieldError>
+            </Field>
+          </FieldGroup>
 
           <DialogFooter className="mt-6">
             <Button
