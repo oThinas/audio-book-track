@@ -1,10 +1,13 @@
 import { getTestDb } from "@tests/helpers/db";
 import { createTestBook, createTestChapter, createTestStudio } from "@tests/helpers/factories";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
+import { handleBooksList } from "@/app/api/v1/books/route";
 import { book } from "@/lib/db/schema";
 import { DrizzleBookRepository } from "@/lib/repositories/drizzle/drizzle-book-repository";
+import { DrizzleChapterRepository } from "@/lib/repositories/drizzle/drizzle-chapter-repository";
 import { DrizzleStudioRepository } from "@/lib/repositories/drizzle/drizzle-studio-repository";
+import { BookService } from "@/lib/services/book-service";
 
 function createRepo() {
   return new DrizzleBookRepository(getTestDb());
@@ -129,7 +132,7 @@ describe("DrizzleBookRepository.listSummariesByUser (SQL aggregation)", () => {
     expect(summaries.map((s) => s.id)).toEqual([newer.id, older.id]);
   });
 
-  it("rounds earnings per-row before summing (matches JS formula in data-model §8)", async () => {
+  it("rounds earnings per-row before summing (matches JS formula in data-model)", async () => {
     const db = getTestDb();
     const { book } = await createTestBook(db, { pricePerHourCents: 7500 });
     // 3601s × 7500 / 3600 = 7502.08… → 7502
@@ -148,8 +151,129 @@ describe("DrizzleBookRepository.listSummariesByUser (SQL aggregation)", () => {
     });
 
     const [summary] = await createRepo().listSummariesByUser("any-user-id");
-
-    // Per-row rounding: 7502 + 7498 = 15000 (matches data-model §8 choice)
     expect(summary.totalEarningsCents).toBe(15_000);
+  });
+});
+
+describe("GET /api/v1/books (handleBooksList, real DB)", () => {
+  function createRouteDeps(session: { user: { id: string } } | null) {
+    const db = getTestDb();
+    const service = new BookService({
+      bookRepo: new DrizzleBookRepository(db),
+      chapterRepo: new DrizzleChapterRepository(db),
+      studioRepo: new DrizzleStudioRepository(db),
+    });
+    return {
+      getSession: vi.fn().mockResolvedValue(session),
+      createService: vi.fn().mockReturnValue(service),
+      headersFn: vi.fn().mockResolvedValue(new Headers()),
+    };
+  }
+
+  it("returns 401 when there is no session", async () => {
+    const response = await handleBooksList(createRouteDeps(null));
+    const body = await response.json();
+
+    expect(response.status).toBe(401);
+    expect(body.error.code).toBe("UNAUTHORIZED");
+  });
+
+  it("returns 200 with correct aggregations for 3 books with chapters in varied states", async () => {
+    const db = getTestDb();
+    const { studio } = await createTestStudio(db, {
+      name: "Sonora",
+      defaultHourlyRateCents: 7500,
+    });
+
+    // Under BEGIN/ROLLBACK every insert shares the same transaction timestamp,
+    // so explicit createdAt is required to test ordering. Use direct inserts
+    // instead of factories (which do not expose createdAt).
+    const [bookA] = await db
+      .insert(book)
+      .values({
+        title: "Alpha",
+        studioId: studio.id,
+        pricePerHourCents: 7500,
+        createdAt: new Date("2026-01-01T00:00:00Z"),
+        updatedAt: new Date("2026-01-01T00:00:00Z"),
+      })
+      .returning();
+    await createTestChapter(db, {
+      bookId: bookA.id,
+      number: 1,
+      status: "paid",
+      editedSeconds: 7200,
+    });
+    await createTestChapter(db, {
+      bookId: bookA.id,
+      number: 2,
+      status: "completed",
+      editedSeconds: 3600,
+    });
+    await createTestChapter(db, {
+      bookId: bookA.id,
+      number: 3,
+      status: "editing",
+      editedSeconds: 0,
+    });
+
+    const [bookB] = await db
+      .insert(book)
+      .values({
+        title: "Beta",
+        studioId: studio.id,
+        pricePerHourCents: 6000,
+        createdAt: new Date("2026-02-01T00:00:00Z"),
+        updatedAt: new Date("2026-02-01T00:00:00Z"),
+      })
+      .returning();
+    await createTestChapter(db, {
+      bookId: bookB.id,
+      number: 1,
+      status: "paid",
+      editedSeconds: 3600,
+    });
+
+    await db.insert(book).values({
+      title: "Gamma",
+      studioId: studio.id,
+      pricePerHourCents: 9000,
+      createdAt: new Date("2026-03-01T00:00:00Z"),
+      updatedAt: new Date("2026-03-01T00:00:00Z"),
+    });
+
+    const response = await handleBooksList(createRouteDeps({ user: { id: crypto.randomUUID() } }));
+    const body = (await response.json()) as {
+      data: Array<{
+        id: string;
+        title: string;
+        totalChapters: number;
+        completedChapters: number;
+        totalEarningsCents: number;
+      }>;
+    };
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Cache-Control")).toBe("no-store");
+    expect(body.data).toHaveLength(3);
+    // ordered by createdAt DESC
+    expect(body.data.map((b) => b.title)).toEqual(["Gamma", "Beta", "Alpha"]);
+
+    const alpha = body.data.find((b) => b.title === "Alpha") as (typeof body.data)[number];
+    expect(alpha.totalChapters).toBe(3);
+    expect(alpha.completedChapters).toBe(2);
+    // (7200 × 7500 / 3600) + (3600 × 7500 / 3600) + 0 = 15000 + 7500 = 22500
+    expect(alpha.totalEarningsCents).toBe(22_500);
+
+    const beta = body.data.find((b) => b.title === "Beta") as (typeof body.data)[number];
+    expect(beta.totalChapters).toBe(1);
+    expect(beta.completedChapters).toBe(1);
+    // 3600 × 6000 / 3600 = 6000
+    expect(beta.totalEarningsCents).toBe(6_000);
+
+    const gamma = body.data.find((b) => b.title === "Gamma") as (typeof body.data)[number];
+    expect(gamma.totalChapters).toBe(0);
+    expect(gamma.completedChapters).toBe(0);
+    expect(gamma.totalEarningsCents).toBe(0);
   });
 });

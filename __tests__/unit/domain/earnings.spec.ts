@@ -39,7 +39,7 @@ describe("computeEarningsCents", () => {
     expect(computeEarningsCents(1, 1800)).toBe(1);
   });
 
-  it("produces the same result as the SQL formula documented in data-model.md §8", () => {
+  it("produces the same result as the SQL formula documented in data-model.md", () => {
     // ROUND((edited_seconds::numeric * price_per_hour_cents) / 3600)
     // For (editedSeconds=7200, pricePerHourCents=8550): 7200 * 8550 / 3600 = 17100
     expect(computeEarningsCents(7200, 8550)).toBe(17100);
@@ -79,7 +79,7 @@ describe("sumEarningsCents", () => {
 
   it("sums per-row rounded earnings (auditable Principle II)", () => {
     // Each row rounds individually — summing per-row results is the auditable
-    // path chosen in data-model.md §8 so the SQL and JS produce identical values.
+    // path chosen in data-model.md so the SQL and JS produce identical values.
     // 3601 * 7500 / 3600 = 7502 (rounded)
     // 3599 * 7500 / 3600 = 7498 (rounded)
     // sum = 15000

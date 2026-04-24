@@ -70,7 +70,7 @@ export class DrizzleBookRepository implements BookRepository {
 
   async listSummariesByUser(_userId: string, tx?: RepositoryTx): Promise<BookSummary[]> {
     // JOIN studio sem filtro de deleted_at — livros históricos precisam resolver
-    // o nome do estúdio mesmo quando o estúdio foi soft-deleted (FR-046 / data-model §8).
+    // o nome do estúdio mesmo quando o estúdio foi soft-deleted.
     const rows = await this.executor(tx)
       .select({
         id: book.id,
