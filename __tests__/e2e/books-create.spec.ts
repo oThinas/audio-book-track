@@ -37,9 +37,8 @@ test.describe("Books create", () => {
     await dialog.getByTestId("book-studio-trigger").click();
     await page.getByRole("option", { name: /sonora/i }).click();
 
+    // Studio selection auto-fills Valor/hora with the studio's default rate.
     const priceInput = dialog.getByLabel(/^valor\/hora$/i);
-    await priceInput.focus();
-    await page.keyboard.type("7500");
     await expect(priceInput).toHaveValue(/R\$\s*75,00/);
 
     const chaptersInput = dialog.getByLabel(/^capítulos$/i);
@@ -73,13 +72,11 @@ test.describe("Books create", () => {
     await dialog.getByLabel(/^título$/i).fill("Um Livro");
     await expect(submit).toBeDisabled();
 
+    // Selecting the studio auto-fills Valor/hora with the studio's default
+    // rate, which also satisfies the remaining required field and enables
+    // submit (numChapters defaults to 1, which is valid).
     await dialog.getByTestId("book-studio-trigger").click();
     await page.getByRole("option", { name: /sonora/i }).click();
-    await expect(submit).toBeDisabled();
-
-    const priceInput = dialog.getByLabel(/^valor\/hora$/i);
-    await priceInput.focus();
-    await page.keyboard.type("7500");
 
     await expect(submit).toBeEnabled();
   });
@@ -104,9 +101,7 @@ test.describe("Books create", () => {
     await dialog.getByLabel(/^título$/i).fill("dom casmurro");
     await dialog.getByTestId("book-studio-trigger").click();
     await page.getByRole("option", { name: /sonora/i }).click();
-    const priceInput = dialog.getByLabel(/^valor\/hora$/i);
-    await priceInput.focus();
-    await page.keyboard.type("6000");
+    // Price auto-fills from the studio's default rate; no manual entry needed.
 
     await dialog.getByTestId("book-create-submit").click();
 

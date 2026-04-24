@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronsUpDown, Loader2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -70,8 +70,9 @@ export function BookCreateDialog({
     control,
     handleSubmit,
     reset,
-    formState: { errors, isSubmitting, isValid },
+    formState: { errors, isSubmitting, isValid, dirtyFields },
     setError,
+    setValue,
     watch,
   } = useForm<CreateBookInput>({
     resolver: zodResolver(createBookSchema),
@@ -86,6 +87,19 @@ export function BookCreateDialog({
 
   const selectedStudioId = watch("studioId");
   const selectedStudio = sortedStudios.find((s) => s.id === selectedStudioId);
+
+  // When the user picks a studio and hasn't typed a custom price yet, suggest
+  // the studio's default hourly rate. The field stays pristine so a subsequent
+  // studio switch still updates the suggestion; the first manual keystroke
+  // marks it dirty and locks in the user's value.
+  useEffect(() => {
+    if (!selectedStudio) return;
+    if (dirtyFields.pricePerHourCents) return;
+    setValue("pricePerHourCents", selectedStudio.defaultHourlyRateCents, {
+      shouldValidate: true,
+      shouldDirty: false,
+    });
+  }, [selectedStudio, setValue, dirtyFields.pricePerHourCents]);
 
   function handleOpenChange(next: boolean) {
     if (!next) {
