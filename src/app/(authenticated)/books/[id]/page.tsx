@@ -5,6 +5,8 @@ import { BookDetailClient } from "@/components/features/books/book-detail-client
 import { PageContainer } from "@/components/layout/page-container";
 import { auth } from "@/lib/auth/server";
 import { createBookService } from "@/lib/factories/book";
+import { createEditorService } from "@/lib/factories/editor";
+import { createNarratorService } from "@/lib/factories/narrator";
 
 export const dynamic = "force-dynamic";
 
@@ -20,14 +22,22 @@ export default async function BookDetailPage({ params }: BookDetailPageProps) {
     redirect("/auth/sign-in");
   }
 
-  const detail = await createBookService().findById(id);
+  const [detail, narrators, editors] = await Promise.all([
+    createBookService().findById(id),
+    createNarratorService().list(),
+    createEditorService().list(),
+  ]);
   if (!detail) {
     notFound();
   }
 
   return (
     <PageContainer>
-      <BookDetailClient book={detail} />
+      <BookDetailClient
+        book={detail}
+        narrators={narrators.map((n) => ({ id: n.id, name: n.name }))}
+        editors={editors.map((e) => ({ id: e.id, name: e.name }))}
+      />
     </PageContainer>
   );
 }

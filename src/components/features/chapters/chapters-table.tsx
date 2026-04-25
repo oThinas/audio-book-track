@@ -1,9 +1,5 @@
 "use client";
 
-import { Pencil, Trash2 } from "lucide-react";
-
-import { StatusBadge } from "@/components/features/books/status-badge";
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Table,
@@ -14,22 +10,21 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { ChapterStatus } from "@/lib/domain/chapter";
-import { formatSecondsAsHours } from "@/lib/utils";
-
-export interface ChapterRowData {
-  readonly id: string;
-  readonly number: number;
-  readonly status: ChapterStatus;
-  readonly narrator: { readonly id: string; readonly name: string } | null;
-  readonly editor: { readonly id: string; readonly name: string } | null;
-  readonly editedSeconds: number;
-}
+import { ChapterRow, type ChapterRowEntity, type ChapterRowOption } from "./chapter-row";
 
 interface ChaptersTableProps {
-  readonly chapters: readonly ChapterRowData[];
+  readonly chapters: ReadonlyArray<ChapterRowEntity>;
+  readonly narrators: ReadonlyArray<ChapterRowOption>;
+  readonly editors: ReadonlyArray<ChapterRowOption>;
+  readonly onChapterSaved: (updated: ChapterRowEntity, bookStatus: ChapterStatus) => void;
 }
 
-export function ChaptersTable({ chapters }: ChaptersTableProps) {
+export function ChaptersTable({
+  chapters,
+  narrators,
+  editors,
+  onChapterSaved,
+}: ChaptersTableProps) {
   return (
     <ScrollArea
       data-testid="chapters-scroll-area"
@@ -48,45 +43,13 @@ export function ChaptersTable({ chapters }: ChaptersTableProps) {
         </TableHeader>
         <TableBody>
           {chapters.map((chapter) => (
-            <TableRow key={chapter.id} data-testid={`chapter-row-${chapter.id}`}>
-              <TableCell className="font-medium">{chapter.number}</TableCell>
-              <TableCell>
-                <StatusBadge status={chapter.status} />
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {chapter.narrator ? chapter.narrator.name : "—"}
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {chapter.editor ? chapter.editor.name : "—"}
-              </TableCell>
-              <TableCell className="text-right tabular-nums">
-                {formatSecondsAsHours(chapter.editedSeconds)}
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="inline-flex items-center gap-1">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`Editar capítulo ${chapter.number}`}
-                    data-testid={`chapter-edit-${chapter.id}`}
-                    disabled
-                  >
-                    <Pencil aria-hidden="true" className="size-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`Excluir capítulo ${chapter.number}`}
-                    data-testid={`chapter-delete-${chapter.id}`}
-                    disabled
-                  >
-                    <Trash2 aria-hidden="true" className="size-4" />
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
+            <ChapterRow
+              key={chapter.id}
+              chapter={chapter}
+              narrators={narrators}
+              editors={editors}
+              onSaved={onChapterSaved}
+            />
           ))}
           {chapters.length === 0 && (
             <TableRow>
@@ -104,3 +67,5 @@ export function ChaptersTable({ chapters }: ChaptersTableProps) {
     </ScrollArea>
   );
 }
+
+export type { ChapterRowEntity as ChapterRowData } from "./chapter-row";

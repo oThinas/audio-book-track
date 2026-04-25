@@ -1,3 +1,7 @@
 export { cn } from "./class-names";
 export { BRL_FORMATTER, formatCentsBRL } from "./format-currency";
-export { formatSecondsAsHours } from "./format-duration";
+export {
+  type FormatSecondsAsHoursOptions,
+  formatSecondsAsHours,
+  parseHoursInputToSeconds,
+} from "./format-duration";
