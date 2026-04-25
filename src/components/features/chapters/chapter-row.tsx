@@ -12,6 +12,7 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import type { ChapterStatus } from "@/lib/domain/chapter";
 import { cn, formatSecondsAsHHMMSS } from "@/lib/utils";
 
+import { ChapterDeleteDialog } from "./chapter-delete-dialog";
 import { ChapterPaidReversionDialog } from "./chapter-paid-reversion-dialog";
 import { ChapterStatusSelect } from "./chapter-status-select";
 
@@ -37,7 +38,9 @@ interface ChapterRowProps {
   readonly editors: ReadonlyArray<ChapterRowOption>;
   readonly narratorNameById: ReadonlyMap<string, string>;
   readonly editorNameById: ReadonlyMap<string, string>;
+  readonly isLastNonPaid: boolean;
   readonly onSaved: (updated: ChapterRowEntity, bookStatus: ChapterStatus) => void;
+  readonly onDeleted: (chapterId: string, bookDeleted: boolean) => void;
 }
 
 const NULL_VALUE = "__none__";
@@ -84,11 +87,15 @@ export function ChapterRow({
   editors,
   narratorNameById,
   editorNameById,
+  isLastNonPaid,
   onSaved,
+  onDeleted,
 }: ChapterRowProps) {
   const [mode, setMode] = useState<"view" | "edit">("view");
   const [submitting, setSubmitting] = useState(false);
   const [reversionPending, setReversionPending] = useState<Record<string, unknown> | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [draft, setDraft] = useState<DraftState>(() => buildDraft(chapter));
 
   function enterEdit() {
@@ -148,6 +155,27 @@ export function ChapterRow({
       toast.error(error instanceof Error ? error.message : "Erro de rede ao atualizar capítulo.");
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleDelete() {
+    setDeleting(true);
+    try {
+      const response = await fetch(`/api/v1/chapters/${chapter.id}`, { method: "DELETE" });
+      if (response.status !== 204) {
+        const body = (await response.json().catch(() => null)) as {
+          error?: { message?: string };
+        } | null;
+        toast.error(body?.error?.message ?? "Erro ao excluir capítulo.");
+        return;
+      }
+      const bookDeleted = response.headers.get("X-Book-Deleted") === "true";
+      setDeleteOpen(false);
+      onDeleted(chapter.id, bookDeleted);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro de rede ao excluir capítulo.");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -294,45 +322,62 @@ export function ChapterRow({
     );
   }
 
+  const isPaid = chapter.status === "paid";
+
   return (
-    <TableRow data-testid={`chapter-row-${chapter.id}`} data-mode="view">
-      <TableCell className="font-medium">{chapter.number}</TableCell>
-      <TableCell>
-        <StatusBadge status={chapter.status} />
-      </TableCell>
-      <TableCell className="truncate text-muted-foreground">
-        {chapter.narrator ? chapter.narrator.name : "—"}
-      </TableCell>
-      <TableCell className="truncate text-muted-foreground">
-        {chapter.editor ? chapter.editor.name : "—"}
-      </TableCell>
-      <TableCell className="text-right tabular-nums">
-        {formatSecondsAsHHMMSS(chapter.editedSeconds)}
-      </TableCell>
-      <TableCell className="text-right">
-        <div className="inline-flex items-center gap-1">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            aria-label={`Editar capítulo ${chapter.number}`}
-            data-testid={`chapter-edit-${chapter.id}`}
-            onClick={enterEdit}
-          >
-            <Pencil aria-hidden="true" className="size-4" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            aria-label={`Excluir capítulo ${chapter.number}`}
-            data-testid={`chapter-delete-${chapter.id}`}
-            disabled
-          >
-            <Trash2 aria-hidden="true" className="size-4" />
-          </Button>
-        </div>
-      </TableCell>
-    </TableRow>
+    <>
+      <TableRow data-testid={`chapter-row-${chapter.id}`} data-mode="view">
+        <TableCell className="font-medium">{chapter.number}</TableCell>
+        <TableCell>
+          <StatusBadge status={chapter.status} />
+        </TableCell>
+        <TableCell className="truncate text-muted-foreground">
+          {chapter.narrator ? chapter.narrator.name : "—"}
+        </TableCell>
+        <TableCell className="truncate text-muted-foreground">
+          {chapter.editor ? chapter.editor.name : "—"}
+        </TableCell>
+        <TableCell className="text-right tabular-nums">
+          {formatSecondsAsHHMMSS(chapter.editedSeconds)}
+        </TableCell>
+        <TableCell className="text-right">
+          <div className="inline-flex items-center gap-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label={`Editar capítulo ${chapter.number}`}
+              data-testid={`chapter-edit-${chapter.id}`}
+              onClick={enterEdit}
+            >
+              <Pencil aria-hidden="true" className="size-4" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label={`Excluir capítulo ${chapter.number}`}
+              data-testid={`chapter-delete-${chapter.id}`}
+              onClick={() => setDeleteOpen(true)}
+              disabled={isPaid || deleting}
+              className="text-destructive hover:text-destructive"
+            >
+              {deleting ? (
+                <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+              ) : (
+                <Trash2 aria-hidden="true" className="size-4" />
+              )}
+            </Button>
+          </div>
+        </TableCell>
+      </TableRow>
+      <ChapterDeleteDialog
+        open={deleteOpen}
+        chapterNumber={chapter.number}
+        isLastNonPaid={isLastNonPaid}
+        onCancel={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+      />
+    </>
   );
 }

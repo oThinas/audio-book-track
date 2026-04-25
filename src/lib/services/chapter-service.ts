@@ -40,6 +40,12 @@ export interface UpdateChapterResult {
   readonly bookStatus: BookStatus;
 }
 
+export interface DeleteChapterResult {
+  readonly bookId: string;
+  readonly bookDeleted: boolean;
+  readonly bookStatus: BookStatus | null;
+}
+
 const PAID_LOCKED_FIELDS = ["narratorId", "editorId", "editedSeconds"] as const;
 
 export class ChapterService {
@@ -79,6 +85,38 @@ export class ChapterService {
       );
 
       return { chapter: updated, bookStatus: book.status };
+    };
+
+    if (this.deps.uow) {
+      return this.deps.uow.transaction(run);
+    }
+    return run();
+  }
+
+  async delete(chapterId: string): Promise<DeleteChapterResult> {
+    const current = await this.deps.chapterRepo.findById(chapterId);
+    if (!current) {
+      throw new ChapterNotFoundError(chapterId);
+    }
+    if (current.status === "paid") {
+      throw new ChapterPaidLockedError(chapterId);
+    }
+
+    const run = async (tx?: RepositoryTx): Promise<DeleteChapterResult> => {
+      await this.deps.chapterRepo.delete(chapterId, tx);
+
+      const remaining = await this.deps.chapterRepo.listByBookId(current.bookId, tx);
+      if (remaining.length === 0) {
+        await this.deps.bookRepo.delete(current.bookId, tx);
+        return { bookId: current.bookId, bookDeleted: true, bookStatus: null };
+      }
+
+      const book = await recomputeBookStatus(
+        current.bookId,
+        { bookRepo: this.deps.bookRepo, chapterRepo: this.deps.chapterRepo },
+        tx,
+      );
+      return { bookId: current.bookId, bookDeleted: false, bookStatus: book.status };
     };
 
     if (this.deps.uow) {

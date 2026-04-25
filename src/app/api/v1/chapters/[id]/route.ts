@@ -118,10 +118,51 @@ export async function handleChapterUpdate(
   }
 }
 
+export async function handleChapterDelete(
+  rawId: string,
+  deps: ChapterByIdDeps,
+): Promise<NextResponse> {
+  const session = await deps.getSession({ headers: await deps.headersFn() });
+  if (!session) {
+    return unauthorizedResponse();
+  }
+
+  const params = chapterIdParamsSchema.safeParse({ id: rawId });
+  if (!params.success) {
+    return validationErrorResponse(params.error);
+  }
+
+  const service = deps.createService();
+  try {
+    const result = await service.delete(params.data.id);
+    const responseHeaders = new Headers(NO_STORE_HEADERS);
+    if (result.bookDeleted) {
+      responseHeaders.set("X-Book-Deleted", "true");
+    }
+    return new NextResponse(null, { status: 204, headers: responseHeaders });
+  } catch (error) {
+    if (error instanceof ChapterNotFoundError) {
+      return notFoundResponse("NOT_FOUND", error.message);
+    }
+    if (error instanceof ChapterPaidLockedError) {
+      return conflictResponse("CHAPTER_PAID_LOCKED", error.message);
+    }
+    throw error;
+  }
+}
+
 export async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ): Promise<NextResponse> {
   const { id } = await context.params;
   return handleChapterUpdate(request, id, defaultDeps());
+}
+
+export async function DELETE(
+  _request: Request,
+  context: { params: Promise<{ id: string }> },
+): Promise<NextResponse> {
+  const { id } = await context.params;
+  return handleChapterDelete(id, defaultDeps());
 }

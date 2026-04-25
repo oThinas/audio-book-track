@@ -20,6 +20,7 @@ interface ChaptersTableProps {
   readonly narrators: ReadonlyArray<ChapterRowOption>;
   readonly editors: ReadonlyArray<ChapterRowOption>;
   readonly onChapterSaved: (updated: ChapterRowEntity, bookStatus: ChapterStatus) => void;
+  readonly onChapterDeleted: (chapterId: string, bookDeleted: boolean) => void;
 }
 
 function buildNameById(options: ReadonlyArray<ChapterRowOption>): ReadonlyMap<string, string> {
@@ -33,9 +34,14 @@ export function ChaptersTable({
   narrators,
   editors,
   onChapterSaved,
+  onChapterDeleted,
 }: ChaptersTableProps) {
   const narratorNameById = useMemo(() => buildNameById(narrators), [narrators]);
   const editorNameById = useMemo(() => buildNameById(editors), [editors]);
+  const nonPaidCount = useMemo(
+    () => chapters.filter((c) => c.status !== "paid").length,
+    [chapters],
+  );
 
   return (
     <ScrollArea
@@ -62,7 +68,9 @@ export function ChaptersTable({
               editors={editors}
               narratorNameById={narratorNameById}
               editorNameById={editorNameById}
+              isLastNonPaid={chapter.status !== "paid" && nonPaidCount === 1}
               onSaved={onChapterSaved}
+              onDeleted={onChapterDeleted}
             />
           ))}
           {chapters.length === 0 && (

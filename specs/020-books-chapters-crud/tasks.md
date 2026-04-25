@@ -246,16 +246,16 @@ description: "Task list for feature 020-books-chapters-crud"
 
 ### Tests for US6 — TDD
 
-- [ ] T087 [P] [US6] Criar [__tests__/unit/services/chapter-service.delete.spec.ts](../../__tests__/unit/services/chapter-service.delete.spec.ts): bloqueia `CHAPTER_PAID_LOCKED`; recomputa `book.status`; cascade-delete do livro quando last não-`paid` e sem `paid`.
-- [ ] T088 [P] [US6] Criar [__tests__/integration/chapter-delete.spec.ts](../../__tests__/integration/chapter-delete.spec.ts): DB real, cascade-delete atômico, header `X-Book-Deleted: true`.
-- [ ] T089 [P] [US6] Criar [__tests__/e2e/chapter-delete-single.spec.ts](../../__tests__/e2e/chapter-delete-single.spec.ts): modal de confirmação, contagem reduz, cenário de cascade-delete (último capítulo → redirect).
+- [X] T087 [P] [US6] Criar [__tests__/unit/services/chapter-service.delete.spec.ts](../../__tests__/unit/services/chapter-service.delete.spec.ts): bloqueia `CHAPTER_PAID_LOCKED`; recomputa `book.status`; cascade-delete do livro quando last não-`paid` e sem `paid`.
+- [X] T088 [P] [US6] Criar [__tests__/integration/chapter-delete.spec.ts](../../__tests__/integration/chapter-delete.spec.ts): DB real, cascade-delete atômico, header `X-Book-Deleted: true`.
+- [X] T089 [P] [US6] Criar [__tests__/e2e/chapter-delete-single.spec.ts](../../__tests__/e2e/chapter-delete-single.spec.ts): modal de confirmação, contagem reduz, cenário de cascade-delete (último capítulo → redirect).
 
 ### Implementation for US6
 
-- [ ] T090 [US6] Implementar `ChapterService.delete(chapterId, userId)` em [src/lib/services/chapter-service.ts](../../src/lib/services/chapter-service.ts): transação; valida não-`paid`; `DELETE FROM chapter`; `COUNT` restante; se zero, `DELETE FROM book`; senão `recomputeBookStatus`.
-- [ ] T091 [US6] Implementar route handler `DELETE` em [src/app/api/v1/chapters/[id]/route.ts](../../src/app/api/v1/chapters/[id]/route.ts): `204` com header `X-Book-Deleted: true` quando aplicável.
-- [ ] T092 [P] [US6] Criar [src/components/features/chapters/chapter-delete-dialog.tsx](../../src/components/features/chapters/chapter-delete-dialog.tsx): `<AlertDialog>` de confirmação com copy ("Excluir capítulo X? Esta ação não pode ser desfeita").
-- [ ] T093 [US6] Integrar ícone "Excluir" em `<ChapterRow>` (T074) para abrir o dialog e disparar o DELETE. Ao receber `X-Book-Deleted: true`, redirecionar para `/books` com toast "Último capítulo removido — livro excluído".
+- [X] T090 [US6] Implementar `ChapterService.delete(chapterId, userId)` em [src/lib/services/chapter-service.ts](../../src/lib/services/chapter-service.ts): transação; valida não-`paid`; `DELETE FROM chapter`; `COUNT` restante; se zero, `DELETE FROM book`; senão `recomputeBookStatus`.
+- [X] T091 [US6] Implementar route handler `DELETE` em [src/app/api/v1/chapters/[id]/route.ts](../../src/app/api/v1/chapters/[id]/route.ts): `204` com header `X-Book-Deleted: true` quando aplicável.
+- [X] T092 [P] [US6] Criar [src/components/features/chapters/chapter-delete-dialog.tsx](../../src/components/features/chapters/chapter-delete-dialog.tsx): `<AlertDialog>` de confirmação com copy ("Excluir capítulo X? Esta ação não pode ser desfeita").
+- [X] T093 [US6] Integrar ícone "Excluir" em `<ChapterRow>` (T074) para abrir o dialog e disparar o DELETE. Ao receber `X-Book-Deleted: true`, redirecionar para `/books` com toast "Último capítulo removido — livro excluído".
 
 **Checkpoint**: US6 entregue.
 

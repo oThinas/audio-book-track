@@ -1,9 +1,12 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { type ChapterRowData, ChaptersTable } from "@/components/features/chapters/chapters-table";
 import type { BookStatus } from "@/lib/domain/book";
+import { computeBookStatus } from "@/lib/domain/book-status";
 import type { ChapterStatus } from "@/lib/domain/chapter";
 import { computeEarningsCents } from "@/lib/domain/earnings";
 
@@ -62,6 +65,7 @@ function recomputeAggregates(
 }
 
 export function BookDetailClient({ book, narrators, editors }: BookDetailClientProps) {
+  const router = useRouter();
   const [state, setState] = useState<DetailState>({
     status: book.status,
     chapters: book.chapters,
@@ -72,6 +76,21 @@ export function BookDetailClient({ book, narrators, editors }: BookDetailClientP
       status: bookStatus,
       chapters: prev.chapters.map((chapter) => (chapter.id === updated.id ? updated : chapter)),
     }));
+  }
+
+  function handleChapterDeleted(chapterId: string, bookDeleted: boolean) {
+    if (bookDeleted) {
+      toast.success("Último capítulo removido — livro excluído.");
+      router.push("/books");
+      return;
+    }
+    setState((prev) => {
+      const remaining = prev.chapters.filter((chapter) => chapter.id !== chapterId);
+      return {
+        status: remaining.length === 0 ? prev.status : computeBookStatus(remaining),
+        chapters: remaining,
+      };
+    });
   }
 
   const aggregates = recomputeAggregates(state.chapters, book.pricePerHourCents);
@@ -92,6 +111,7 @@ export function BookDetailClient({ book, narrators, editors }: BookDetailClientP
         narrators={narrators}
         editors={editors}
         onChapterSaved={handleChapterSaved}
+        onChapterDeleted={handleChapterDeleted}
       />
     </>
   );
