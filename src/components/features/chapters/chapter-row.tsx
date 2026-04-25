@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Pencil, Trash2, X } from "lucide-react";
+import { Check, Loader2, Pencil, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -269,8 +269,13 @@ export function ChapterRow({
                 data-testid={`chapter-confirm-${chapter.id}`}
                 onClick={handleConfirm}
                 disabled={submitting}
+                className="text-primary"
               >
-                <Check aria-hidden="true" className="size-4" />
+                {submitting ? (
+                  <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+                ) : (
+                  <Check aria-hidden="true" className="size-4" />
+                )}
               </Button>
             </div>
           </TableCell>
