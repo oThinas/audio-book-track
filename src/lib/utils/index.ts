@@ -6,3 +6,9 @@ export {
   formatSecondsAsHours,
   parseHoursInputToSeconds,
 } from "./format-duration";
+export {
+  digitsFromSeconds,
+  displayFromDigits,
+  secondsFromDigits,
+  TIMECODE_BUFFER_SIZE,
+} from "./timecode-buffer";

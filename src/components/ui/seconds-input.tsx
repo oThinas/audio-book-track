@@ -5,11 +5,17 @@ import {
   forwardRef,
   type KeyboardEvent,
   useEffect,
-  useMemo,
   useRef,
+  useState,
 } from "react";
 
-import { cn, formatSecondsAsHHMMSS } from "@/lib/utils";
+import {
+  cn,
+  digitsFromSeconds,
+  displayFromDigits,
+  secondsFromDigits,
+  TIMECODE_BUFFER_SIZE,
+} from "@/lib/utils";
 
 export interface SecondsInputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "type"> {
@@ -19,28 +25,50 @@ export interface SecondsInputProps
 }
 
 /**
- * Seconds-first duration input. Callers pass and receive integer seconds —
- * the canonical representation of duration in this codebase. The component
- * formats `HH:MM:SS` on screen and accumulates digits seconds-first (typing
- * "12345" yields 03:25:45).
+ * HH:MM:SS timecode-style duration input. Each typed digit shifts existing
+ * digits left and lands on the rightmost slot, mirroring how a digital clock
+ * is set: typing "12545" yields 01:25:45 (not 12545 seconds).
+ *
+ * Internally maintains a 6-digit buffer ("HHMMSS"). The buffer is the source
+ * of truth during interaction so the display does not snap to canonical form
+ * mid-typing. The component emits canonical seconds via onChange.
  */
 export const SecondsInput = forwardRef<HTMLInputElement, SecondsInputProps>(function SecondsInput(
   { value: seconds, onChange, max: maxSeconds = Number.MAX_SAFE_INTEGER, className, ...rest },
   forwardedRef,
 ) {
   const innerRef = useRef<HTMLInputElement | null>(null);
+  const [buffer, setBuffer] = useState<string>(() => digitsFromSeconds(seconds));
+  const lastEmittedRef = useRef<number>(seconds);
 
-  const displayValue = useMemo(() => formatSecondsAsHHMMSS(seconds), [seconds]);
+  // Resync the buffer when the parent passes a value we did not emit. Keeps
+  // the input controlled (initial mount, external resets) without snapping
+  // the user's in-progress digits to canonical HH:MM:SS form.
+  useEffect(() => {
+    if (seconds !== lastEmittedRef.current && seconds !== secondsFromDigits(buffer)) {
+      setBuffer(digitsFromSeconds(seconds));
+      lastEmittedRef.current = seconds;
+    }
+  }, [seconds, buffer]);
 
-  function commit(nextSeconds: number) {
-    const clamped = Math.max(0, Math.min(nextSeconds, maxSeconds));
-    if (clamped === seconds) return;
-    onChange(clamped);
+  function commit(nextBuffer: string) {
+    const next = nextBuffer.padStart(TIMECODE_BUFFER_SIZE, "0").slice(-TIMECODE_BUFFER_SIZE);
+    let nextSeconds = secondsFromDigits(next);
+    let canonical = next;
+    if (nextSeconds > maxSeconds) {
+      nextSeconds = maxSeconds;
+      canonical = digitsFromSeconds(maxSeconds);
+    }
+    setBuffer(canonical);
+    if (nextSeconds !== seconds) {
+      lastEmittedRef.current = nextSeconds;
+      onChange(nextSeconds);
+    }
   }
 
-  // Mirrors MoneyInput: React 19's synthetic onBeforeInput does not fire in
-  // jsdom — a native addEventListener on the input is the only reliable
-  // interception path across jsdom (tests) and real browsers.
+  // React 19's synthetic onBeforeInput does not fire in jsdom — a native
+  // addEventListener on the input is the only reliable interception path
+  // across jsdom (tests) and real browsers (incl. mobile IME).
   useEffect(() => {
     const input = innerRef.current;
     if (!input) return;
@@ -49,7 +77,7 @@ export const SecondsInput = forwardRef<HTMLInputElement, SecondsInputProps>(func
       event.preventDefault();
       if (data === null || data === "") return;
       if (!/^\d$/.test(data)) return;
-      commit(seconds * 10 + Number(data));
+      commit(buffer + data);
     }
     input.addEventListener("beforeinput", handleBeforeInput);
     return () => input.removeEventListener("beforeinput", handleBeforeInput);
@@ -58,7 +86,7 @@ export const SecondsInput = forwardRef<HTMLInputElement, SecondsInputProps>(func
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key === "Backspace") {
       event.preventDefault();
-      commit(Math.floor(seconds / 10));
+      commit(`0${buffer.slice(0, -1)}`);
     }
   }
 
@@ -66,15 +94,7 @@ export const SecondsInput = forwardRef<HTMLInputElement, SecondsInputProps>(func
     event.preventDefault();
     const digits = event.clipboardData.getData("text").replace(/\D/g, "");
     if (digits.length === 0) return;
-    let next = seconds;
-    for (const digit of digits) {
-      next = next * 10 + Number(digit);
-      if (next >= maxSeconds) {
-        next = maxSeconds;
-        break;
-      }
-    }
-    commit(next);
+    commit(buffer + digits);
   }
 
   function setRef(element: HTMLInputElement | null) {
@@ -92,7 +112,7 @@ export const SecondsInput = forwardRef<HTMLInputElement, SecondsInputProps>(func
       type="text"
       inputMode="numeric"
       data-slot="seconds-input"
-      value={displayValue}
+      value={displayFromDigits(buffer)}
       onKeyDown={handleKeyDown}
       onPaste={handlePaste}
       onChange={() => {
