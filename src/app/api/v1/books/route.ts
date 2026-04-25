@@ -10,7 +10,11 @@ import {
 } from "@/lib/api/responses";
 import { auth } from "@/lib/auth/server";
 import type { Session } from "@/lib/auth/session";
-import { BookStudioNotFoundError, BookTitleAlreadyInUseError } from "@/lib/errors/book-errors";
+import {
+  BookInlineStudioInvalidError,
+  BookStudioNotFoundError,
+  BookTitleAlreadyInUseError,
+} from "@/lib/errors/book-errors";
 import { createBookService } from "@/lib/factories/book";
 import { createBookSchema } from "@/lib/schemas/book";
 import type { BookService } from "@/lib/services/book-service";
@@ -96,6 +100,9 @@ export async function handleBooksCreate(request: Request, deps: BooksDeps): Prom
   } catch (error) {
     if (error instanceof BookStudioNotFoundError) {
       return unprocessableEntityResponse("STUDIO_NOT_FOUND", error.message);
+    }
+    if (error instanceof BookInlineStudioInvalidError) {
+      return unprocessableEntityResponse("INLINE_STUDIO_INVALID", error.message);
     }
     if (error instanceof BookTitleAlreadyInUseError) {
       return conflictResponse("TITLE_ALREADY_IN_USE", error.message);

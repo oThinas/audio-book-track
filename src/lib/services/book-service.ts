@@ -1,7 +1,7 @@
 import type { Book, BookStatus } from "@/lib/domain/book";
 import type { Chapter, ChapterStatus } from "@/lib/domain/chapter";
 import { computeEarningsCents } from "@/lib/domain/earnings";
-import { BookStudioNotFoundError } from "@/lib/errors/book-errors";
+import { BookInlineStudioInvalidError, BookStudioNotFoundError } from "@/lib/errors/book-errors";
 import type { BookRepository, BookSummary } from "@/lib/repositories/book-repository";
 import type { ChapterRepository } from "@/lib/repositories/chapter-repository";
 import type { EditorRepository } from "@/lib/repositories/editor-repository";
@@ -25,7 +25,10 @@ export interface CreateBookServiceInput {
   readonly studioId: string;
   readonly pricePerHourCents: number;
   readonly numChapters: number;
+  readonly inlineStudioId?: string;
 }
+
+const INLINE_STUDIO_PLACEHOLDER_RATE_CENTS = 1;
 
 export interface CreateBookResult {
   readonly book: Book;
@@ -140,12 +143,33 @@ export class BookService {
   }
 
   async create(input: CreateBookServiceInput): Promise<CreateBookResult> {
-    const studio = await this.deps.studioRepo.findById(input.studioId);
-    if (!studio) {
-      throw new BookStudioNotFoundError(input.studioId);
+    if (input.inlineStudioId !== undefined) {
+      if (input.inlineStudioId !== input.studioId) {
+        throw new BookInlineStudioInvalidError(input.inlineStudioId);
+      }
+      const inlineStudio = await this.deps.studioRepo.findById(input.inlineStudioId);
+      if (!inlineStudio) {
+        throw new BookInlineStudioInvalidError(input.inlineStudioId);
+      }
+      if (inlineStudio.defaultHourlyRateCents !== INLINE_STUDIO_PLACEHOLDER_RATE_CENTS) {
+        throw new BookInlineStudioInvalidError(input.inlineStudioId);
+      }
+    } else {
+      const studio = await this.deps.studioRepo.findById(input.studioId);
+      if (!studio) {
+        throw new BookStudioNotFoundError(input.studioId);
+      }
     }
 
     return this.deps.uow.transaction(async (tx) => {
+      if (input.inlineStudioId !== undefined) {
+        await this.deps.studioRepo.update(
+          input.inlineStudioId,
+          { defaultHourlyRateCents: input.pricePerHourCents },
+          tx,
+        );
+      }
+
       const inserted = await this.deps.bookRepo.insert(
         {
           title: input.title,

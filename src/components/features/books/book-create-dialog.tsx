@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronsUpDown, Loader2 } from "lucide-react";
+import { ChevronsUpDown, Loader2, Plus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -14,6 +14,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
+  CommandSeparator,
 } from "@/components/ui/command";
 import {
   Dialog,
@@ -33,6 +34,7 @@ import { type CreateBookInput, createBookSchema } from "@/lib/schemas/book";
 import { cn, formatCentsBRL } from "@/lib/utils";
 
 import { CHAPTER_COUNT_MAX, CHAPTER_COUNT_MIN, ChapterCountInput } from "./chapter-count-input";
+import { StudioInlineCreator } from "./studio-inline-creator";
 
 const PRICE_PER_HOUR_MIN_CENTS = 1;
 const PRICE_PER_HOUR_MAX_CENTS = 999_999;
@@ -59,11 +61,21 @@ export function BookCreateDialog({
   onCreated,
 }: BookCreateDialogProps) {
   const [studioPickerOpen, setStudioPickerOpen] = useState(false);
+  const [showInlineCreator, setShowInlineCreator] = useState(false);
+  const [inlineStudios, setInlineStudios] = useState<readonly Studio[]>([]);
+  const [inlineStudioId, setInlineStudioId] = useState<string | null>(null);
 
-  const sortedStudios = useMemo(
-    () => [...studios].sort((a, b) => a.name.localeCompare(b.name, "pt-BR")),
-    [studios],
-  );
+  const sortedStudios = useMemo(() => {
+    const merged = [...studios, ...inlineStudios];
+    const seen = new Set<string>();
+    const deduped: Studio[] = [];
+    for (const s of merged) {
+      if (seen.has(s.id)) continue;
+      seen.add(s.id);
+      deduped.push(s);
+    }
+    return deduped.sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+  }, [studios, inlineStudios]);
 
   const {
     register,
@@ -101,24 +113,46 @@ export function BookCreateDialog({
     });
   }, [selectedStudio, setValue, dirtyFields.pricePerHourCents]);
 
+  function resetState() {
+    reset();
+    setStudioPickerOpen(false);
+    setShowInlineCreator(false);
+    setInlineStudios([]);
+    setInlineStudioId(null);
+  }
+
   function handleOpenChange(next: boolean) {
     if (!next) {
-      reset();
-      setStudioPickerOpen(false);
+      if (inlineStudioId) {
+        toast.warning(
+          "Estúdio criado mas não vinculado: o valor/hora ficou em R$ 0,01. Edite-o quando puder.",
+        );
+      }
+      resetState();
     }
     onOpenChange(next);
   }
 
+  function handleInlineStudioCreated(studio: Studio) {
+    setInlineStudios((current) => [...current, studio]);
+    setInlineStudioId(studio.id);
+    setValue("studioId", studio.id, { shouldValidate: true, shouldDirty: true });
+    setShowInlineCreator(false);
+    setStudioPickerOpen(false);
+  }
+
   async function onSubmit(values: CreateBookInput) {
+    const payload =
+      inlineStudioId && inlineStudioId === values.studioId ? { ...values, inlineStudioId } : values;
     const response = await fetch("/api/v1/books", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values),
+      body: JSON.stringify(payload),
     });
 
     if (response.status === 201) {
       const body = (await response.json()) as { data: CreatedBook };
-      reset();
+      resetState();
       onCreated(body.data);
       return;
     }
@@ -127,6 +161,12 @@ export function BookCreateDialog({
       const body = (await response.json()) as ApiErrorBody;
       if (body.error.code === "STUDIO_NOT_FOUND") {
         setError("studioId", { message: "Estúdio não encontrado ou arquivado." });
+        return;
+      }
+      if (body.error.code === "INLINE_STUDIO_INVALID") {
+        setError("studioId", {
+          message: "Estúdio inline inválido. Selecione outro estúdio.",
+        });
         return;
       }
       for (const detail of body.error.details ?? []) {
@@ -202,33 +242,52 @@ export function BookCreateDialog({
                       }
                     />
                     <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                      <Command>
-                        <CommandInput placeholder="Buscar estúdio..." />
-                        <CommandList>
-                          <CommandEmpty>Nenhum estúdio encontrado.</CommandEmpty>
-                          <CommandGroup>
-                            {sortedStudios.map((studio) => (
+                      {showInlineCreator ? (
+                        <StudioInlineCreator
+                          onCreated={handleInlineStudioCreated}
+                          onCancel={() => setShowInlineCreator(false)}
+                        />
+                      ) : (
+                        <Command>
+                          <CommandInput placeholder="Buscar estúdio..." />
+                          <CommandList>
+                            <CommandEmpty>Nenhum estúdio encontrado.</CommandEmpty>
+                            <CommandGroup>
+                              {sortedStudios.map((studio) => (
+                                <CommandItem
+                                  key={studio.id}
+                                  value={studio.name}
+                                  onSelect={() => {
+                                    field.onChange(studio.id);
+                                    setStudioPickerOpen(false);
+                                  }}
+                                  data-checked={field.value === studio.id ? true : undefined}
+                                  data-testid={`book-studio-item-${studio.id}`}
+                                >
+                                  <div className="flex flex-col">
+                                    <span>{studio.name}</span>
+                                    <span className="text-xs text-muted-foreground">
+                                      {formatCentsBRL(studio.defaultHourlyRateCents)}/h
+                                    </span>
+                                  </div>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                            <CommandSeparator />
+                            <CommandGroup>
                               <CommandItem
-                                key={studio.id}
-                                value={studio.name}
-                                onSelect={() => {
-                                  field.onChange(studio.id);
-                                  setStudioPickerOpen(false);
-                                }}
-                                data-checked={field.value === studio.id ? true : undefined}
-                                data-testid={`book-studio-item-${studio.id}`}
+                                value="__inline_create_studio__"
+                                onSelect={() => setShowInlineCreator(true)}
+                                data-testid="book-studio-inline-create"
+                                className="text-primary"
                               >
-                                <div className="flex flex-col">
-                                  <span>{studio.name}</span>
-                                  <span className="text-xs text-muted-foreground">
-                                    {formatCentsBRL(studio.defaultHourlyRateCents)}/h
-                                  </span>
-                                </div>
+                                <Plus aria-hidden="true" className="mr-2 size-4" />
+                                Novo Estúdio
                               </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      )}
                     </PopoverContent>
                   </Popover>
                 )}

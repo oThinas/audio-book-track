@@ -18,3 +18,10 @@ export class BookStudioNotFoundError extends Error {
     this.name = "BookStudioNotFoundError";
   }
 }
+
+export class BookInlineStudioInvalidError extends Error {
+  constructor(studioId: string) {
+    super(`Estúdio inline inválido: ${studioId}`);
+    this.name = "BookInlineStudioInvalidError";
+  }
+}

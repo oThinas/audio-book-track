@@ -9,7 +9,7 @@ import {
 } from "@/lib/api/responses";
 import { auth } from "@/lib/auth/server";
 import type { Session } from "@/lib/auth/session";
-import { createStudioSchema } from "@/lib/domain/studio";
+import { createStudioRequestSchema } from "@/lib/domain/studio";
 import { StudioNameAlreadyInUseError } from "@/lib/errors/studio-errors";
 import { createStudioService } from "@/lib/factories/studio";
 import type { StudioService } from "@/lib/services/studio-service";
@@ -50,14 +50,18 @@ export async function handleStudiosCreate(
   }
 
   const body: unknown = await request.json();
-  const parsed = createStudioSchema.safeParse(body);
+  const parsed = createStudioRequestSchema.safeParse(body);
   if (!parsed.success) {
     return validationErrorResponse(parsed.error);
   }
 
+  const { inline, ...input } = parsed.data;
   const service = deps.createService();
   try {
-    const { studio, reactivated, rateResetForInline } = await service.create(parsed.data);
+    const { studio, reactivated, rateResetForInline } = await service.create(
+      input,
+      inline ? { inline: true } : {},
+    );
     return NextResponse.json(
       {
         data: studio,

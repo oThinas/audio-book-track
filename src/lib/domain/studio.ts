@@ -27,8 +27,13 @@ export const studioSchema = z.object({
 export const createStudioSchema = studioSchema;
 export const updateStudioSchema = studioSchema.partial();
 
+export const createStudioRequestSchema = studioSchema.extend({
+  inline: z.literal(true).optional(),
+});
+
 export type CreateStudioInput = z.infer<typeof createStudioSchema>;
 export type UpdateStudioInput = z.infer<typeof updateStudioSchema>;
+export type CreateStudioRequest = z.infer<typeof createStudioRequestSchema>;
 
 export const studioFormSchema = studioSchema;
 export type StudioFormValues = z.infer<typeof studioFormSchema>;
