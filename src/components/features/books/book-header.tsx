@@ -17,6 +17,9 @@ export interface BookHeaderProps {
   readonly totalChapters: number;
   readonly completedChapters: number;
   readonly totalEarningsCents: number;
+  readonly hasNonPaidChapters: boolean;
+  readonly isSelectionMode: boolean;
+  readonly onEnterSelectionMode: () => void;
 }
 
 export function BookHeader({
@@ -27,6 +30,9 @@ export function BookHeader({
   totalChapters,
   completedChapters,
   totalEarningsCents,
+  hasNonPaidChapters,
+  isSelectionMode,
+  onEnterSelectionMode,
 }: BookHeaderProps) {
   return (
     <header className="mb-6 flex flex-col gap-4">
@@ -49,20 +55,29 @@ export function BookHeader({
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <Button type="button" variant="outline" size="sm" disabled aria-disabled="true">
-            <FileText aria-hidden="true" className="size-4" />
-            Ver PDF
-          </Button>
-          <Button type="button" variant="outline" size="sm" disabled aria-disabled="true">
-            <Pencil aria-hidden="true" className="size-4" />
-            Editar livro
-          </Button>
-          <Button type="button" variant="outline" size="sm" disabled aria-disabled="true">
-            <Trash2 aria-hidden="true" className="size-4" />
-            Excluir capítulos
-          </Button>
-        </div>
+        {!isSelectionMode && (
+          <div className="flex flex-wrap items-center gap-2">
+            <Button type="button" variant="outline" size="sm" disabled aria-disabled="true">
+              <FileText aria-hidden="true" className="size-4" />
+              Ver PDF
+            </Button>
+            <Button type="button" variant="outline" size="sm" disabled aria-disabled="true">
+              <Pencil aria-hidden="true" className="size-4" />
+              Editar livro
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={onEnterSelectionMode}
+              disabled={!hasNonPaidChapters}
+              data-testid="book-detail-enter-selection-mode"
+            >
+              <Trash2 aria-hidden="true" className="size-4" />
+              Excluir capítulos
+            </Button>
+          </div>
+        )}
       </div>
 
       <dl className="grid grid-cols-2 gap-4 rounded-lg border bg-card p-4 sm:grid-cols-4">

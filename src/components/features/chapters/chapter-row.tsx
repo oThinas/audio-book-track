@@ -1,11 +1,12 @@
 "use client";
 
 import { Check, Loader2, Pencil, Trash2, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { StatusBadge } from "@/components/features/books/status-badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { SecondsInput } from "@/components/ui/seconds-input";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { TableCell, TableRow } from "@/components/ui/table";
@@ -39,8 +40,11 @@ interface ChapterRowProps {
   readonly narratorNameById: ReadonlyMap<string, string>;
   readonly editorNameById: ReadonlyMap<string, string>;
   readonly isLastNonPaid: boolean;
+  readonly isSelectionMode: boolean;
+  readonly isSelected: boolean;
   readonly onSaved: (updated: ChapterRowEntity, bookStatus: ChapterStatus) => void;
   readonly onDeleted: (chapterId: string, bookDeleted: boolean) => void;
+  readonly onToggleSelected: (chapterId: string, selected: boolean) => void;
 }
 
 const NULL_VALUE = "__none__";
@@ -88,8 +92,11 @@ export function ChapterRow({
   narratorNameById,
   editorNameById,
   isLastNonPaid,
+  isSelectionMode,
+  isSelected,
   onSaved,
   onDeleted,
+  onToggleSelected,
 }: ChapterRowProps) {
   const [mode, setMode] = useState<"view" | "edit">("view");
   const [submitting, setSubmitting] = useState(false);
@@ -97,6 +104,16 @@ export function ChapterRow({
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [draft, setDraft] = useState<DraftState>(() => buildDraft(chapter));
+
+  // Bulk-delete mode and inline edit mode are mutually exclusive: when the
+  // parent enters selection mode, drop any in-flight edit so the row renders
+  // its checkbox instead of the edit form.
+  useEffect(() => {
+    if (isSelectionMode) {
+      setMode("view");
+      setReversionPending(null);
+    }
+  }, [isSelectionMode]);
 
   function enterEdit() {
     setDraft(buildDraft(chapter));
@@ -327,6 +344,17 @@ export function ChapterRow({
   return (
     <>
       <TableRow data-testid={`chapter-row-${chapter.id}`} data-mode="view">
+        {isSelectionMode && (
+          <TableCell>
+            <Checkbox
+              checked={isSelected}
+              disabled={isPaid}
+              onCheckedChange={(value) => onToggleSelected(chapter.id, value === true)}
+              aria-label={`Selecionar capítulo ${chapter.number}`}
+              data-testid={`chapter-select-${chapter.id}`}
+            />
+          </TableCell>
+        )}
         <TableCell className="font-medium">{chapter.number}</TableCell>
         <TableCell>
           <StatusBadge status={chapter.status} />
@@ -340,36 +368,38 @@ export function ChapterRow({
         <TableCell className="text-right tabular-nums">
           {formatSecondsAsHHMMSS(chapter.editedSeconds)}
         </TableCell>
-        <TableCell className="text-right">
-          <div className="inline-flex items-center gap-1">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              aria-label={`Editar capítulo ${chapter.number}`}
-              data-testid={`chapter-edit-${chapter.id}`}
-              onClick={enterEdit}
-            >
-              <Pencil aria-hidden="true" className="size-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              aria-label={`Excluir capítulo ${chapter.number}`}
-              data-testid={`chapter-delete-${chapter.id}`}
-              onClick={() => setDeleteOpen(true)}
-              disabled={isPaid || deleting}
-              className="text-destructive hover:text-destructive"
-            >
-              {deleting ? (
-                <Loader2 aria-hidden="true" className="size-4 animate-spin" />
-              ) : (
-                <Trash2 aria-hidden="true" className="size-4" />
-              )}
-            </Button>
-          </div>
-        </TableCell>
+        {!isSelectionMode && (
+          <TableCell className="text-right">
+            <div className="inline-flex items-center gap-1">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label={`Editar capítulo ${chapter.number}`}
+                data-testid={`chapter-edit-${chapter.id}`}
+                onClick={enterEdit}
+              >
+                <Pencil aria-hidden="true" className="size-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label={`Excluir capítulo ${chapter.number}`}
+                data-testid={`chapter-delete-${chapter.id}`}
+                onClick={() => setDeleteOpen(true)}
+                disabled={isPaid || deleting}
+                className="text-destructive hover:text-destructive"
+              >
+                {deleting ? (
+                  <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+                ) : (
+                  <Trash2 aria-hidden="true" className="size-4" />
+                )}
+              </Button>
+            </div>
+          </TableCell>
+        )}
       </TableRow>
       <ChapterDeleteDialog
         open={deleteOpen}

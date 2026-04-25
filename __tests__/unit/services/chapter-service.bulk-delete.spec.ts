@@ -7,10 +7,11 @@ import { InMemoryNarratorRepository } from "@tests/repositories/in-memory-narrat
 import { InMemoryStudioRepository } from "@tests/repositories/in-memory-studio-repository";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { ChapterNotFoundError, ChapterPaidLockedError } from "@/lib/errors/chapter-errors";
+import { BookNotFoundError } from "@/lib/errors/book-errors";
+import { ChapterPaidLockedError, ChaptersNotInBookError } from "@/lib/errors/chapter-errors";
 import { ChapterService } from "@/lib/services/chapter-service";
 
-describe("ChapterService.delete", () => {
+describe("ChapterService.bulkDelete", () => {
   let bookRepo: InMemoryBookRepository;
   let chapterRepo: InMemoryChapterRepository;
   let studioRepo: InMemoryStudioRepository;
@@ -33,70 +34,67 @@ describe("ChapterService.delete", () => {
     });
   });
 
-  it("deletes a non-paid chapter and recomputes book.status", async () => {
+  it("deletes multiple non-paid chapters and recomputes book.status", async () => {
     const { book, chapters } = await seedInMemoryBook({
       studioRepo,
       bookRepo,
       chapterRepo,
-      statuses: ["pending", "completed", "completed"],
+      statuses: ["pending", "editing", "completed", "completed"],
     });
 
-    const result = await service.delete(chapters[0].id);
+    const result = await service.bulkDelete(book.id, [chapters[0].id, chapters[1].id]);
 
     expect(result.bookDeleted).toBe(false);
-    expect(await chapterRepo.findById(chapters[0].id)).toBeNull();
+    expect(result.deletedCount).toBe(2);
     expect(await chapterRepo.countByBookId(book.id)).toBe(2);
     const refreshed = await bookRepo.findById(book.id);
     expect(refreshed?.status).toBe("completed");
   });
 
-  it("throws CHAPTER_PAID_LOCKED when the chapter is paid", async () => {
-    const { chapters } = await seedInMemoryBook({
+  it("throws CHAPTER_PAID_LOCKED atomically when any id is paid (nothing deleted)", async () => {
+    const { book, chapters } = await seedInMemoryBook({
       studioRepo,
       bookRepo,
       chapterRepo,
-      statuses: ["paid", "pending"],
+      statuses: ["pending", "paid", "completed"],
     });
 
-    await expect(service.delete(chapters[0].id)).rejects.toBeInstanceOf(ChapterPaidLockedError);
+    await expect(
+      service.bulkDelete(book.id, [chapters[0].id, chapters[1].id]),
+    ).rejects.toBeInstanceOf(ChapterPaidLockedError);
+
+    expect(await chapterRepo.countByBookId(book.id)).toBe(3);
   });
 
-  it("throws ChapterNotFoundError when the chapter does not exist", async () => {
-    await expect(service.delete(crypto.randomUUID())).rejects.toBeInstanceOf(ChapterNotFoundError);
-  });
-
-  it("cascade-deletes the book when removing the last non-paid chapter and no paid chapter remains", async () => {
-    const { book, chapters } = await seedInMemoryBook({
+  it("throws CHAPTERS_NOT_IN_BOOK when any chapter does not belong to the book", async () => {
+    const a = await seedInMemoryBook({
+      studioRepo,
+      bookRepo,
+      chapterRepo,
+      statuses: ["pending"],
+    });
+    const b = await seedInMemoryBook({
       studioRepo,
       bookRepo,
       chapterRepo,
       statuses: ["pending"],
     });
 
-    const result = await service.delete(chapters[0].id);
+    await expect(
+      service.bulkDelete(a.book.id, [a.chapters[0].id, b.chapters[0].id]),
+    ).rejects.toBeInstanceOf(ChaptersNotInBookError);
 
-    expect(result.bookDeleted).toBe(true);
-    expect(result.bookId).toBe(book.id);
-    expect(await bookRepo.findById(book.id)).toBeNull();
-    expect(await chapterRepo.countByBookId(book.id)).toBe(0);
+    expect(await chapterRepo.countByBookId(a.book.id)).toBe(1);
+    expect(await chapterRepo.countByBookId(b.book.id)).toBe(1);
   });
 
-  it("does NOT cascade-delete the book when paid chapters remain even if last non-paid is removed", async () => {
-    const { book, chapters } = await seedInMemoryBook({
-      studioRepo,
-      bookRepo,
-      chapterRepo,
-      statuses: ["pending", "paid"],
-    });
-
-    const result = await service.delete(chapters[0].id);
-
-    expect(result.bookDeleted).toBe(false);
-    expect(await bookRepo.findById(book.id)).not.toBeNull();
-    expect(await chapterRepo.countByBookId(book.id)).toBe(1);
+  it("throws BookNotFoundError when the book does not exist", async () => {
+    await expect(
+      service.bulkDelete(crypto.randomUUID(), [crypto.randomUUID()]),
+    ).rejects.toBeInstanceOf(BookNotFoundError);
   });
 
-  it("recomputes book.status after deletion (e.g. removing a pending leaves only completed)", async () => {
+  it("cascade-deletes the book when all non-paid chapters are removed and no paid remain", async () => {
     const { book, chapters } = await seedInMemoryBook({
       studioRepo,
       bookRepo,
@@ -104,9 +102,39 @@ describe("ChapterService.delete", () => {
       statuses: ["pending", "completed"],
     });
 
-    await service.delete(chapters[0].id);
+    const result = await service.bulkDelete(book.id, [chapters[0].id, chapters[1].id]);
 
-    const refreshed = await bookRepo.findById(book.id);
-    expect(refreshed?.status).toBe("completed");
+    expect(result.bookDeleted).toBe(true);
+    expect(result.deletedCount).toBe(2);
+    expect(await bookRepo.findById(book.id)).toBeNull();
+  });
+
+  it("preserves the book when paid chapters remain even after deleting all non-paid", async () => {
+    const { book, chapters } = await seedInMemoryBook({
+      studioRepo,
+      bookRepo,
+      chapterRepo,
+      statuses: ["pending", "completed", "paid"],
+    });
+
+    const result = await service.bulkDelete(book.id, [chapters[0].id, chapters[1].id]);
+
+    expect(result.bookDeleted).toBe(false);
+    expect(await bookRepo.findById(book.id)).not.toBeNull();
+    expect(await chapterRepo.countByBookId(book.id)).toBe(1);
+  });
+
+  it("dedupes duplicated ids in the input", async () => {
+    const { book, chapters } = await seedInMemoryBook({
+      studioRepo,
+      bookRepo,
+      chapterRepo,
+      statuses: ["pending", "completed"],
+    });
+
+    const result = await service.bulkDelete(book.id, [chapters[0].id, chapters[0].id]);
+
+    expect(result.deletedCount).toBe(1);
+    expect(await chapterRepo.countByBookId(book.id)).toBe(1);
   });
 });

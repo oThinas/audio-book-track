@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 
+import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Table,
@@ -19,8 +20,12 @@ interface ChaptersTableProps {
   readonly chapters: ReadonlyArray<ChapterRowEntity>;
   readonly narrators: ReadonlyArray<ChapterRowOption>;
   readonly editors: ReadonlyArray<ChapterRowOption>;
+  readonly isSelectionMode: boolean;
+  readonly selectedIds: ReadonlySet<string>;
   readonly onChapterSaved: (updated: ChapterRowEntity, bookStatus: ChapterStatus) => void;
   readonly onChapterDeleted: (chapterId: string, bookDeleted: boolean) => void;
+  readonly onToggleSelected: (chapterId: string, selected: boolean) => void;
+  readonly onToggleSelectAll: (selected: boolean) => void;
 }
 
 function buildNameById(options: ReadonlyArray<ChapterRowOption>): ReadonlyMap<string, string> {
@@ -33,8 +38,12 @@ export function ChaptersTable({
   chapters,
   narrators,
   editors,
+  isSelectionMode,
+  selectedIds,
   onChapterSaved,
   onChapterDeleted,
+  onToggleSelected,
+  onToggleSelectAll,
 }: ChaptersTableProps) {
   const narratorNameById = useMemo(() => buildNameById(narrators), [narrators]);
   const editorNameById = useMemo(() => buildNameById(editors), [editors]);
@@ -42,6 +51,12 @@ export function ChaptersTable({
     () => chapters.filter((c) => c.status !== "paid").length,
     [chapters],
   );
+  const allNonPaidSelected =
+    isSelectionMode &&
+    nonPaidCount > 0 &&
+    chapters.every((c) => c.status === "paid" || selectedIds.has(c.id));
+  const someSelected =
+    isSelectionMode && chapters.some((c) => c.status !== "paid" && selectedIds.has(c.id));
 
   return (
     <ScrollArea
@@ -51,12 +66,24 @@ export function ChaptersTable({
       <Table className="table-fixed">
         <TableHeader>
           <TableRow>
+            {isSelectionMode && (
+              <TableHead className="w-12">
+                <Checkbox
+                  checked={allNonPaidSelected}
+                  indeterminate={!allNonPaidSelected && someSelected}
+                  disabled={nonPaidCount === 0}
+                  onCheckedChange={(value) => onToggleSelectAll(value === true)}
+                  aria-label="Selecionar todos os capítulos não pagos"
+                  data-testid="chapter-select-all"
+                />
+              </TableHead>
+            )}
             <TableHead className="w-16">Nº</TableHead>
             <TableHead className="w-40">Status</TableHead>
             <TableHead className="w-56">Narrador</TableHead>
             <TableHead className="w-56">Editor</TableHead>
             <TableHead className="w-40 text-right">Horas editadas</TableHead>
-            <TableHead className="w-28 text-right">Ações</TableHead>
+            {!isSelectionMode && <TableHead className="w-28 text-right">Ações</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -69,8 +96,11 @@ export function ChaptersTable({
               narratorNameById={narratorNameById}
               editorNameById={editorNameById}
               isLastNonPaid={chapter.status !== "paid" && nonPaidCount === 1}
+              isSelectionMode={isSelectionMode}
+              isSelected={selectedIds.has(chapter.id)}
               onSaved={onChapterSaved}
               onDeleted={onChapterDeleted}
+              onToggleSelected={onToggleSelected}
             />
           ))}
           {chapters.length === 0 && (

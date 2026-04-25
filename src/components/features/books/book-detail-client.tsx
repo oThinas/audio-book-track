@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { ChaptersBulkDeleteBar } from "@/components/features/chapters/chapters-bulk-delete-bar";
+import { ChaptersBulkDeleteConfirm } from "@/components/features/chapters/chapters-bulk-delete-confirm";
 import { type ChapterRowData, ChaptersTable } from "@/components/features/chapters/chapters-table";
 import type { BookStatus } from "@/lib/domain/book";
 import { computeBookStatus } from "@/lib/domain/book-status";
@@ -70,6 +72,15 @@ export function BookDetailClient({ book, narrators, editors }: BookDetailClientP
     status: book.status,
     chapters: book.chapters,
   });
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(new Set());
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+
+  const nonPaidChapters = state.chapters.filter((c) => c.status !== "paid");
+  const paidCount = state.chapters.length - nonPaidChapters.length;
+  const willDeleteBook =
+    selectedIds.size === nonPaidChapters.length && nonPaidChapters.length > 0 && paidCount === 0;
 
   function handleChapterSaved(updated: ChapterRowData, bookStatus: ChapterStatus) {
     setState((prev) => ({
@@ -80,7 +91,6 @@ export function BookDetailClient({ book, narrators, editors }: BookDetailClientP
 
   function handleChapterDeleted(chapterId: string, bookDeleted: boolean) {
     if (bookDeleted) {
-      toast.success("Último capítulo removido — livro excluído.");
       router.push("/books");
       return;
     }
@@ -93,10 +103,72 @@ export function BookDetailClient({ book, narrators, editors }: BookDetailClientP
     });
   }
 
+  function exitSelectionMode() {
+    setIsSelectionMode(false);
+    setSelectedIds(new Set());
+  }
+
+  function handleToggleSelected(chapterId: string, selected: boolean) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (selected) next.add(chapterId);
+      else next.delete(chapterId);
+      return next;
+    });
+  }
+
+  function handleToggleSelectAll(selected: boolean) {
+    setSelectedIds(selected ? new Set(nonPaidChapters.map((c) => c.id)) : new Set());
+  }
+
+  async function handleBulkDeleteConfirm() {
+    if (selectedIds.size === 0) return;
+    setBulkDeleting(true);
+    try {
+      const response = await fetch(`/api/v1/books/${book.id}/chapters/bulk-delete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chapterIds: Array.from(selectedIds) }),
+      });
+      if (response.status !== 204) {
+        const body = (await response.json().catch(() => null)) as {
+          error?: { message?: string };
+        } | null;
+        toast.error(body?.error?.message ?? "Erro ao excluir capítulos.");
+        return;
+      }
+      const bookDeleted = response.headers.get("X-Book-Deleted") === "true";
+      if (bookDeleted) {
+        router.push("/books");
+        return;
+      }
+      setState((prev) => {
+        const remaining = prev.chapters.filter((c) => !selectedIds.has(c.id));
+        return {
+          status: remaining.length === 0 ? prev.status : computeBookStatus(remaining),
+          chapters: remaining,
+        };
+      });
+      setConfirmOpen(false);
+      exitSelectionMode();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro de rede ao excluir capítulos.");
+    } finally {
+      setBulkDeleting(false);
+    }
+  }
+
   const aggregates = recomputeAggregates(state.chapters, book.pricePerHourCents);
 
   return (
     <>
+      {isSelectionMode && (
+        <ChaptersBulkDeleteBar
+          selectedCount={selectedIds.size}
+          onCancel={exitSelectionMode}
+          onConfirm={() => setConfirmOpen(true)}
+        />
+      )}
       <BookHeader
         title={book.title}
         studio={book.studio}
@@ -105,13 +177,30 @@ export function BookDetailClient({ book, narrators, editors }: BookDetailClientP
         totalChapters={aggregates.totalChapters}
         completedChapters={aggregates.completedChapters}
         totalEarningsCents={aggregates.totalEarningsCents}
+        hasNonPaidChapters={nonPaidChapters.length > 0}
+        isSelectionMode={isSelectionMode}
+        onEnterSelectionMode={() => setIsSelectionMode(true)}
       />
       <ChaptersTable
         chapters={state.chapters}
         narrators={narrators}
         editors={editors}
+        isSelectionMode={isSelectionMode}
+        selectedIds={selectedIds}
         onChapterSaved={handleChapterSaved}
         onChapterDeleted={handleChapterDeleted}
+        onToggleSelected={handleToggleSelected}
+        onToggleSelectAll={handleToggleSelectAll}
+      />
+      <ChaptersBulkDeleteConfirm
+        open={confirmOpen}
+        count={selectedIds.size}
+        hasPaid={paidCount > 0}
+        willDeleteBook={willDeleteBook}
+        onCancel={() => {
+          if (!bulkDeleting) setConfirmOpen(false);
+        }}
+        onConfirm={handleBulkDeleteConfirm}
       />
     </>
   );

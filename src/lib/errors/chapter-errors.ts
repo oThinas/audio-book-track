@@ -51,3 +51,10 @@ export class ChapterReversionConfirmationRequiredError extends Error {
     this.name = "ChapterReversionConfirmationRequiredError";
   }
 }
+
+export class ChaptersNotInBookError extends Error {
+  constructor(bookId: string, chapterIds: ReadonlyArray<string>) {
+    super(`Capítulos não pertencem ao livro ${bookId}: ${chapterIds.join(", ")}`);
+    this.name = "ChaptersNotInBookError";
+  }
+}

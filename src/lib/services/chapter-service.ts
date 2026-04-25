@@ -1,6 +1,7 @@
 import type { BookStatus } from "@/lib/domain/book";
 import type { Chapter, ChapterStatus } from "@/lib/domain/chapter";
 import { isValidTransition } from "@/lib/domain/chapter-state-machine";
+import { BookNotFoundError } from "@/lib/errors/book-errors";
 import {
   ChapterEditorOrSecondsRequiredError,
   ChapterInvalidTransitionError,
@@ -8,6 +9,7 @@ import {
   ChapterNotFoundError,
   ChapterPaidLockedError,
   ChapterReversionConfirmationRequiredError,
+  ChaptersNotInBookError,
 } from "@/lib/errors/chapter-errors";
 import { EditorNotFoundError } from "@/lib/errors/editor-errors";
 import { NarratorNotFoundError } from "@/lib/errors/narrator-errors";
@@ -44,6 +46,13 @@ export interface DeleteChapterResult {
   readonly bookId: string;
   readonly bookDeleted: boolean;
   readonly bookStatus: BookStatus | null;
+}
+
+export interface BulkDeleteChaptersResult {
+  readonly bookId: string;
+  readonly bookDeleted: boolean;
+  readonly bookStatus: BookStatus | null;
+  readonly deletedCount: number;
 }
 
 const PAID_LOCKED_FIELDS = ["narratorId", "editorId", "editedSeconds"] as const;
@@ -117,6 +126,52 @@ export class ChapterService {
         tx,
       );
       return { bookId: current.bookId, bookDeleted: false, bookStatus: book.status };
+    };
+
+    if (this.deps.uow) {
+      return this.deps.uow.transaction(run);
+    }
+    return run();
+  }
+
+  async bulkDelete(
+    bookId: string,
+    chapterIds: ReadonlyArray<string>,
+  ): Promise<BulkDeleteChaptersResult> {
+    const book = await this.deps.bookRepo.findById(bookId);
+    if (!book) {
+      throw new BookNotFoundError(bookId);
+    }
+
+    const uniqueIds = Array.from(new Set(chapterIds));
+    const allChapters = await this.deps.chapterRepo.listByBookId(bookId);
+    const ownedIds = new Set(allChapters.map((c) => c.id));
+
+    const foreignIds = uniqueIds.filter((id) => !ownedIds.has(id));
+    if (foreignIds.length > 0) {
+      throw new ChaptersNotInBookError(bookId, foreignIds);
+    }
+
+    const targets = allChapters.filter((c) => uniqueIds.includes(c.id));
+    if (targets.some((c) => c.status === "paid")) {
+      throw new ChapterPaidLockedError(bookId);
+    }
+
+    const run = async (tx?: RepositoryTx): Promise<BulkDeleteChaptersResult> => {
+      const deletedCount = await this.deps.chapterRepo.deleteMany(uniqueIds, tx);
+
+      const remaining = await this.deps.chapterRepo.listByBookId(bookId, tx);
+      if (remaining.length === 0) {
+        await this.deps.bookRepo.delete(bookId, tx);
+        return { bookId, bookDeleted: true, bookStatus: null, deletedCount };
+      }
+
+      const refreshed = await recomputeBookStatus(
+        bookId,
+        { bookRepo: this.deps.bookRepo, chapterRepo: this.deps.chapterRepo },
+        tx,
+      );
+      return { bookId, bookDeleted: false, bookStatus: refreshed.status, deletedCount };
     };
 
     if (this.deps.uow) {
