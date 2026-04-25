@@ -6,13 +6,16 @@ import { toast } from "sonner";
 
 import { StatusBadge } from "@/components/features/books/status-badge";
 import { Button } from "@/components/ui/button";
+import { SecondsInput } from "@/components/ui/seconds-input";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { ChapterStatus } from "@/lib/domain/chapter";
-import { formatSecondsAsHours, parseHoursInputToSeconds } from "@/lib/utils";
+import { cn, formatSecondsAsHHMMSS } from "@/lib/utils";
 
 import { ChapterPaidReversionDialog } from "./chapter-paid-reversion-dialog";
 import { ChapterStatusSelect } from "./chapter-status-select";
+
+const EDITED_SECONDS_MAX = 3_600_000;
 
 export interface ChapterRowEntity {
   readonly id: string;
@@ -32,6 +35,8 @@ interface ChapterRowProps {
   readonly chapter: ChapterRowEntity;
   readonly narrators: ReadonlyArray<ChapterRowOption>;
   readonly editors: ReadonlyArray<ChapterRowOption>;
+  readonly narratorNameById: ReadonlyMap<string, string>;
+  readonly editorNameById: ReadonlyMap<string, string>;
   readonly onSaved: (updated: ChapterRowEntity, bookStatus: ChapterStatus) => void;
 }
 
@@ -41,7 +46,7 @@ interface DraftState {
   readonly status: ChapterStatus;
   readonly narratorId: string | null;
   readonly editorId: string | null;
-  readonly editedHours: string;
+  readonly editedSeconds: number;
 }
 
 function buildDraft(chapter: ChapterRowEntity): DraftState {
@@ -49,11 +54,7 @@ function buildDraft(chapter: ChapterRowEntity): DraftState {
     status: chapter.status,
     narratorId: chapter.narrator?.id ?? null,
     editorId: chapter.editor?.id ?? null,
-    editedHours: formatSecondsAsHours(chapter.editedSeconds, {
-      minDigits: 0,
-      maxDigits: 4,
-      emptyForZero: true,
-    }),
+    editedSeconds: chapter.editedSeconds,
   };
 }
 
@@ -69,17 +70,22 @@ function buildPatch(draft: DraftState, current: ChapterRowEntity): Record<string
   if (draft.editorId !== (current.editor?.id ?? null)) {
     patch.editorId = draft.editorId;
   }
-  const seconds = parseHoursInputToSeconds(draft.editedHours);
-  if (seconds === null) return null;
-  if (seconds !== current.editedSeconds) {
-    patch.editedSeconds = seconds;
+  if (draft.editedSeconds !== current.editedSeconds) {
+    patch.editedSeconds = draft.editedSeconds;
   }
 
   if (Object.keys(patch).length === 0) return null;
   return patch;
 }
 
-export function ChapterRow({ chapter, narrators, editors, onSaved }: ChapterRowProps) {
+export function ChapterRow({
+  chapter,
+  narrators,
+  editors,
+  narratorNameById,
+  editorNameById,
+  onSaved,
+}: ChapterRowProps) {
   const [mode, setMode] = useState<"view" | "edit">("view");
   const [submitting, setSubmitting] = useState(false);
   const [reversionPending, setReversionPending] = useState<Record<string, unknown> | null>(null);
@@ -129,12 +135,10 @@ export function ChapterRow({ chapter, narrators, editors, onSaved }: ChapterRowP
           status: data.status,
           editedSeconds: data.editedSeconds,
           narrator: data.narratorId
-            ? (narrators.find((n) => n.id === data.narratorId) ??
-              chapter.narrator ?? { id: data.narratorId, name: "—" })
+            ? { id: data.narratorId, name: narratorNameById.get(data.narratorId) ?? "—" }
             : null,
           editor: data.editorId
-            ? (editors.find((e) => e.id === data.editorId) ??
-              chapter.editor ?? { id: data.editorId, name: "—" })
+            ? { id: data.editorId, name: editorNameById.get(data.editorId) ?? "—" }
             : null,
         };
         onSaved(updated, body.meta.bookStatus);
@@ -187,9 +191,11 @@ export function ChapterRow({ chapter, narrators, editors, onSaved }: ChapterRowP
               }
             >
               <SelectTrigger data-testid={`chapter-narrator-${chapter.id}`} className="w-full">
-                <span className={draft.narratorId ? undefined : "text-muted-foreground"}>
+                <span
+                  className={cn("truncate", draft.narratorId ? undefined : "text-muted-foreground")}
+                >
                   {draft.narratorId
-                    ? (narrators.find((n) => n.id === draft.narratorId)?.name ?? "—")
+                    ? (narratorNameById.get(draft.narratorId) ?? "—")
                     : "Selecionar narrador"}
                 </span>
               </SelectTrigger>
@@ -214,9 +220,11 @@ export function ChapterRow({ chapter, narrators, editors, onSaved }: ChapterRowP
               }
             >
               <SelectTrigger data-testid={`chapter-editor-${chapter.id}`} className="w-full">
-                <span className={draft.editorId ? undefined : "text-muted-foreground"}>
+                <span
+                  className={cn("truncate", draft.editorId ? undefined : "text-muted-foreground")}
+                >
                   {draft.editorId
-                    ? (editors.find((e) => e.id === draft.editorId)?.name ?? "—")
+                    ? (editorNameById.get(draft.editorId) ?? "—")
                     : "Selecionar editor"}
                 </span>
               </SelectTrigger>
@@ -231,16 +239,13 @@ export function ChapterRow({ chapter, narrators, editors, onSaved }: ChapterRowP
             </Select>
           </TableCell>
           <TableCell className="text-right">
-            <input
-              type="text"
-              inputMode="decimal"
+            <SecondsInput
               data-testid={`chapter-hours-${chapter.id}`}
               aria-label={`Horas editadas do capítulo ${chapter.number}`}
-              value={draft.editedHours}
-              onChange={(event) =>
-                setDraft((prev) => ({ ...prev, editedHours: event.target.value }))
-              }
-              className="ml-auto block w-24 rounded-md border bg-background px-2 py-1 text-right text-sm tabular-nums"
+              value={draft.editedSeconds}
+              max={EDITED_SECONDS_MAX}
+              onChange={(seconds) => setDraft((prev) => ({ ...prev, editedSeconds: seconds }))}
+              className="text-right"
             />
           </TableCell>
           <TableCell className="text-right">
@@ -292,14 +297,14 @@ export function ChapterRow({ chapter, narrators, editors, onSaved }: ChapterRowP
       <TableCell>
         <StatusBadge status={chapter.status} />
       </TableCell>
-      <TableCell className="text-muted-foreground">
+      <TableCell className="truncate text-muted-foreground">
         {chapter.narrator ? chapter.narrator.name : "—"}
       </TableCell>
-      <TableCell className="text-muted-foreground">
+      <TableCell className="truncate text-muted-foreground">
         {chapter.editor ? chapter.editor.name : "—"}
       </TableCell>
       <TableCell className="text-right tabular-nums">
-        {formatSecondsAsHours(chapter.editedSeconds)}
+        {formatSecondsAsHHMMSS(chapter.editedSeconds)}
       </TableCell>
       <TableCell className="text-right">
         <div className="inline-flex items-center gap-1">

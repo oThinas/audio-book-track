@@ -30,3 +30,18 @@ export function parseHoursInputToSeconds(value: string): number | null {
   if (!Number.isFinite(hours) || hours < 0) return null;
   return Math.round(hours * SECONDS_PER_HOUR);
 }
+
+const SECONDS_PER_MINUTE = 60;
+
+export function formatSecondsAsHHMMSS(seconds: number): string {
+  if (!Number.isFinite(seconds) || seconds < 0) {
+    throw new Error(
+      `formatSecondsAsHHMMSS: seconds deve ser inteiro não-negativo, recebido ${seconds}`,
+    );
+  }
+  const total = Math.floor(seconds);
+  const hours = Math.floor(total / SECONDS_PER_HOUR);
+  const minutes = Math.floor((total % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE);
+  const secs = total % SECONDS_PER_MINUTE;
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+}

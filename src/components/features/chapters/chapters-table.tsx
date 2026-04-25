@@ -1,5 +1,7 @@
 "use client";
 
+import { useMemo } from "react";
+
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Table,
@@ -10,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { ChapterStatus } from "@/lib/domain/chapter";
+
 import { ChapterRow, type ChapterRowEntity, type ChapterRowOption } from "./chapter-row";
 
 interface ChaptersTableProps {
@@ -19,25 +22,34 @@ interface ChaptersTableProps {
   readonly onChapterSaved: (updated: ChapterRowEntity, bookStatus: ChapterStatus) => void;
 }
 
+function buildNameById(options: ReadonlyArray<ChapterRowOption>): ReadonlyMap<string, string> {
+  const map = new Map<string, string>();
+  for (const option of options) map.set(option.id, option.name);
+  return map;
+}
+
 export function ChaptersTable({
   chapters,
   narrators,
   editors,
   onChapterSaved,
 }: ChaptersTableProps) {
+  const narratorNameById = useMemo(() => buildNameById(narrators), [narrators]);
+  const editorNameById = useMemo(() => buildNameById(editors), [editors]);
+
   return (
     <ScrollArea
       data-testid="chapters-scroll-area"
       className="max-h-[60vh] w-full rounded-lg border"
     >
-      <Table>
+      <Table className="table-fixed">
         <TableHeader>
           <TableRow>
             <TableHead className="w-16">Nº</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Narrador</TableHead>
-            <TableHead>Editor</TableHead>
-            <TableHead className="text-right">Horas editadas</TableHead>
+            <TableHead className="w-40">Status</TableHead>
+            <TableHead className="w-56">Narrador</TableHead>
+            <TableHead className="w-56">Editor</TableHead>
+            <TableHead className="w-40 text-right">Horas editadas</TableHead>
             <TableHead className="w-28 text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
@@ -48,6 +60,8 @@ export function ChaptersTable({
               chapter={chapter}
               narrators={narrators}
               editors={editors}
+              narratorNameById={narratorNameById}
+              editorNameById={editorNameById}
               onSaved={onChapterSaved}
             />
           ))}
