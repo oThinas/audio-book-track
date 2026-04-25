@@ -33,7 +33,7 @@ function reachableTargets(current: ChapterStatus): ReadonlyArray<ChapterStatus> 
     case "retake":
       return ["retake", "reviewing"];
     case "completed":
-      return ["completed", "paid"];
+      return ["completed", "reviewing", "paid"];
     case "paid":
       return ["paid", "completed"];
     default: {

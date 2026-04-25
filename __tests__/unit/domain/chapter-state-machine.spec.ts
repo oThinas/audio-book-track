@@ -136,7 +136,12 @@ describe("isValidTransition", () => {
       expect(result).toEqual({ valid: true });
     });
 
-    for (const to of ["pending", "editing", "reviewing", "retake"] as const) {
+    it("completed → reviewing is valid (reversion without confirmation)", () => {
+      const result = isValidTransition("completed", "reviewing", EMPTY_CTX);
+      expect(result).toEqual({ valid: true });
+    });
+
+    for (const to of ["pending", "editing", "retake"] as const) {
       it(`completed → ${to} is invalid (INVALID_STATUS_TRANSITION)`, () => {
         const result = isValidTransition("completed", to, FULL_CTX);
         expect(result).toEqual({ valid: false, reason: "INVALID_STATUS_TRANSITION" });

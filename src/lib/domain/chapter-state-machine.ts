@@ -54,7 +54,7 @@ export function isValidTransition(
       return reject("INVALID_STATUS_TRANSITION");
 
     case "completed":
-      if (to === "paid") return VALID;
+      if (to === "paid" || to === "reviewing") return VALID;
       return reject("INVALID_STATUS_TRANSITION");
 
     case "paid":
