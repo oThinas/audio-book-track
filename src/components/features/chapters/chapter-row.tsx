@@ -143,7 +143,6 @@ export function ChapterRow({
         };
         onSaved(updated, body.meta.bookStatus);
         setMode("view");
-        toast.success(`Capítulo ${chapter.number} atualizado.`);
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro de rede ao atualizar capítulo.");
@@ -155,7 +154,6 @@ export function ChapterRow({
   async function handleConfirm() {
     const patch = buildPatch(draft, chapter);
     if (!patch) {
-      toast.message("Nenhuma alteração para salvar.");
       setMode("view");
       return;
     }
