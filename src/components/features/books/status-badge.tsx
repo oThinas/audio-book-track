@@ -11,10 +11,10 @@ export const STATUS_LABELS: Record<BookStatus, string> = {
 
 export const STATUS_CLASSES: Record<BookStatus, string> = {
   pending: "bg-muted text-muted-foreground",
-  editing: "bg-blue-500/15 text-blue-700 dark:text-blue-300",
-  reviewing: "bg-amber-500/15 text-amber-700 dark:text-amber-300",
-  retake: "bg-orange-500/15 text-orange-700 dark:text-orange-300",
-  completed: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300",
+  editing: "bg-editing/15 text-editing",
+  reviewing: "bg-reviewing/15 text-reviewing",
+  retake: "bg-retake/15 text-retake",
+  completed: "bg-completed/15 text-completed",
   paid: "bg-primary/15 text-primary",
 };
 
