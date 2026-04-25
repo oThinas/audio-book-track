@@ -39,6 +39,7 @@ export function isValidTransition(
       return VALID;
 
     case "editing":
+      if (to === "pending") return VALID;
       if (to !== "reviewing") return reject("INVALID_STATUS_TRANSITION");
       if (ctx.editorId === null || ctx.editedSeconds <= 0) {
         return reject("EDITOR_OR_SECONDS_REQUIRED");
@@ -46,11 +47,11 @@ export function isValidTransition(
       return VALID;
 
     case "reviewing":
-      if (to === "retake" || to === "completed") return VALID;
+      if (to === "editing" || to === "retake" || to === "completed") return VALID;
       return reject("INVALID_STATUS_TRANSITION");
 
     case "retake":
-      if (to === "reviewing") return VALID;
+      if (to === "editing" || to === "reviewing") return VALID;
       return reject("INVALID_STATUS_TRANSITION");
 
     case "completed":

@@ -27,11 +27,11 @@ function reachableTargets(current: ChapterStatus): ReadonlyArray<ChapterStatus> 
     case "pending":
       return ["pending", "editing"];
     case "editing":
-      return ["editing", "reviewing"];
+      return ["editing", "pending", "reviewing"];
     case "reviewing":
-      return ["reviewing", "retake", "completed"];
+      return ["reviewing", "editing", "retake", "completed"];
     case "retake":
-      return ["retake", "reviewing"];
+      return ["retake", "editing", "reviewing"];
     case "completed":
       return ["completed", "reviewing", "paid"];
     case "paid":

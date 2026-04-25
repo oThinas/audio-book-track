@@ -89,7 +89,12 @@ describe("isValidTransition", () => {
       expect(result).toEqual({ valid: false, reason: "EDITOR_OR_SECONDS_REQUIRED" });
     });
 
-    for (const to of ["pending", "retake", "completed", "paid"] as const) {
+    it("editing → pending is valid (reversion)", () => {
+      const result = isValidTransition("editing", "pending", EMPTY_CTX);
+      expect(result).toEqual({ valid: true });
+    });
+
+    for (const to of ["retake", "completed", "paid"] as const) {
       it(`editing → ${to} is invalid (INVALID_STATUS_TRANSITION)`, () => {
         const result = isValidTransition("editing", to, FULL_CTX);
         expect(result).toEqual({ valid: false, reason: "INVALID_STATUS_TRANSITION" });
@@ -108,7 +113,12 @@ describe("isValidTransition", () => {
       expect(result).toEqual({ valid: true });
     });
 
-    for (const to of ["pending", "editing", "paid"] as const) {
+    it("reviewing → editing is valid (reversion)", () => {
+      const result = isValidTransition("reviewing", "editing", EMPTY_CTX);
+      expect(result).toEqual({ valid: true });
+    });
+
+    for (const to of ["pending", "paid"] as const) {
       it(`reviewing → ${to} is invalid (INVALID_STATUS_TRANSITION)`, () => {
         const result = isValidTransition("reviewing", to, FULL_CTX);
         expect(result).toEqual({ valid: false, reason: "INVALID_STATUS_TRANSITION" });
@@ -122,7 +132,12 @@ describe("isValidTransition", () => {
       expect(result).toEqual({ valid: true });
     });
 
-    for (const to of ["pending", "editing", "completed", "paid"] as const) {
+    it("retake → editing is valid (reversion)", () => {
+      const result = isValidTransition("retake", "editing", EMPTY_CTX);
+      expect(result).toEqual({ valid: true });
+    });
+
+    for (const to of ["pending", "completed", "paid"] as const) {
       it(`retake → ${to} is invalid (INVALID_STATUS_TRANSITION)`, () => {
         const result = isValidTransition("retake", to, FULL_CTX);
         expect(result).toEqual({ valid: false, reason: "INVALID_STATUS_TRANSITION" });
