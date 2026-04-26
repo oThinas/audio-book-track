@@ -32,11 +32,10 @@ export function BooksClient({ initialBooks, studios }: BooksClientProps) {
   }, [books, search]);
 
   function handleCreated(created: CreatedBook) {
-    const studio = studios.find((s) => s.id === created.studioId);
     const optimistic: BookSummaryRow = {
       id: created.id,
       title: created.title,
-      studio: { id: created.studioId, name: studio?.name ?? "" },
+      studio: created.studio,
       pricePerHourCents: created.pricePerHourCents,
       status: "pending",
       totalChapters: created.chapters.length,

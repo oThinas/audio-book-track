@@ -42,7 +42,7 @@ const PRICE_PER_HOUR_MAX_CENTS = 999_999;
 export interface CreatedBook {
   readonly id: string;
   readonly title: string;
-  readonly studioId: string;
+  readonly studio: { readonly id: string; readonly name: string };
   readonly pricePerHourCents: number;
   readonly chapters: ReadonlyArray<{ readonly id: string; readonly number: number }>;
 }
@@ -151,9 +151,25 @@ export function BookCreateDialog({
     });
 
     if (response.status === 201) {
-      const body = (await response.json()) as { data: CreatedBook };
+      const body = (await response.json()) as {
+        data: {
+          readonly id: string;
+          readonly title: string;
+          readonly studioId: string;
+          readonly pricePerHourCents: number;
+          readonly chapters: ReadonlyArray<{ readonly id: string; readonly number: number }>;
+        };
+      };
+      const studio = sortedStudios.find((s) => s.id === body.data.studioId);
+      const created: CreatedBook = {
+        id: body.data.id,
+        title: body.data.title,
+        studio: { id: body.data.studioId, name: studio?.name ?? "" },
+        pricePerHourCents: body.data.pricePerHourCents,
+        chapters: body.data.chapters,
+      };
       resetState();
-      onCreated(body.data);
+      onCreated(created);
       return;
     }
 
