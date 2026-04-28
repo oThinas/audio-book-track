@@ -46,6 +46,7 @@ const COMPLETED_STATUSES: ReadonlyArray<ChapterStatus> = ["completed", "paid"];
 interface DetailState {
   readonly status: BookStatus;
   readonly chapters: ReadonlyArray<ChapterRowData>;
+  readonly pdfUrl: string | null;
 }
 
 function recomputeAggregates(
@@ -74,6 +75,7 @@ export function BookDetailClient({ book, narrators, editors, studios }: BookDeta
   const [state, setState] = useState<DetailState>({
     status: book.status,
     chapters: book.chapters,
+    pdfUrl: book.pdfUrl,
   });
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(new Set());
@@ -88,13 +90,15 @@ export function BookDetailClient({ book, narrators, editors, studios }: BookDeta
 
   function handleChapterSaved(updated: ChapterRowData, bookStatus: ChapterStatus) {
     setState((prev) => ({
+      ...prev,
       status: bookStatus,
       chapters: prev.chapters.map((chapter) => (chapter.id === updated.id ? updated : chapter)),
     }));
   }
 
   function applyBookUpdate(detail: UpdatedBookDetail) {
-    setState({
+    setState((prev) => ({
+      ...prev,
       status: detail.status,
       chapters: detail.chapters.map((c) => ({
         id: c.id,
@@ -104,7 +108,7 @@ export function BookDetailClient({ book, narrators, editors, studios }: BookDeta
         editor: c.editor,
         editedSeconds: c.editedSeconds,
       })),
-    });
+    }));
     router.refresh();
   }
 
@@ -116,10 +120,16 @@ export function BookDetailClient({ book, narrators, editors, studios }: BookDeta
     setState((prev) => {
       const remaining = prev.chapters.filter((chapter) => chapter.id !== chapterId);
       return {
+        ...prev,
         status: remaining.length === 0 ? prev.status : computeBookStatus(remaining),
         chapters: remaining,
       };
     });
+  }
+
+  function handlePdfUrlChange(next: string | null) {
+    setState((prev) => ({ ...prev, pdfUrl: next }));
+    router.refresh();
   }
 
   function exitSelectionMode() {
@@ -164,6 +174,7 @@ export function BookDetailClient({ book, narrators, editors, studios }: BookDeta
       setState((prev) => {
         const remaining = prev.chapters.filter((c) => !selectedIds.has(c.id));
         return {
+          ...prev,
           status: remaining.length === 0 ? prev.status : computeBookStatus(remaining),
           chapters: remaining,
         };
@@ -189,9 +200,12 @@ export function BookDetailClient({ book, narrators, editors, studios }: BookDeta
         />
       )}
       <BookHeader
+        bookId={book.id}
         title={book.title}
         studio={book.studio}
         pricePerHourCents={book.pricePerHourCents}
+        pdfUrl={state.pdfUrl}
+        onPdfUrlChange={handlePdfUrlChange}
         status={state.status}
         totalChapters={aggregates.totalChapters}
         completedChapters={aggregates.completedChapters}

@@ -1,18 +1,21 @@
 "use client";
 
-import { ArrowLeft, FileText, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import type { BookStatus } from "@/lib/domain/book";
 import { formatCentsBRL } from "@/lib/utils";
 
+import { BookPdfPopover } from "./book-pdf-popover";
 import { StatusBadge } from "./status-badge";
 
 export interface BookHeaderProps {
+  readonly bookId: string;
   readonly title: string;
   readonly studio: { readonly id: string; readonly name: string };
   readonly pricePerHourCents: number;
+  readonly pdfUrl: string | null;
   readonly status: BookStatus;
   readonly totalChapters: number;
   readonly completedChapters: number;
@@ -21,12 +24,15 @@ export interface BookHeaderProps {
   readonly isSelectionMode: boolean;
   readonly onEnterSelectionMode: () => void;
   readonly onEdit: () => void;
+  readonly onPdfUrlChange: (next: string | null) => void;
 }
 
 export function BookHeader({
+  bookId,
   title,
   studio,
   pricePerHourCents,
+  pdfUrl,
   status,
   totalChapters,
   completedChapters,
@@ -35,6 +41,7 @@ export function BookHeader({
   isSelectionMode,
   onEnterSelectionMode,
   onEdit,
+  onPdfUrlChange,
 }: BookHeaderProps) {
   return (
     <header className="mb-6 flex flex-col gap-4">
@@ -59,10 +66,7 @@ export function BookHeader({
 
         {!isSelectionMode && (
           <div className="flex flex-wrap items-center gap-2">
-            <Button type="button" variant="outline" size="sm" disabled aria-disabled="true">
-              <FileText aria-hidden="true" className="size-4" />
-              Ver PDF
-            </Button>
+            <BookPdfPopover bookId={bookId} pdfUrl={pdfUrl} onUpdated={onPdfUrlChange} />
             <Button
               type="button"
               variant="outline"

@@ -362,15 +362,15 @@ description: "Task list for feature 020-books-chapters-crud"
 
 ### Tests for US9 — TDD
 
-- [ ] T123 [P] [US9] Criar [__tests__/unit/services/book-service.update-pdf.spec.ts](../../__tests__/unit/services/book-service.update-pdf.spec.ts): valida regex, aceita null para remover.
-- [ ] T124 [P] [US9] Criar [__tests__/integration/book-pdf-url.spec.ts](../../__tests__/integration/book-pdf-url.spec.ts): DB real, PATCH com `pdfUrl` válido/inválido/null.
-- [ ] T125 [P] [US9] Criar [__tests__/e2e/book-pdf.spec.ts](../../__tests__/e2e/book-pdf.spec.ts): popover, salvar, remover, abrir em nova guia.
+- [X] T123 [P] [US9] Criar [__tests__/unit/services/book-service.update-pdf.spec.ts](../../__tests__/unit/services/book-service.update-pdf.spec.ts): valida regex, aceita null para remover.
+- [X] T124 [P] [US9] Criar [__tests__/integration/book-pdf-url.spec.ts](../../__tests__/integration/book-pdf-url.spec.ts): DB real, PATCH com `pdfUrl` válido/inválido/null.
+- [X] T125 [P] [US9] Criar [__tests__/e2e/book-pdf.spec.ts](../../__tests__/e2e/book-pdf.spec.ts): popover, salvar, remover, abrir em nova guia.
 
 ### Implementation for US9
 
-- [ ] T126 [US9] Estender `BookService.update` (T106) em [src/lib/services/book-service.ts](../../src/lib/services/book-service.ts) para aceitar `pdfUrl` nulável no `updateBookSchema`. Validação de formato via Zod + CHECK no banco.
-- [ ] T127 [P] [US9] Criar [src/components/features/books/book-pdf-popover.tsx](../../src/components/features/books/book-pdf-popover.tsx): `<Popover>` shadcn com `<Input>` (URL), botão Salvar (disabled se inválido), botão "Abrir em nova guia" (renderizado só se `pdfUrl` persistido, usa `<a target="_blank" rel="noopener noreferrer">`).
-- [ ] T128 [US9] Conectar botão "Ver PDF" em `<BookHeader>` (T063) para abrir o popover. Após salvar, `router.refresh()`.
+- [X] T126 [US9] Estender `BookService.update` (T106) em [src/lib/services/book-service.ts](../../src/lib/services/book-service.ts) para aceitar `pdfUrl` nulável no `updateBookSchema`. Validação de formato via Zod + CHECK no banco. _Schema usa `regex(/^https?:\/\//i)`, `trim()`, `max(2048)`, `nullable().optional()` — espelha o `book_pdf_url_format` CHECK._
+- [X] T127 [P] [US9] Criar [src/components/features/books/book-pdf-popover.tsx](../../src/components/features/books/book-pdf-popover.tsx): `<Popover>` shadcn com `<Input>` (URL), botão Salvar (disabled se inválido), botão "Abrir em nova guia" (renderizado só se `pdfUrl` persistido, usa `<a target="_blank" rel="noopener noreferrer">`). _Form gerenciado por react-hook-form + zodResolver; estado de open híbrido (controlled/uncontrolled)._
+- [X] T128 [US9] Conectar botão "Ver PDF" em `<BookHeader>` (T063) para abrir o popover. Após salvar, `router.refresh()`. _BookHeader recebe `bookId`, `pdfUrl` e `onPdfUrlChange`; BookDetailClient sincroniza state local `pdfUrl` e dispara `router.refresh()`._
 
 **Checkpoint**: US9 entregue.
 

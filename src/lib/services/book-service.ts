@@ -48,6 +48,8 @@ export interface UpdateBookServiceInput {
   readonly pricePerHourCents?: number;
   readonly numChapters?: number;
   readonly inlineStudioId?: string;
+  // null → remove a URL persistida; undefined → preserva; string → atualiza.
+  readonly pdfUrl?: string | null;
 }
 
 export interface UpdateBookResult {
