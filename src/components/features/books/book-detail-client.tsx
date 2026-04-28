@@ -11,7 +11,9 @@ import type { BookStatus } from "@/lib/domain/book";
 import { computeBookStatus } from "@/lib/domain/book-status";
 import type { ChapterStatus } from "@/lib/domain/chapter";
 import { computeEarningsCents } from "@/lib/domain/earnings";
+import type { Studio } from "@/lib/domain/studio";
 
+import { BookEditDialog, type UpdatedBookDetail } from "./book-edit-dialog";
 import { BookHeader } from "./book-header";
 
 export interface BookDetailData {
@@ -36,6 +38,7 @@ interface BookDetailClientProps {
   readonly book: BookDetailData;
   readonly narrators: ReadonlyArray<PersonOption>;
   readonly editors: ReadonlyArray<PersonOption>;
+  readonly studios: ReadonlyArray<Studio>;
 }
 
 const COMPLETED_STATUSES: ReadonlyArray<ChapterStatus> = ["completed", "paid"];
@@ -66,7 +69,7 @@ function recomputeAggregates(
   };
 }
 
-export function BookDetailClient({ book, narrators, editors }: BookDetailClientProps) {
+export function BookDetailClient({ book, narrators, editors, studios }: BookDetailClientProps) {
   const router = useRouter();
   const [state, setState] = useState<DetailState>({
     status: book.status,
@@ -76,6 +79,7 @@ export function BookDetailClient({ book, narrators, editors }: BookDetailClientP
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(new Set());
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
 
   const nonPaidChapters = state.chapters.filter((c) => c.status !== "paid");
   const paidCount = state.chapters.length - nonPaidChapters.length;
@@ -87,6 +91,21 @@ export function BookDetailClient({ book, narrators, editors }: BookDetailClientP
       status: bookStatus,
       chapters: prev.chapters.map((chapter) => (chapter.id === updated.id ? updated : chapter)),
     }));
+  }
+
+  function applyBookUpdate(detail: UpdatedBookDetail) {
+    setState({
+      status: detail.status,
+      chapters: detail.chapters.map((c) => ({
+        id: c.id,
+        number: c.number,
+        status: c.status,
+        narrator: c.narrator,
+        editor: c.editor,
+        editedSeconds: c.editedSeconds,
+      })),
+    });
+    router.refresh();
   }
 
   function handleChapterDeleted(chapterId: string, bookDeleted: boolean) {
@@ -180,6 +199,7 @@ export function BookDetailClient({ book, narrators, editors }: BookDetailClientP
         hasNonPaidChapters={nonPaidChapters.length > 0}
         isSelectionMode={isSelectionMode}
         onEnterSelectionMode={() => setIsSelectionMode(true)}
+        onEdit={() => setEditOpen(true)}
       />
       <ChaptersTable
         chapters={state.chapters}
@@ -201,6 +221,20 @@ export function BookDetailClient({ book, narrators, editors }: BookDetailClientP
           if (!bulkDeleting) setConfirmOpen(false);
         }}
         onConfirm={handleBulkDeleteConfirm}
+      />
+      <BookEditDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        book={{
+          id: book.id,
+          title: book.title,
+          studioId: book.studio.id,
+          pricePerHourCents: book.pricePerHourCents,
+          currentChapters: state.chapters.length,
+          hasPaidChapter: paidCount > 0,
+        }}
+        studios={studios}
+        onUpdated={(detail) => applyBookUpdate(detail)}
       />
     </>
   );

@@ -25,3 +25,26 @@ export class BookInlineStudioInvalidError extends Error {
     this.name = "BookInlineStudioInvalidError";
   }
 }
+
+export class BookPaidPriceLockedError extends Error {
+  constructor(bookId: string) {
+    super(`Livro ${bookId} possui capítulo pago — valor/hora não pode ser alterado.`);
+    this.name = "BookPaidPriceLockedError";
+  }
+}
+
+export class BookPaidStudioLockedError extends Error {
+  constructor(bookId: string) {
+    super(`Livro ${bookId} possui capítulo pago — estúdio não pode ser alterado.`);
+    this.name = "BookPaidStudioLockedError";
+  }
+}
+
+export class BookCannotReduceChaptersError extends Error {
+  constructor(currentTotal: number, requested: number) {
+    super(
+      `Não é possível reduzir capítulos: total atual ${currentTotal}, solicitado ${requested}.`,
+    );
+    this.name = "BookCannotReduceChaptersError";
+  }
+}

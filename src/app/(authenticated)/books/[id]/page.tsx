@@ -7,6 +7,7 @@ import { auth } from "@/lib/auth/server";
 import { createBookService } from "@/lib/factories/book";
 import { createEditorService } from "@/lib/factories/editor";
 import { createNarratorService } from "@/lib/factories/narrator";
+import { createStudioService } from "@/lib/factories/studio";
 
 export const dynamic = "force-dynamic";
 
@@ -22,10 +23,11 @@ export default async function BookDetailPage({ params }: BookDetailPageProps) {
     redirect("/auth/sign-in");
   }
 
-  const [detail, narrators, editors] = await Promise.all([
+  const [detail, narrators, editors, studios] = await Promise.all([
     createBookService().findById(id),
     createNarratorService().list(),
     createEditorService().list(),
+    createStudioService().list(),
   ]);
   if (!detail) {
     notFound();
@@ -37,6 +39,7 @@ export default async function BookDetailPage({ params }: BookDetailPageProps) {
         book={detail}
         narrators={narrators.map((n) => ({ id: n.id, name: n.name }))}
         editors={editors.map((e) => ({ id: e.id, name: e.name }))}
+        studios={studios}
       />
     </PageContainer>
   );

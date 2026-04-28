@@ -294,16 +294,16 @@ description: "Task list for feature 020-books-chapters-crud"
 
 ### Tests for US8 — TDD
 
-- [ ] T103 [P] [US8] Criar [__tests__/unit/services/book-service.update.spec.ts](../../__tests__/unit/services/book-service.update.spec.ts): aumenta capítulos, bloqueios de price/studio com `paid`, regra de numeração após `MAX(number)+1`.
-- [ ] T104 [P] [US8] Criar [__tests__/integration/book-update.spec.ts](../../__tests__/integration/book-update.spec.ts): DB real, `PATCH /api/v1/books/:id`, atomicidade de aumento de capítulos, conflict `TITLE_ALREADY_IN_USE`.
-- [ ] T105 [P] [US8] Criar [__tests__/e2e/book-edit.spec.ts](../../__tests__/e2e/book-edit.spec.ts): modal pré-preenchido, dica de redução, aumento visível na lista, bloqueios com capítulo paid.
+- [X] T103 [P] [US8] Criar [__tests__/unit/services/book-service.update.spec.ts](../../__tests__/unit/services/book-service.update.spec.ts): aumenta capítulos, bloqueios de price/studio com `paid`, regra de numeração após `MAX(number)+1`.
+- [X] T104 [P] [US8] Criar [__tests__/integration/book-update.spec.ts](../../__tests__/integration/book-update.spec.ts): DB real, `PATCH /api/v1/books/:id`, atomicidade de aumento de capítulos, conflict `TITLE_ALREADY_IN_USE`.
+- [X] T105 [P] [US8] Criar [__tests__/e2e/book-edit.spec.ts](../../__tests__/e2e/book-edit.spec.ts): modal pré-preenchido, dica de redução, aumento visível na lista, bloqueios com capítulo paid.
 
 ### Implementation for US8
 
-- [ ] T106 [US8] Implementar `BookService.update(bookId, input, userId)` em [src/lib/services/book-service.ts](../../src/lib/services/book-service.ts): valida bloqueios (`BOOK_PAID_PRICE_LOCKED`, `BOOK_PAID_STUDIO_LOCKED`, `CANNOT_REDUCE_CHAPTERS`, `TITLE_ALREADY_IN_USE`), cria delta de capítulos em transação, recomputa `book.status`.
-- [ ] T107 [US8] Implementar route handler `PATCH` em [src/app/api/v1/books/[id]/route.ts](../../src/app/api/v1/books/[id]/route.ts) com `updateBookSchema`.
-- [ ] T108 [P] [US8] Criar [src/components/features/books/book-edit-dialog.tsx](../../src/components/features/books/book-edit-dialog.tsx): modal similar ao de criação, pré-preenchido. `price_per_hour_cents` (campo "Valor/hora", input em reais convertido para centavos) e `studio` ficam `disabled` com tooltip explicativo quando há capítulo paid (lê da prop `hasPaidChapter` derivada do livro). `chapter-count-input` com min atual; ao tentar reduzir, exibir dica inline "Para reduzir, use 'Excluir capítulos'".
-- [ ] T109 [US8] Conectar o botão "Editar livro" no `<BookHeader>` (T063) para abrir `<BookEditDialog>`. Após sucesso, `router.refresh()` e toast de sucesso.
+- [X] T106 [US8] Implementar `BookService.update(bookId, input, userId)` em [src/lib/services/book-service.ts](../../src/lib/services/book-service.ts): valida bloqueios (`BOOK_PAID_PRICE_LOCKED`, `BOOK_PAID_STUDIO_LOCKED`, `CANNOT_REDUCE_CHAPTERS`, `TITLE_ALREADY_IN_USE`), cria delta de capítulos em transação, recomputa `book.status`.
+- [X] T107 [US8] Implementar route handler `PATCH` em [src/app/api/v1/books/[id]/route.ts](../../src/app/api/v1/books/[id]/route.ts) com `updateBookSchema`.
+- [X] T108 [P] [US8] Criar [src/components/features/books/book-edit-dialog.tsx](../../src/components/features/books/book-edit-dialog.tsx): modal similar ao de criação, pré-preenchido. `price_per_hour_cents` (campo "Valor/hora", input em reais convertido para centavos) e `studio` ficam `disabled` com tooltip explicativo quando há capítulo paid (lê da prop `hasPaidChapter` derivada do livro). `chapter-count-input` com min atual; ao tentar reduzir, exibir dica inline "Para reduzir, use 'Excluir capítulos'".
+- [X] T109 [US8] Conectar o botão "Editar livro" no `<BookHeader>` (T063) para abrir `<BookEditDialog>`. Após sucesso, `router.refresh()` e toast de sucesso.
 
 **Checkpoint**: US8 entregue.
 

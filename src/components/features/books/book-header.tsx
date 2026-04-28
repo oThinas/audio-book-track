@@ -20,6 +20,7 @@ export interface BookHeaderProps {
   readonly hasNonPaidChapters: boolean;
   readonly isSelectionMode: boolean;
   readonly onEnterSelectionMode: () => void;
+  readonly onEdit: () => void;
 }
 
 export function BookHeader({
@@ -33,6 +34,7 @@ export function BookHeader({
   hasNonPaidChapters,
   isSelectionMode,
   onEnterSelectionMode,
+  onEdit,
 }: BookHeaderProps) {
   return (
     <header className="mb-6 flex flex-col gap-4">
@@ -61,7 +63,13 @@ export function BookHeader({
               <FileText aria-hidden="true" className="size-4" />
               Ver PDF
             </Button>
-            <Button type="button" variant="outline" size="sm" disabled aria-disabled="true">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onEdit}
+              data-testid="book-detail-edit-button"
+            >
               <Pencil aria-hidden="true" className="size-4" />
               Editar livro
             </Button>

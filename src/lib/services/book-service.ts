@@ -1,7 +1,14 @@
 import type { Book, BookStatus } from "@/lib/domain/book";
 import type { Chapter, ChapterStatus } from "@/lib/domain/chapter";
 import { computeEarningsCents } from "@/lib/domain/earnings";
-import { BookInlineStudioInvalidError, BookStudioNotFoundError } from "@/lib/errors/book-errors";
+import {
+  BookCannotReduceChaptersError,
+  BookInlineStudioInvalidError,
+  BookNotFoundError,
+  BookPaidPriceLockedError,
+  BookPaidStudioLockedError,
+  BookStudioNotFoundError,
+} from "@/lib/errors/book-errors";
 import type { BookRepository, BookSummary } from "@/lib/repositories/book-repository";
 import type { ChapterRepository } from "@/lib/repositories/chapter-repository";
 import type { EditorRepository } from "@/lib/repositories/editor-repository";
@@ -33,6 +40,18 @@ const INLINE_STUDIO_PLACEHOLDER_RATE_CENTS = 1;
 export interface CreateBookResult {
   readonly book: Book;
   readonly chapters: readonly Chapter[];
+}
+
+export interface UpdateBookServiceInput {
+  readonly title?: string;
+  readonly studioId?: string;
+  readonly pricePerHourCents?: number;
+  readonly numChapters?: number;
+}
+
+export interface UpdateBookResult {
+  readonly book: Book;
+  readonly chaptersAdded: number;
 }
 
 export interface BookChapterDetail {
@@ -195,6 +214,73 @@ export class BookService {
       );
 
       return { book: withStatus, chapters };
+    });
+  }
+
+  async update(bookId: string, input: UpdateBookServiceInput): Promise<UpdateBookResult> {
+    const current = await this.deps.bookRepo.findById(bookId);
+    if (!current) {
+      throw new BookNotFoundError(bookId);
+    }
+
+    const chapters = await this.deps.chapterRepo.listByBookId(bookId);
+    const hasPaidChapter = chapters.some((c) => c.status === "paid");
+
+    if (input.pricePerHourCents !== undefined && hasPaidChapter) {
+      throw new BookPaidPriceLockedError(bookId);
+    }
+    if (input.studioId !== undefined && input.studioId !== current.studioId && hasPaidChapter) {
+      throw new BookPaidStudioLockedError(bookId);
+    }
+
+    if (input.studioId !== undefined && input.studioId !== current.studioId) {
+      const studio = await this.deps.studioRepo.findById(input.studioId);
+      if (!studio) {
+        throw new BookStudioNotFoundError(input.studioId);
+      }
+    }
+
+    if (input.numChapters !== undefined && input.numChapters < chapters.length) {
+      throw new BookCannotReduceChaptersError(chapters.length, input.numChapters);
+    }
+
+    // The repo accepts only persistent book fields. `numChapters` is a
+    // service-level concept that translates into chapter inserts, so it lives
+    // outside the patch passed downstream.
+    const { numChapters: _ignored, ...repoPatch } = input;
+    const patchEntries = Object.entries(repoPatch).filter(([, value]) => value !== undefined);
+
+    return this.deps.uow.transaction(async (tx) => {
+      let book = current;
+      if (patchEntries.length > 0) {
+        book = await this.deps.bookRepo.update(bookId, Object.fromEntries(patchEntries), tx);
+      }
+
+      let chaptersAdded = 0;
+      if (input.numChapters !== undefined && input.numChapters > chapters.length) {
+        const delta = input.numChapters - chapters.length;
+        const maxNumber = await this.deps.chapterRepo.maxNumberByBookId(bookId, tx);
+        await this.deps.chapterRepo.insertMany(
+          Array.from({ length: delta }, (_, index) => ({
+            bookId,
+            number: maxNumber + 1 + index,
+            status: "pending" as const,
+          })),
+          tx,
+        );
+        chaptersAdded = delta;
+      }
+
+      if (chaptersAdded > 0) {
+        const refreshed = await recomputeBookStatus(
+          bookId,
+          { bookRepo: this.deps.bookRepo, chapterRepo: this.deps.chapterRepo },
+          tx,
+        );
+        return { book: refreshed, chaptersAdded };
+      }
+
+      return { book, chaptersAdded };
     });
   }
 }

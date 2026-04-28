@@ -3,6 +3,7 @@ import type { InMemoryChapterRepository } from "@tests/repositories/in-memory-ch
 import type { InMemoryStudioRepository } from "@tests/repositories/in-memory-studio-repository";
 
 import type { Book } from "@/lib/domain/book";
+import { computeBookStatus } from "@/lib/domain/book-status";
 import type { Chapter, ChapterStatus } from "@/lib/domain/chapter";
 
 export interface SeedInMemoryBookOptions {
@@ -46,5 +47,15 @@ export async function seedInMemoryBook(
       editedSeconds: status === "completed" || status === "paid" ? 3600 : 0,
     })),
   );
+
+  // Persist the computed book status so seeded fixtures match the production
+  // invariant that `book.status` is always derived from its chapters.
+  if (chapters.length > 0) {
+    const nextStatus = computeBookStatus(chapters);
+    if (nextStatus !== book.status) {
+      const refreshed = await opts.bookRepo.updateStatus(book.id, nextStatus);
+      return { book: refreshed, chapters };
+    }
+  }
   return { book, chapters };
 }
