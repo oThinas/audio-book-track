@@ -1,6 +1,6 @@
 import type { CreateNarratorInput, Narrator, UpdateNarratorInput } from "@/lib/domain/narrator";
 import { NarratorNameAlreadyInUseError, NarratorNotFoundError } from "@/lib/errors/narrator-errors";
-import type { NarratorRepository } from "@/lib/repositories/narrator-repository";
+import type { NarratorListItem, NarratorRepository } from "@/lib/repositories/narrator-repository";
 
 interface InternalNarrator extends Narrator {
   readonly deletedAt: Date | null;
@@ -14,6 +14,12 @@ export class InMemoryNarratorRepository implements NarratorRepository {
       .filter((current) => current.deletedAt === null)
       .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
       .map(stripDeletedAt);
+  }
+
+  async findAllWithCounts(): Promise<NarratorListItem[]> {
+    // Fake não tem visibilidade de `chapter`; integration (T130) valida a contagem real.
+    const all = await this.findAll();
+    return all.map((n) => ({ ...n, chaptersCount: 0 }));
   }
 
   async findById(id: string): Promise<Narrator | null> {

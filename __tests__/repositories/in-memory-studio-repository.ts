@@ -2,6 +2,7 @@ import type { CreateStudioInput, Studio, UpdateStudioInput } from "@/lib/domain/
 import { StudioNameAlreadyInUseError, StudioNotFoundError } from "@/lib/errors/studio-errors";
 import type {
   ReactivateStudioOverrides,
+  StudioListItem,
   StudioRepository,
 } from "@/lib/repositories/studio-repository";
 
@@ -17,6 +18,13 @@ export class InMemoryStudioRepository implements StudioRepository {
       .filter((current) => current.deletedAt === null)
       .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
       .map(stripDeletedAt);
+  }
+
+  async findAllWithCounts(): Promise<StudioListItem[]> {
+    // O fake não tem visibilidade de `book`; service unit tests não validam
+    // a contagem aqui — a verificação real fica em integration (T129).
+    const studios = await this.findAll();
+    return studios.map((s) => ({ ...s, booksCount: 0 }));
   }
 
   async findById(id: string): Promise<Studio | null> {

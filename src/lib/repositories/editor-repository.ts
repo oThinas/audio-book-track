@@ -6,8 +6,13 @@ export interface ReactivateEditorOverrides {
   readonly email?: string;
 }
 
+export interface EditorListItem extends Editor {
+  readonly chaptersCount: number;
+}
+
 export interface EditorRepository {
   findAll(): Promise<Editor[]>;
+  findAllWithCounts(): Promise<EditorListItem[]>;
   findById(id: string): Promise<Editor | null>;
   findByName(name: string): Promise<Editor | null>;
   findByNameIncludingDeleted(name: string): Promise<Editor | null>;

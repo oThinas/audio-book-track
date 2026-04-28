@@ -13,10 +13,11 @@ import { MoneyInput } from "@/components/ui/money-input";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { ApiErrorBody } from "@/lib/api/error-response";
 import { type Studio, type StudioFormValues, studioFormSchema } from "@/lib/domain/studio";
+import type { StudioListItem } from "@/lib/repositories/studio-repository";
 import { formatCentsBRL } from "@/lib/utils";
 
 interface StudioRowProps {
-  readonly studio: Studio;
+  readonly studio: StudioListItem;
   readonly onUpdated?: (studio: Studio) => void;
   readonly onRequestDelete?: (studio: Studio) => void;
 }
@@ -44,6 +45,9 @@ export function StudioRow({ studio, onUpdated, onRequestDelete }: StudioRowProps
       </TableCell>
       <TableCell data-testid="studio-hourly-rate" className="text-foreground">
         {formatCentsBRL(studio.defaultHourlyRateCents)}
+      </TableCell>
+      <TableCell data-testid="studio-books-count" className="text-foreground">
+        {studio.booksCount}
       </TableCell>
       <TableCell className="w-24">
         <div className="flex items-center justify-end gap-1">
@@ -74,7 +78,7 @@ export function StudioRow({ studio, onUpdated, onRequestDelete }: StudioRowProps
 }
 
 interface StudioRowEditModeProps {
-  readonly studio: Studio;
+  readonly studio: StudioListItem;
   readonly onCancel: () => void;
   readonly onUpdated: (studio: Studio) => void;
 }
@@ -192,6 +196,9 @@ function StudioRowEditMode({ studio, onCancel, onUpdated }: StudioRowEditModePro
         {errors.defaultHourlyRateCents && (
           <p className="mt-1 text-xs text-destructive">{errors.defaultHourlyRateCents.message}</p>
         )}
+      </TableCell>
+      <TableCell className="text-foreground align-top">
+        <span className="text-muted-foreground">{studio.booksCount}</span>
       </TableCell>
       <TableCell className="w-24">
         <div className="flex items-center justify-end gap-1">

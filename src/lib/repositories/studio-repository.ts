@@ -6,8 +6,13 @@ export interface ReactivateStudioOverrides {
   readonly defaultHourlyRateCents?: number;
 }
 
+export interface StudioListItem extends Studio {
+  readonly booksCount: number;
+}
+
 export interface StudioRepository {
   findAll(): Promise<Studio[]>;
+  findAllWithCounts(): Promise<StudioListItem[]>;
   findById(id: string): Promise<Studio | null>;
   findByIdIncludingDeleted(id: string): Promise<Studio | null>;
   findByName(name: string): Promise<Studio | null>;

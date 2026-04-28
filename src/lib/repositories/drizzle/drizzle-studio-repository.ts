@@ -3,12 +3,13 @@ import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
 import { getUniqueConstraintName } from "@/lib/db/postgres-errors";
 import type * as schema from "@/lib/db/schema";
-import { studio } from "@/lib/db/schema";
+import { book, studio } from "@/lib/db/schema";
 import type { CreateStudioInput, Studio, UpdateStudioInput } from "@/lib/domain/studio";
 import { StudioNameAlreadyInUseError, StudioNotFoundError } from "@/lib/errors/studio-errors";
 import type { RepositoryTx } from "@/lib/repositories/book-repository";
 import type {
   ReactivateStudioOverrides,
+  StudioListItem,
   StudioRepository,
 } from "@/lib/repositories/studio-repository";
 
@@ -56,6 +57,25 @@ export class DrizzleStudioRepository implements StudioRepository {
       .where(isNull(studio.deletedAt))
       .orderBy(asc(studio.createdAt));
     return rows.map(toDomain);
+  }
+
+  async findAllWithCounts(): Promise<StudioListItem[]> {
+    // LEFT JOIN book + COUNT — usa o índice book_studio_id_idx (T008).
+    const rows = await this.db
+      .select({
+        ...STUDIO_COLUMNS,
+        booksCount: sql<number>`coalesce(count(${book.id}), 0)::int`,
+      })
+      .from(studio)
+      .leftJoin(book, eq(book.studioId, studio.id))
+      .where(isNull(studio.deletedAt))
+      .groupBy(studio.id)
+      .orderBy(asc(studio.createdAt));
+
+    return rows.map((row) => ({
+      ...toDomain(row),
+      booksCount: row.booksCount,
+    }));
   }
 
   async findById(id: string): Promise<Studio | null> {

@@ -23,11 +23,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { Editor } from "@/lib/domain/editor";
+import type { EditorListItem } from "@/lib/repositories/editor-repository";
 
 import { EditorRow } from "./editor-row";
 
 interface EditorsTableProps {
-  readonly editors: readonly Editor[];
+  readonly editors: readonly EditorListItem[];
   readonly topRow?: ReactNode;
   readonly onEditorUpdated?: (editor: Editor) => void;
   readonly onRequestDelete?: (editor: Editor) => void;
@@ -47,7 +48,7 @@ export function EditorsTable({
 }: EditorsTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
-  const columns = useMemo<ColumnDef<Editor>[]>(
+  const columns = useMemo<ColumnDef<EditorListItem>[]>(
     () => [
       {
         id: "name",
@@ -62,6 +63,14 @@ export function EditorsTable({
         enableSorting: true,
       },
       {
+        id: "chaptersCount",
+        accessorKey: "chaptersCount",
+        header: "Capítulos",
+        enableSorting: true,
+        sortingFn: "basic",
+        sortDescFirst: false,
+      },
+      {
         id: "actions",
         header: () => <span className="sr-only">Ações</span>,
         enableSorting: false,
@@ -71,7 +80,7 @@ export function EditorsTable({
   );
 
   const table = useReactTable({
-    data: editors as Editor[],
+    data: editors as EditorListItem[],
     columns,
     state: { sorting },
     onSortingChange: setSorting,
@@ -95,9 +104,11 @@ export function EditorsTable({
                 const widthClass =
                   columnId === "actions"
                     ? "w-24 text-right"
-                    : columnId === "name"
-                      ? "w-1/3"
-                      : "w-auto";
+                    : columnId === "chaptersCount"
+                      ? "w-32"
+                      : columnId === "name"
+                        ? "w-1/3"
+                        : "w-auto";
                 const ariaSort = canSort
                   ? sortDirection === "asc"
                     ? "ascending"

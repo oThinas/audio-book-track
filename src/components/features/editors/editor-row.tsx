@@ -12,9 +12,10 @@ import { Label } from "@/components/ui/label";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { ApiErrorBody } from "@/lib/api/error-response";
 import { type Editor, type EditorFormValues, editorFormSchema } from "@/lib/domain/editor";
+import type { EditorListItem } from "@/lib/repositories/editor-repository";
 
 interface EditorRowProps {
-  readonly editor: Editor;
+  readonly editor: EditorListItem;
   readonly onUpdated?: (editor: Editor) => void;
   readonly onRequestDelete?: (editor: Editor) => void;
 }
@@ -47,6 +48,9 @@ export function EditorRow({ editor, onUpdated, onRequestDelete }: EditorRowProps
       >
         {editor.email}
       </TableCell>
+      <TableCell data-testid="editor-chapters-count" className="text-foreground">
+        {editor.chaptersCount}
+      </TableCell>
       <TableCell className="w-24">
         <div className="flex items-center justify-end gap-1">
           <Button
@@ -76,7 +80,7 @@ export function EditorRow({ editor, onUpdated, onRequestDelete }: EditorRowProps
 }
 
 interface EditorRowEditModeProps {
-  readonly editor: Editor;
+  readonly editor: EditorListItem;
   readonly onCancel: () => void;
   readonly onUpdated: (editor: Editor) => void;
 }
@@ -180,6 +184,9 @@ function EditorRowEditMode({ editor, onCancel, onUpdated }: EditorRowEditModePro
           {...register("email")}
         />
         {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>}
+      </TableCell>
+      <TableCell className="text-foreground align-top">
+        <span className="text-muted-foreground">{editor.chaptersCount}</span>
       </TableCell>
       <TableCell className="w-24">
         <div className="flex items-center justify-end gap-1">

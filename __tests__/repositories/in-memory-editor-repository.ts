@@ -5,6 +5,7 @@ import {
   EditorNotFoundError,
 } from "@/lib/errors/editor-errors";
 import type {
+  EditorListItem,
   EditorRepository,
   ReactivateEditorOverrides,
 } from "@/lib/repositories/editor-repository";
@@ -21,6 +22,12 @@ export class InMemoryEditorRepository implements EditorRepository {
       .filter((current) => current.deletedAt === null)
       .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
       .map(stripDeletedAt);
+  }
+
+  async findAllWithCounts(): Promise<EditorListItem[]> {
+    // Fake não tem visibilidade de `chapter`; integration (T130) valida a contagem real.
+    const all = await this.findAll();
+    return all.map((e) => ({ ...e, chaptersCount: 0 }));
   }
 
   async findById(id: string): Promise<Editor | null> {

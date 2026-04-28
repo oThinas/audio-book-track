@@ -3,7 +3,7 @@ import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
 import { getUniqueConstraintName } from "@/lib/db/postgres-errors";
 import type * as schema from "@/lib/db/schema";
-import { editor } from "@/lib/db/schema";
+import { chapter, editor } from "@/lib/db/schema";
 import type { CreateEditorInput, Editor, UpdateEditorInput } from "@/lib/domain/editor";
 import {
   EditorEmailAlreadyInUseError,
@@ -12,6 +12,7 @@ import {
 } from "@/lib/errors/editor-errors";
 import type { RepositoryTx } from "@/lib/repositories/book-repository";
 import type {
+  EditorListItem,
   EditorRepository,
   ReactivateEditorOverrides,
 } from "@/lib/repositories/editor-repository";
@@ -42,6 +43,22 @@ export class DrizzleEditorRepository implements EditorRepository {
       .from(editor)
       .where(isNull(editor.deletedAt))
       .orderBy(asc(editor.createdAt));
+  }
+
+  async findAllWithCounts(): Promise<EditorListItem[]> {
+    // LEFT JOIN chapter ON chapter.editor_id — usa o índice chapter_editor_id_idx.
+    const rows = await this.db
+      .select({
+        ...EDITOR_COLUMNS,
+        chaptersCount: sql<number>`coalesce(count(${chapter.id}), 0)::int`,
+      })
+      .from(editor)
+      .leftJoin(chapter, eq(chapter.editorId, editor.id))
+      .where(isNull(editor.deletedAt))
+      .groupBy(editor.id)
+      .orderBy(asc(editor.createdAt));
+
+    return rows;
   }
 
   async findById(id: string): Promise<Editor | null> {

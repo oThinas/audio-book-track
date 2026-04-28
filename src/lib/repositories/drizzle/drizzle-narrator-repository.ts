@@ -3,11 +3,11 @@ import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
 import { isUniqueViolation } from "@/lib/db/postgres-errors";
 import type * as schema from "@/lib/db/schema";
-import { narrator } from "@/lib/db/schema";
+import { chapter, narrator } from "@/lib/db/schema";
 import type { CreateNarratorInput, Narrator, UpdateNarratorInput } from "@/lib/domain/narrator";
 import { NarratorNameAlreadyInUseError, NarratorNotFoundError } from "@/lib/errors/narrator-errors";
 import type { RepositoryTx } from "@/lib/repositories/book-repository";
-import type { NarratorRepository } from "@/lib/repositories/narrator-repository";
+import type { NarratorListItem, NarratorRepository } from "@/lib/repositories/narrator-repository";
 
 type Executor = NodePgDatabase<typeof schema>;
 
@@ -31,6 +31,22 @@ export class DrizzleNarratorRepository implements NarratorRepository {
       .from(narrator)
       .where(isNull(narrator.deletedAt))
       .orderBy(asc(narrator.createdAt));
+  }
+
+  async findAllWithCounts(): Promise<NarratorListItem[]> {
+    // LEFT JOIN chapter ON chapter.narrator_id — usa o índice chapter_narrator_id_idx.
+    const rows = await this.db
+      .select({
+        ...NARRATOR_COLUMNS,
+        chaptersCount: sql<number>`coalesce(count(${chapter.id}), 0)::int`,
+      })
+      .from(narrator)
+      .leftJoin(chapter, eq(chapter.narratorId, narrator.id))
+      .where(isNull(narrator.deletedAt))
+      .groupBy(narrator.id)
+      .orderBy(asc(narrator.createdAt));
+
+    return rows;
   }
 
   async findById(id: string): Promise<Narrator | null> {

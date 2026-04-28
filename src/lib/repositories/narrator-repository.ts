@@ -2,8 +2,13 @@ import type { CreateNarratorInput, Narrator, UpdateNarratorInput } from "@/lib/d
 
 import type { RepositoryTx } from "./book-repository";
 
+export interface NarratorListItem extends Narrator {
+  readonly chaptersCount: number;
+}
+
 export interface NarratorRepository {
   findAll(): Promise<Narrator[]>;
+  findAllWithCounts(): Promise<NarratorListItem[]>;
   findById(id: string): Promise<Narrator | null>;
   findByName(name: string): Promise<Narrator | null>;
   findByNameIncludingDeleted(name: string): Promise<Narrator | null>;

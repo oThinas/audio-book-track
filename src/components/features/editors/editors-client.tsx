@@ -7,20 +7,21 @@ import { useMemo, useState } from "react";
 import { PageDescription, PageHeader, PageTitle } from "@/components/layout/page-container";
 import { Button } from "@/components/ui/button";
 import type { Editor } from "@/lib/domain/editor";
+import type { EditorListItem } from "@/lib/repositories/editor-repository";
 
 import { DeleteEditorDialog } from "./delete-editor-dialog";
 import { EditorNewRow } from "./editor-new-row";
 import { EditorsTable } from "./editors-table";
 
 interface EditorsClientProps {
-  readonly initialEditors: readonly Editor[];
+  readonly initialEditors: readonly EditorListItem[];
 }
 
 const NEW_ROW_NAME_INPUT_ID = "editor-new-name";
 
 export function EditorsClient({ initialEditors }: EditorsClientProps) {
   const router = useRouter();
-  const [editors, setEditors] = useState<readonly Editor[]>(initialEditors);
+  const [editors, setEditors] = useState<readonly EditorListItem[]>(initialEditors);
   const [isCreating, setIsCreating] = useState(false);
   const [editorToDelete, setEditorToDelete] = useState<Editor | null>(null);
 
@@ -41,7 +42,7 @@ export function EditorsClient({ initialEditors }: EditorsClientProps) {
   }
 
   function handleCreated(editor: Editor) {
-    setEditors((current) => [...current, editor]);
+    setEditors((current) => [...current, { ...editor, chaptersCount: 0 }]);
     setIsCreating(false);
     router.refresh();
   }
@@ -51,7 +52,11 @@ export function EditorsClient({ initialEditors }: EditorsClientProps) {
   }
 
   function handleUpdated(updated: Editor) {
-    setEditors((current) => current.map((e) => (e.id === updated.id ? updated : e)));
+    setEditors((current) =>
+      current.map((e) =>
+        e.id === updated.id ? { ...updated, chaptersCount: e.chaptersCount } : e,
+      ),
+    );
     router.refresh();
   }
 

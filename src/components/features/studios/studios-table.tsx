@@ -23,11 +23,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { Studio } from "@/lib/domain/studio";
+import type { StudioListItem } from "@/lib/repositories/studio-repository";
 
 import { StudioRow } from "./studio-row";
 
 interface StudiosTableProps {
-  readonly studios: readonly Studio[];
+  readonly studios: readonly StudioListItem[];
   readonly topRow?: ReactNode;
   readonly onStudioUpdated?: (studio: Studio) => void;
   readonly onRequestDelete?: (studio: Studio) => void;
@@ -47,7 +48,7 @@ export function StudiosTable({
 }: StudiosTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
-  const columns = useMemo<ColumnDef<Studio>[]>(
+  const columns = useMemo<ColumnDef<StudioListItem>[]>(
     () => [
       {
         id: "name",
@@ -67,6 +68,14 @@ export function StudiosTable({
         sortDescFirst: false,
       },
       {
+        id: "booksCount",
+        accessorKey: "booksCount",
+        header: "Livros",
+        enableSorting: true,
+        sortingFn: "basic",
+        sortDescFirst: false,
+      },
+      {
         id: "actions",
         header: () => <span className="sr-only">Ações</span>,
         enableSorting: false,
@@ -76,8 +85,8 @@ export function StudiosTable({
   );
 
   const table = useReactTable({
-    data: studios as Studio[],
     columns,
+    data: studios as StudioListItem[],
     state: { sorting },
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
@@ -100,9 +109,11 @@ export function StudiosTable({
                 const widthClass =
                   columnId === "actions"
                     ? "w-24 text-right"
-                    : columnId === "defaultHourlyRateCents"
-                      ? "w-56"
-                      : "w-auto";
+                    : columnId === "booksCount"
+                      ? "w-24"
+                      : columnId === "name"
+                        ? "w-1/3"
+                        : "w-auto";
                 const ariaSort = canSort
                   ? sortDirection === "asc"
                     ? "ascending"

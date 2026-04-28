@@ -23,11 +23,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { Narrator } from "@/lib/domain/narrator";
+import type { NarratorListItem } from "@/lib/repositories/narrator-repository";
 
 import { NarratorRow } from "./narrator-row";
 
 interface NarratorsTableProps {
-  readonly narrators: readonly Narrator[];
+  readonly narrators: readonly NarratorListItem[];
   readonly topRow?: ReactNode;
   readonly onNarratorUpdated?: (narrator: Narrator) => void;
   readonly onRequestDelete?: (narrator: Narrator) => void;
@@ -47,13 +48,21 @@ export function NarratorsTable({
 }: NarratorsTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
-  const columns = useMemo<ColumnDef<Narrator>[]>(
+  const columns = useMemo<ColumnDef<NarratorListItem>[]>(
     () => [
       {
         id: "name",
         accessorKey: "name",
         header: "Nome",
         enableSorting: true,
+      },
+      {
+        id: "chaptersCount",
+        accessorKey: "chaptersCount",
+        header: "Capítulos",
+        enableSorting: true,
+        sortingFn: "basic",
+        sortDescFirst: false,
       },
       {
         id: "actions",
@@ -65,7 +74,7 @@ export function NarratorsTable({
   );
 
   const table = useReactTable({
-    data: narrators as Narrator[],
+    data: narrators as NarratorListItem[],
     columns,
     state: { sorting },
     onSortingChange: setSorting,
@@ -92,9 +101,11 @@ export function NarratorsTable({
                 const widthClass =
                   columnId === "actions"
                     ? "w-24 text-right"
-                    : columnId === "name"
-                      ? "w-auto"
-                      : undefined;
+                    : columnId === "chaptersCount"
+                      ? "w-32"
+                      : columnId === "name"
+                        ? "w-auto"
+                        : undefined;
                 const ariaSort = canSort
                   ? sortDirection === "asc"
                     ? "ascending"

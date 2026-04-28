@@ -1,7 +1,7 @@
 import type { CreateNarratorInput, Narrator, UpdateNarratorInput } from "@/lib/domain/narrator";
 import { NarratorLinkedToActiveChaptersError } from "@/lib/errors/narrator-errors";
 import type { BlockingBookSummary } from "@/lib/errors/studio-errors";
-import type { NarratorRepository } from "@/lib/repositories/narrator-repository";
+import type { NarratorListItem, NarratorRepository } from "@/lib/repositories/narrator-repository";
 
 export interface CreateNarratorResult {
   readonly narrator: Narrator;
@@ -22,8 +22,8 @@ export interface SoftDeleteNarratorDeps {
 export class NarratorService {
   constructor(private readonly repository: NarratorRepository) {}
 
-  async list(): Promise<Narrator[]> {
-    return this.repository.findAll();
+  async list(): Promise<NarratorListItem[]> {
+    return this.repository.findAllWithCounts();
   }
 
   async create(input: CreateNarratorInput): Promise<CreateNarratorResult> {

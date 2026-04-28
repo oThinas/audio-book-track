@@ -384,17 +384,17 @@ description: "Task list for feature 020-books-chapters-crud"
 
 ### Tests for US12 — TDD
 
-- [ ] T129 [P] [US12] Criar [__tests__/integration/studios-books-count.spec.ts](../../__tests__/integration/studios-books-count.spec.ts): `GET /api/v1/studios` retorna `booksCount` correto.
-- [ ] T130 [P] [US12] Criar [__tests__/integration/narrators-editors-chapters-count.spec.ts](../../__tests__/integration/narrators-editors-chapters-count.spec.ts): `GET /api/v1/narrators` e `/editors` retornam `chaptersCount` correto.
-- [ ] T131 [P] [US12] Criar [__tests__/e2e/derived-columns.spec.ts](../../__tests__/e2e/derived-columns.spec.ts): cenários visuais + ordenação nas três listagens.
+- [X] T129 [P] [US12] Criar [__tests__/integration/studios-books-count.spec.ts](../../__tests__/integration/studios-books-count.spec.ts): `GET /api/v1/studios` retorna `booksCount` correto.
+- [X] T130 [P] [US12] Criar [__tests__/integration/narrators-editors-chapters-count.spec.ts](../../__tests__/integration/narrators-editors-chapters-count.spec.ts): `GET /api/v1/narrators` e `/editors` retornam `chaptersCount` correto.
+- [X] T131 [P] [US12] Criar [__tests__/e2e/derived-columns.spec.ts](../../__tests__/e2e/derived-columns.spec.ts): cenários visuais + ordenação nas três listagens.
 
 ### Implementation for US12
 
-- [ ] T132 [US12] Atualizar `StudioService.listForUser` em [src/lib/services/studio-service.ts](../../src/lib/services/studio-service.ts) e seu repo (T028) para agregar `booksCount` via `LEFT JOIN book GROUP BY studio.id`. Garantir performance com índice `book_studio_id_idx` já criado em T008.
-- [ ] T133 [US12] Atualizar `NarratorService.listForUser` e `EditorService.listForUser` (T034/T035) + seus repos (T029/T030) para agregar `chaptersCount`.
-- [ ] T134 [P] [US12] Estender [src/components/features/studios/studios-table.tsx](../../src/components/features/studios/studios-table.tsx) com coluna "Livros" ordenável.
-- [ ] T135 [P] [US12] Estender [src/components/features/narrators/narrators-table.tsx](../../src/components/features/narrators/narrators-table.tsx) com coluna "Capítulos" ordenável.
-- [ ] T136 [P] [US12] Estender [src/components/features/editors/editors-table.tsx](../../src/components/features/editors/editors-table.tsx) com coluna "Capítulos" ordenável.
+- [X] T132 [US12] Atualizar `StudioService.listForUser` em [src/lib/services/studio-service.ts](../../src/lib/services/studio-service.ts) e seu repo (T028) para agregar `booksCount` via `LEFT JOIN book GROUP BY studio.id`. Garantir performance com índice `book_studio_id_idx` já criado em T008. _Implementação: novo `findAllWithCounts()` no repo + tipo `StudioListItem`; `service.list()` retorna `StudioListItem[]`._
+- [X] T133 [US12] Atualizar `NarratorService.listForUser` e `EditorService.listForUser` (T034/T035) + seus repos (T029/T030) para agregar `chaptersCount`. _Mesmo padrão: `findAllWithCounts()` + `NarratorListItem`/`EditorListItem`._
+- [X] T134 [P] [US12] Estender [src/components/features/studios/studios-table.tsx](../../src/components/features/studios/studios-table.tsx) com coluna "Livros" ordenável.
+- [X] T135 [P] [US12] Estender [src/components/features/narrators/narrators-table.tsx](../../src/components/features/narrators/narrators-table.tsx) com coluna "Capítulos" ordenável.
+- [X] T136 [P] [US12] Estender [src/components/features/editors/editors-table.tsx](../../src/components/features/editors/editors-table.tsx) com coluna "Capítulos" ordenável.
 
 **Checkpoint**: US12 entregue — todas as features funcionais.
 

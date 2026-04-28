@@ -1,7 +1,7 @@
 import type { CreateEditorInput, Editor, UpdateEditorInput } from "@/lib/domain/editor";
 import { EditorLinkedToActiveChaptersError } from "@/lib/errors/editor-errors";
 import type { BlockingBookSummary } from "@/lib/errors/studio-errors";
-import type { EditorRepository } from "@/lib/repositories/editor-repository";
+import type { EditorListItem, EditorRepository } from "@/lib/repositories/editor-repository";
 
 export interface CreateEditorResult {
   readonly editor: Editor;
@@ -22,8 +22,8 @@ export interface SoftDeleteEditorDeps {
 export class EditorService {
   constructor(private readonly repository: EditorRepository) {}
 
-  async list(): Promise<Editor[]> {
-    return this.repository.findAll();
+  async list(): Promise<EditorListItem[]> {
+    return this.repository.findAllWithCounts();
   }
 
   async create(input: CreateEditorInput): Promise<CreateEditorResult> {
