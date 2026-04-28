@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronsUpDown, Loader2 } from "lucide-react";
+import { ChevronsUpDown, Loader2, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -14,6 +14,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
+  CommandSeparator,
 } from "@/components/ui/command";
 import {
   Dialog,
@@ -34,6 +35,7 @@ import { type UpdateBookInput, updateBookSchema } from "@/lib/schemas/book";
 import { cn, formatCentsBRL } from "@/lib/utils";
 
 import { ChapterCountInput } from "./chapter-count-input";
+import { StudioInlineCreator } from "./studio-inline-creator";
 
 const PRICE_PER_HOUR_MIN_CENTS = 1;
 const PRICE_PER_HOUR_MAX_CENTS = 999_999;
@@ -81,20 +83,31 @@ export function BookEditDialog({
 }: BookEditDialogProps) {
   const [studioPickerOpen, setStudioPickerOpen] = useState(false);
   const [reduceHint, setReduceHint] = useState(false);
+  const [showInlineCreator, setShowInlineCreator] = useState(false);
+  const [inlineStudios, setInlineStudios] = useState<readonly Studio[]>([]);
+  const [inlineStudioId, setInlineStudioId] = useState<string | null>(null);
 
-  const sortedStudios = useMemo(
-    () => [...studios].sort((a, b) => a.name.localeCompare(b.name, "pt-BR")),
-    [studios],
-  );
+  const sortedStudios = useMemo(() => {
+    const merged = [...studios, ...inlineStudios];
+    const seen = new Set<string>();
+    const deduped: Studio[] = [];
+    for (const s of merged) {
+      if (seen.has(s.id)) continue;
+      seen.add(s.id);
+      deduped.push(s);
+    }
+    return deduped.sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+  }, [studios, inlineStudios]);
 
   const {
     register,
     control,
     handleSubmit,
     reset,
-    formState: { errors, isSubmitting, isDirty, isValid },
     setError,
     watch,
+    setValue: formSetValue,
+    formState: { errors, isSubmitting, isDirty, isValid },
   } = useForm<UpdateBookInput>({
     resolver: zodResolver(updateBookSchema),
     mode: "onChange",
@@ -112,13 +125,39 @@ export function BookEditDialog({
   const selectedStudioId = watch("studioId");
   const selectedStudio = sortedStudios.find((s) => s.id === selectedStudioId);
 
+  function resetState() {
+    reset();
+    setStudioPickerOpen(false);
+    setShowInlineCreator(false);
+    setInlineStudios([]);
+    setInlineStudioId(null);
+    setReduceHint(false);
+  }
+
   function handleOpenChange(next: boolean) {
     if (!next) {
-      reset();
-      setStudioPickerOpen(false);
-      setReduceHint(false);
+      // Reaching this path means the dialog is closing without a successful
+      // save (Cancel button, ESC, or backdrop click) — the inline studio
+      // exists but was never bound to a book, so the placeholder rate
+      // (R$ 0,01) lingers and the user should fix it manually.
+      if (inlineStudioId) {
+        toast.warning(
+          "Estúdio criado mas não vinculado: o valor/hora ficou em R$ 0,01. Edite-o quando puder.",
+        );
+      }
+      resetState();
     }
     onOpenChange(next);
+  }
+
+  function handleInlineStudioCreated(studio: Studio) {
+    setInlineStudios((current) => [...current, studio]);
+    setInlineStudioId(studio.id);
+    // RHF's setValue lives behind the form instance — we use the controlled
+    // field via Controller, so we just nudge the studioId here.
+    formSetValue("studioId", studio.id, { shouldValidate: true, shouldDirty: true });
+    setShowInlineCreator(false);
+    setStudioPickerOpen(false);
   }
 
   async function onSubmit(values: UpdateBookInput) {
@@ -138,6 +177,9 @@ export function BookEditDialog({
     if (values.numChapters !== undefined && values.numChapters !== book.currentChapters) {
       patch.numChapters = values.numChapters;
     }
+    if (inlineStudioId && values.studioId === inlineStudioId && patch.studioId === inlineStudioId) {
+      patch.inlineStudioId = inlineStudioId;
+    }
 
     if (Object.keys(patch).length === 0) {
       handleOpenChange(false);
@@ -152,9 +194,12 @@ export function BookEditDialog({
 
     if (response.status === 200) {
       const body = (await response.json()) as { data: UpdatedBookDetail };
+      // Bypass handleOpenChange's "orphan studio" warning: the PATCH
+      // succeeded, so the inline studio is now linked and its rate has been
+      // propagated to the book's pricePerHourCents.
+      resetState();
+      onOpenChange(false);
       onUpdated(body.data);
-      handleOpenChange(false);
-      toast.success("Livro atualizado.");
       return;
     }
 
@@ -168,6 +213,10 @@ export function BookEditDialog({
       }
       if (body.error.code === "STUDIO_NOT_FOUND") {
         setError("studioId", { message: "Estúdio não encontrado ou arquivado." });
+        return;
+      }
+      if (body.error.code === "INLINE_STUDIO_INVALID") {
+        setError("studioId", { message: "Estúdio inline inválido. Selecione outro estúdio." });
         return;
       }
       for (const detail of body.error.details ?? []) {
@@ -278,33 +327,52 @@ export function BookEditDialog({
                           className="w-[--radix-popover-trigger-width] p-0"
                           align="start"
                         >
-                          <Command>
-                            <CommandInput placeholder="Buscar estúdio..." />
-                            <CommandList>
-                              <CommandEmpty>Nenhum estúdio encontrado.</CommandEmpty>
-                              <CommandGroup>
-                                {sortedStudios.map((studio) => (
+                          {showInlineCreator ? (
+                            <StudioInlineCreator
+                              onCreated={handleInlineStudioCreated}
+                              onCancel={() => setShowInlineCreator(false)}
+                            />
+                          ) : (
+                            <Command>
+                              <CommandInput placeholder="Buscar estúdio..." />
+                              <CommandList>
+                                <CommandEmpty>Nenhum estúdio encontrado.</CommandEmpty>
+                                <CommandGroup>
+                                  {sortedStudios.map((studio) => (
+                                    <CommandItem
+                                      key={studio.id}
+                                      value={studio.name}
+                                      onSelect={() => {
+                                        field.onChange(studio.id);
+                                        setStudioPickerOpen(false);
+                                      }}
+                                      data-checked={field.value === studio.id ? true : undefined}
+                                      data-testid={`book-edit-studio-item-${studio.id}`}
+                                    >
+                                      <div className="flex flex-col">
+                                        <span>{studio.name}</span>
+                                        <span className="text-xs text-muted-foreground">
+                                          {formatCentsBRL(studio.defaultHourlyRateCents)}/h
+                                        </span>
+                                      </div>
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                                <CommandSeparator />
+                                <CommandGroup>
                                   <CommandItem
-                                    key={studio.id}
-                                    value={studio.name}
-                                    onSelect={() => {
-                                      field.onChange(studio.id);
-                                      setStudioPickerOpen(false);
-                                    }}
-                                    data-checked={field.value === studio.id ? true : undefined}
-                                    data-testid={`book-edit-studio-item-${studio.id}`}
+                                    value="__inline_create_studio__"
+                                    onSelect={() => setShowInlineCreator(true)}
+                                    data-testid="book-edit-studio-inline-create"
+                                    className="text-primary"
                                   >
-                                    <div className="flex flex-col">
-                                      <span>{studio.name}</span>
-                                      <span className="text-xs text-muted-foreground">
-                                        {formatCentsBRL(studio.defaultHourlyRateCents)}/h
-                                      </span>
-                                    </div>
+                                    <Plus aria-hidden="true" className="mr-2 size-4" />
+                                    Novo Estúdio
                                   </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          )}
                         </PopoverContent>
                       </Popover>
                     </Tooltip>

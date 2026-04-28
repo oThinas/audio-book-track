@@ -9,6 +9,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import {
   BookCannotReduceChaptersError,
+  BookInlineStudioInvalidError,
   BookNotFoundError,
   BookPaidPriceLockedError,
   BookPaidStudioLockedError,
@@ -197,6 +198,87 @@ describe("BookService.update", () => {
     await expect(
       service.update(crypto.randomUUID(), { title: "irrelevante" }),
     ).rejects.toBeInstanceOf(BookNotFoundError);
+  });
+
+  it("propagates pricePerHourCents to the inline studio when inlineStudioId is provided", async () => {
+    const { book } = await seedInMemoryBook({
+      studioRepo,
+      bookRepo,
+      chapterRepo,
+      statuses: ["pending"],
+      pricePerHourCents: 7500,
+    });
+    const inline = await studioRepo.create({
+      name: "Estúdio Inline",
+      defaultHourlyRateCents: 1,
+    });
+
+    const result = await service.update(book.id, {
+      studioId: inline.id,
+      inlineStudioId: inline.id,
+    });
+
+    expect(result.book.studioId).toBe(inline.id);
+    const refreshed = await studioRepo.findById(inline.id);
+    expect(refreshed?.defaultHourlyRateCents).toBe(7500);
+  });
+
+  it("propagates the new pricePerHourCents to the inline studio when both change", async () => {
+    const { book } = await seedInMemoryBook({
+      studioRepo,
+      bookRepo,
+      chapterRepo,
+      statuses: ["pending"],
+      pricePerHourCents: 7500,
+    });
+    const inline = await studioRepo.create({
+      name: "Inline Novo Preço",
+      defaultHourlyRateCents: 1,
+    });
+
+    await service.update(book.id, {
+      studioId: inline.id,
+      inlineStudioId: inline.id,
+      pricePerHourCents: 9000,
+    });
+
+    const refreshedStudio = await studioRepo.findById(inline.id);
+    expect(refreshedStudio?.defaultHourlyRateCents).toBe(9000);
+  });
+
+  it("rejects with INLINE_STUDIO_INVALID when inlineStudioId differs from studioId", async () => {
+    const { book } = await seedInMemoryBook({
+      studioRepo,
+      bookRepo,
+      chapterRepo,
+      statuses: ["pending"],
+    });
+    const target = await studioRepo.create({ name: "Outro", defaultHourlyRateCents: 5000 });
+    const inline = await studioRepo.create({
+      name: "Inline",
+      defaultHourlyRateCents: 1,
+    });
+
+    await expect(
+      service.update(book.id, { studioId: target.id, inlineStudioId: inline.id }),
+    ).rejects.toBeInstanceOf(BookInlineStudioInvalidError);
+  });
+
+  it("rejects with INLINE_STUDIO_INVALID when the inline studio is not at the placeholder rate", async () => {
+    const { book } = await seedInMemoryBook({
+      studioRepo,
+      bookRepo,
+      chapterRepo,
+      statuses: ["pending"],
+    });
+    const tampered = await studioRepo.create({
+      name: "Já Customizado",
+      defaultHourlyRateCents: 5000,
+    });
+
+    await expect(
+      service.update(book.id, { studioId: tampered.id, inlineStudioId: tampered.id }),
+    ).rejects.toBeInstanceOf(BookInlineStudioInvalidError);
   });
 
   it("recomputes book.status after appending new pending chapters to a completed book", async () => {

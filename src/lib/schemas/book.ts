@@ -43,10 +43,24 @@ export const updateBookSchema = z
     studioId: z.string().uuid("studioId deve ser UUID válido").optional(),
     pricePerHourCents: pricePerHourCentsSchema.optional(),
     numChapters: numChaptersSchema.optional(),
+    inlineStudioId: z.string().uuid("inlineStudioId deve ser UUID válido").optional(),
   })
-  .refine((data) => Object.keys(data).length > 0, {
-    message: "Pelo menos um campo deve ser fornecido",
-  });
+  .refine(
+    (data) =>
+      data.inlineStudioId === undefined ||
+      (data.studioId !== undefined && data.inlineStudioId === data.studioId),
+    {
+      message: "inlineStudioId must match studioId when provided",
+      path: ["inlineStudioId"],
+    },
+  )
+  .refine(
+    (data) =>
+      Object.entries(data).some(([key, value]) => key !== "inlineStudioId" && value !== undefined),
+    {
+      message: "Pelo menos um campo deve ser fornecido",
+    },
+  );
 
 export const bookIdParamsSchema = z.object({
   id: z.string().uuid("id deve ser UUID válido"),

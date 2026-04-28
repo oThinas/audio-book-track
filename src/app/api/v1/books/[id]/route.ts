@@ -13,6 +13,7 @@ import { auth } from "@/lib/auth/server";
 import type { Session } from "@/lib/auth/session";
 import {
   BookCannotReduceChaptersError,
+  BookInlineStudioInvalidError,
   BookNotFoundError,
   BookPaidPriceLockedError,
   BookPaidStudioLockedError,
@@ -99,6 +100,9 @@ export async function handleBookUpdate(
     }
     if (error instanceof BookStudioNotFoundError) {
       return unprocessableEntityResponse("STUDIO_NOT_FOUND", error.message);
+    }
+    if (error instanceof BookInlineStudioInvalidError) {
+      return unprocessableEntityResponse("INLINE_STUDIO_INVALID", error.message);
     }
     if (error instanceof BookPaidPriceLockedError) {
       return conflictResponse("BOOK_PAID_PRICE_LOCKED", error.message);

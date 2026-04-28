@@ -47,6 +47,7 @@ export interface UpdateBookServiceInput {
   readonly studioId?: string;
   readonly pricePerHourCents?: number;
   readonly numChapters?: number;
+  readonly inlineStudioId?: string;
 }
 
 export interface UpdateBookResult {
@@ -233,7 +234,18 @@ export class BookService {
       throw new BookPaidStudioLockedError(bookId);
     }
 
-    if (input.studioId !== undefined && input.studioId !== current.studioId) {
+    if (input.inlineStudioId !== undefined) {
+      if (input.inlineStudioId !== input.studioId) {
+        throw new BookInlineStudioInvalidError(input.inlineStudioId);
+      }
+      const inlineStudio = await this.deps.studioRepo.findById(input.inlineStudioId);
+      if (!inlineStudio) {
+        throw new BookInlineStudioInvalidError(input.inlineStudioId);
+      }
+      if (inlineStudio.defaultHourlyRateCents !== INLINE_STUDIO_PLACEHOLDER_RATE_CENTS) {
+        throw new BookInlineStudioInvalidError(input.inlineStudioId);
+      }
+    } else if (input.studioId !== undefined && input.studioId !== current.studioId) {
       const studio = await this.deps.studioRepo.findById(input.studioId);
       if (!studio) {
         throw new BookStudioNotFoundError(input.studioId);
@@ -244,13 +256,21 @@ export class BookService {
       throw new BookCannotReduceChaptersError(chapters.length, input.numChapters);
     }
 
-    // The repo accepts only persistent book fields. `numChapters` is a
-    // service-level concept that translates into chapter inserts, so it lives
-    // outside the patch passed downstream.
-    const { numChapters: _ignored, ...repoPatch } = input;
+    // The repo accepts only persistent book fields. `numChapters` and
+    // `inlineStudioId` are service-level concepts handled separately.
+    const { numChapters: _ignoredCount, inlineStudioId: _ignoredInline, ...repoPatch } = input;
     const patchEntries = Object.entries(repoPatch).filter(([, value]) => value !== undefined);
+    const propagatedRateCents = input.pricePerHourCents ?? current.pricePerHourCents;
 
     return this.deps.uow.transaction(async (tx) => {
+      if (input.inlineStudioId !== undefined) {
+        await this.deps.studioRepo.update(
+          input.inlineStudioId,
+          { defaultHourlyRateCents: propagatedRateCents },
+          tx,
+        );
+      }
+
       let book = current;
       if (patchEntries.length > 0) {
         book = await this.deps.bookRepo.update(bookId, Object.fromEntries(patchEntries), tx);
