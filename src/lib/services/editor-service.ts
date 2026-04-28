@@ -1,5 +1,6 @@
 import type { CreateEditorInput, Editor, UpdateEditorInput } from "@/lib/domain/editor";
 import { EditorLinkedToActiveChaptersError } from "@/lib/errors/editor-errors";
+import type { BlockingBookSummary } from "@/lib/errors/studio-errors";
 import type { EditorRepository } from "@/lib/repositories/editor-repository";
 
 export interface CreateEditorResult {
@@ -9,10 +10,13 @@ export interface CreateEditorResult {
 
 export interface SoftDeleteEditorDeps {
   /**
-   * Placeholder dep — retorna a quantidade de capítulos ativos vinculados ao editor.
-   * Default retorna 0 (nenhum bloqueio). US11 liga à implementação real via chapter/book repos.
+   * Retorna a lista de livros ativos (com pelo menos um capítulo em
+   * `pending|editing|reviewing|retake`) onde o editor possui ao menos um capítulo.
+   *
+   * Default retorna [] (nenhum bloqueio). A factory de produção liga à
+   * implementação real via Drizzle JOIN `chapter` × `book` × `chapter`.
    */
-  readonly getActiveChaptersCount?: (editorId: string) => Promise<number>;
+  readonly getActiveBooks?: (editorId: string) => Promise<ReadonlyArray<BlockingBookSummary>>;
 }
 
 export class EditorService {
@@ -52,9 +56,9 @@ export class EditorService {
   }
 
   async softDelete(id: string, deps: SoftDeleteEditorDeps = {}): Promise<void> {
-    const activeCount = deps.getActiveChaptersCount ? await deps.getActiveChaptersCount(id) : 0;
-    if (activeCount > 0) {
-      throw new EditorLinkedToActiveChaptersError(id, activeCount);
+    const activeBooks = deps.getActiveBooks ? await deps.getActiveBooks(id) : [];
+    if (activeBooks.length > 0) {
+      throw new EditorLinkedToActiveChaptersError(id, activeBooks);
     }
     await this.repository.softDelete(id);
   }

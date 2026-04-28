@@ -168,7 +168,14 @@ describe("EditorService", () => {
       const { editor: created } = await service.create({ name: "Carla", email: "c@s.com" });
 
       await expect(
-        service.softDelete(created.id, { getActiveChaptersCount: async () => 4 }),
+        service.softDelete(created.id, {
+          getActiveBooks: async () => [
+            { id: "book-1", title: "Livro 1" },
+            { id: "book-2", title: "Livro 2" },
+            { id: "book-3", title: "Livro 3" },
+            { id: "book-4", title: "Livro 4" },
+          ],
+        }),
       ).rejects.toBeInstanceOf(EditorLinkedToActiveChaptersError);
 
       expect(await repo.findById(created.id)).not.toBeNull();

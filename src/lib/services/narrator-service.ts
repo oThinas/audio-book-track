@@ -1,5 +1,6 @@
 import type { CreateNarratorInput, Narrator, UpdateNarratorInput } from "@/lib/domain/narrator";
 import { NarratorLinkedToActiveChaptersError } from "@/lib/errors/narrator-errors";
+import type { BlockingBookSummary } from "@/lib/errors/studio-errors";
 import type { NarratorRepository } from "@/lib/repositories/narrator-repository";
 
 export interface CreateNarratorResult {
@@ -9,10 +10,13 @@ export interface CreateNarratorResult {
 
 export interface SoftDeleteNarratorDeps {
   /**
-   * Placeholder dep — retorna a quantidade de capítulos ativos vinculados ao narrador.
-   * Default retorna 0 (nenhum bloqueio). US11 liga à implementação real via chapter/book repos.
+   * Retorna a lista de livros ativos (com pelo menos um capítulo em
+   * `pending|editing|reviewing|retake`) onde o narrador possui ao menos um capítulo.
+   *
+   * Default retorna [] (nenhum bloqueio). A factory de produção liga à
+   * implementação real via Drizzle JOIN `chapter` × `book` × `chapter`.
    */
-  readonly getActiveChaptersCount?: (narratorId: string) => Promise<number>;
+  readonly getActiveBooks?: (narratorId: string) => Promise<ReadonlyArray<BlockingBookSummary>>;
 }
 
 export class NarratorService {
@@ -44,9 +48,9 @@ export class NarratorService {
   }
 
   async softDelete(id: string, deps: SoftDeleteNarratorDeps = {}): Promise<void> {
-    const activeCount = deps.getActiveChaptersCount ? await deps.getActiveChaptersCount(id) : 0;
-    if (activeCount > 0) {
-      throw new NarratorLinkedToActiveChaptersError(id, activeCount);
+    const activeBooks = deps.getActiveBooks ? await deps.getActiveBooks(id) : [];
+    if (activeBooks.length > 0) {
+      throw new NarratorLinkedToActiveChaptersError(id, activeBooks);
     }
     await this.repository.softDelete(id);
   }

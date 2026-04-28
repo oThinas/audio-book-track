@@ -339,16 +339,16 @@ description: "Task list for feature 020-books-chapters-crud"
 
 ### Tests for US11 — TDD
 
-- [ ] T116 [P] [US11] Criar [__tests__/unit/services/narrator-service.soft-delete-precondition.spec.ts](../../__tests__/unit/services/narrator-service.soft-delete-precondition.spec.ts).
-- [ ] T117 [P] [US11] Criar [__tests__/unit/services/editor-service.soft-delete-precondition.spec.ts](../../__tests__/unit/services/editor-service.soft-delete-precondition.spec.ts).
-- [ ] T118 [P] [US11] Criar [__tests__/integration/narrator-editor-soft-delete.spec.ts](../../__tests__/integration/narrator-editor-soft-delete.spec.ts): DB real, precondições e aceitação, preservação histórica.
-- [ ] T119 [P] [US11] Criar [__tests__/e2e/narrator-editor-delete.spec.ts](../../__tests__/e2e/narrator-editor-delete.spec.ts): fluxos em ambas as telas.
+- [X] T116 [P] [US11] Criar [__tests__/unit/services/narrator-service.soft-delete-precondition.spec.ts](../../__tests__/unit/services/narrator-service.soft-delete-precondition.spec.ts).
+- [X] T117 [P] [US11] Criar [__tests__/unit/services/editor-service.soft-delete-precondition.spec.ts](../../__tests__/unit/services/editor-service.soft-delete-precondition.spec.ts).
+- [X] T118 [P] [US11] Criar [__tests__/integration/narrator-editor-soft-delete.spec.ts](../../__tests__/integration/narrator-editor-soft-delete.spec.ts): DB real, precondições e aceitação, preservação histórica.
+- [X] T119 [P] [US11] Criar [__tests__/e2e/narrator-editor-delete.spec.ts](../../__tests__/e2e/narrator-editor-delete.spec.ts): fluxos em ambas as telas.
 
 ### Implementation for US11
 
-- [ ] T120 [US11] Preencher precondições em `NarratorService.softDelete` (T034) e `EditorService.softDelete` (T035) com as queries reais conforme [contracts/narrators-delta.md](./contracts/narrators-delta.md) e [contracts/editors-delta.md](./contracts/editors-delta.md).
-- [ ] T121 [US11] Atualizar route handlers `DELETE` em [src/app/api/v1/narrators/[id]/route.ts](../../src/app/api/v1/narrators/[id]/route.ts) e [src/app/api/v1/editors/[id]/route.ts](../../src/app/api/v1/editors/[id]/route.ts) para os novos erros `409 NARRATOR_LINKED_TO_ACTIVE_CHAPTERS` / `409 EDITOR_LINKED_TO_ACTIVE_CHAPTERS` com detalhes.
-- [ ] T122 [P] [US11] Atualizar [src/components/features/narrators/narrators-table.tsx](../../src/components/features/narrators/narrators-table.tsx) e [src/components/features/editors/editors-table.tsx](../../src/components/features/editors/editors-table.tsx) para exibir toast explicativo em caso de erro.
+- [X] T120 [US11] Preencher precondições em `NarratorService.softDelete` (T034) e `EditorService.softDelete` (T035) com as queries reais conforme [contracts/narrators-delta.md](./contracts/narrators-delta.md) e [contracts/editors-delta.md](./contracts/editors-delta.md). _Implementação: helpers `createGetActiveBooksForNarrator` / `createGetActiveBooksForEditor` em [src/lib/factories/narrator.ts](../../src/lib/factories/narrator.ts) e [src/lib/factories/editor.ts](../../src/lib/factories/editor.ts) usando `alias(chapter)` + `EXISTS` subquery; erros agora carregam `books: BlockingBookSummary[]`._
+- [X] T121 [US11] Atualizar route handlers `DELETE` em [src/app/api/v1/narrators/[id]/route.ts](../../src/app/api/v1/narrators/[id]/route.ts) e [src/app/api/v1/editors/[id]/route.ts](../../src/app/api/v1/editors/[id]/route.ts) para os novos erros `409 NARRATOR_LINKED_TO_ACTIVE_CHAPTERS` / `409 EDITOR_LINKED_TO_ACTIVE_CHAPTERS` com detalhes. _Agora chamam `service.softDelete()` (não `service.delete()`), injetando deps via `createNarratorSoftDeleteDeps()` / `createEditorSoftDeleteDeps()`._
+- [X] T122 [P] [US11] Atualizar [src/components/features/narrators/delete-narrator-dialog.tsx](../../src/components/features/narrators/delete-narrator-dialog.tsx) e [src/components/features/editors/delete-editor-dialog.tsx](../../src/components/features/editors/delete-editor-dialog.tsx) (a UI de exclusão fica no dialog, não na tabela) para exibir toast explicativo em caso de erro `409`, listando os livros bloqueando.
 
 **Checkpoint**: US11 entregue.
 

@@ -122,7 +122,12 @@ describe("NarratorService", () => {
       const { narrator: created } = await service.create({ name: "Ana" });
 
       await expect(
-        service.softDelete(created.id, { getActiveChaptersCount: async () => 2 }),
+        service.softDelete(created.id, {
+          getActiveBooks: async () => [
+            { id: "book-1", title: "Em produção" },
+            { id: "book-2", title: "Outro" },
+          ],
+        }),
       ).rejects.toBeInstanceOf(NarratorLinkedToActiveChaptersError);
 
       expect(await repo.findById(created.id)).not.toBeNull();

@@ -1,3 +1,5 @@
+import type { BlockingBookSummary } from "@/lib/errors/studio-errors";
+
 export class NarratorNameAlreadyInUseError extends Error {
   constructor(name: string) {
     super(`Nome já cadastrado: ${name}`);
@@ -15,10 +17,10 @@ export class NarratorNotFoundError extends Error {
 export class NarratorLinkedToActiveChaptersError extends Error {
   constructor(
     id: string,
-    readonly activeChaptersCount: number,
+    readonly books: ReadonlyArray<BlockingBookSummary>,
   ) {
     super(
-      `Narrador ${id} está vinculado a ${activeChaptersCount} capítulo(s) ativo(s) — soft-delete bloqueado.`,
+      `Narrador ${id} está vinculado a capítulos em ${books.length} livro(s) ativo(s) — soft-delete bloqueado.`,
     );
     this.name = "NarratorLinkedToActiveChaptersError";
   }

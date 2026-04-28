@@ -13,16 +13,18 @@ import type { Session } from "@/lib/auth/session";
 import { updateEditorSchema } from "@/lib/domain/editor";
 import {
   EditorEmailAlreadyInUseError,
+  EditorLinkedToActiveChaptersError,
   EditorNameAlreadyInUseError,
   EditorNotFoundError,
 } from "@/lib/errors/editor-errors";
-import { createEditorService } from "@/lib/factories/editor";
-import type { EditorService } from "@/lib/services/editor-service";
+import { createEditorService, createEditorSoftDeleteDeps } from "@/lib/factories/editor";
+import type { EditorService, SoftDeleteEditorDeps } from "@/lib/services/editor-service";
 
 interface EditorByIdDeps {
   readonly getSession: (args: { headers: Headers }) => Promise<Session | null>;
   readonly createService: () => EditorService;
   readonly headersFn: () => Promise<Headers>;
+  readonly createSoftDeleteDeps: () => SoftDeleteEditorDeps;
 }
 
 function defaultDeps(): EditorByIdDeps {
@@ -30,6 +32,7 @@ function defaultDeps(): EditorByIdDeps {
     getSession: (args) => auth.api.getSession(args) as Promise<Session | null>,
     createService: createEditorService,
     headersFn: headers,
+    createSoftDeleteDeps: createEditorSoftDeleteDeps,
   };
 }
 
@@ -78,11 +81,23 @@ export async function handleEditorsDelete(
 
   const service = deps.createService();
   try {
-    await service.delete(params.id);
+    await service.softDelete(params.id, deps.createSoftDeleteDeps());
     return new NextResponse(null, { status: 204, headers: NO_STORE_HEADERS });
   } catch (error: unknown) {
     if (error instanceof EditorNotFoundError) {
       return notFoundResponse("EDITOR_NOT_FOUND", "Editor não encontrado");
+    }
+    if (error instanceof EditorLinkedToActiveChaptersError) {
+      return NextResponse.json(
+        {
+          error: {
+            code: "EDITOR_LINKED_TO_ACTIVE_CHAPTERS",
+            message: "Editor está vinculado a capítulos em livros ativos.",
+            details: { books: error.books },
+          },
+        },
+        { status: 409 },
+      );
     }
     throw error;
   }

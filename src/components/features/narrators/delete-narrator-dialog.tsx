@@ -51,6 +51,27 @@ export function DeleteNarratorDialog({
         return;
       }
 
+      if (response.status === 409) {
+        const body = (await response.json()) as {
+          error: {
+            code: string;
+            message: string;
+            details?: { books?: ReadonlyArray<{ id: string; title: string }> };
+          };
+        };
+        if (body.error.code === "NARRATOR_LINKED_TO_ACTIVE_CHAPTERS") {
+          const titles = body.error.details?.books?.map((b) => b.title) ?? [];
+          const titlesPreview = titles.slice(0, 3).join(", ");
+          const remainder = titles.length > 3 ? ` e mais ${titles.length - 3}` : "";
+          toast.error(
+            `Não é possível excluir: capítulos em ${titles.length} livro(s) ativo(s).`,
+            titles.length > 0 ? { description: `${titlesPreview}${remainder}` } : undefined,
+          );
+          onOpenChange(false);
+          return;
+        }
+      }
+
       toast.error("Não foi possível excluir o narrador. Tente novamente.");
     } finally {
       setIsDeleting(false);

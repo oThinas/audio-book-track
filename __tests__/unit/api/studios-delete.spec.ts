@@ -9,6 +9,7 @@ function createDeps(options: { session: { user: { id: string } } | null; service
     getSession: vi.fn().mockResolvedValue(options.session),
     createService: vi.fn().mockReturnValue(options.service),
     headersFn: vi.fn().mockResolvedValue(new Headers()),
+    createSoftDeleteDeps: () => ({ getActiveBooks: async () => [] }),
   };
 }
 

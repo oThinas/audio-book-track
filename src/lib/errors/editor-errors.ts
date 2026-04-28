@@ -1,3 +1,5 @@
+import type { BlockingBookSummary } from "@/lib/errors/studio-errors";
+
 export class EditorNameAlreadyInUseError extends Error {
   constructor(name: string) {
     super(`Nome já cadastrado: ${name}`);
@@ -22,10 +24,10 @@ export class EditorNotFoundError extends Error {
 export class EditorLinkedToActiveChaptersError extends Error {
   constructor(
     id: string,
-    readonly activeChaptersCount: number,
+    readonly books: ReadonlyArray<BlockingBookSummary>,
   ) {
     super(
-      `Editor ${id} está vinculado a ${activeChaptersCount} capítulo(s) ativo(s) — soft-delete bloqueado.`,
+      `Editor ${id} está vinculado a capítulos em ${books.length} livro(s) ativo(s) — soft-delete bloqueado.`,
     );
     this.name = "EditorLinkedToActiveChaptersError";
   }
