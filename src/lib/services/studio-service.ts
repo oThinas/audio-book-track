@@ -1,5 +1,5 @@
 import type { CreateStudioInput, Studio, UpdateStudioInput } from "@/lib/domain/studio";
-import { StudioHasActiveBooksError } from "@/lib/errors/studio-errors";
+import { type BlockingBookSummary, StudioHasActiveBooksError } from "@/lib/errors/studio-errors";
 import type { StudioRepository } from "@/lib/repositories/studio-repository";
 
 export interface CreateStudioOptions {
@@ -14,10 +14,13 @@ export interface CreateStudioResult {
 
 export interface SoftDeleteStudioDeps {
   /**
-   * Placeholder dep — retorna a quantidade de livros do estúdio com capítulos ativos.
-   * Default retorna 0 (nenhum bloqueio). US10 liga à implementação real via chapter/book repos.
+   * Retorna a lista de livros do estúdio com pelo menos um capítulo ativo
+   * (`pending`, `editing`, `reviewing`, `retake`).
+   *
+   * Default retorna [] (nenhum bloqueio). A factory de produção liga à
+   * implementação real via Drizzle JOIN `book` × `chapter`.
    */
-  readonly getActiveBooksCount?: (studioId: string) => Promise<number>;
+  readonly getActiveBooks?: (studioId: string) => Promise<ReadonlyArray<BlockingBookSummary>>;
 }
 
 export class StudioService {
@@ -74,9 +77,9 @@ export class StudioService {
   }
 
   async softDelete(id: string, deps: SoftDeleteStudioDeps = {}): Promise<void> {
-    const activeCount = deps.getActiveBooksCount ? await deps.getActiveBooksCount(id) : 0;
-    if (activeCount > 0) {
-      throw new StudioHasActiveBooksError(id, activeCount);
+    const activeBooks = deps.getActiveBooks ? await deps.getActiveBooks(id) : [];
+    if (activeBooks.length > 0) {
+      throw new StudioHasActiveBooksError(id, activeBooks);
     }
     await this.repository.softDelete(id);
   }

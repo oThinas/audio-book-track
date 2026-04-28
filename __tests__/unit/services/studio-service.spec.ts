@@ -207,7 +207,13 @@ describe("StudioService", () => {
       });
 
       await expect(
-        service.softDelete(created.id, { getActiveBooksCount: async () => 3 }),
+        service.softDelete(created.id, {
+          getActiveBooks: async () => [
+            { id: "book-1", title: "Livro Bloqueio" },
+            { id: "book-2", title: "Outro Livro" },
+            { id: "book-3", title: "Mais um" },
+          ],
+        }),
       ).rejects.toBeInstanceOf(StudioHasActiveBooksError);
 
       // not soft-deleted

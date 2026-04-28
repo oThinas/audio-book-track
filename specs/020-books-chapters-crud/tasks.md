@@ -317,15 +317,15 @@ description: "Task list for feature 020-books-chapters-crud"
 
 ### Tests for US10 — TDD
 
-- [ ] T110 [P] [US10] Criar [__tests__/unit/services/studio-service.soft-delete-precondition.spec.ts](../../__tests__/unit/services/studio-service.soft-delete-precondition.spec.ts): precondição `STUDIO_HAS_ACTIVE_BOOKS` com in-memory repos.
-- [ ] T111 [P] [US10] Criar [__tests__/integration/studio-soft-delete.spec.ts](../../__tests__/integration/studio-soft-delete.spec.ts): DB real, precondição bloqueia com detalhes (nomes de livros), aceitação soft-deleta; livro histórico continua resolvendo estúdio.
-- [ ] T112 [P] [US10] Criar [__tests__/e2e/studio-delete-with-active-books.spec.ts](../../__tests__/e2e/studio-delete-with-active-books.spec.ts): cenário completo de bloqueio + soft-delete + desarquive.
+- [X] T110 [P] [US10] Criar [__tests__/unit/services/studio-service.soft-delete-precondition.spec.ts](../../__tests__/unit/services/studio-service.soft-delete-precondition.spec.ts): precondição `STUDIO_HAS_ACTIVE_BOOKS` com in-memory repos.
+- [X] T111 [P] [US10] Criar [__tests__/integration/studio-soft-delete.spec.ts](../../__tests__/integration/studio-soft-delete.spec.ts): DB real, precondição bloqueia com detalhes (nomes de livros), aceitação soft-deleta; livro histórico continua resolvendo estúdio.
+- [X] T112 [P] [US10] Criar [__tests__/e2e/studio-delete-with-active-books.spec.ts](../../__tests__/e2e/studio-delete-with-active-books.spec.ts): cenário completo de bloqueio + soft-delete + desarquive.
 
 ### Implementation for US10
 
-- [ ] T113 [US10] Preencher a pré-condição `STUDIO_HAS_ACTIVE_BOOKS` no `StudioService.softDeleteStudio` (T033) com a query real (LEFT JOIN book+chapter) — conforme [contracts/studios-delta.md](./contracts/studios-delta.md). Retornar `details: { books: [...] }` no payload de erro.
-- [ ] T114 [US10] Atualizar route handler `DELETE /api/v1/studios/:id` ([src/app/api/v1/studios/[id]/route.ts](../../src/app/api/v1/studios/[id]/route.ts)) para consumir o novo erro e mapear para `409 STUDIO_HAS_ACTIVE_BOOKS` com detalhes.
-- [ ] T115 [P] [US10] Atualizar [src/components/features/studios/studios-table.tsx](../../src/components/features/studios/studios-table.tsx) para: (a) exibir toast explicativo quando o DELETE falhar com `409 STUDIO_HAS_ACTIVE_BOOKS` (listar livros/nomes); (b) refletir lista sem soft-deleted após sucesso.
+- [X] T113 [US10] Preencher a pré-condição `STUDIO_HAS_ACTIVE_BOOKS` no `StudioService.softDeleteStudio` (T033) com a query real (LEFT JOIN book+chapter) — conforme [contracts/studios-delta.md](./contracts/studios-delta.md). Retornar `details: { books: [...] }` no payload de erro. _Implementação: helper `createGetActiveBooks()` em [src/lib/factories/studio.ts](../../src/lib/factories/studio.ts) + erro `StudioHasActiveBooksError.books` em [src/lib/errors/studio-errors.ts](../../src/lib/errors/studio-errors.ts)._
+- [X] T114 [US10] Atualizar route handler `DELETE /api/v1/studios/:id` ([src/app/api/v1/studios/[id]/route.ts](../../src/app/api/v1/studios/[id]/route.ts)) para consumir o novo erro e mapear para `409 STUDIO_HAS_ACTIVE_BOOKS` com detalhes. _Agora chama `service.softDelete()` (não `service.delete()`), injetando deps via `createStudioSoftDeleteDeps()`._
+- [X] T115 [P] [US10] Atualizar [src/components/features/studios/delete-studio-dialog.tsx](../../src/components/features/studios/delete-studio-dialog.tsx) (a UI de exclusão fica no dialog, não na tabela) para: (a) exibir toast explicativo quando o DELETE falhar com `409 STUDIO_HAS_ACTIVE_BOOKS` (listar livros/nomes); (b) refletir lista sem soft-deleted após sucesso (já garantido pelo `router.refresh()` existente).
 
 **Checkpoint**: US10 entregue.
 

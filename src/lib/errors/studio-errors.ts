@@ -1,3 +1,8 @@
+export interface BlockingBookSummary {
+  readonly id: string;
+  readonly title: string;
+}
+
 export class StudioNameAlreadyInUseError extends Error {
   constructor(name: string) {
     super(`Nome já cadastrado: ${name}`);
@@ -15,10 +20,10 @@ export class StudioNotFoundError extends Error {
 export class StudioHasActiveBooksError extends Error {
   constructor(
     id: string,
-    readonly activeBooksCount: number,
+    readonly books: ReadonlyArray<BlockingBookSummary>,
   ) {
     super(
-      `Estúdio ${id} possui ${activeBooksCount} livro(s) com capítulos ativos — soft-delete bloqueado.`,
+      `Estúdio ${id} possui ${books.length} livro(s) com capítulos ativos — soft-delete bloqueado.`,
     );
     this.name = "StudioHasActiveBooksError";
   }
