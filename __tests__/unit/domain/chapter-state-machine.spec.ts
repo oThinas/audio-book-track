@@ -201,5 +201,12 @@ describe("isValidTransition", () => {
         expect(result).toEqual({ valid: false, reason: "INVALID_STATUS_TRANSITION" });
       });
     }
+
+    it("throws on unknown source status (exhaustiveness guard)", () => {
+      expect(() =>
+        // biome-ignore lint/suspicious/noExplicitAny: testando o branch `never` que existe apenas como rede de segurança em runtime
+        isValidTransition("unknown" as any, "pending", FULL_CTX),
+      ).toThrow(/status inesperado/);
+    });
   });
 });

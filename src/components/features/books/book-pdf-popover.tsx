@@ -133,12 +133,17 @@ export function BookPdfPopover({
               inputMode="url"
               placeholder="https://exemplo.com/livro.pdf"
               aria-invalid={errors.pdfUrl ? true : undefined}
+              aria-describedby={errors.pdfUrl ? "book-pdf-url-error" : undefined}
               data-testid="book-pdf-url-input"
               disabled={isSubmitting}
               {...register("pdfUrl")}
             />
             {errors.pdfUrl && (
-              <p className="text-xs text-destructive" data-testid="book-pdf-url-error">
+              <p
+                id="book-pdf-url-error"
+                className="text-xs text-destructive"
+                data-testid="book-pdf-url-error"
+              >
                 {errors.pdfUrl.message}
               </p>
             )}

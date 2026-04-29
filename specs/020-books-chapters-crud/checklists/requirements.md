@@ -45,3 +45,21 @@
   - Q11 — recomputação de `book.status`: obrigatória em toda mutação de capítulo; cenários de teste codificados em US5.13 e US5.14.
 - Referências técnicas em FRs e Assumptions estão preservadas propositalmente — a constituição fixa decisões de stack. User-facing permanece tecnologia-agnóstico.
 - Spec está pronta para `/speckit-plan`.
+
+## Validação pós-implementação (T142, 2026-04-29)
+
+Todos os critérios desta checklist foram revisados após a implementação completa
+(Phases 1–14). Evidências:
+
+- **Acceptance scenarios cobertos por testes**: todas as user stories US1–US12
+  têm specs E2E + integration + unit conforme [tasks.md](../tasks.md).
+- **Success criteria mensuráveis aprovados**:
+  - SC-010 (cobertura 100% em `book-status.ts` + `chapter-state-machine.ts`):
+    validado por T142a.
+  - SC-011 (overhead < 100ms para COUNT em derived columns): validado por
+    T142b — overhead medido ≈ 0,6ms versus 100ms de teto.
+- **Edge cases**: soft-delete com nome duplicado (desarquive automático),
+  reversão `paid → completed` com confirmação dupla, recomputação de
+  `book.status` em todas as mutações de capítulo — todos cobertos.
+- **No leak FR-017**: validado por T142c (`api-error-responses.spec.ts`).
+- **Self-review**: ver [self-review.md](../self-review.md).

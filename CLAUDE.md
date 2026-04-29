@@ -58,9 +58,13 @@
 - **Durações que alimentam cálculo financeiro**: `integer` em segundos, sufixo `_seconds`.
 - **Todo foreign key deve ter índice** correspondente.
 - **`SELECT *` é proibido** em código de produção.
-- **Transações obrigatórias** para operações que afetam múltiplas tabelas.
+- **Transações obrigatórias** para operações que afetam múltiplas tabelas. Usar `SavepointUnitOfWork` para encapsular o `BEGIN/COMMIT` no service (ex: `BookService.create({ inline })` cria estúdio + livro + capítulos atomicamente; deletar capítulo + recomputar `book.status` é uma única transação).
 - **Migrations devem ser reversíveis.**
 - **Drizzle ORM**: usar `generate` + `migrate` — `drizzle-kit push` é proibido.
+- **Soft-delete unificado**: entidades soft-deletáveis (`studio`, `narrator`, `editor`) usam coluna `deleted_at` (nullable, `withTimezone`) com **índice único parcial** `WHERE deleted_at IS NULL` + índice de apoio em `deleted_at IS NOT NULL`. Listagens filtram `deleted_at IS NULL`. **Sem `ON DELETE SET NULL`** em FKs — todas usam `RESTRICT` + soft-delete; nenhum órfão jamais é criado.
+- **Desarquive automático por colisão de nome**: criar uma entidade soft-deletável com nome igual ao de um registro arquivado **reativa o registro original** (mesmo `id`) em vez de criar um novo. O service emite o flag `reactivated: true` no envelope e a UI mostra um toast de "desarquivado". `default_hourly_rate_cents` permanece **histórico** no desarquive normal, mas é resetado para o valor recém-fornecido **apenas** quando a criação vem de um livro inline (`{ inline: true }` + propagação de `price_per_hour_cents`).
+- **`book.status` é cache materializado** — recomputado por `BookStatusRecomputeService` na **mesma transação** de qualquer mutação de capítulo (create/update/delete/bulk-delete). A fonte da verdade permanece o capítulo (Princípio I). Nunca atualizar `book.status` diretamente fora desse serviço.
+- **Derived columns por listagem**: quando uma listagem precisa exibir contagens (ex: `/studios` com `booksCount`, `/narrators` e `/editors` com `chaptersCount`), usar `findAllWithCounts()` no repository (single query com `LEFT JOIN + GROUP BY`). Não criar rota separada `/counts`. Tipos `*ListItem` extendem a entidade com o campo derivado, mantendo o tipo base (`Studio`, `Narrator`, `Editor`) inalterado.
 
 ### API REST
 

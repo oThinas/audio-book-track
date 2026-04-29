@@ -93,7 +93,7 @@ export function DeleteEditorDialog({
             type="button"
             onClick={handleConfirm}
             disabled={isDeleting}
-            className="bg-destructive text-white hover:bg-destructive/90 focus-visible:border-destructive focus-visible:ring-destructive/30"
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90 focus-visible:border-destructive focus-visible:ring-destructive/30"
           >
             Excluir
           </AlertDialogAction>

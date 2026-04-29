@@ -164,6 +164,18 @@ Durante dev, rodar mentalmente os 4 cenários abaixo — são os de maior risco:
 3. Excluir capítulo 2 (em modo normal, ícone excluir).
 4. Após confirmar: `book.status` muda para `paid` em `/books` (sem refresh manual — resposta da API já reflete).
 
+### SC-011 — Overhead da agregação de `booksCount`/`chaptersCount`
+
+`__tests__/e2e/derived-columns-perf.spec.ts` semeia 50 estúdios × 10 livros e mede no PostgreSQL real a diferença de tempo entre uma listagem de estúdios sem `JOIN` e a listagem com `LEFT JOIN book + COUNT + GROUP BY` (mediana de 5 execuções, após warm-up). O teste falha se `overhead > 100ms`. Última execução (T142b, 2026-04-29):
+
+| Métrica | Valor |
+|---------|-------|
+| baseline (sem JOIN) | ~0.6 ms |
+| com JOIN + COUNT | ~1.2 ms |
+| overhead | ~0.6 ms |
+
+Margem confortável versus o teto de 100ms — SC-011 aprovado.
+
 ---
 
 ## 6. Artefatos gerados pelo `/speckit-plan`
