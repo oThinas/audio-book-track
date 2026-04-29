@@ -6,6 +6,16 @@
       "from": null,
       "by": "extension",
       "at": "2026-04-16T04:59:05.690Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-29T04:33:56.704Z"
     }
   ],
   "currentStep": "plan",
@@ -15,6 +25,8 @@
       "completedAt": null
     }
   },
-  "status": "active",
-  "specName": "Custom 404 Page"
+  "status": "completed",
+  "specName": "Custom 404 Page",
+  "workflow": "speckit",
+  "branch": ""
 }

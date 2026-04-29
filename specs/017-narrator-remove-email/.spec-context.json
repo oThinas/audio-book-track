@@ -16,6 +16,16 @@
       },
       "by": "extension",
       "at": "2026-04-17T23:46:20.907Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-29T04:34:34.219Z"
     }
   ],
   "currentStep": "tasks",
@@ -29,6 +39,8 @@
       "completedAt": null
     }
   },
-  "status": "active",
-  "specName": "Narrator Remove Email"
+  "status": "completed",
+  "specName": "Narrator Remove Email",
+  "workflow": "speckit",
+  "branch": ""
 }

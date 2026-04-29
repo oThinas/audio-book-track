@@ -106,6 +106,16 @@
       },
       "by": "extension",
       "at": "2026-04-16T23:52:18.111Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-29T04:34:04.004Z"
     }
   ],
   "currentStep": "tasks",
@@ -123,6 +133,8 @@
       "completedAt": "2026-04-16T22:19:29.118Z"
     }
   },
-  "status": "active",
-  "specName": "Narrators Crud"
+  "status": "completed",
+  "specName": "Narrators Crud",
+  "workflow": "speckit",
+  "branch": ""
 }

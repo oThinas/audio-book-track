@@ -82,6 +82,6 @@
     "unrs-resolver"
   ],
   "lint-staged": {
-    "*.{ts,tsx,json}": "bunx biome check --write"
+    "(__tests__|src|scripts)/**/*.{ts,tsx,json}": "bunx biome check --write"
   }
 }

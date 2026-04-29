@@ -6,6 +6,16 @@
       "from": null,
       "by": "extension",
       "at": "2026-04-21T20:41:28.226Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-29T04:33:31.689Z"
     }
   ],
   "currentStep": "tasks",
@@ -15,6 +25,8 @@
       "completedAt": null
     }
   },
-  "status": "active",
-  "specName": "Studios Crud"
+  "status": "completed",
+  "specName": "Studios Crud",
+  "workflow": "speckit",
+  "branch": ""
 }

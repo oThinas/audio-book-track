@@ -26,6 +26,16 @@
       },
       "by": "extension",
       "at": "2026-04-18T01:51:16.701Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-04-29T04:35:02.769Z"
     }
   ],
   "currentStep": "tasks",
@@ -43,6 +53,8 @@
       "completedAt": null
     }
   },
-  "status": "active",
-  "specName": "Editors Crud"
+  "status": "completed",
+  "specName": "Editors Crud",
+  "workflow": "speckit",
+  "branch": ""
 }

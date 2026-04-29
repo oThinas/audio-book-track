@@ -146,11 +146,11 @@ _(Vazia.)_
 Per Constitution Principle XVI, quality checks are NOT run per-phase.
 Run them once here, before marking the feature done or opening the PR:
 
-- [ ] `bun run lint` — zero erros e zero warnings
-- [ ] `bun run test:unit` — toda a suíte passando
-- [ ] `bun run test:integration` — toda a suíte passando
-- [ ] `bun run test:e2e` — especialmente `narrators-*.spec.ts`
-- [ ] `bun run build` — build de produção compila sem erros
+- [x] `bun run lint` — zero erros e zero warnings
+- [x] `bun run test:unit` — toda a suíte passando
+- [x] `bun run test:integration` — toda a suíte passando
+- [x] `bun run test:e2e` — especialmente `narrators-*.spec.ts`
+- [x] `bun run build` — build de produção compila sem erros
 
 Se qualquer verificação falhar, a feature não está pronta.
 
