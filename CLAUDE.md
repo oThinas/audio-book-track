@@ -11,15 +11,18 @@
 ### Domínio
 
 - **Capítulo é a unidade central** — atribuição, cálculo de ganho e status operam sempre no nível do capítulo, nunca no livro ou estúdio.
-- **Preço/hora é imutável quando o livro está `pago`** — vinculado ao livro, nunca ao estúdio; não pode ser recalculado retroativamente após esse status.
-- **Fórmula de ganho**: `horas_editadas × preço_hora_do_livro` — determinística, auditável, sem derivação dinâmica.
-- **Ciclo de vida do capítulo**: `pendente` → `em edição` → `em revisão` → [`edição retake`] → `concluído` → `pago`. Nenhuma etapa obrigatória pode ser pulada.
-  - `em edição` exige narrador atribuído.
-  - `em revisão` exige editor + horas_editadas registrados.
-  - `edição retake` é opcional — ativado somente por reprovação em `em revisão`; retorna a `em revisão`.
-  - `concluído` exige revisão aprovada.
-  - `pago` torna os dados financeiros imutáveis e desabilita edição do livro.
-- **Capítulo marcado como `pago` não pode ter dados financeiros alterados.**
+- **Preço/hora é imutável quando o livro está `paid`** — vinculado ao livro, nunca ao estúdio; não pode ser recalculado retroativamente após esse status.
+- **Representação integer-only** para valores monetários e duração financeira:
+  - Monetário: **`integer` em centavos** com sufixo `_cents` — `book.price_per_hour_cents`, `studio.default_hourly_rate_cents`. `numeric(10,2)` é legado; `float`/`double` são proibidos.
+  - Duração que alimenta cálculo de ganho: **`integer` em segundos** com sufixo `_seconds` — `chapter.edited_seconds`. Conversão para horas/minutos ocorre apenas na UI.
+- **Fórmula de ganho**: `round(chapter.edited_seconds × book.price_per_hour_cents / 3600)` → **valor em centavos**. Determinística, auditável, sem derivação dinâmica. Arredondamento half-away-from-zero; conversão para reais (÷ 100) e formatação BRL ficam na camada de apresentação. Nomes de campos/colunas/enum em **inglês** no código; labels de UI em português.
+- **Ciclo de vida do capítulo** (valor no DB / rótulo em UI): `pending` (Pendente) → `editing` (Em edição) → `reviewing` (Em revisão) → [`retake` (Retake)] → `completed` (Concluído) → `paid` (Pago). Nenhuma etapa obrigatória pode ser pulada.
+  - `editing` exige narrador atribuído.
+  - `reviewing` exige editor + `edited_seconds > 0` registrados.
+  - `retake` é opcional — ativado somente por reprovação em `reviewing`; retorna a `reviewing`.
+  - `completed` exige revisão aprovada.
+  - `paid` torna os dados financeiros imutáveis e desabilita edição do livro.
+- **Capítulo marcado como `paid` não pode ter dados financeiros alterados.**
 
 ### Arquitetura
 
@@ -28,8 +31,8 @@
   app/api/          → Controllers (HTTP apenas, sem lógica de negócio)
   lib/factories/    → Composition Root (instanciam services com deps concretas)
   lib/services/     → Use Cases (orquestração, sem SQL/HTTP direto)
-  lib/repositories/ → Implementações concretas de repositories (dados)
-  lib/domain/       → Entidades, regras puras e interfaces de repositories
+  lib/repositories/ → Ports (interfaces) na raiz + adapters concretos em subpastas (drizzle/, …)
+  lib/domain/       → Entidades, value objects, enums e regras de negócio puras (SEM interfaces de persistência)
   lib/api/          → Helpers de resposta HTTP reutilizáveis (responses.ts)
   ```
 - **Injeção de dependência via construtor** — nunca instanciar dependências dentro de uma classe.
@@ -37,7 +40,8 @@
 - **Respostas de erro padronizadas** — usar helpers de `lib/api/responses.ts` (ex: `unauthorizedResponse`, `validationErrorResponse`).
 - **Interfaces em arquivos separados** — nunca co-localizadas com implementações ou tipos de domínio.
 - **Sem prefixo `I` em interfaces** — usar `UserPreferenceRepository`, não `IUserPreferenceRepository`.
-- **Repositories concretos prefixados com o adaptador** — ex: `DrizzleUserPreferenceRepository` implementa `UserPreferenceRepository`.
+- **Interfaces de repositório (ports) vivem em `src/lib/repositories/<entidade>-repository.ts`** (raiz da pasta). **NUNCA** em `src/lib/domain/` — a camada de domínio fica livre de preocupações de persistência.
+- **Repositories concretos prefixados com o adaptador** — ex: `DrizzleUserPreferenceRepository` implementa `UserPreferenceRepository`, morando em `src/lib/repositories/drizzle/`.
 - **shadcn/ui é a biblioteca de componentes padrão** — usar `bunx --bun shadcn@latest add <component>` antes de construir primitivos do zero. A flag `--bun` é obrigatória com Bun runtime.
 - **Componentes UI (`components/ui/`)** são shadcn/ui primitivos, puramente visuais: sem `useState` de negócio, sem `fetch`.
 - **Componentes de feature DEVEM residir em `src/components/features/<feature>/`** e ser importados via alias `@/components/features/<feature>/...`. Pastas `_components/` (ou qualquer variante colocada dentro de `src/app/`) são **PROIBIDAS**, mesmo quando o componente é usado por uma única rota.
@@ -50,12 +54,17 @@
 
 ### Banco de dados
 
-- **Valores financeiros**: `numeric(10,2)` — `float` e `double` são proibidos.
+- **Valores financeiros**: **`integer` em centavos** (preferido, sufixo `_cents`) OU `numeric(10,2)` (legado). `float`/`double` são proibidos.
+- **Durações que alimentam cálculo financeiro**: `integer` em segundos, sufixo `_seconds`.
 - **Todo foreign key deve ter índice** correspondente.
 - **`SELECT *` é proibido** em código de produção.
-- **Transações obrigatórias** para operações que afetam múltiplas tabelas.
+- **Transações obrigatórias** para operações que afetam múltiplas tabelas. Usar `SavepointUnitOfWork` para encapsular o `BEGIN/COMMIT` no service (ex: `BookService.create({ inline })` cria estúdio + livro + capítulos atomicamente; deletar capítulo + recomputar `book.status` é uma única transação).
 - **Migrations devem ser reversíveis.**
 - **Drizzle ORM**: usar `generate` + `migrate` — `drizzle-kit push` é proibido.
+- **Soft-delete unificado**: entidades soft-deletáveis (`studio`, `narrator`, `editor`) usam coluna `deleted_at` (nullable, `withTimezone`) com **índice único parcial** `WHERE deleted_at IS NULL` + índice de apoio em `deleted_at IS NOT NULL`. Listagens filtram `deleted_at IS NULL`. **Sem `ON DELETE SET NULL`** em FKs — todas usam `RESTRICT` + soft-delete; nenhum órfão jamais é criado.
+- **Desarquive automático por colisão de nome**: criar uma entidade soft-deletável com nome igual ao de um registro arquivado **reativa o registro original** (mesmo `id`) em vez de criar um novo. O service emite o flag `reactivated: true` no envelope e a UI mostra um toast de "desarquivado". `default_hourly_rate_cents` permanece **histórico** no desarquive normal, mas é resetado para o valor recém-fornecido **apenas** quando a criação vem de um livro inline (`{ inline: true }` + propagação de `price_per_hour_cents`).
+- **`book.status` é cache materializado** — recomputado por `BookStatusRecomputeService` na **mesma transação** de qualquer mutação de capítulo (create/update/delete/bulk-delete). A fonte da verdade permanece o capítulo (Princípio I). Nunca atualizar `book.status` diretamente fora desse serviço.
+- **Derived columns por listagem**: quando uma listagem precisa exibir contagens (ex: `/studios` com `booksCount`, `/narrators` e `/editors` com `chaptersCount`), usar `findAllWithCounts()` no repository (single query com `LEFT JOIN + GROUP BY`). Não criar rota separada `/counts`. Tipos `*ListItem` extendem a entidade com o campo derivado, mantendo o tipo base (`Studio`, `Narrator`, `Editor`) inalterado.
 
 ### API REST
 
@@ -266,7 +275,7 @@ task — isso é ruído desproporcional.
 - [ ] VIII. Sem peso desnecessário no bundle do cliente?
 - [ ] IX.   Valores visuais via design tokens (sem hardcode)?
 - [ ] X.    Endpoints REST corretos (URL, método, status, envelope, Zod)?
-- [ ] XI.   Sem SELECT *? Foreign keys com índice? Monetário em numeric?
+- [ ] XI.   Sem SELECT *? Foreign keys com índice? Monetário em `integer` cents (preferido) ou `numeric(10,2)` (legado)? Durações de cálculo em `integer` segundos?
 - [ ] XII.  Nenhum anti-padrão proibido presente?
 - [ ] XV.   Context7 MCP consultado? design.pen referenciado para telas?
 - [ ] XVI.  Fase final de verificação executada (lint + testes + build) antes do PR?
@@ -279,8 +288,8 @@ task — isso é ruído desproporcional.
 | Entidade   | Pertence a | Campo crítico                        |
 |------------|------------|--------------------------------------|
 | Estúdio    | —          | nome                                 |
-| Livro      | Estúdio    | `preço_por_hora` (imutável quando `pago`), `pdf_url` (opcional) |
-| Capítulo   | Livro      | status, narrador, editor, horas_editadas, num_paginas |
+| Livro      | Estúdio    | `price_per_hour_cents` (imutável quando `paid`), `pdf_url` (opcional) |
+| Capítulo   | Livro      | `status`, `narrator_id`, `editor_id`, `edited_seconds` |
 | Narrador   | —          | `name` único (case-sensitive, após `trim`); responsável pela gravação dos capítulos |
 | Editor     | —          | recebe pagamento por horas em capítulos atribuídos |
 
@@ -305,9 +314,10 @@ Qualquer mudança no modelo financeiro (preço, horas, responsáveis) requer **r
 
 
 ## Recent Changes
+- 020-books-chapters-crud: Added TypeScript 5.9.3 sobre Bun 1.2 (runtime + package manager + test runner) + Next.js 16.2.1 (App Router + Turbopack), React 19.2.4, Drizzle ORM 0.45.2 + `drizzle-kit` 0.31.10, Zod 4.3.6, better-auth 1.5.6, React Hook Form 7.72.1 + `@hookform/resolvers` 5.2.2, `@tanstack/react-table` 8.21.3, shadcn/ui 4.1.2, Tailwind CSS 4.2, `sonner` 2.0.7 (toasts), `lucide-react` (ícones)
 - 019-studios-crud: Added TypeScript 5.9.3 (Bun runtime 1.2) + Next.js 16.2.1 (App Router), React 19.2.4, Drizzle ORM 0.45.2 + drizzle-kit 0.31.10, Zod 4.3.6, better-auth 1.5.6, React Hook Form 7.72.1 + `@hookform/resolvers` 5.2.2, `@tanstack/react-table` 8.21.3, shadcn/ui 4.1.2, Tailwind CSS 4.2, sonner 2.0.7
 - 018-editors-crud: Added TypeScript 5.9.3 (Bun runtime 1.2) + Next.js 16.2.1 (App Router), React 19.2.4, Drizzle ORM 0.45.2 + drizzle-kit 0.31.10, Zod 4.3.6, better-auth 1.5.6, React Hook Form 7.72.1 + `@hookform/resolvers` 5.2.2, `@tanstack/react-table` 8.21.3, shadcn/ui 4.1.2, Tailwind CSS 4.2, sonner 2.0.7
-- 017-narrator-remove-email: Added TypeScript 5.9.3 (Bun runtime 1.2) + Next.js 16.2.1 (App Router), React 19.2.4, Drizzle ORM 0.45.2 + drizzle-kit 0.31.10, Zod 4.3.6, better-auth 1.5.6, React Hook Form 7.72.1 + `@hookform/resolvers` 5.2.2, `@tanstack/react-table` 8.21.3, shadcn/ui 4.1.2, Tailwind CSS 4.2, sonner 2.0.7
 
 ## Active Technologies
-- PostgreSQL via Drizzle ORM — tabela `studio` **nova** (não existe no schema atual), sem FKs entrantes ou saintes nesta feature. Um índice único: `studio_name_unique` em `name` (byte-exato). Campo `default_hourly_rate` como `numeric(10,2)` — lidado como `string` no driver do Drizzle, convertido em `number` na borda do repository. (019-studios-crud)
+- TypeScript 5.9.3 sobre Bun 1.2 (runtime + package manager + test runner) + Next.js 16.2.1 (App Router + Turbopack), React 19.2.4, Drizzle ORM 0.45.2 + `drizzle-kit` 0.31.10, Zod 4.3.6, better-auth 1.5.6, React Hook Form 7.72.1 + `@hookform/resolvers` 5.2.2, `@tanstack/react-table` 8.21.3, shadcn/ui 4.1.2, Tailwind CSS 4.2, `sonner` 2.0.7 (toasts), `lucide-react` (ícones) (020-books-chapters-crud)
+- PostgreSQL (local Dockerized) via Drizzle ORM; migrations com `drizzle-kit generate` + `drizzle-kit migrate` (NUNCA `push`); `TEST_DATABASE_URL` separado para integration e E2E (020-books-chapters-crud)

@@ -7,20 +7,21 @@ import { useMemo, useState } from "react";
 import { PageDescription, PageHeader, PageTitle } from "@/components/layout/page-container";
 import { Button } from "@/components/ui/button";
 import type { Narrator } from "@/lib/domain/narrator";
+import type { NarratorListItem } from "@/lib/repositories/narrator-repository";
 
 import { DeleteNarratorDialog } from "./delete-narrator-dialog";
 import { NarratorNewRow } from "./narrator-new-row";
 import { NarratorsTable } from "./narrators-table";
 
 interface NarratorsClientProps {
-  readonly initialNarrators: readonly Narrator[];
+  readonly initialNarrators: readonly NarratorListItem[];
 }
 
 const NEW_ROW_NAME_INPUT_ID = "narrator-new-name";
 
 export function NarratorsClient({ initialNarrators }: NarratorsClientProps) {
   const router = useRouter();
-  const [narrators, setNarrators] = useState<readonly Narrator[]>(initialNarrators);
+  const [narrators, setNarrators] = useState<readonly NarratorListItem[]>(initialNarrators);
   const [isCreating, setIsCreating] = useState(false);
   const [narratorToDelete, setNarratorToDelete] = useState<Narrator | null>(null);
 
@@ -41,7 +42,7 @@ export function NarratorsClient({ initialNarrators }: NarratorsClientProps) {
   }
 
   function handleCreated(narrator: Narrator) {
-    setNarrators((current) => [...current, narrator]);
+    setNarrators((current) => [...current, { ...narrator, chaptersCount: 0 }]);
     setIsCreating(false);
     router.refresh();
   }
@@ -51,7 +52,11 @@ export function NarratorsClient({ initialNarrators }: NarratorsClientProps) {
   }
 
   function handleUpdated(updated: Narrator) {
-    setNarrators((current) => current.map((n) => (n.id === updated.id ? updated : n)));
+    setNarrators((current) =>
+      current.map((n) =>
+        n.id === updated.id ? { ...updated, chaptersCount: n.chaptersCount } : n,
+      ),
+    );
     router.refresh();
   }
 

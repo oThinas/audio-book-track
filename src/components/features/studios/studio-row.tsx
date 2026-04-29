@@ -13,10 +13,11 @@ import { MoneyInput } from "@/components/ui/money-input";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { ApiErrorBody } from "@/lib/api/error-response";
 import { type Studio, type StudioFormValues, studioFormSchema } from "@/lib/domain/studio";
-import { formatBRL } from "@/lib/utils";
+import type { StudioListItem } from "@/lib/repositories/studio-repository";
+import { formatCentsBRL } from "@/lib/utils";
 
 interface StudioRowProps {
-  readonly studio: Studio;
+  readonly studio: StudioListItem;
   readonly onUpdated?: (studio: Studio) => void;
   readonly onRequestDelete?: (studio: Studio) => void;
 }
@@ -43,7 +44,10 @@ export function StudioRow({ studio, onUpdated, onRequestDelete }: StudioRowProps
         {studio.name}
       </TableCell>
       <TableCell data-testid="studio-hourly-rate" className="text-foreground">
-        {formatBRL(studio.defaultHourlyRate)}
+        {formatCentsBRL(studio.defaultHourlyRateCents)}
+      </TableCell>
+      <TableCell data-testid="studio-books-count" className="text-foreground">
+        {studio.booksCount}
       </TableCell>
       <TableCell className="w-24">
         <div className="flex items-center justify-end gap-1">
@@ -74,7 +78,7 @@ export function StudioRow({ studio, onUpdated, onRequestDelete }: StudioRowProps
 }
 
 interface StudioRowEditModeProps {
-  readonly studio: Studio;
+  readonly studio: StudioListItem;
   readonly onCancel: () => void;
   readonly onUpdated: (studio: Studio) => void;
 }
@@ -95,7 +99,7 @@ function StudioRowEditMode({ studio, onCancel, onUpdated }: StudioRowEditModePro
     resolver: zodResolver(studioFormSchema),
     defaultValues: {
       name: studio.name,
-      defaultHourlyRate: studio.defaultHourlyRate,
+      defaultHourlyRateCents: studio.defaultHourlyRateCents,
     },
   });
 
@@ -119,8 +123,10 @@ function StudioRowEditMode({ studio, onCancel, onUpdated }: StudioRowEditModePro
     if (response.status === 422) {
       const body = (await response.json()) as ApiErrorBody;
       for (const detail of body.error.details ?? []) {
-        if (detail.field === "name" || detail.field === "defaultHourlyRate") {
-          setError(detail.field, { message: detail.message });
+        if (detail.field === "name") {
+          setError("name", { message: detail.message });
+        } else if (detail.field === "defaultHourlyRateCents") {
+          setError("defaultHourlyRateCents", { message: detail.message });
         }
       }
       return;
@@ -171,25 +177,28 @@ function StudioRowEditMode({ studio, onCancel, onUpdated }: StudioRowEditModePro
           Valor/hora
         </Label>
         <Controller
-          name="defaultHourlyRate"
+          name="defaultHourlyRateCents"
           control={control}
           render={({ field }) => (
             <MoneyInput
               id={rateFieldId}
               form={formId}
-              min={0.01}
-              max={9999.99}
+              min={1}
+              max={999_999}
               value={field.value ?? 0}
               onChange={field.onChange}
               onBlur={field.onBlur}
-              aria-invalid={errors.defaultHourlyRate ? true : undefined}
+              aria-invalid={errors.defaultHourlyRateCents ? true : undefined}
               disabled={isSubmitting}
             />
           )}
         />
-        {errors.defaultHourlyRate && (
-          <p className="mt-1 text-xs text-destructive">{errors.defaultHourlyRate.message}</p>
+        {errors.defaultHourlyRateCents && (
+          <p className="mt-1 text-xs text-destructive">{errors.defaultHourlyRateCents.message}</p>
         )}
+      </TableCell>
+      <TableCell className="text-foreground align-top">
+        <span className="text-muted-foreground">{studio.booksCount}</span>
       </TableCell>
       <TableCell className="w-24">
         <div className="flex items-center justify-end gap-1">

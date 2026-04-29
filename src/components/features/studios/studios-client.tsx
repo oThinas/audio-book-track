@@ -7,20 +7,21 @@ import { useMemo, useState } from "react";
 import { PageDescription, PageHeader, PageTitle } from "@/components/layout/page-container";
 import { Button } from "@/components/ui/button";
 import type { Studio } from "@/lib/domain/studio";
+import type { StudioListItem } from "@/lib/repositories/studio-repository";
 
 import { DeleteStudioDialog } from "./delete-studio-dialog";
 import { StudioNewRow } from "./studio-new-row";
 import { StudiosTable } from "./studios-table";
 
 interface StudiosClientProps {
-  readonly initialStudios: readonly Studio[];
+  readonly initialStudios: readonly StudioListItem[];
 }
 
 const NEW_ROW_NAME_INPUT_ID = "studio-new-name";
 
 export function StudiosClient({ initialStudios }: StudiosClientProps) {
   const router = useRouter();
-  const [studios, setStudios] = useState<readonly Studio[]>(initialStudios);
+  const [studios, setStudios] = useState<readonly StudioListItem[]>(initialStudios);
   const [isCreating, setIsCreating] = useState(false);
   const [studioToDelete, setStudioToDelete] = useState<Studio | null>(null);
 
@@ -41,7 +42,8 @@ export function StudiosClient({ initialStudios }: StudiosClientProps) {
   }
 
   function handleCreated(studio: Studio) {
-    setStudios((current) => [...current, studio]);
+    // Studio recém-criado começa sem livros — booksCount é incrementado em revalidações.
+    setStudios((current) => [...current, { ...studio, booksCount: 0 }]);
     setIsCreating(false);
     router.refresh();
   }
@@ -51,7 +53,10 @@ export function StudiosClient({ initialStudios }: StudiosClientProps) {
   }
 
   function handleUpdated(updated: Studio) {
-    setStudios((current) => current.map((s) => (s.id === updated.id ? updated : s)));
+    // Preserva o booksCount existente — update não altera a contagem.
+    setStudios((current) =>
+      current.map((s) => (s.id === updated.id ? { ...updated, booksCount: s.booksCount } : s)),
+    );
     router.refresh();
   }
 

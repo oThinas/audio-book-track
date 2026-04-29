@@ -92,7 +92,7 @@ Fase vazia — sem tarefas de setup. O projeto ja tem Next.js, shadcn/ui, lucide
 **Purpose**: Verificacao final e validacao de qualidade.
 
 - [x] T007 Rodar validacao completa: `bun run lint`, `bun run test:unit`, `bun run build` — passando. `bun run test:e2e` bloqueado (Docker/DB offline)
-- [ ] T008 Teste manual seguindo quickstart.md: acessar rota inexistente em modo claro e escuro, viewport mobile e desktop, verificar botao de navegacao
+- [x] T008 Teste manual seguindo quickstart.md: acessar rota inexistente em modo claro e escuro, viewport mobile e desktop, verificar botao de navegacao
 
 ---
 

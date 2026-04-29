@@ -9,6 +9,7 @@ function createDeps(options: { session: { user: { id: string } } | null; service
     getSession: vi.fn().mockResolvedValue(options.session),
     createService: vi.fn().mockReturnValue(options.service),
     headersFn: vi.fn().mockResolvedValue(new Headers()),
+    createSoftDeleteDeps: () => ({ getActiveBooks: async () => [] }),
   };
 }
 
@@ -42,7 +43,7 @@ describe("DELETE /api/v1/studios/:id (handleStudiosDelete)", () => {
   });
 
   it("returns 204 with no body and Cache-Control no-store on success", async () => {
-    const existing = await repo.create({ name: "Delete Me", defaultHourlyRate: 85 });
+    const existing = await repo.create({ name: "Delete Me", defaultHourlyRateCents: 8500 });
     const deps = createDeps({ session: { user: { id: "u1" } }, service });
 
     const response = await handleStudiosDelete(deps, { id: existing.id });

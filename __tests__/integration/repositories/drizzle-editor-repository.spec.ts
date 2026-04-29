@@ -44,12 +44,13 @@ describe("DrizzleEditorRepository", () => {
       ).rejects.toBeInstanceOf(EditorEmailAlreadyInUseError);
     });
 
-    it("accepts two editors whose names differ only in case (case-sensitive unique on name)", async () => {
+    it("rejects two editors whose names differ only in case (case-insensitive partial unique on lower(name))", async () => {
       const repo = createRepo();
-      const lower = await repo.create({ name: "carla", email: "lower@studio.com" });
-      const upper = await repo.create({ name: "CARLA", email: "upper@studio.com" });
+      await repo.create({ name: "carla", email: "lower@studio.com" });
 
-      expect(lower.id).not.toBe(upper.id);
+      await expect(
+        repo.create({ name: "CARLA", email: "upper@studio.com" }),
+      ).rejects.toBeInstanceOf(EditorNameAlreadyInUseError);
     });
   });
 
@@ -102,11 +103,12 @@ describe("DrizzleEditorRepository", () => {
       expect(found?.name).toBe("Maria");
     });
 
-    it("returns null for a different case (match is case-sensitive)", async () => {
+    it("matches case-insensitively (consistent with the lower(name) partial unique index)", async () => {
       const repo = createRepo();
-      await repo.create({ name: "Maria", email: "m@s.com" });
+      const created = await repo.create({ name: "Maria", email: "m@s.com" });
 
-      expect(await repo.findByName("maria")).toBeNull();
+      expect(await repo.findByName("maria")).toEqual(created);
+      expect(await repo.findByName("MARIA")).toEqual(created);
     });
 
     it("returns null when name does not exist", async () => {

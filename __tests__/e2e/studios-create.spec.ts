@@ -71,7 +71,7 @@ test.describe("Studios create", () => {
     const name = "Sonora Duplicada";
 
     const seed = await page.request.post("/api/v1/studios", {
-      data: { name, defaultHourlyRate: 70 },
+      data: { name, defaultHourlyRateCents: 7000 },
     });
     expect(seed.ok()).toBe(true);
 
@@ -104,7 +104,7 @@ test.describe("Studios create", () => {
 
   test("created studio appears at the top (DESC ordering preserved)", async ({ page }) => {
     const seed = await page.request.post("/api/v1/studios", {
-      data: { name: "Primeiro Estúdio", defaultHourlyRate: 60 },
+      data: { name: "Primeiro Estúdio", defaultHourlyRateCents: 6000 },
     });
     expect(seed.ok()).toBe(true);
 

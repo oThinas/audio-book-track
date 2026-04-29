@@ -1,15 +1,23 @@
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq, isNull, sql } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
+import { getUniqueConstraintName } from "@/lib/db/postgres-errors";
 import type * as schema from "@/lib/db/schema";
-import { editor } from "@/lib/db/schema";
+import { chapter, editor } from "@/lib/db/schema";
 import type { CreateEditorInput, Editor, UpdateEditorInput } from "@/lib/domain/editor";
-import type { EditorRepository } from "@/lib/domain/editor-repository";
 import {
   EditorEmailAlreadyInUseError,
   EditorNameAlreadyInUseError,
   EditorNotFoundError,
 } from "@/lib/errors/editor-errors";
+import type { RepositoryTx } from "@/lib/repositories/book-repository";
+import type {
+  EditorListItem,
+  EditorRepository,
+  ReactivateEditorOverrides,
+} from "@/lib/repositories/editor-repository";
+
+type Executor = NodePgDatabase<typeof schema>;
 
 const EDITOR_COLUMNS = {
   id: editor.id,
@@ -19,46 +27,61 @@ const EDITOR_COLUMNS = {
   updatedAt: editor.updatedAt,
 } as const;
 
-const POSTGRES_UNIQUE_VIOLATION = "23505";
-const EDITOR_NAME_CONSTRAINT = "editor_name_unique";
+const EDITOR_NAME_CONSTRAINT = "editor_name_unique_active";
 const EDITOR_EMAIL_CONSTRAINT = "editor_email_unique";
 
-function getUniqueConstraintName(error: unknown): string | null {
-  const direct = extractConstraint(error);
-  if (direct !== null) {
-    return direct;
-  }
-  if (error instanceof Error && error.cause !== undefined) {
-    return extractConstraint(error.cause);
-  }
-  return null;
-}
-
-function extractConstraint(candidate: unknown): string | null {
-  if (typeof candidate !== "object" || candidate === null) {
-    return null;
-  }
-  const record = candidate as { code?: unknown; constraint?: unknown };
-  if (record.code !== POSTGRES_UNIQUE_VIOLATION) {
-    return null;
-  }
-  return typeof record.constraint === "string" ? record.constraint : null;
-}
-
 export class DrizzleEditorRepository implements EditorRepository {
-  constructor(private readonly db: NodePgDatabase<typeof schema>) {}
+  constructor(private readonly db: Executor) {}
+
+  private executor(tx?: RepositoryTx): Executor {
+    return (tx as Executor | undefined) ?? this.db;
+  }
 
   async findAll(): Promise<Editor[]> {
-    return this.db.select(EDITOR_COLUMNS).from(editor).orderBy(asc(editor.createdAt));
+    return this.db
+      .select(EDITOR_COLUMNS)
+      .from(editor)
+      .where(isNull(editor.deletedAt))
+      .orderBy(asc(editor.createdAt));
+  }
+
+  async findAllWithCounts(): Promise<EditorListItem[]> {
+    // LEFT JOIN chapter ON chapter.editor_id — usa o índice chapter_editor_id_idx.
+    const rows = await this.db
+      .select({
+        ...EDITOR_COLUMNS,
+        chaptersCount: sql<number>`coalesce(count(${chapter.id}), 0)::int`,
+      })
+      .from(editor)
+      .leftJoin(chapter, eq(chapter.editorId, editor.id))
+      .where(isNull(editor.deletedAt))
+      .groupBy(editor.id)
+      .orderBy(asc(editor.createdAt));
+
+    return rows;
   }
 
   async findById(id: string): Promise<Editor | null> {
-    const rows = await this.db.select(EDITOR_COLUMNS).from(editor).where(eq(editor.id, id));
+    const rows = await this.db
+      .select(EDITOR_COLUMNS)
+      .from(editor)
+      .where(and(eq(editor.id, id), isNull(editor.deletedAt)));
     return rows[0] ?? null;
   }
 
   async findByName(name: string): Promise<Editor | null> {
-    const rows = await this.db.select(EDITOR_COLUMNS).from(editor).where(eq(editor.name, name));
+    const rows = await this.db
+      .select(EDITOR_COLUMNS)
+      .from(editor)
+      .where(and(sql`lower(${editor.name}) = lower(${name})`, isNull(editor.deletedAt)));
+    return rows[0] ?? null;
+  }
+
+  async findByNameIncludingDeleted(name: string): Promise<Editor | null> {
+    const rows = await this.db
+      .select(EDITOR_COLUMNS)
+      .from(editor)
+      .where(sql`lower(${editor.name}) = lower(${name})`);
     return rows[0] ?? null;
   }
 
@@ -67,9 +90,9 @@ export class DrizzleEditorRepository implements EditorRepository {
     return rows[0] ?? null;
   }
 
-  async create(input: CreateEditorInput): Promise<Editor> {
+  async create(input: CreateEditorInput, tx?: RepositoryTx): Promise<Editor> {
     try {
-      const [row] = await this.db
+      const [row] = await this.executor(tx)
         .insert(editor)
         .values({ name: input.name, email: input.email })
         .returning(EDITOR_COLUMNS);
@@ -86,15 +109,15 @@ export class DrizzleEditorRepository implements EditorRepository {
     }
   }
 
-  async update(id: string, input: UpdateEditorInput): Promise<Editor> {
+  async update(id: string, input: UpdateEditorInput, tx?: RepositoryTx): Promise<Editor> {
     try {
-      const [row] = await this.db
+      const [row] = await this.executor(tx)
         .update(editor)
         .set({
           ...(input.name !== undefined ? { name: input.name } : {}),
           ...(input.email !== undefined ? { email: input.email } : {}),
         })
-        .where(eq(editor.id, id))
+        .where(and(eq(editor.id, id), isNull(editor.deletedAt)))
         .returning(EDITOR_COLUMNS);
 
       if (!row) {
@@ -116,8 +139,53 @@ export class DrizzleEditorRepository implements EditorRepository {
     }
   }
 
-  async delete(id: string): Promise<void> {
-    const deleted = await this.db
+  async softDelete(id: string, tx?: RepositoryTx): Promise<void> {
+    const [row] = await this.executor(tx)
+      .update(editor)
+      .set({ deletedAt: new Date() })
+      .where(and(eq(editor.id, id), isNull(editor.deletedAt)))
+      .returning({ id: editor.id });
+
+    if (!row) {
+      throw new EditorNotFoundError(id);
+    }
+  }
+
+  async reactivate(
+    id: string,
+    overrides?: ReactivateEditorOverrides,
+    tx?: RepositoryTx,
+  ): Promise<Editor> {
+    try {
+      const [row] = await this.executor(tx)
+        .update(editor)
+        .set({
+          deletedAt: null,
+          ...(overrides?.email !== undefined ? { email: overrides.email } : {}),
+        })
+        .where(eq(editor.id, id))
+        .returning(EDITOR_COLUMNS);
+
+      if (!row) {
+        throw new EditorNotFoundError(id);
+      }
+      return row;
+    } catch (error) {
+      if (error instanceof EditorNotFoundError) {
+        throw error;
+      }
+      if (
+        getUniqueConstraintName(error) === EDITOR_EMAIL_CONSTRAINT &&
+        overrides?.email !== undefined
+      ) {
+        throw new EditorEmailAlreadyInUseError(overrides.email);
+      }
+      throw error;
+    }
+  }
+
+  async delete(id: string, tx?: RepositoryTx): Promise<void> {
+    const deleted = await this.executor(tx)
       .delete(editor)
       .where(eq(editor.id, id))
       .returning({ id: editor.id });

@@ -1,40 +1,59 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 2.10.0 → 2.11.0 (MINOR: Principle VII expanded with
-rule forbidding route-colocated `_components/` folders; components
-DEVEM residir em `src/components/features/<feature>/`)
+Version change: 2.14.0 → 2.15.0 (MINOR: data/persistence guidance
+materially expanded after the 020-books-chapters-crud feature
+introduced four reusable patterns now mandatory for new entities.
+No principle removed or redefined; existing principles I and XI
+gained explicit sub-rules covering: BookStatus as materialized cache
+with synchronous transactional recompute, unified soft-delete
+(deleted_at + partial unique index, no ON DELETE SET NULL),
+auto-undelete on name collision (desarquive automático), service-level
+Unit of Work via SavepointUnitOfWork, and derived columns through
+findAllWithCounts() with *ListItem view types. These were already
+required de facto by the production codebase; this amendment lifts
+them from CLAUDE.md inline rules to constitutional principles so they
+bind future features.)
 
 Modified principles:
-  - VII. Frontend: Composição, Atomicidade e Mobile First:
-    - Added "Localização de Componentes de Feature" subsection:
-      pastas `_components/` (ou qualquer variante colocada dentro
-      de `src/app/`) são PROIBIDAS. Componentes de feature DEVEM
-      residir em `src/components/features/<feature>/` e serem
-      importados via alias `@/components/features/...`.
-  - XII. Anti-Padrões Proibidos (Frontend):
-    - Added explicit forbidden pattern: criar pasta `_components/`
-      (ou similar) dentro de `src/app/` para colocar componentes
-      de UI junto à rota.
-  - Self-Review Checklist:
-    - Added item em "Anti-Padrões": nenhuma pasta `_components/`
-      dentro de `src/app/`.
+  - I. Capítulo como Unidade de Trabalho:
+    - Adicionado: `book.status` é cache materializado computado a
+      partir do mínimo do ciclo dos capítulos via
+      `BookStatusRecomputeService`; capítulo permanece a fonte da
+      verdade. Recomputação ocorre na MESMA transação de qualquer
+      mutação de capítulo (create/update/delete/bulk-delete).
+  - XI. PostgreSQL e Banco de Dados:
+    - Adicionado: padrão de soft-delete unificado para entidades
+      soft-deletáveis (`studio`, `narrator`, `editor`) — coluna
+      `deleted_at` (nullable, `withTimezone`) + índice único parcial
+      `WHERE deleted_at IS NULL` + índice de apoio em
+      `deleted_at IS NOT NULL`; FKs entrantes usam `RESTRICT` e nunca
+      `ON DELETE SET NULL`.
+    - Adicionado: desarquive automático por colisão de nome — criar
+      uma entidade soft-deletável com nome igual ao de um registro
+      arquivado reativa o registro original (mesmo `id`); service
+      retorna `reactivated: true`.
+    - Adicionado: transações multi-tabela em services usam
+      `SavepointUnitOfWork` (port `UnitOfWork` com adapter Drizzle)
+      em vez de `db.transaction()` direto na rota.
+    - Adicionado: derived columns via `findAllWithCounts()` no
+      repository (single query com `LEFT JOIN + GROUP BY`); tipos
+      `*ListItem` extendem a entidade com o campo derivado, mantendo
+      o tipo base inalterado.
 
-Added sections: N/A (amendment within existing principles)
+Added sections: N/A
 
 Removed sections: N/A
 
 Templates requiring updates:
-  ✅ .specify/memory/constitution.md — this file (updated now)
-  ⚠ CLAUDE.md — adicionar regra sobre `_components/` proibido e
-    `src/components/features/` como localização obrigatória de
-    componentes de feature (pendente, para manter alinhamento)
-  ✅ .specify/templates/plan-template.md — sem mudanças necessárias
-     (estrutura de frontend já referencia Princípio VII)
-  ✅ .specify/templates/tasks-template.md — sem mudanças necessárias
-  ✅ .specify/templates/spec-template.md — sem mudanças necessárias
+  ✅ .specify/memory/constitution.md — este arquivo (atualizado agora)
+  ✅ CLAUDE.md — já contém os blocos correspondentes (T140 da feature
+     020), refletindo as mesmas regras agora elevadas a princípios
+  ⚠ docs/ — nenhuma referência cruzada exigia atualização; nenhum
+     diagrama de arquitetura mencionava soft-delete unificado ou
+     UnitOfWork explicitamente
 
-Follow-up TODOs: N/A
+Follow-up TODOs: N/A.
 -->
 
 # AudioBook Track Constitution
@@ -51,9 +70,19 @@ DEVE ser feito no nível do capítulo.
   a partir do status `em edição`, um editor responsável pela edição.
 - Horas editadas são registradas por capítulo — não por livro ou estúdio.
 - Nenhum pagamento pode ser calculado sem um responsável de edição definido.
+- **`book.status` é cache materializado**, NUNCA fonte da verdade.
+  Ele é derivado do mínimo do ciclo dos capítulos do livro e DEVE ser
+  recomputado por `BookStatusRecomputeService` na **MESMA transação** de
+  qualquer mutação de capítulo (create/update/delete/bulk-delete). É
+  proibido alterar `book.status` diretamente fora desse serviço — a fonte
+  da verdade permanece o capítulo, e qualquer leitura derivada do livro
+  DEVE refletir esse cálculo.
 
 **Rationale**: O fluxo de trabalho real divide-se em capítulos. Tratar o livro
 como unidade de pagamento mascararia a contribuição individual de cada editor.
+O cache materializado em `book.status` existe para listar livros eficientemente
+(sem JOIN com capítulos a cada requisição) sem violar o princípio: a recomputação
+síncrona em transação garante consistência absoluta com a fonte da verdade.
 
 ### II. Precisão Financeira (NÃO NEGOCIÁVEL)
 
@@ -63,7 +92,16 @@ persistidos — nunca derivado dinamicamente de valores que podem mudar.
 - O preço/hora DEVE ser vinculado ao **livro**, não ao estúdio. Ele é editável
   enquanto o livro não estiver `pago`. Uma vez que o livro atinge o status
   `pago`, o preço torna-se imutável para preservar o histórico financeiro.
-- A fórmula de ganho é: `horas_editadas × preço_hora_do_livro`.
+- Campos de origem (inteiros, persistidos): `chapter.edited_seconds`
+  (integer, segundos) e `book.price_per_hour_cents` (integer, centavos).
+- A fórmula de ganho é:
+  `round(chapter.edited_seconds × book.price_per_hour_cents / 3600)` →
+  **valor em centavos**. A conversão centavos → reais (`÷ 100` +
+  formatação BRL) acontece na camada de apresentação. Nomes de campos
+  e colunas em inglês no código; labels em português na UI.
+- Arredondamento DEVE ser determinístico (`Math.round` half-away-from-zero
+  aplicado ao divisor inteiro 3600). A fórmula DEVE ser implementada em
+  helper puro (`lib/domain/earnings.ts`) com cobertura unitária de 100%.
 - Ganhos calculados DEVEM ser auditáveis: todas as entradas do cálculo
   (horas, preço, responsável, data) DEVEM estar disponíveis para consulta.
 - Relatórios de ganho por período DEVEM ser filtráveis por capítulo, livro e
@@ -89,7 +127,7 @@ pendente → em edição → em revisão → concluído → pago
 |---|---|---|
 | `pendente` | Gravação não iniciada | — |
 | `em edição` | Gravação finalizada, edição pendente | narrador atribuído |
-| `em revisão` | Edição finalizada, revisão pendente | editor + horas_editadas registrados |
+| `em revisão` | Edição finalizada, revisão pendente | editor + `edited_seconds > 0` registrados |
 | `edição retake` | Revisão reprovada, nova edição necessária | revisão explicitamente reprovada |
 | `concluído` | Revisão aprovada, aguarda decisão do estúdio | revisão aprovada (de `em revisão`) |
 | `pago` | Histórico imutável, edição do livro desabilitada | aprovação do estúdio |
@@ -331,8 +369,8 @@ Dependências apontam sempre de fora para dentro — nunca o contrário.
 app/api/          → Controllers/Route Handlers (HTTP, entrada/saída)
 lib/factories/    → Composition Root (instanciam services com dependências concretas)
 lib/services/     → Use Cases / Application Services (orquestração)
-lib/repositories/ → Implementações concretas de repositories (dados)
-lib/domain/       → Entities, value objects, regras de negócio puras, interfaces de repositories
+lib/repositories/ → Ports (interfaces) na raiz + adapters concretos em subpastas (drizzle/, …)
+lib/domain/       → Entities, value objects, enums e regras de negócio puras
 ```
 
 - Controllers DEVEM ser finos: validam input, chamam uma factory para obter
@@ -341,8 +379,12 @@ lib/domain/       → Entities, value objects, regras de negócio puras, interfa
   reutilizáveis de `lib/api/responses.ts` — nunca construir o envelope de
   erro inline no controller.
 - Services contêm toda a orquestração: não conhecem HTTP nem SQL diretamente.
-- Repositories encapsulam todo acesso a dados; a interface DEVE ser definida
-  no domínio e implementada fora dele.
+- Repositories encapsulam todo acesso a dados. A **interface (port)** DEVE
+  residir em `lib/repositories/<entidade>-repository.ts` (raiz da camada de
+  repositórios); **adapters concretos** DEVEM residir em subpastas nomeadas
+  pelo mecanismo (ex: `lib/repositories/drizzle/`). A camada de domínio
+  (`lib/domain/`) fica LIVRE de preocupações de persistência — nenhuma
+  interface de repositório pode ser declarada ali.
 - Entities do domínio são POJOs puros — sem imports de framework.
 - Injeção de dependência via construtor; nunca instanciar dependências dentro
   de uma classe.
@@ -576,7 +618,14 @@ O banco de dados DEVE ser PostgreSQL. Todas as interações DEVEM passar
 pelo Repository Pattern definido no Princípio VI.
 
 - Tipos corretos: `bigint` para IDs, `text` para strings, `timestamptz`
-  para datas, `numeric(10,2)` para valores financeiros (NUNCA `float`).
+  para datas, **`integer` em centavos para valores monetários (preferido)
+  OU `numeric(10,2)` (legado/compatibilidade)** — `float`/`double` são
+  proibidos.
+- Durações que alimentam cálculo financeiro DEVEM ser `integer` em
+  segundos (ex: `edited_seconds`), não `numeric` em horas. Conversão
+  para unidades apresentáveis (horas, minutos) ocorre na UI.
+- Nomes de colunas monetárias e de duração DEVEM explicitar a unidade
+  no sufixo: `_cents` para centavos, `_seconds` para segundos.
 - Todo foreign key DEVE ter índice correspondente.
 - Índices compostos: colunas de igualdade primeiro, range depois.
 - Índice parcial para registros ativos:
@@ -593,8 +642,62 @@ pelo Repository Pattern definido no Princípio VI.
   sem gerar arquivos de migração, causando dessincronização entre o estado
   do banco e o journal de migrações.
 
+**Soft-delete unificado** (entidades soft-deletáveis: `studio`, `narrator`,
+`editor`):
+
+- Coluna `deleted_at: timestamp("deleted_at", { withTimezone: true })`
+  (nullable). Listagens DEVEM filtrar `WHERE deleted_at IS NULL`.
+- Índice único parcial para nomes/identificadores naturais únicos:
+  `CREATE UNIQUE INDEX <table>_<col>_unique_active ON <table> (lower(<col>))
+  WHERE deleted_at IS NULL` — garante unicidade apenas entre registros ativos
+  e libera o nome para reuso após exclusão.
+- Índice de apoio em registros arquivados:
+  `CREATE INDEX <table>_deleted_at_idx ON <table> (deleted_at)
+  WHERE deleted_at IS NOT NULL` — habilita busca eficiente para desarquive.
+- **Sem `ON DELETE SET NULL`** em FKs entrantes. Relações DEVEM usar
+  `RESTRICT` + soft-delete; nenhum órfão jamais é criado. Pré-condições de
+  exclusão (ex: estúdio com livros tendo capítulos ativos, narrador/editor
+  com capítulos ativos) DEVEM ser validadas no service e retornar 409 com
+  detalhes do bloqueio antes do soft-delete.
+
+**Desarquive automático por colisão de nome**: criar uma entidade
+soft-deletável com nome (case-insensitive, após `trim`) igual ao de um
+registro arquivado **reativa o registro original** (mesmo `id`,
+`deleted_at = NULL`) em vez de criar um novo. O service retorna o flag
+`reactivated: true` no envelope; a UI exibe toast de "desarquivado".
+Política de campos no desarquive: `default_hourly_rate_cents`/preços
+permanecem **históricos** no desarquive normal; reset para o valor recém-fornecido
+ocorre **apenas** quando a criação vem do contexto de um livro inline
+(`{ inline: true }` + propagação de `price_per_hour_cents`).
+
+**Unit of Work no service**: transações multi-tabela em services DEVEM ser
+encapsuladas via porta `UnitOfWork` (adapter `SavepointUnitOfWork` para
+Drizzle), nunca chamando `db.transaction()` direto da rota. Exemplos:
+`BookService.create({ inline: true })` cria estúdio + livro + capítulos
+atomicamente; `ChapterService.delete()` deleta o capítulo e recomputa
+`book.status` na mesma transação; bulk-delete de capítulos + recompute
+roda em uma única `BEGIN/COMMIT`. A composição via UnitOfWork mantém o
+service testável (port pode ser mockado) e impede que mutations
+parciais sobrevivam a falhas.
+
+**Derived columns por listagem**: quando uma listagem precisa exibir
+contagens agregadas (ex: `/studios` com `booksCount`, `/narrators` e
+`/editors` com `chaptersCount`), o repository DEVE expor um método
+`findAllWithCounts()` que retorna a lista em **uma única query** com
+`LEFT JOIN + GROUP BY`. Não criar rota separada `/counts` nem fazer N+1.
+O tipo retornado DEVE ser um `*ListItem` (ex: `StudioListItem`) que
+**estende** a entidade base (`Studio`) com o(s) campo(s) derivado(s),
+preservando o tipo base inalterado para os outros call sites.
+
 **Rationale**: Valores financeiros em `float` introduzem erros de ponto
-flutuante. Índices inadequados causam degradação sob volume real de dados.
+flutuante. Inteiros em centavos dão aritmética exata e cálculos
+determinísticos (Princípio II). Índices inadequados causam degradação
+sob volume real de dados. Soft-delete unificado evita asymetria entre
+entidades (cada uma com seu próprio padrão), e o índice único parcial
+permite que nomes humanos significativos sejam reutilizados após exclusão
+sem comprometer a unicidade entre registros ativos. UnitOfWork mantém
+serviços testáveis e atômicos sob falha; `findAllWithCounts()` evita o
+clássico problema N+1 quando listagens crescem.
 
 ### XII. Anti-Padrões Proibidos
 
@@ -655,19 +758,22 @@ apoiar decisões do estúdio. Todos os dados DEVEM ser calculados no servidor.
 
 | # | KPI | Definição |
 |---|---|---|
-| 1 | **Ganho do período** | Soma de `horas_editadas × preço_hora_livro` dos capítulos com status `pago` no intervalo selecionado |
-| 2 | **Capítulos concluídos do período** | Contagem de capítulos que atingiram `concluído` ou `pago` no intervalo selecionado |
-| 3 | **Livros em andamento** | Contagem de livros com ao menos 1 capítulo em status diferente de `pendente` e diferente de `pago`, agrupados também por número de estúdios distintos |
-| 4 | **Média de duração por página** | `SUM(horas_editadas) ÷ SUM(num_paginas)` dos capítulos com status ≥ `em revisão` e `num_paginas > 0` |
-| 5 | **Previsão de receita a receber** | Soma de `(horas_editadas × preço_hora_livro)` dos capítulos com status entre `em edição` e `concluído` (não `pago`) — receita pendente caso todos sejam concluídos |
+| 1 | **Ganho do período** | Soma de `round(chapter.edited_seconds × book.price_per_hour_cents / 3600)` dos capítulos com status `paid` no intervalo selecionado. Resultado em centavos; formatação BRL na UI |
+| 2 | **Capítulos concluídos do período** | Contagem de capítulos que atingiram `completed` ou `paid` no intervalo selecionado |
+| 3 | **Livros em andamento** | Contagem de livros com ao menos 1 capítulo em status diferente de `pending` e diferente de `paid`, agrupados também por número de estúdios distintos |
+| 4 | **Minutagem média por capítulo** | `AVG(chapter.edited_seconds) / 60` dos capítulos com status ∈ {`reviewing`, `retake`, `completed`, `paid`} e `edited_seconds > 0`. Unidade: minutos. A conversão segundos→minutos acontece na camada de apresentação; nenhum campo novo é necessário — reusa a mesma fonte dos KPIs 1 e 5 |
+| 5 | **Previsão de receita a receber** | Soma de `round(chapter.edited_seconds × book.price_per_hour_cents / 3600)` dos capítulos com status entre `editing` e `completed` (não `paid`) — receita pendente caso todos sejam concluídos. Resultado em centavos |
 
 **Regras dos KPIs:**
 - KPI 1 e 2: filtráveis por intervalo de datas (padrão: mês corrente).
 - KPI 3: exibe `N livros em andamento de M estúdio(s)`.
-- KPI 4: `num_paginas = 0` ou nulo são excluídos do denominador para evitar
-  divisão por zero. Exibido também na página individual do livro.
-- KPI 5: exclui capítulos `pago` e `pendente`; considera apenas capítulos
-  com editor atribuído e `horas_editadas > 0`.
+- KPI 4: capítulos com `edited_seconds = 0` DEVEM ser excluídos do cálculo
+  para evitar viés (representam capítulos ainda não cronometrados) e para
+  prevenir divisão por zero em agregações relacionadas. Capítulos em status
+  `pending` ou `editing` também não contam — a minutagem só é confiável a
+  partir de `reviewing`.
+- KPI 5: exclui capítulos `paid` e `pending`; considera apenas capítulos
+  com editor atribuído e `edited_seconds > 0`.
 
 #### Gráficos do Dashboard (versão inicial)
 
@@ -678,17 +784,12 @@ apoiar decisões do estúdio. Todos os dados DEVEM ser calculados no servidor.
 | 3 | **Ganho por editor** | Barras horizontais | Eixo X: valor em R$; Eixo Y: nome do editor; filtro de período |
 
 **Regras dos gráficos:**
-- Todos os gráficos consideram apenas capítulos com status `pago` no período.
+- Todos os gráficos consideram apenas capítulos com status `paid` no período.
 - Gráfico 1: agrupamento padrão por semana; opção de alternar para mês.
 - Gráfico 2: período sincronizado com o filtro global do dashboard.
 - Gráfico 3: ordenado por ganho decrescente.
 - Dados dos gráficos DEVEM ser servidos via API route dedicada com
   paginação/agregação no banco — nunca carregar todos os registros no cliente.
-
-#### Campo `num_paginas`
-
-- Cada capítulo DEVE ter um campo `num_paginas` (inteiro, configurável na
-  criação ou edição do capítulo enquanto não estiver `pago`).
 
 **Rationale**: KPIs e gráficos bem definidos permitem ao estúdio tomar
 decisões baseadas em dados reais de produção e previsibilidade financeira.
@@ -705,8 +806,9 @@ original. O PDF viewer é uma funcionalidade de leitura — não de edição.
 - A URL do PDF DEVE ser validada no upload (tipo MIME `application/pdf`).
 - Acesso ao PDF DEVE respeitar as mesmas permissões de acesso ao livro.
 - O viewer DEVE suportar navegação por página e zoom básico.
-- Dados do PDF (metadados, número de páginas) NÃO devem sobrescrever
-  configurações manuais do capítulo (`num_paginas`).
+- Dados do PDF (metadados, número de páginas, duração estimada) NÃO devem
+  sobrescrever configurações manuais do capítulo (`edited_seconds`,
+  `narrator_id`, `editor_id`).
 
 **Rationale**: O PDF serve como referência para narradores e revisores
 sem necessidade de arquivos externos ao sistema.
@@ -817,15 +919,19 @@ Restrições que se aplicam ao modelo de dados e às entidades do sistema:
 
 - **Estúdio**: entidade mestre com nome e lista de livros. Estúdios não são
   frequentemente criados — o foco do sistema não é gestão de estúdios.
-- **Livro**: pertence a um estúdio; carrega o `preço_por_hora` (editável até
-  o livro atingir o status `pago`, imutável a partir daí para preservar
-  histórico financeiro). O número de capítulos é definido na criação do livro.
-  Pode ter um `pdf_url` associado (opcional).
-- **Capítulo**: pertence a um livro; tem `status`, `narrador` (responsável
-  pela gravação), `editor` (responsável pela edição), `horas_editadas` e
-  `num_paginas`. É a entidade central do sistema.
-  Status possíveis: `pendente`, `em edição`, `em revisão`, `edição retake`,
-  `concluído`, `pago`.
+- **Livro**: pertence a um estúdio; carrega o `price_per_hour_cents`
+  (integer, centavos — editável até o livro atingir o status `paid`,
+  imutável a partir daí para preservar histórico financeiro). O número de
+  capítulos é definido na criação do livro. Pode ter um `pdf_url`
+  associado (opcional).
+- **Capítulo**: pertence a um livro; tem `status`, `narrator_id`
+  (responsável pela gravação), `editor_id` (responsável pela edição) e
+  `edited_seconds` (integer, segundos — alimenta a fórmula de ganho e o
+  KPI 4 "Minutagem média por capítulo" via conversão `÷ 60`). É a
+  entidade central do sistema.
+  Status possíveis (valor no DB / rótulo em UI): `pending` (Pendente),
+  `editing` (Em edição), `reviewing` (Em revisão), `retake` (Retake),
+  `completed` (Concluído), `paid` (Pago).
 - **Narrador**: responsável pela gravação dos capítulos.
 - **Editor**: identificado pelo nome; recebe pagamentos baseados em horas
   editadas em capítulos atribuídos a ele.
@@ -933,8 +1039,14 @@ submeter para review ou merge:
 - [ ] X.    Input validado com Zod? Erros não expõem detalhes internos?
 - [ ] XI.   Queries selecionam apenas colunas necessárias (sem SELECT *)?
 - [ ] XI.   Novos foreign keys têm índice?
-- [ ] XI.   Valores monetários usam `numeric`, não `float`?
-- [ ] XIII. KPIs calculados no servidor? Divisão por zero (num_paginas) prevenida?
+- [ ] XI.   Valores monetários usam `integer` em centavos (preferido) ou `numeric(10,2)` (legado)? Nunca `float`/`double`?
+- [ ] XI.   Durações que alimentam cálculo financeiro usam `integer` em segundos, com sufixo `_seconds` no nome?
+- [ ] XI.   Soft-delete unificado: coluna `deleted_at` + índice único parcial `WHERE deleted_at IS NULL`? Nenhuma FK usa `ON DELETE SET NULL`?
+- [ ] XI.   Desarquive automático implementado para colisão de nome em entidades soft-deletáveis (com flag `reactivated`)?
+- [ ] XI.   Transações multi-tabela usam `SavepointUnitOfWork` (port `UnitOfWork`) — nunca `db.transaction()` direto na rota?
+- [ ] XI.   Listagens com contagens usam `findAllWithCounts()` (single query LEFT JOIN + GROUP BY) e tipo `*ListItem`?
+- [ ] I.    Mutações de capítulo recomputam `book.status` via `BookStatusRecomputeService` na MESMA transação?
+- [ ] XIII. KPIs calculados no servidor? Divisão por zero no KPI 4 prevenida (capítulos com `edited_seconds = 0` excluídos)?
 - [ ] XIII. Gráficos servidos via API route com agregação no banco (não no cliente)?
 - [ ] XIII. KPI 5 (previsão) exclui capítulos `pago` e `pendente`?
 - [ ] XIV.  PDF viewer carregado via lazy loading? URL validada no upload?
@@ -967,4 +1079,4 @@ submeter para review ou merge:
 revisar por outros e cria responsabilidade pessoal com os padrões
 definidos nesta constituição.
 
-**Version**: 2.11.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-04-21
+**Version**: 2.15.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-04-29

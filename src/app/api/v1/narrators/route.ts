@@ -57,11 +57,11 @@ export async function handleNarratorsCreate(
 
   const service = deps.createService();
   try {
-    const narrator = await service.create(parsed.data);
+    const { narrator, reactivated } = await service.create(parsed.data);
     return NextResponse.json(
-      { data: narrator },
+      { data: narrator, meta: { reactivated } },
       {
-        status: 201,
+        status: reactivated ? 200 : 201,
         headers: {
           ...NO_STORE_HEADERS,
           Location: `/api/v1/narrators/${narrator.id}`,

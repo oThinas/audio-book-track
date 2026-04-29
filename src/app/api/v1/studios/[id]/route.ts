@@ -11,14 +11,19 @@ import {
 import { auth } from "@/lib/auth/server";
 import type { Session } from "@/lib/auth/session";
 import { updateStudioSchema } from "@/lib/domain/studio";
-import { StudioNameAlreadyInUseError, StudioNotFoundError } from "@/lib/errors/studio-errors";
-import { createStudioService } from "@/lib/factories/studio";
-import type { StudioService } from "@/lib/services/studio-service";
+import {
+  StudioHasActiveBooksError,
+  StudioNameAlreadyInUseError,
+  StudioNotFoundError,
+} from "@/lib/errors/studio-errors";
+import { createStudioService, createStudioSoftDeleteDeps } from "@/lib/factories/studio";
+import type { SoftDeleteStudioDeps, StudioService } from "@/lib/services/studio-service";
 
 interface StudioByIdDeps {
   readonly getSession: (args: { headers: Headers }) => Promise<Session | null>;
   readonly createService: () => StudioService;
   readonly headersFn: () => Promise<Headers>;
+  readonly createSoftDeleteDeps: () => SoftDeleteStudioDeps;
 }
 
 function defaultDeps(): StudioByIdDeps {
@@ -26,6 +31,7 @@ function defaultDeps(): StudioByIdDeps {
     getSession: (args) => auth.api.getSession(args) as Promise<Session | null>,
     createService: createStudioService,
     headersFn: headers,
+    createSoftDeleteDeps: createStudioSoftDeleteDeps,
   };
 }
 
@@ -71,11 +77,23 @@ export async function handleStudiosDelete(
 
   const service = deps.createService();
   try {
-    await service.delete(params.id);
+    await service.softDelete(params.id, deps.createSoftDeleteDeps());
     return new NextResponse(null, { status: 204, headers: NO_STORE_HEADERS });
   } catch (error: unknown) {
     if (error instanceof StudioNotFoundError) {
       return notFoundResponse("STUDIO_NOT_FOUND", "Estúdio não encontrado");
+    }
+    if (error instanceof StudioHasActiveBooksError) {
+      return NextResponse.json(
+        {
+          error: {
+            code: "STUDIO_HAS_ACTIVE_BOOKS",
+            message: "Estúdio possui livros com capítulos ativos.",
+            details: { books: error.books },
+          },
+        },
+        { status: 409 },
+      );
     }
     throw error;
   }

@@ -12,9 +12,10 @@ import { Label } from "@/components/ui/label";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { ApiErrorBody } from "@/lib/api/error-response";
 import { type Narrator, type NarratorFormValues, narratorFormSchema } from "@/lib/domain/narrator";
+import type { NarratorListItem } from "@/lib/repositories/narrator-repository";
 
 interface NarratorRowProps {
-  readonly narrator: Narrator;
+  readonly narrator: NarratorListItem;
   readonly onUpdated?: (narrator: Narrator) => void;
   readonly onRequestDelete?: (narrator: Narrator) => void;
 }
@@ -39,6 +40,9 @@ export function NarratorRow({ narrator, onUpdated, onRequestDelete }: NarratorRo
     <TableRow data-testid="narrator-row">
       <TableCell data-testid="narrator-name" className="text-foreground">
         {narrator.name}
+      </TableCell>
+      <TableCell data-testid="narrator-chapters-count" className="text-foreground">
+        {narrator.chaptersCount}
       </TableCell>
       <TableCell className="w-24">
         <div className="flex items-center justify-end gap-1">
@@ -69,7 +73,7 @@ export function NarratorRow({ narrator, onUpdated, onRequestDelete }: NarratorRo
 }
 
 interface NarratorRowEditModeProps {
-  readonly narrator: Narrator;
+  readonly narrator: NarratorListItem;
   readonly onCancel: () => void;
   readonly onUpdated: (narrator: Narrator) => void;
 }
@@ -152,6 +156,9 @@ function NarratorRowEditMode({ narrator, onCancel, onUpdated }: NarratorRowEditM
           }}
         />
         {errors.name && <p className="mt-1 text-xs text-destructive">{errors.name.message}</p>}
+      </TableCell>
+      <TableCell className="text-foreground align-top">
+        <span className="text-muted-foreground">{narrator.chaptersCount}</span>
       </TableCell>
       <TableCell className="w-24">
         <div className="flex items-center justify-end gap-1">

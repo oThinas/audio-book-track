@@ -170,7 +170,7 @@ Monorepo Next.js em `src/` e testes em `__tests__/`. Paths absolutos no workspac
 - [X] T049 [P] Escrever [__tests__/e2e/editors-primary-colors.spec.ts](__tests__/e2e/editors-primary-colors.spec.ts) validando que `--destructive` difere de `--primary` em todas as 5 cores primárias.
 - [X] T050 [P] Escrever [__tests__/e2e/editors-concurrent-ops.spec.ts](__tests__/e2e/editors-concurrent-ops.spec.ts) cobrindo múltiplas operações simultâneas (duas edições + criação em curso; confirmar uma linha sem afetar as outras).
 - [~] T051 Seed dev de editores — **descartado por decisão do usuário** (não é necessário popular `/editors` no seed). `src/lib/db/seed.ts` não alterado.
-- [ ] T052 Rodar [quickstart.md](specs/018-editors-crud/quickstart.md) §4 (checklist manual de UI) no ambiente dev para validar paridade visual com Narrador, dark mode, font-size e responsividade. Registrar eventuais correções de layout como sub-tasks aqui.
+- [x] T052 Rodar [quickstart.md](specs/018-editors-crud/quickstart.md) §4 (checklist manual de UI) no ambiente dev para validar paridade visual com Narrador, dark mode, font-size e responsividade. Registrar eventuais correções de layout como sub-tasks aqui.
 
 ---
 
@@ -183,8 +183,8 @@ Per Constitution Principle XVI, quality checks NÃO são rodadas por fase — ap
 - [X] T055 `bun run test:integration` — 82/82 verdes (inclui 22 do `drizzle-editor-repository.test.ts`).
 - [X] T056 `bun run test:e2e` — 127/127 verdes (inclui 36 novos em editors-list/create/update/delete + accessibility/responsive/font-size/dark-mode/primary-colors/concurrent-ops).
 - [X] T057 `bun run build` — build de produção compila sem erros; rotas `/editors`, `/api/v1/editors` e `/api/v1/editors/[id]` registradas.
-- [ ] T058 Executar checklist de Self-Review da Constituição (§Self-Review Obrigatório) no PR.
-- [ ] T059 Abrir PR contra `main` via `/finish-task`.
+- [x] T058 Executar checklist de Self-Review da Constituição (§Self-Review Obrigatório) no PR.
+- [x] T059 Abrir PR contra `main` via `/finish-task`.
 
 ---
 

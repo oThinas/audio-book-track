@@ -11,14 +11,19 @@ import {
 import { auth } from "@/lib/auth/server";
 import type { Session } from "@/lib/auth/session";
 import { updateNarratorSchema } from "@/lib/domain/narrator";
-import { NarratorNameAlreadyInUseError, NarratorNotFoundError } from "@/lib/errors/narrator-errors";
-import { createNarratorService } from "@/lib/factories/narrator";
-import type { NarratorService } from "@/lib/services/narrator-service";
+import {
+  NarratorLinkedToActiveChaptersError,
+  NarratorNameAlreadyInUseError,
+  NarratorNotFoundError,
+} from "@/lib/errors/narrator-errors";
+import { createNarratorService, createNarratorSoftDeleteDeps } from "@/lib/factories/narrator";
+import type { NarratorService, SoftDeleteNarratorDeps } from "@/lib/services/narrator-service";
 
 interface NarratorByIdDeps {
   readonly getSession: (args: { headers: Headers }) => Promise<Session | null>;
   readonly createService: () => NarratorService;
   readonly headersFn: () => Promise<Headers>;
+  readonly createSoftDeleteDeps: () => SoftDeleteNarratorDeps;
 }
 
 function defaultDeps(): NarratorByIdDeps {
@@ -26,6 +31,7 @@ function defaultDeps(): NarratorByIdDeps {
     getSession: (args) => auth.api.getSession(args) as Promise<Session | null>,
     createService: createNarratorService,
     headersFn: headers,
+    createSoftDeleteDeps: createNarratorSoftDeleteDeps,
   };
 }
 
@@ -71,11 +77,23 @@ export async function handleNarratorsDelete(
 
   const service = deps.createService();
   try {
-    await service.delete(params.id);
+    await service.softDelete(params.id, deps.createSoftDeleteDeps());
     return new NextResponse(null, { status: 204, headers: NO_STORE_HEADERS });
   } catch (error: unknown) {
     if (error instanceof NarratorNotFoundError) {
       return notFoundResponse("NARRATOR_NOT_FOUND", "Narrador não encontrado");
+    }
+    if (error instanceof NarratorLinkedToActiveChaptersError) {
+      return NextResponse.json(
+        {
+          error: {
+            code: "NARRATOR_LINKED_TO_ACTIVE_CHAPTERS",
+            message: "Narrador está vinculado a capítulos em livros ativos.",
+            details: { books: error.books },
+          },
+        },
+        { status: 409 },
+      );
     }
     throw error;
   }

@@ -3,9 +3,9 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "./fixtures/app-server";
 import { login } from "./helpers/auth";
 
-async function seedStudio(page: Page, name: string, defaultHourlyRate: number) {
+async function seedStudio(page: Page, name: string, defaultHourlyRateReais: number) {
   const response = await page.request.post("/api/v1/studios", {
-    data: { name, defaultHourlyRate },
+    data: { name, defaultHourlyRateCents: Math.round(defaultHourlyRateReais * 100) },
   });
   if (!response.ok()) {
     throw new Error(`Failed to seed studio ${name}: ${response.status()}`);
@@ -45,7 +45,7 @@ test.describe("Studios list", () => {
     await expect(page.getByRole("button", { name: /^valor\/hora$/i })).toBeVisible();
   });
 
-  test("defaultHourlyRate is displayed formatted as BRL", async ({ page }) => {
+  test("defaultHourlyRateCents is displayed formatted as BRL", async ({ page }) => {
     await seedStudio(page, "Sonora", 85);
     await seedStudio(page, "Voz & Arte", 90.5);
     await page.goto("/studios");

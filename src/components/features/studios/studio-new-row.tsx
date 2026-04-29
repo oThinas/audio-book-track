@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { MoneyInput } from "@/components/ui/money-input";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { ApiErrorBody } from "@/lib/api/error-response";
-import { createStudioSchema, type Studio, type StudioFormValues } from "@/lib/domain/studio";
+import { type Studio, type StudioFormValues, studioFormSchema } from "@/lib/domain/studio";
 
 interface StudioNewRowProps {
   readonly onCreated: (studio: Studio) => void;
@@ -32,8 +32,8 @@ export function StudioNewRow({ onCreated, onCancelled }: StudioNewRowProps) {
     formState: { errors, isSubmitting },
     setError,
   } = useForm<StudioFormValues>({
-    resolver: zodResolver(createStudioSchema),
-    defaultValues: { name: "", defaultHourlyRate: 0 },
+    resolver: zodResolver(studioFormSchema),
+    defaultValues: { name: "", defaultHourlyRateCents: 0 },
   });
 
   useEffect(() => {
@@ -56,8 +56,10 @@ export function StudioNewRow({ onCreated, onCancelled }: StudioNewRowProps) {
     if (response.status === 422) {
       const body = (await response.json()) as ApiErrorBody;
       for (const detail of body.error.details ?? []) {
-        if (detail.field === "name" || detail.field === "defaultHourlyRate") {
-          setError(detail.field, { message: detail.message });
+        if (detail.field === "name") {
+          setError("name", { message: detail.message });
+        } else if (detail.field === "defaultHourlyRateCents") {
+          setError("defaultHourlyRateCents", { message: detail.message });
         }
       }
       return;
@@ -102,24 +104,24 @@ export function StudioNewRow({ onCreated, onCancelled }: StudioNewRowProps) {
           Valor/hora
         </Label>
         <Controller
-          name="defaultHourlyRate"
+          name="defaultHourlyRateCents"
           control={control}
           render={({ field }) => (
             <MoneyInput
               id={RATE_FIELD_ID}
               form={FORM_ID}
-              min={0.01}
-              max={9999.99}
+              min={1}
+              max={999_999}
               value={field.value ?? 0}
               onChange={field.onChange}
               onBlur={field.onBlur}
-              aria-invalid={errors.defaultHourlyRate ? true : undefined}
+              aria-invalid={errors.defaultHourlyRateCents ? true : undefined}
               disabled={isSubmitting}
             />
           )}
         />
-        {errors.defaultHourlyRate && (
-          <p className="mt-1 text-xs text-destructive">{errors.defaultHourlyRate.message}</p>
+        {errors.defaultHourlyRateCents && (
+          <p className="mt-1 text-xs text-destructive">{errors.defaultHourlyRateCents.message}</p>
         )}
       </TableCell>
       <TableCell className="w-24">
