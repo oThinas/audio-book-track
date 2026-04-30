@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { useAutoSavePreference } from "@/components/features/settings/hooks/use-auto-save-preference";
+import { useFavoritePageSelector } from "@/components/features/settings/hooks/use-favorite-page-selector";
 import {
   Select,
   SelectContent,
@@ -18,14 +18,8 @@ interface FavoritePageSelectorProps {
 }
 
 export function FavoritePageSelector({ initialValue }: FavoritePageSelectorProps) {
-  const [value, setValue] = useState(initialValue);
   const { save } = useAutoSavePreference();
-
-  function handleChange(newValue: FavoritePage | null) {
-    if (!newValue) return;
-    setValue(newValue);
-    save({ favoritePage: newValue });
-  }
+  const { value, handleChange } = useFavoritePageSelector({ initialValue, save });
 
   const Icon = PAGE_ICONS[value];
 

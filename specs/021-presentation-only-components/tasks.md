@@ -120,18 +120,18 @@ Web app monolito Next.js — uma única árvore `src/` na raiz do repo. Testes e
 
 Targets: `primary-color-selector.tsx`, `favorite-page-selector.tsx`, `preference-initializer.tsx`. (`theme-selector.tsx` e `font-size-selector.tsx` permanecem 🟢 conforme [data-model.md](./data-model.md).)
 
-- [ ] T028 [US2] Criar (se ainda não criado em T003d) `src/components/features/settings/hooks/` e criar `__tests__/unit/components/features/settings/`
-- [ ] T029 [P] [US2] Escrever testes RED para `usePrimaryColorSelector` em `__tests__/unit/components/features/settings/use-primary-color-selector.spec.ts` (estado, callbacks, integração com `useAutoSavePreference` mockado via fake injetado)
-- [ ] T030 [P] [US2] Escrever testes RED para `useFavoritePageSelector` em `__tests__/unit/components/features/settings/use-favorite-page-selector.spec.ts`
-- [ ] T031 [P] [US2] Escrever testes RED para `usePreferenceInitializer` em `__tests__/unit/components/features/settings/use-preference-initializer.spec.ts` (verifica `useEffect` de bootstrap dispara exatamente uma vez)
-- [ ] T032 [P] [US2] Implementar `usePrimaryColorSelector` em `src/components/features/settings/hooks/use-primary-color-selector.ts`
-- [ ] T033 [P] [US2] Implementar `useFavoritePageSelector` em `src/components/features/settings/hooks/use-favorite-page-selector.ts`
-- [ ] T034 [P] [US2] Implementar `usePreferenceInitializer` em `src/components/features/settings/hooks/use-preference-initializer.ts`
-- [ ] T035 [US2] Refatorar `src/components/features/settings/primary-color-selector.tsx` para consumir o hook; remover `useState` e callbacks com lógica
-- [ ] T036 [US2] Refatorar `src/components/features/settings/favorite-page-selector.tsx`
-- [ ] T037 [US2] Refatorar `src/components/features/settings/preference-initializer.tsx` (deve sobrar < 15 LOC após extração do `useEffect`)
-- [ ] T038 [US2] Validar: `bun run test:unit -- --coverage src/components/features/settings/hooks` ≥ 80%; smoke manual em `/settings`; `bun run test:integration` + `test:e2e` com filtro settings verdes
-- [ ] T039 [US2] Self-review da sub-feature; abrir PR contra `main` com title `refactor(021): 🎨 settings — extrai lógica para hooks`
+- [X] T028 [US2] Criar (se ainda não criado em T003d) `src/components/features/settings/hooks/` e criar `__tests__/unit/components/features/settings/`
+- [X] T029 [P] [US2] Escrever testes RED para `usePrimaryColorSelector` em `__tests__/unit/components/features/settings/use-primary-color-selector.spec.ts` (estado, callbacks, integração com `useAutoSavePreference` mockado via fake injetado)
+- [X] T030 [P] [US2] Escrever testes RED para `useFavoritePageSelector` em `__tests__/unit/components/features/settings/use-favorite-page-selector.spec.ts`
+- [X] T031 [P] [US2] Escrever testes RED para `usePreferenceInitializer` em `__tests__/unit/components/features/settings/use-preference-initializer.spec.ts` (verifica `useEffect` de bootstrap dispara exatamente uma vez)
+- [X] T032 [P] [US2] Implementar `usePrimaryColorSelector` em `src/components/features/settings/hooks/use-primary-color-selector.ts`
+- [X] T033 [P] [US2] Implementar `useFavoritePageSelector` em `src/components/features/settings/hooks/use-favorite-page-selector.ts`
+- [X] T034 [P] [US2] Implementar `usePreferenceInitializer` em `src/components/features/settings/hooks/use-preference-initializer.ts`
+- [X] T035 [US2] Refatorar `src/components/features/settings/primary-color-selector.tsx` para consumir o hook; remover `useState` e callbacks com lógica
+- [X] T036 [US2] Refatorar `src/components/features/settings/favorite-page-selector.tsx`
+- [X] T037 [US2] Refatorar `src/components/features/settings/preference-initializer.tsx` (deve sobrar < 15 LOC após extração do `useEffect`)
+- [X] T038 [US2] Validar: `bun run test:unit -- --coverage src/components/features/settings/hooks` ≥ 80%; smoke manual em `/settings`; `bun run test:integration` + `test:e2e` com filtro settings verdes
+- [X] T039 [US2] Self-review da sub-feature; abrir PR contra `main` com title `refactor(021): 🎨 settings — extrai lógica para hooks`
 
 **Checkpoint A**: Settings migrada e PR'd.
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { usePreferenceInitializer } from "@/components/features/settings/hooks/use-preference-initializer";
 import type { FontSize, PrimaryColor } from "@/lib/domain/user-preference";
 
 interface PreferenceInitializerProps {
@@ -9,14 +9,6 @@ interface PreferenceInitializerProps {
 }
 
 export function PreferenceInitializer({ fontSize, primaryColor }: PreferenceInitializerProps) {
-  useEffect(() => {
-    const fontSizeMap = { small: "14px", medium: "16px", large: "18px" } as const;
-    document.documentElement.style.fontSize = fontSizeMap[fontSize];
-    document.documentElement.setAttribute("data-primary-color", primaryColor);
-    try {
-      localStorage.setItem("primary-color", primaryColor);
-    } catch {}
-  }, [fontSize, primaryColor]);
-
+  usePreferenceInitializer({ fontSize, primaryColor });
   return null;
 }
