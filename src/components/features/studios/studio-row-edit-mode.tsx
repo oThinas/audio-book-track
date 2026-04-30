@@ -10,22 +10,27 @@ import { Label } from "@/components/ui/label";
 import { MoneyInput } from "@/components/ui/money-input";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { type Studio, type StudioFormValues, studioFormSchema } from "@/lib/domain/studio";
+import type { StudioListItem } from "@/lib/repositories/studio-repository";
 
-import { useCreateStudioForm } from "./hooks/use-create-studio-form";
+import { useUpdateStudioForm } from "./hooks/use-update-studio-form";
 
-interface StudioNewRowProps {
-  readonly onCreated: (studio: Studio) => void;
-  readonly onCancelled: () => void;
+interface StudioRowEditModeProps {
+  readonly studio: StudioListItem;
+  readonly onCancel: () => void;
+  readonly onUpdated: (studio: Studio) => void;
 }
 
-const FORM_ID = "studio-new-row-form";
-const NAME_FIELD_ID = "studio-new-name";
-const RATE_FIELD_ID = "studio-new-default-hourly-rate";
+export function StudioRowEditMode({ studio, onCancel, onUpdated }: StudioRowEditModeProps) {
+  const formId = `studio-edit-row-form-${studio.id}`;
+  const nameFieldId = `studio-edit-name-${studio.id}`;
+  const rateFieldId = `studio-edit-default-hourly-rate-${studio.id}`;
 
-export function StudioNewRow({ onCreated, onCancelled }: StudioNewRowProps) {
   const form = useForm<StudioFormValues>({
     resolver: zodResolver(studioFormSchema),
-    defaultValues: { name: "", defaultHourlyRateCents: 0 },
+    defaultValues: {
+      name: studio.name,
+      defaultHourlyRateCents: studio.defaultHourlyRateCents,
+    },
   });
   const {
     register,
@@ -34,20 +39,25 @@ export function StudioNewRow({ onCreated, onCancelled }: StudioNewRowProps) {
     formState: { errors, isSubmitting },
   } = form;
 
-  const { onSubmit, firstFieldRef } = useCreateStudioForm({ form, onCreated });
+  const { onSubmit, firstFieldRef } = useUpdateStudioForm({
+    studioId: studio.id,
+    form,
+    onUpdated,
+    onNotFound: onCancel,
+  });
 
   const { ref: nameRefCallback, ...nameRegister } = register("name");
 
   return (
-    <TableRow data-testid="studio-new-row">
+    <TableRow data-testid="studio-row">
       <TableCell className="align-top">
-        <form id={FORM_ID} onSubmit={handleSubmit(onSubmit)} className="contents" noValidate />
-        <Label htmlFor={NAME_FIELD_ID} className="sr-only">
+        <form id={formId} onSubmit={handleSubmit(onSubmit)} className="contents" noValidate />
+        <Label htmlFor={nameFieldId} className="sr-only">
           Nome
         </Label>
         <Input
-          id={NAME_FIELD_ID}
-          form={FORM_ID}
+          id={nameFieldId}
+          form={formId}
           placeholder="Nome do estúdio"
           aria-invalid={errors.name ? true : undefined}
           disabled={isSubmitting}
@@ -60,7 +70,7 @@ export function StudioNewRow({ onCreated, onCancelled }: StudioNewRowProps) {
         {errors.name && <p className="mt-1 text-xs text-destructive">{errors.name.message}</p>}
       </TableCell>
       <TableCell className="align-top">
-        <Label htmlFor={RATE_FIELD_ID} className="sr-only">
+        <Label htmlFor={rateFieldId} className="sr-only">
           Valor/hora
         </Label>
         <Controller
@@ -68,8 +78,8 @@ export function StudioNewRow({ onCreated, onCancelled }: StudioNewRowProps) {
           control={control}
           render={({ field }) => (
             <MoneyInput
-              id={RATE_FIELD_ID}
-              form={FORM_ID}
+              id={rateFieldId}
+              form={formId}
               min={1}
               max={999_999}
               value={field.value ?? 0}
@@ -84,6 +94,9 @@ export function StudioNewRow({ onCreated, onCancelled }: StudioNewRowProps) {
           <p className="mt-1 text-xs text-destructive">{errors.defaultHourlyRateCents.message}</p>
         )}
       </TableCell>
+      <TableCell className="text-foreground align-top">
+        <span className="text-muted-foreground">{studio.booksCount}</span>
+      </TableCell>
       <TableCell className="w-24">
         <div className="flex items-center justify-end gap-1">
           <Button
@@ -91,14 +104,14 @@ export function StudioNewRow({ onCreated, onCancelled }: StudioNewRowProps) {
             variant="ghost"
             size="icon-sm"
             aria-label="Cancelar"
-            onClick={onCancelled}
+            onClick={onCancel}
             disabled={isSubmitting}
           >
             <X aria-hidden="true" />
           </Button>
           <Button
             type="submit"
-            form={FORM_ID}
+            form={formId}
             variant="ghost"
             size="icon-sm"
             aria-label="Confirmar"

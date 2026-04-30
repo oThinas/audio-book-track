@@ -67,40 +67,40 @@ Web app monolito Next.js — uma única árvore `src/` na raiz do repo. Testes e
 
 ### Pré-flight da feature
 
-- [ ] T005 [US1] Criar pastas `src/components/features/studios/hooks/` e `__tests__/unit/components/features/studios/`
+- [X] T005 [US1] Criar pastas `src/components/features/studios/hooks/` e `__tests__/unit/components/features/studios/`
 
 ### Tests for User Story 1 (TDD — Vitest + renderHook) ⚠️
 
 > Escreva os testes PRIMEIRO; rode e confirme RED antes de implementar.
 
-- [ ] T006 [P] [US1] Escrever testes para `useStudiosList` em `__tests__/unit/components/features/studios/use-studios-list.spec.ts` cobrindo todos os asserts mínimos de [contracts/use-studios-list.contract.md](./contracts/use-studios-list.contract.md) (estado inicial, sortedStudios, handleNewClick, handleCreated com booksCount=0, handleUpdated preserva booksCount, handleRequestDelete, handleDeleteDialogChange, handleDeleted, isDeleteDialogOpen)
-- [ ] T007 [P] [US1] Escrever testes para `useCreateStudioForm` em `__tests__/unit/components/features/studios/use-create-studio-form.spec.ts` cobrindo asserts de [contracts/use-create-studio-form.contract.md](./contracts/use-create-studio-form.contract.md) (foco no mount, 201 dispara onCreated, 422 mapeia para form.setError, 409 NAME_ALREADY_IN_USE marca name, 500 toast.error, nunca toast.success)
-- [ ] T008 [P] [US1] Escrever testes para `useStudioRow` em `__tests__/unit/components/features/studios/use-studio-row.spec.ts` cobrindo asserts de [contracts/use-studio-row.contract.md](./contracts/use-studio-row.contract.md) sub-contract A (handleStartEdit, handleEditCompleted, handleRequestDelete, canDelete)
-- [ ] T009 [P] [US1] Escrever testes para `useUpdateStudioForm` em `__tests__/unit/components/features/studios/use-update-studio-form.spec.ts` cobrindo asserts de [contracts/use-studio-row.contract.md](./contracts/use-studio-row.contract.md) sub-contract B (foco mount, 200 dispara onUpdated, 422 form.setError, 409 NAME_ALREADY_IN_USE, 500 toast.error)
-- [ ] T010 [P] [US1] Escrever testes para `useDeleteStudio` em `__tests__/unit/components/features/studios/use-delete-studio.spec.ts` cobrindo asserts de [contracts/use-delete-studio.contract.md](./contracts/use-delete-studio.contract.md) (no-op com studio=null, 204 fecha dialog, 409 BOOKS_EXIST mantém aberto com error, 500 toast.error, error reseta quando studio muda)
-- [ ] T011 [US1] Rodar `bun run test:unit __tests__/unit/components/features/studios` e confirmar **todos os testes falharem** (RED) antes de seguir para implementação
+- [X] T006 [P] [US1] Escrever testes para `useStudiosList` em `__tests__/unit/components/features/studios/use-studios-list.spec.ts` cobrindo todos os asserts mínimos de [contracts/use-studios-list.contract.md](./contracts/use-studios-list.contract.md) (estado inicial, sortedStudios, handleNewClick, handleCreated com booksCount=0, handleUpdated preserva booksCount, handleRequestDelete, handleDeleteDialogChange, handleDeleted, isDeleteDialogOpen)
+- [X] T007 [P] [US1] Escrever testes para `useCreateStudioForm` em `__tests__/unit/components/features/studios/use-create-studio-form.spec.ts` cobrindo asserts de [contracts/use-create-studio-form.contract.md](./contracts/use-create-studio-form.contract.md) (foco no mount, 201 dispara onCreated, 422 mapeia para form.setError, 409 NAME_ALREADY_IN_USE marca name, 500 toast.error, nunca toast.success)
+- [X] T008 [P] [US1] Escrever testes para `useStudioRow` em `__tests__/unit/components/features/studios/use-studio-row.spec.ts` cobrindo asserts de [contracts/use-studio-row.contract.md](./contracts/use-studio-row.contract.md) sub-contract A (handleStartEdit, handleEditCompleted, handleRequestDelete, canDelete)
+- [X] T009 [P] [US1] Escrever testes para `useUpdateStudioForm` em `__tests__/unit/components/features/studios/use-update-studio-form.spec.ts` cobrindo asserts de [contracts/use-studio-row.contract.md](./contracts/use-studio-row.contract.md) sub-contract B (foco mount, 200 dispara onUpdated, 422 form.setError, 409 NAME_ALREADY_IN_USE, 500 toast.error)
+- [X] T010 [P] [US1] Escrever testes para `useDeleteStudio` em `__tests__/unit/components/features/studios/use-delete-studio.spec.ts` cobrindo asserts de [contracts/use-delete-studio.contract.md](./contracts/use-delete-studio.contract.md) (no-op com studio=null, 204 fecha dialog, 409 BOOKS_EXIST mantém aberto com error, 500 toast.error, error reseta quando studio muda)
+- [X] T011 [US1] Rodar `bun run test:unit __tests__/unit/components/features/studios` e confirmar **todos os testes falharem** (RED) antes de seguir para implementação
 
 ### Implementation for User Story 1
 
-- [ ] T012 [P] [US1] Implementar `useStudiosList` em `src/components/features/studios/hooks/use-studios-list.ts` conforme [contracts/use-studios-list.contract.md](./contracts/use-studios-list.contract.md); fazer testes T006 passarem (GREEN)
-- [ ] T013 [P] [US1] Implementar `useCreateStudioForm` em `src/components/features/studios/hooks/use-create-studio-form.ts` conforme contrato; fazer T007 passar
-- [ ] T014 [P] [US1] Implementar `useStudioRow` em `src/components/features/studios/hooks/use-studio-row.ts` conforme sub-contract A; fazer T008 passar
-- [ ] T015 [P] [US1] Implementar `useUpdateStudioForm` em `src/components/features/studios/hooks/use-update-studio-form.ts` conforme sub-contract B; fazer T009 passar
-- [ ] T016 [P] [US1] Implementar `useDeleteStudio` em `src/components/features/studios/hooks/use-delete-studio.ts` conforme contrato; fazer T010 passar
-- [ ] T017 [US1] Extrair `StudioRowEditMode` para arquivo próprio `src/components/features/studios/studio-row-edit-mode.tsx` (hoje função interna em `studio-row.tsx` l.86–234) — ainda mantém a lógica embutida temporariamente; refactor de comportamento vem em T019
-- [ ] T018 [US1] Refatorar `src/components/features/studios/studios-client.tsx` para consumir `useStudiosList`; remover `useState`/`useMemo`/`useRouter` locais; LOC esperado ≤ 55 (depende de T012)
-- [ ] T019 [US1] Refatorar `src/components/features/studios/studio-row-edit-mode.tsx` para consumir `useUpdateStudioForm`; manter `useForm()` no componente; remover `useEffect`/`useRef`/`fetch`; LOC esperado ≤ 95 (depende de T015, T017)
-- [ ] T020 [US1] Refatorar `src/components/features/studios/studio-row.tsx` para consumir `useStudioRow`; remover `useState`; renderizar `<StudioRowEditMode>` quando `isEditing`; LOC esperado ≤ 60 (depende de T014, T017, T019)
-- [ ] T021 [US1] Refatorar `src/components/features/studios/studio-new-row.tsx` para consumir `useCreateStudioForm`; manter `useForm()` no componente; remover `useEffect`/`useRef`/`fetch`/`onSubmit` inline; LOC esperado ≤ 110 (depende de T013)
-- [ ] T022 [US1] Refatorar `src/components/features/studios/delete-studio-dialog.tsx` para consumir `useDeleteStudio`; remover `fetch`/`useState` de mutação; exibir `error` retornado pelo hook quando presente; LOC esperado ≤ 70 (depende de T016)
+- [X] T012 [P] [US1] Implementar `useStudiosList` em `src/components/features/studios/hooks/use-studios-list.ts` conforme [contracts/use-studios-list.contract.md](./contracts/use-studios-list.contract.md); fazer testes T006 passarem (GREEN)
+- [X] T013 [P] [US1] Implementar `useCreateStudioForm` em `src/components/features/studios/hooks/use-create-studio-form.ts` conforme contrato; fazer T007 passar
+- [X] T014 [P] [US1] Implementar `useStudioRow` em `src/components/features/studios/hooks/use-studio-row.ts` conforme sub-contract A; fazer T008 passar
+- [X] T015 [P] [US1] Implementar `useUpdateStudioForm` em `src/components/features/studios/hooks/use-update-studio-form.ts` conforme sub-contract B; fazer T009 passar
+- [X] T016 [P] [US1] Implementar `useDeleteStudio` em `src/components/features/studios/hooks/use-delete-studio.ts` conforme contrato; fazer T010 passar
+- [X] T017 [US1] Extrair `StudioRowEditMode` para arquivo próprio `src/components/features/studios/studio-row-edit-mode.tsx` (hoje função interna em `studio-row.tsx` l.86–234) — ainda mantém a lógica embutida temporariamente; refactor de comportamento vem em T019
+- [X] T018 [US1] Refatorar `src/components/features/studios/studios-client.tsx` para consumir `useStudiosList`; remover `useState`/`useMemo`/`useRouter` locais; LOC esperado ≤ 55 (depende de T012)
+- [X] T019 [US1] Refatorar `src/components/features/studios/studio-row-edit-mode.tsx` para consumir `useUpdateStudioForm`; manter `useForm()` no componente; remover `useEffect`/`useRef`/`fetch`; LOC esperado ≤ 95 (depende de T015, T017)
+- [X] T020 [US1] Refatorar `src/components/features/studios/studio-row.tsx` para consumir `useStudioRow`; remover `useState`; renderizar `<StudioRowEditMode>` quando `isEditing`; LOC esperado ≤ 60 (depende de T014, T017, T019)
+- [X] T021 [US1] Refatorar `src/components/features/studios/studio-new-row.tsx` para consumir `useCreateStudioForm`; manter `useForm()` no componente; remover `useEffect`/`useRef`/`fetch`/`onSubmit` inline; LOC esperado ≤ 110 (depende de T013)
+- [X] T022 [US1] Refatorar `src/components/features/studios/delete-studio-dialog.tsx` para consumir `useDeleteStudio`; remover `fetch`/`useState` de mutação; exibir `error` retornado pelo hook quando presente; LOC esperado ≤ 70 (depende de T016)
 
 ### Validation for User Story 1
 
-- [ ] T023 [US1] Rodar `bun run test:unit -- --coverage src/components/features/studios/hooks` e confirmar cobertura ≥ 80% (linhas e branches) — Success Criteria SC-003
-- [ ] T024 [US1] Rodar `bun run test:integration -- studios` e confirmar verde sem alteração nos testes existentes (oráculo de não-regressão)
-- [ ] T025 [US1] Rodar `bun run test:e2e -- studios` e confirmar verde sem alteração
+- [X] T023 [US1] Rodar `bun run test:unit -- --coverage src/components/features/studios/hooks` e confirmar cobertura ≥ 80% (linhas e branches) — Success Criteria SC-003
+- [X] T024 [US1] Rodar `bun run test:integration -- studios` e confirmar verde sem alteração nos testes existentes (oráculo de não-regressão)
+- [X] T025 [US1] Rodar `bun run test:e2e -- studios` e confirmar verde sem alteração
 - [ ] T026 [US1] Smoke manual: subir `bun run dev`, navegar para `/studios`, executar fluxos completos (criar, editar, excluir, criar duplicado → 409, recarregar página)
-- [ ] T027 [US1] Self-review por componente refatorado conforme checklist em [quickstart.md Passo 9](./quickstart.md#passo-9--self-review-checklist); confirmar para cada um: hook não retorna JSX, hook não importa de `@/components/`, componente não importa `@/lib/services/`, componente < 200 LOC, sem `useEffect` de side-effect, sem `fetch`, zero `toast.success` introduzido
+- [X] T027 [US1] Self-review por componente refatorado conforme checklist em [quickstart.md Passo 9](./quickstart.md#passo-9--self-review-checklist); confirmar para cada um: hook não retorna JSX, hook não importa de `@/components/`, componente não importa `@/lib/services/`, componente < 200 LOC, sem `useEffect` de side-effect, sem `fetch`, zero `toast.success` introduzido
 
 **Checkpoint**: User Story 1 completa. Estúdios é o exemplo canônico replicável. Padrão validado por testes, smoke e self-review. **Esta é a entrega MVP da feature** — pode ser PR independente.
 
