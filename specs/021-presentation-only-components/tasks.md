@@ -27,9 +27,9 @@ Web app monolito Next.js — uma única árvore `src/` na raiz do repo. Testes e
 
 **Purpose**: Pré-requisitos compartilhados antes de iniciar qualquer story. Nenhuma instalação de dependência nova — `@testing-library/react`, Vitest e `next/navigation` mock já estão disponíveis no projeto.
 
-- [ ] T001 [P] Confirmar que `@testing-library/react` resolve e `renderHook` está disponível executando um smoke test descartável (`__tests__/unit/_smoke/render-hook.spec.ts` rodando `bun run test:unit __tests__/unit/_smoke`); apagar o smoke após validação
-- [ ] T002 [P] Adicionar/verificar mock canônico de `next/navigation` no `__tests__/unit/setup.ts` para que `useRouter().refresh()` funcione em todos os testes de hook sem repetição de `vi.mock` em cada spec
-- [ ] T003 [P] Criar arquivo `docs/hooks-pattern.md` com link curto para [quickstart.md](./quickstart.md) e [contracts/](./contracts/), servindo como entrada rápida para o time encontrar o padrão
+- [X] T001 [P] Confirmar que `@testing-library/react` resolve e `renderHook` está disponível executando um smoke test descartável (`__tests__/unit/_smoke/render-hook.spec.ts` rodando `bun run test:unit __tests__/unit/_smoke`); apagar o smoke após validação
+- [X] T002 [P] Adicionar/verificar mock canônico de `next/navigation` no `__tests__/unit/setup.ts` para que `useRouter().refresh()` funcione em todos os testes de hook sem repetição de `vi.mock` em cada spec
+- [X] T003 [P] Criar arquivo `docs/hooks-pattern.md` com link curto para [quickstart.md](./quickstart.md) e [contracts/](./contracts/), servindo como entrada rápida para o time encontrar o padrão
 
 **Checkpoint**: ambiente de teste de hooks pronto e documentação de entrada disponível.
 
@@ -39,7 +39,7 @@ Web app monolito Next.js — uma única árvore `src/` na raiz do repo. Testes e
 
 **Purpose**: Garantia de oráculo de comportamento — toda a suíte verde **antes** de tocar em qualquer feature. Zero novas instalações.
 
-- [ ] T004 Rodar `bun run test:unit && bun run test:integration && bun run test:e2e` no estado atual de `main` mergeado em `021-presentation-only-components`; capturar resumo (totais e tempos) em `specs/021-presentation-only-components/baseline-tests.md` para referência de não-regressão
+- [X] T004 Rodar `bun run test:unit && bun run test:integration && bun run test:e2e` no estado atual de `main` mergeado em `021-presentation-only-components`; capturar resumo (totais e tempos) em `specs/021-presentation-only-components/baseline-tests.md` para referência de não-regressão
 
 **Checkpoint**: baseline registrado. User stories podem iniciar.
 
