@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { act, renderHook } from "@testing-library/react";
-import { buildNarrator, buildNarratorListItem } from "@tests/helpers/seed-objects";
+import { buildNarrator, buildNarratorListItem } from "@tests/helpers/seed";
 import { useRouter } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useNarratorsList } from "@/components/features/narrators/hooks/use-narrators-list";

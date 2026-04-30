@@ -1,4 +1,4 @@
-import { seedInMemoryBook } from "@tests/helpers/seed";
+import { seedInMemoryBook } from "@tests/helpers/seed-in-memory";
 import { NoOpUnitOfWork } from "@tests/helpers/test-unit-of-work";
 import { InMemoryBookRepository } from "@tests/repositories/in-memory-book-repository";
 import { InMemoryChapterRepository } from "@tests/repositories/in-memory-chapter-repository";

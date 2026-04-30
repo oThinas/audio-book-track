@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { act, renderHook } from "@testing-library/react";
-import { buildStudio, buildStudioListItem } from "@tests/helpers/seed-objects";
+import { buildStudio, buildStudioListItem } from "@tests/helpers/seed";
 import { useRouter } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useStudiosList } from "@/components/features/studios/hooks/use-studios-list";

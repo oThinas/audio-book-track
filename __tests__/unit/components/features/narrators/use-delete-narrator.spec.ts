@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, renderHook } from "@testing-library/react";
 import { emptyResponse, jsonResponse } from "@tests/helpers/fetch-response";
-import { buildNarrator } from "@tests/helpers/seed-objects";
+import { buildNarrator } from "@tests/helpers/seed";
 import { toast } from "sonner";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useDeleteNarrator } from "@/components/features/narrators/hooks/use-delete-narrator";

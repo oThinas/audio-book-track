@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, renderHook } from "@testing-library/react";
 import { jsonResponse } from "@tests/helpers/fetch-response";
-import { buildNarrator } from "@tests/helpers/seed-objects";
+import { buildNarrator } from "@tests/helpers/seed";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { beforeEach, describe, expect, it, vi } from "vitest";
