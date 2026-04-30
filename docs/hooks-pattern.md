@@ -23,7 +23,7 @@ Componentes em `src/components/features/<feature>/` ficam **apenas de renderiza�
 
 ## Convenções resumidas
 
-- **Co-localização**: hook em `src/components/features/<feature>/hooks/use-<scope>.ts`. Promoção para `src/lib/hooks/` apenas quando usado por ≥ 2 features.
+- **Co-localização**: hooks ficam sempre em uma subpasta `hooks/` dentro da área que os consome — `src/components/features/<feature>/hooks/use-<scope>.ts` para hooks de feature, `src/components/layout/hooks/use-<scope>.ts` para hooks do shell de layout. `src/lib/hooks/` é reservado para o caso de hooks usados por **≥ 2 features distintas** — hoje não há ocorrências; recriar a pasta sob esse critério explícito quando surgir necessidade real.
 - **Retorno**: objeto nomeado (`{ data, isLoading, callbacks, ... }`), nunca tupla.
 - **Naming**: `use-<feature>-<scope>` (ex.: `use-studios-list`, `use-studio-row`, `use-create-studio-form`).
 - **RHF**: `useForm()` permanece **no componente**; o hook recebe `form` por argumento e expõe `onSubmit`.

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAutoSavePreference } from "@/components/features/settings/hooks/use-auto-save-preference";
 import {
   Select,
   SelectContent,
@@ -10,7 +11,6 @@ import {
 } from "@/components/ui/select";
 import { NAVIGABLE_PAGES, NAVIGABLE_PAGES_MAP } from "@/lib/domain/navigable-pages";
 import type { FavoritePage } from "@/lib/domain/user-preference";
-import { useAutoSavePreference } from "@/lib/hooks/use-auto-save-preference";
 import { PAGE_ICONS } from "@/lib/ui/page-icons";
 
 interface FavoritePageSelectorProps {

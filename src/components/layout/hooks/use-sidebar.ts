@@ -1,9 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { SIDEBAR_COOKIE_NAME } from "./sidebar-constants";
-
-export { getSidebarCollapsed, SIDEBAR_COOKIE_NAME } from "./sidebar-constants";
+import { SIDEBAR_COOKIE_NAME } from "../sidebar-constants";
 
 export function useSidebar(initialCollapsed: boolean) {
   const [collapsed, setCollapsed] = useState(initialCollapsed);

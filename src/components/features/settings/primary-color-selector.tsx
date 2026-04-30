@@ -2,9 +2,9 @@
 
 import { Check } from "lucide-react";
 import { useState } from "react";
+import { useAutoSavePreference } from "@/components/features/settings/hooks/use-auto-save-preference";
 import type { PrimaryColor } from "@/lib/domain/user-preference";
 import { PRIMARY_COLORS } from "@/lib/domain/user-preference";
-import { useAutoSavePreference } from "@/lib/hooks/use-auto-save-preference";
 import { cn } from "@/lib/utils";
 
 const COLOR_MAP: Record<PrimaryColor, { bg: string; ring: string }> = {

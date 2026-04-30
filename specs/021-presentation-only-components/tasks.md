@@ -35,6 +35,20 @@ Web app monolito Next.js — uma única árvore `src/` na raiz do repo. Testes e
 
 ---
 
+## Phase 1.5: Esvaziar e remover `src/lib/hooks/` (Cleanup estrutural)
+
+**Purpose**: A pasta `src/lib/hooks/` foi inspecionada e os 4 arquivos não justificam sua permanência: 3 são shell de layout (pertencem a `src/components/layout/`), 1 é específico da feature `settings` (pertence a `src/components/features/settings/hooks/`), e 1 deles (`sidebar-constants.ts`) sequer é hook. Sweep único antes de US1 para que o repositório fique sem ambiguidade durante a refatoração das features.
+
+- [X] T003a Mover `src/lib/hooks/use-mobile-menu.ts` → `src/components/layout/hooks/use-mobile-menu.ts`. Atualizar imports em `src/app/(authenticated)/layout-client.tsx` e em `__tests__/unit/hooks/use-mobile-menu.spec.ts` (mover o spec para `__tests__/unit/components/layout/hooks/use-mobile-menu.spec.ts`)
+- [X] T003b Mover `src/lib/hooks/use-sidebar.ts` → `src/components/layout/hooks/use-sidebar.ts`. Atualizar import em `src/app/(authenticated)/layout-client.tsx`. Ajustar import interno do `sidebar-constants` para `../sidebar-constants` (ver T003c). Re-export de `getSidebarCollapsed`/`SIDEBAR_COOKIE_NAME` removido do hook (consumidores importam direto do `sidebar-constants`)
+- [X] T003c Mover `src/lib/hooks/sidebar-constants.ts` → `src/components/layout/sidebar-constants.ts` (não é hook — fica no root da pasta `layout`, fora de `hooks/`). Atualizar import em `src/app/(authenticated)/layout.tsx` para `@/components/layout/sidebar-constants`. Spec mal-nomeado `__tests__/unit/use-sidebar.spec.ts` (testava só constantes) renomeado para `__tests__/unit/components/layout/sidebar-constants.spec.ts`
+- [X] T003d Mover `src/lib/hooks/use-auto-save-preference.ts` → `src/components/features/settings/hooks/use-auto-save-preference.ts` (feature única `settings`, 4 consumidores). Criar pasta `src/components/features/settings/hooks/` se necessário. Atualizar imports em `theme-selector.tsx`, `font-size-selector.tsx`, `primary-color-selector.tsx`, `favorite-page-selector.tsx`
+- [X] T003e Remover `src/lib/hooks/` (deve estar vazio). Rodar `bun run test:unit` e confirmar contagem **idêntica à baseline** (633 testes / 59 arquivos verde) — file moves não introduzem testes novos nem mudam comportamento
+
+**Checkpoint**: `src/lib/hooks/` removido. Cada hook co-localizado com seu único consumidor (layout ou settings). Spec de `use-mobile-menu` migrada para o novo path.
+
+---
+
 ## Phase 2: Foundational (Blocking Prerequisites)
 
 **Purpose**: Garantia de oráculo de comportamento — toda a suíte verde **antes** de tocar em qualquer feature. Zero novas instalações.
@@ -106,7 +120,7 @@ Web app monolito Next.js — uma única árvore `src/` na raiz do repo. Testes e
 
 Targets: `primary-color-selector.tsx`, `favorite-page-selector.tsx`, `preference-initializer.tsx`. (`theme-selector.tsx` e `font-size-selector.tsx` permanecem 🟢 conforme [data-model.md](./data-model.md).)
 
-- [ ] T028 [US2] Criar `src/components/features/settings/hooks/` e `__tests__/unit/components/features/settings/`
+- [ ] T028 [US2] Criar (se ainda não criado em T003d) `src/components/features/settings/hooks/` e criar `__tests__/unit/components/features/settings/`
 - [ ] T029 [P] [US2] Escrever testes RED para `usePrimaryColorSelector` em `__tests__/unit/components/features/settings/use-primary-color-selector.spec.ts` (estado, callbacks, integração com `useAutoSavePreference` mockado via fake injetado)
 - [ ] T030 [P] [US2] Escrever testes RED para `useFavoritePageSelector` em `__tests__/unit/components/features/settings/use-favorite-page-selector.spec.ts`
 - [ ] T031 [P] [US2] Escrever testes RED para `usePreferenceInitializer` em `__tests__/unit/components/features/settings/use-preference-initializer.spec.ts` (verifica `useEffect` de bootstrap dispara exatamente uma vez)

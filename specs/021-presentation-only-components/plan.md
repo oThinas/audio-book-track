@@ -134,7 +134,7 @@ CLAUDE.md                                   # P3: adicionar regra na seção Arq
 
 1. **Co-localização**: hook + componente da mesma feature evoluem juntos; mover entre features fica explícito.
 2. **Subpasta `hooks/` (vs. arquivos soltos na raiz da feature)**: separa visualmente apresentação de lógica dentro da própria feature, escalando para 4–8 hooks por feature sem poluir a listagem.
-3. **`src/lib/hooks/` permanece** para hooks **reutilizáveis entre features** (`use-sidebar`, `use-mobile-menu`, `use-auto-save-preference`). Critério para promover: usado por ≥ 2 features.
+3. **`src/lib/hooks/` é removida** (Phase 1.5 / T003a–T003e). Hooks do shell de layout (`use-sidebar`, `use-mobile-menu`) migram para `src/components/layout/hooks/` (consumidor único: `(authenticated)/layout-client.tsx`). O helper `sidebar-constants` migra para `src/components/layout/` (root da área, fora de `hooks/`, por não ser hook). `use-auto-save-preference` migra para `src/components/features/settings/hooks/` (consumidor único: feature `settings`). A convenção `<area>/hooks/` é mantida em todas as áreas (`features/<feature>/hooks/`, `layout/hooks/`). Caso futuramente algum hook seja compartilhado por ≥ 2 features, recriar `src/lib/hooks/` sob esse critério explícito.
 
 ## Complexity Tracking
 

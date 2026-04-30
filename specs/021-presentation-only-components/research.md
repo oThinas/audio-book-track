@@ -222,7 +222,7 @@ function useCreateStudioForm({ form, onCreated }: Args) {
 
 ## R6 — Naming convention dos hooks
 
-**Decision**: `use-<feature>-<scope>.ts` em kebab-case (alinhado com as rules globais e o pattern existente em `src/lib/hooks/use-mobile-menu.ts`). Export como camelCase: `useStudiosList`, `useStudioRow`, `useDeleteStudio`.
+**Decision**: `use-<feature>-<scope>.ts` em kebab-case (alinhado com as rules globais e o pattern existente em `use-mobile-menu.ts`, que sai de `src/lib/hooks/` para `src/components/layout/hooks/` na Phase 1.5). Export como camelCase: `useStudiosList`, `useStudioRow`, `useDeleteStudio`.
 
 Convenções:
 

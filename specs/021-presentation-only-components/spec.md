@@ -72,7 +72,7 @@ Como tech lead, eu quero **enforcement humano-assistido** — constituição ame
 - **Forms com React Hook Form**: a chamada `useForm()` permanece no componente do formulário (é a forma idiomática), mas o **submit handler**, mutações associadas, refetch e tratamento de erros são extraídos para um hook (ex.: `useCreateStudioForm()` retornando `{ form, onSubmit, isSubmitting, error }`).
 - **Páginas (`src/app/**/page.tsx`)**: continuam Server Components quando possível. Quando precisam ser client, seguem a mesma regra.
 - **Componentes de layout autenticado (`PageContainer`, `PageHeader`, etc.)**: são apresentacionais e permanecem inalterados.
-- **Hooks já existentes em `src/lib/hooks/` (`use-sidebar`, `use-mobile-menu`, `use-auto-save-preference`)**: já seguem o padrão; servem como confirmação de que a infraestrutura está pronta.
+- **Hooks pré-existentes do projeto** (`use-sidebar`, `use-mobile-menu`, `use-auto-save-preference`): já seguem o padrão estrutural (objeto nomeado retornado, sem JSX dentro). Como parte desta feature (Phase 1.5), os 3 são relocados para junto dos seus consumidores únicos — `src/components/layout/hooks/` para os dois primeiros, `src/components/features/settings/hooks/` para o terceiro. A pasta `src/lib/hooks/` deixa de existir.
 - **Migração de capítulos com state machine complexa**: a lógica de transição (`pending → editing → reviewing → ...`) deve sair completamente do componente e residir em um hook dedicado, permitindo testes unitários sem renderização.
 
 ## Requirements *(mandatory)*
@@ -117,7 +117,7 @@ Como tech lead, eu quero **enforcement humano-assistido** — constituição ame
 - A refatoração é **incremental por feature** (uma feature por PR ou conjunto pequeno), não um big-bang. Cada PR mantém o app verde e o comportamento observável intacto.
 - Server Components continuam sendo o padrão para páginas que apenas exibem dados; a regra incide somente sobre componentes client.
 - A biblioteca React Hook Form permanece como ferramenta canônica para formulários; a separação acontece entre o `useForm()` (fica no componente) e a orquestração do submit + mutações (vai para hook).
-- Hooks específicos de uma única feature ficam **co-localizados** em `src/components/features/<feature>/use-*.ts(x)`. Hooks reutilizáveis entre features ficam em `src/lib/hooks/`. A pasta `src/lib/hooks/` já existe e contém exemplos do padrão (`use-sidebar`, `use-mobile-menu`, `use-auto-save-preference`).
+- Hooks ficam **co-localizados** em uma subpasta `hooks/` dentro da área que os consome: `src/components/features/<feature>/hooks/use-*.ts` para hooks de feature, `src/components/layout/hooks/use-*.ts` para hooks do shell de layout. `src/lib/hooks/` é reservado para o caso (hoje inexistente) de hooks usados por ≥ 2 features distintas — recriar a pasta apenas sob esse critério explícito.
 - Componentes em `src/components/ui/**` e `src/components/layout/**` permanecem inalterados.
 - A suíte de testes existente (unit, integration, e2e) é considerada o oráculo de comportamento observável; mudanças que quebrem testes indicam regressão e bloqueiam o PR.
 - Skills `/frontend-patterns` e `/frontend-design` serão consultadas no `/speckit-plan` e durante implementação para detalhamento técnico (composição, hooks, separação container/presentational, naming).
