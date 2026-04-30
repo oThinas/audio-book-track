@@ -186,24 +186,24 @@ Targets: `narrators-client.tsx`, `narrator-row.tsx`, `narrator-new-row.tsx`, `de
 
 Targets: `editors-client.tsx`, `editor-row.tsx`, `editor-new-row.tsx`, `delete-editor-dialog.tsx`. (`editors-table.tsx` permanece 🟢.) Mesmo padrão de Narradores.
 
-- [ ] T067 [US2] Criar `src/components/features/editors/hooks/` e `__tests__/unit/components/features/editors/`
-- [ ] T068 [P] [US2] Escrever testes RED para `useEditorsList`
-- [ ] T069 [P] [US2] Escrever testes RED para `useCreateEditorForm`
-- [ ] T070 [P] [US2] Escrever testes RED para `useEditorRow`
-- [ ] T071 [P] [US2] Escrever testes RED para `useUpdateEditorForm`
-- [ ] T072 [P] [US2] Escrever testes RED para `useDeleteEditor`
-- [ ] T073 [P] [US2] Implementar `useEditorsList` em `src/components/features/editors/hooks/use-editors-list.ts`
-- [ ] T074 [P] [US2] Implementar `useCreateEditorForm`
-- [ ] T075 [P] [US2] Implementar `useEditorRow`
-- [ ] T076 [P] [US2] Implementar `useUpdateEditorForm`
-- [ ] T077 [P] [US2] Implementar `useDeleteEditor`
-- [ ] T078 [US2] Extrair `EditorRowEditMode` se necessário
-- [ ] T079 [US2] Refatorar `editors-client.tsx`
-- [ ] T080 [US2] Refatorar `editor-row.tsx` (+ edit-mode)
-- [ ] T081 [US2] Refatorar `editor-new-row.tsx`
-- [ ] T082 [US2] Refatorar `delete-editor-dialog.tsx`
-- [ ] T083 [US2] Validar: cobertura ≥ 80%; smoke `/editors`; testes filtro editors verdes
-- [ ] T084 [US2] Self-review e PR `refactor(021): ✂️ editors — extrai lógica para hooks`
+- [X] T067 [US2] Criar `src/components/features/editors/hooks/` e `__tests__/unit/components/features/editors/`
+- [X] T068 [P] [US2] Escrever testes RED para `useEditorsList`
+- [X] T069 [P] [US2] Escrever testes RED para `useCreateEditorForm`
+- [X] T070 [P] [US2] Escrever testes RED para `useEditorRow`
+- [X] T071 [P] [US2] Escrever testes RED para `useUpdateEditorForm`
+- [X] T072 [P] [US2] Escrever testes RED para `useDeleteEditor`
+- [X] T073 [P] [US2] Implementar `useEditorsList` em `src/components/features/editors/hooks/use-editors-list.ts`
+- [X] T074 [P] [US2] Implementar `useCreateEditorForm`
+- [X] T075 [P] [US2] Implementar `useEditorRow`
+- [X] T076 [P] [US2] Implementar `useUpdateEditorForm`
+- [X] T077 [P] [US2] Implementar `useDeleteEditor`
+- [X] T078 [US2] Extrair `EditorRowEditMode` se necessário
+- [X] T079 [US2] Refatorar `editors-client.tsx`
+- [X] T080 [US2] Refatorar `editor-row.tsx` (+ edit-mode)
+- [X] T081 [US2] Refatorar `editor-new-row.tsx`
+- [X] T082 [US2] Refatorar `delete-editor-dialog.tsx`
+- [X] T083 [US2] Validar: cobertura ≥ 80%; smoke `/editors`; testes filtro editors verdes
+- [X] T084 [US2] Self-review e PR `refactor(021): ✂️ editors — extrai lógica para hooks`
 
 **Checkpoint D**: Editores migrada e PR'd.
 

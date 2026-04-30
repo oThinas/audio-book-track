@@ -9,43 +9,50 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { type Editor, type EditorFormValues, editorFormSchema } from "@/lib/domain/editor";
+import type { EditorListItem } from "@/lib/repositories/editor-repository";
 
-import { useCreateEditorForm } from "./hooks/use-create-editor-form";
+import { useUpdateEditorForm } from "./hooks/use-update-editor-form";
 
-interface EditorNewRowProps {
-  readonly onCreated: (editor: Editor) => void;
-  readonly onCancelled: () => void;
+interface EditorRowEditModeProps {
+  readonly editor: EditorListItem;
+  readonly onCancel: () => void;
+  readonly onUpdated: (editor: Editor) => void;
 }
 
-const FORM_ID = "editor-new-row-form";
-const NAME_FIELD_ID = "editor-new-name";
-const EMAIL_FIELD_ID = "editor-new-email";
+export function EditorRowEditMode({ editor, onCancel, onUpdated }: EditorRowEditModeProps) {
+  const formId = `editor-edit-row-form-${editor.id}`;
+  const nameFieldId = `editor-edit-name-${editor.id}`;
+  const emailFieldId = `editor-edit-email-${editor.id}`;
 
-export function EditorNewRow({ onCreated, onCancelled }: EditorNewRowProps) {
   const form = useForm<EditorFormValues>({
     resolver: zodResolver(editorFormSchema),
-    defaultValues: { name: "", email: "" },
+    defaultValues: { name: editor.name, email: editor.email },
   });
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = form;
 
-  const { onSubmit, isSubmitting, firstFieldRef } = useCreateEditorForm({ form, onCreated });
+  const { onSubmit, firstFieldRef } = useUpdateEditorForm({
+    editorId: editor.id,
+    form,
+    onUpdated,
+    onNotFound: onCancel,
+  });
 
   const { ref: nameRefCallback, ...nameRegister } = register("name");
 
   return (
-    <TableRow data-testid="editor-new-row">
+    <TableRow data-testid="editor-row">
       <TableCell className="align-top">
-        <form id={FORM_ID} onSubmit={handleSubmit(onSubmit)} className="contents" noValidate />
-        <Label htmlFor={NAME_FIELD_ID} className="sr-only">
+        <form id={formId} onSubmit={handleSubmit(onSubmit)} className="contents" noValidate />
+        <Label htmlFor={nameFieldId} className="sr-only">
           Nome
         </Label>
         <Input
-          id={NAME_FIELD_ID}
-          form={FORM_ID}
+          id={nameFieldId}
+          form={formId}
           placeholder="Nome do editor"
           aria-invalid={errors.name ? true : undefined}
           disabled={isSubmitting}
@@ -58,12 +65,12 @@ export function EditorNewRow({ onCreated, onCancelled }: EditorNewRowProps) {
         {errors.name && <p className="mt-1 text-xs text-destructive">{errors.name.message}</p>}
       </TableCell>
       <TableCell className="align-top">
-        <Label htmlFor={EMAIL_FIELD_ID} className="sr-only">
+        <Label htmlFor={emailFieldId} className="sr-only">
           E-mail
         </Label>
         <Input
-          id={EMAIL_FIELD_ID}
-          form={FORM_ID}
+          id={emailFieldId}
+          form={formId}
           type="email"
           placeholder="email@studio.com"
           aria-invalid={errors.email ? true : undefined}
@@ -72,6 +79,9 @@ export function EditorNewRow({ onCreated, onCancelled }: EditorNewRowProps) {
         />
         {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>}
       </TableCell>
+      <TableCell className="text-foreground align-top">
+        <span className="text-muted-foreground">{editor.chaptersCount}</span>
+      </TableCell>
       <TableCell className="w-24">
         <div className="flex items-center justify-end gap-1">
           <Button
@@ -79,14 +89,14 @@ export function EditorNewRow({ onCreated, onCancelled }: EditorNewRowProps) {
             variant="ghost"
             size="icon-sm"
             aria-label="Cancelar"
-            onClick={onCancelled}
+            onClick={onCancel}
             disabled={isSubmitting}
           >
             <X aria-hidden="true" />
           </Button>
           <Button
             type="submit"
-            form={FORM_ID}
+            form={formId}
             variant="ghost"
             size="icon-sm"
             aria-label="Confirmar"
