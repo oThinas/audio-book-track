@@ -82,8 +82,8 @@
 
 - [x] T018 Verificar que `radix-ui` nao aparece em package.json (confirmado zero matches)
 - [x] T019 Executar `bun run lint:fix` e `bun run lint` — sem erros
-- [ ] T020 Executar verificacao visual da pagina de login conforme quickstart.md
-- [ ] T021 Verificar bundle size comparando com estado anterior (deve ser igual ou menor)
+- [x] T020 Executar verificacao visual da pagina de login conforme quickstart.md
+- [x] T021 Verificar bundle size comparando com estado anterior (deve ser igual ou menor)
 
 ---
 

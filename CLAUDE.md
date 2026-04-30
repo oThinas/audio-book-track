@@ -48,6 +48,7 @@
 - **NUNCA usar elementos HTML crus** (`<button>`, `<input>`, `<select>`, etc.) quando existe componente equivalente em `components/ui/`. Usar `<Button>`, `<Input>`, `<Select>`, etc.
 - **Páginas autenticadas DEVEM usar componentes de layout** — `<PageContainer>`, `<PageHeader>`, `<PageTitle>`, `<PageDescription>` de `components/layout/page-container.tsx`.
 - **Dark mode obrigatório** — todo componente DEVE funcionar em modo claro e escuro. Usar tokens semânticos do Tailwind (`bg-background`, `text-foreground`). NUNCA cores hardcoded que não se adaptam ao tema.
+- **Toasts apenas para warnings/erros** — `toast.success(...)` (e equivalentes verde+checkmark) são **proibidos**. O feedback de sucesso DEVE vir da própria efetivação da ação na UI (item entrando/saindo da lista, dialog fechando, redirecionamento, status atualizado). Exceção: ações sem efeito visível imediato (envio em background, exportação enfileirada) podem usar toast **neutro informativo** curto, nunca verde de sucesso. Ações destrutivas concluídas preferem `toast.warning(...)` ou undo discreto.
 - **Arquivo `design.pen`** — consultar via Pencil MCP antes de construir qualquer tela nova como referência visual.
 - **`use client` apenas quando necessário** — Server Components são o padrão.
 - **Data fetching** usa Server Components com `async/await`; `useEffect` para fetch é proibido.
@@ -85,6 +86,7 @@
 - Pasta `_components/` (ou similar) dentro de `src/app/` — componentes de feature DEVEM ficar em `src/components/features/<feature>/`.
 - Página autenticada sem `<PageContainer>` e componentes de layout.
 - Ignorar dark mode — cores que não se adaptam ao tema.
+- `toast.success(...)` (ou equivalente verde + checkmark genérico) para confirmar ações concluídas — feedback de sucesso vem da própria UI; toasts ficam reservados a warnings e erros.
 - Lógica de negócio em controllers.
 - SQL direto fora de repositories.
 - Swallow silencioso de erros: `catch (e) {}`.

@@ -1,45 +1,26 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 2.14.0 → 2.15.0 (MINOR: data/persistence guidance
-materially expanded after the 020-books-chapters-crud feature
-introduced four reusable patterns now mandatory for new entities.
-No principle removed or redefined; existing principles I and XI
-gained explicit sub-rules covering: BookStatus as materialized cache
-with synchronous transactional recompute, unified soft-delete
-(deleted_at + partial unique index, no ON DELETE SET NULL),
-auto-undelete on name collision (desarquive automático), service-level
-Unit of Work via SavepointUnitOfWork, and derived columns through
-findAllWithCounts() with *ListItem view types. These were already
-required de facto by the production codebase; this amendment lifts
-them from CLAUDE.md inline rules to constitutional principles so they
-bind future features.)
+Version change: 2.15.0 → 2.16.0 (MINOR: nova diretriz de UX adicionada
+ao Princípio VII proibindo toasts de sucesso; o feedback visual de
+sucesso DEVE vir da própria efetivação da ação na UI. Anti-padrão
+correspondente refletido no Princípio XII. Nenhum princípio removido
+ou redefinido.)
 
 Modified principles:
-  - I. Capítulo como Unidade de Trabalho:
-    - Adicionado: `book.status` é cache materializado computado a
-      partir do mínimo do ciclo dos capítulos via
-      `BookStatusRecomputeService`; capítulo permanece a fonte da
-      verdade. Recomputação ocorre na MESMA transação de qualquer
-      mutação de capítulo (create/update/delete/bulk-delete).
-  - XI. PostgreSQL e Banco de Dados:
-    - Adicionado: padrão de soft-delete unificado para entidades
-      soft-deletáveis (`studio`, `narrator`, `editor`) — coluna
-      `deleted_at` (nullable, `withTimezone`) + índice único parcial
-      `WHERE deleted_at IS NULL` + índice de apoio em
-      `deleted_at IS NOT NULL`; FKs entrantes usam `RESTRICT` e nunca
-      `ON DELETE SET NULL`.
-    - Adicionado: desarquive automático por colisão de nome — criar
-      uma entidade soft-deletável com nome igual ao de um registro
-      arquivado reativa o registro original (mesmo `id`); service
-      retorna `reactivated: true`.
-    - Adicionado: transações multi-tabela em services usam
-      `SavepointUnitOfWork` (port `UnitOfWork` com adapter Drizzle)
-      em vez de `db.transaction()` direto na rota.
-    - Adicionado: derived columns via `findAllWithCounts()` no
-      repository (single query com `LEFT JOIN + GROUP BY`); tipos
-      `*ListItem` extendem a entidade com o campo derivado, mantendo
-      o tipo base inalterado.
+  - VII. Frontend: Composição, Atomicidade e Mobile First:
+    - Adicionado: subseção "Toasts e feedback de sucesso" — toasts
+      DEVEM ser usados apenas para warnings e erros. Sucesso deve
+      ser comunicado pela própria mudança visual (item adicionado
+      à lista, dialog fechando, redirecionamento, badge atualizado,
+      etc.). Exceções limitadas: ações sem efeito visível imediato
+      (ex: envio de e-mail em background) podem usar toast neutro
+      curto, e nunca verde com checkmark genérico.
+  - XII. Anti-Padrões Proibidos:
+    - Adicionado em "Frontend": uso de toast/sonner com variante
+      `success` (ou cor verde + checkmark) para confirmar ações
+      concluídas — proibido. O feedback de sucesso DEVE vir da
+      própria UI refletindo o novo estado.
 
 Added sections: N/A
 
@@ -47,11 +28,10 @@ Removed sections: N/A
 
 Templates requiring updates:
   ✅ .specify/memory/constitution.md — este arquivo (atualizado agora)
-  ✅ CLAUDE.md — já contém os blocos correspondentes (T140 da feature
-     020), refletindo as mesmas regras agora elevadas a princípios
-  ⚠ docs/ — nenhuma referência cruzada exigia atualização; nenhum
-     diagrama de arquitetura mencionava soft-delete unificado ou
-     UnitOfWork explicitamente
+  ⚠ CLAUDE.md — adicionar a regra na seção "Arquitetura" (UI) e
+     no bloco de "Anti-padrões proibidos" → flagged abaixo
+  ⚠ Self-Review Checklist — adicionar item correspondente no
+     bloco "Anti-Padrões"
 
 Follow-up TODOs: N/A.
 -->
@@ -479,6 +459,33 @@ herança. Componentes DEVEM ser atômicos e independentes.
 - Testar visualmente ambos os modos antes de considerar a
   implementação concluída.
 
+**Toasts e feedback de sucesso:**
+
+- Toasts (via `sonner` ou similar) DEVEM ser usados **apenas para
+  warnings e erros** — nunca para confirmar sucesso de uma ação.
+- O feedback visual de sucesso DEVE vir da própria efetivação da
+  ação na UI: item aparecendo/desaparecendo da lista, dialog
+  fechando, redirecionamento, badge/status atualizado em tempo
+  real, contagem incrementada, etc.
+- `toast.success(...)` e variantes equivalentes (cor verde +
+  checkmark genérico) são **proibidos**. Em código existente,
+  remover essas chamadas e garantir que a UI reflita o novo estado
+  sem necessidade de notificação.
+- Exceção limitada: ações cujo efeito não é visível imediatamente
+  na tela atual (ex: envio assíncrono em background, exportação
+  enfileirada) PODEM usar um toast **neutro e informativo** curto
+  descrevendo o efeito ("E-mail enviado", "Exportação iniciada"),
+  nunca um toast genérico de sucesso.
+- Para ações destrutivas concluídas, preferir
+  `toast.warning(...)` ou um confirm-then-undo discreto em vez de
+  toast de sucesso.
+
+**Rationale (toasts):** confirmar sucesso com toast é redundante
+quando a UI já reflete o novo estado, polui a tela com ruído
+descartável e desvia a atenção do usuário. Reservar toasts para
+warnings e erros aumenta o sinal: quando um toast aparece, ele
+sempre exige atenção.
+
 **Arquivo de design como referência:**
 
 - O arquivo `design.pen` na raiz do projeto é a referência visual
@@ -733,6 +740,11 @@ Os seguintes padrões são **explicitamente proibidos** neste projeto:
   colocar componentes de UI junto à rota. Componentes de feature
   DEVEM ficar em `src/components/features/<feature>/` (ver
   Princípio VII).
+- Toast/sonner com variante `success` (ou equivalente verde +
+  checkmark genérico) para confirmar ações concluídas. O feedback
+  de sucesso DEVE vir da própria UI refletindo o novo estado
+  (ver Princípio VII, "Toasts e feedback de sucesso"). Toasts ficam
+  reservados a warnings e erros.
 
 **Banco de dados:**
 - `float` ou `double` para valores financeiros.
@@ -1072,6 +1084,8 @@ submeter para review ou merge:
 - [ ] Nenhuma página sem `<PageContainer>` e componentes de layout?
 - [ ] Nenhuma pasta `_components/` dentro de `src/app/` (componentes de feature em `src/components/features/<feature>/`)?
 - [ ] Dark mode funciona corretamente em todos os componentes novos?
+- [ ] Nenhum `toast.success(...)` (ou equivalente) — sucesso é mostrado pela própria UI?
+- [ ] Toasts presentes são apenas para warnings/erros (ou neutro informativo em ações sem efeito visível)?
 - [ ] Erros são tratados explicitamente (sem `catch (e) {}`)?
 ```
 
@@ -1079,4 +1093,4 @@ submeter para review ou merge:
 revisar por outros e cria responsabilidade pessoal com os padrões
 definidos nesta constituição.
 
-**Version**: 2.15.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-04-29
+**Version**: 2.16.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-04-30

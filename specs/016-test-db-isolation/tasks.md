@@ -306,4 +306,4 @@ Convergem em Phase 6/7.
 - **Parallel opportunities**: ~30 tasks marcadas com `[P]` (arquivos distintos, sem dependências cruzadas)
 - **Independent test criteria**: todas as user stories têm pelo menos 1 teste de aceitação escrito antes da implementação (TDD strict)
 - **MVP scope sugerido**: Phase 1 + Phase 2 + Phase 3 (resolve US1)
-- **Format validation**: todas as tasks seguem `- [ ] T### [P?] [US?] descrição com caminho de arquivo`
+- **Format validation**: todas as tasks seguem `- [x] T### [P?] [US?] descrição com caminho de arquivo`
