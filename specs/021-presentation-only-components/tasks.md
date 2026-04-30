@@ -141,15 +141,15 @@ Targets: `primary-color-selector.tsx`, `favorite-page-selector.tsx`, `preference
 
 Targets: `login-form.tsx`, `logout-button.tsx`.
 
-- [ ] T040 [US2] Criar `src/components/features/auth/hooks/` e `__tests__/unit/components/features/auth/`
-- [ ] T041 [P] [US2] Escrever testes RED para `useLoginForm` em `__tests__/unit/components/features/auth/use-login-form.spec.ts` (submit chama better-auth client; sucesso redireciona; erro mostra mensagem; nunca toast.success)
-- [ ] T042 [P] [US2] Escrever testes RED para `useLogout` em `__tests__/unit/components/features/auth/use-logout.spec.ts` (signOut + redirect)
-- [ ] T043 [P] [US2] Implementar `useLoginForm` em `src/components/features/auth/hooks/use-login-form.ts`
-- [ ] T044 [P] [US2] Implementar `useLogout` em `src/components/features/auth/hooks/use-logout.ts`
-- [ ] T045 [US2] Refatorar `src/components/features/auth/login-form.tsx` para consumir `useLoginForm`; manter `useForm()`; remover `signIn` inline e tratamento de erro inline
-- [ ] T046 [US2] Refatorar `src/components/features/auth/logout-button.tsx` para consumir `useLogout`
-- [ ] T047 [US2] Validar: cobertura ≥ 80% nos hooks; smoke manual `/login` (login válido, login inválido, logout); `bun run test:integration` + `test:e2e` filtro auth verdes
-- [ ] T048 [US2] Self-review e PR `refactor(021): 🔐 auth — extrai lógica para hooks`
+- [X] T040 [US2] Criar `src/components/features/auth/hooks/` e `__tests__/unit/components/features/auth/`
+- [X] T041 [P] [US2] Escrever testes RED para `useLoginForm` em `__tests__/unit/components/features/auth/use-login-form.spec.ts` (submit chama better-auth client; sucesso redireciona; erro mostra mensagem; nunca toast.success)
+- [X] T042 [P] [US2] Escrever testes RED para `useLogout` em `__tests__/unit/components/features/auth/use-logout.spec.ts` (signOut + redirect)
+- [X] T043 [P] [US2] Implementar `useLoginForm` em `src/components/features/auth/hooks/use-login-form.ts`
+- [X] T044 [P] [US2] Implementar `useLogout` em `src/components/features/auth/hooks/use-logout.ts`
+- [X] T045 [US2] Refatorar `src/components/features/auth/login-form.tsx` para consumir `useLoginForm`; manter `useForm()`; remover `signIn` inline e tratamento de erro inline
+- [X] T046 [US2] Refatorar `src/components/features/auth/logout-button.tsx` para consumir `useLogout`
+- [X] T047 [US2] Validar: cobertura ≥ 80% nos hooks; smoke manual `/login` (login válido, login inválido, logout); `bun run test:integration` + `test:e2e` filtro auth verdes
+- [X] T048 [US2] Self-review e PR `refactor(021): 🔐 auth — extrai lógica para hooks`
 
 **Checkpoint B**: Auth migrada e PR'd.
 
