@@ -10,7 +10,9 @@
  * the fields that matter for the test.
  */
 
+import type { Narrator } from "@/lib/domain/narrator";
 import type { Studio } from "@/lib/domain/studio";
+import type { NarratorListItem } from "@/lib/repositories/narrator-repository";
 import type { StudioListItem } from "@/lib/repositories/studio-repository";
 
 export function buildStudio(overrides: Partial<Studio> = {}): Studio {
@@ -26,4 +28,18 @@ export function buildStudio(overrides: Partial<Studio> = {}): Studio {
 
 export function buildStudioListItem(overrides: Partial<StudioListItem> = {}): StudioListItem {
   return { ...buildStudio(), booksCount: 0, ...overrides };
+}
+
+export function buildNarrator(overrides: Partial<Narrator> = {}): Narrator {
+  return {
+    id: "n-1",
+    name: "Narrator One",
+    createdAt: new Date("2026-01-01T10:00:00.000Z"),
+    updatedAt: new Date("2026-01-01T10:00:00.000Z"),
+    ...overrides,
+  };
+}
+
+export function buildNarratorListItem(overrides: Partial<NarratorListItem> = {}): NarratorListItem {
+  return { ...buildNarrator(), chaptersCount: 0, ...overrides };
 }

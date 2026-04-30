@@ -9,44 +9,49 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { type Narrator, type NarratorFormValues, narratorFormSchema } from "@/lib/domain/narrator";
+import type { NarratorListItem } from "@/lib/repositories/narrator-repository";
 
-import { useCreateNarratorForm } from "./hooks/use-create-narrator-form";
+import { useUpdateNarratorForm } from "./hooks/use-update-narrator-form";
 
-interface NarratorNewRowProps {
-  readonly onCreated: (narrator: Narrator) => void;
-  readonly onCancelled: () => void;
+interface NarratorRowEditModeProps {
+  readonly narrator: NarratorListItem;
+  readonly onCancel: () => void;
+  readonly onUpdated: (narrator: Narrator) => void;
 }
 
-export function NarratorNewRow({ onCreated, onCancelled }: NarratorNewRowProps) {
+export function NarratorRowEditMode({ narrator, onCancel, onUpdated }: NarratorRowEditModeProps) {
+  const formId = `narrator-edit-row-form-${narrator.id}`;
+  const nameFieldId = `narrator-edit-name-${narrator.id}`;
+
   const form = useForm<NarratorFormValues>({
     resolver: zodResolver(narratorFormSchema),
-    defaultValues: { name: "" },
+    defaultValues: { name: narrator.name },
   });
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = form;
 
-  const { onSubmit, isSubmitting, firstFieldRef } = useCreateNarratorForm({ form, onCreated });
+  const { onSubmit, firstFieldRef } = useUpdateNarratorForm({
+    narratorId: narrator.id,
+    form,
+    onUpdated,
+    onNotFound: onCancel,
+  });
 
   const { ref: nameRefCallback, ...nameRegister } = register("name");
 
   return (
-    <TableRow data-testid="narrator-new-row">
+    <TableRow data-testid="narrator-row">
       <TableCell className="align-top">
-        <form
-          id="narrator-new-row-form"
-          onSubmit={handleSubmit(onSubmit)}
-          className="contents"
-          noValidate
-        />
-        <Label htmlFor="narrator-new-name" className="sr-only">
+        <form id={formId} onSubmit={handleSubmit(onSubmit)} className="contents" noValidate />
+        <Label htmlFor={nameFieldId} className="sr-only">
           Nome
         </Label>
         <Input
-          id="narrator-new-name"
-          form="narrator-new-row-form"
+          id={nameFieldId}
+          form={formId}
           placeholder="Nome do narrador"
           aria-invalid={errors.name ? true : undefined}
           disabled={isSubmitting}
@@ -58,6 +63,9 @@ export function NarratorNewRow({ onCreated, onCancelled }: NarratorNewRowProps) 
         />
         {errors.name && <p className="mt-1 text-xs text-destructive">{errors.name.message}</p>}
       </TableCell>
+      <TableCell className="text-foreground align-top">
+        <span className="text-muted-foreground">{narrator.chaptersCount}</span>
+      </TableCell>
       <TableCell className="w-24">
         <div className="flex items-center justify-end gap-1">
           <Button
@@ -65,14 +73,14 @@ export function NarratorNewRow({ onCreated, onCancelled }: NarratorNewRowProps) 
             variant="ghost"
             size="icon-sm"
             aria-label="Cancelar"
-            onClick={onCancelled}
+            onClick={onCancel}
             disabled={isSubmitting}
           >
             <X aria-hidden="true" />
           </Button>
           <Button
             type="submit"
-            form="narrator-new-row-form"
+            form={formId}
             variant="ghost"
             size="icon-sm"
             aria-label="Confirmar"

@@ -159,24 +159,24 @@ Targets: `login-form.tsx`, `logout-button.tsx`.
 
 Targets: `narrators-client.tsx`, `narrator-row.tsx`, `narrator-new-row.tsx`, `delete-narrator-dialog.tsx`. (`narrators-table.tsx` permanece 🟢.) **Replicar quase 1:1 o padrão de Estúdios** — narradores tem CRUD com soft-delete + reativação igual a estúdios.
 
-- [ ] T049 [US2] Criar `src/components/features/narrators/hooks/` e `__tests__/unit/components/features/narrators/`
-- [ ] T050 [P] [US2] Escrever testes RED para `useNarratorsList` (espelhando contrato de `useStudiosList`)
-- [ ] T051 [P] [US2] Escrever testes RED para `useCreateNarratorForm`
-- [ ] T052 [P] [US2] Escrever testes RED para `useNarratorRow`
-- [ ] T053 [P] [US2] Escrever testes RED para `useUpdateNarratorForm`
-- [ ] T054 [P] [US2] Escrever testes RED para `useDeleteNarrator`
-- [ ] T055 [P] [US2] Implementar `useNarratorsList` em `src/components/features/narrators/hooks/use-narrators-list.ts`
-- [ ] T056 [P] [US2] Implementar `useCreateNarratorForm` em `src/components/features/narrators/hooks/use-create-narrator-form.ts`
-- [ ] T057 [P] [US2] Implementar `useNarratorRow` em `src/components/features/narrators/hooks/use-narrator-row.ts`
-- [ ] T058 [P] [US2] Implementar `useUpdateNarratorForm` em `src/components/features/narrators/hooks/use-update-narrator-form.ts`
-- [ ] T059 [P] [US2] Implementar `useDeleteNarrator` em `src/components/features/narrators/hooks/use-delete-narrator.ts`
-- [ ] T060 [US2] Extrair `NarratorRowEditMode` para `src/components/features/narrators/narrator-row-edit-mode.tsx` (caso seja função interna como em studios)
-- [ ] T061 [US2] Refatorar `src/components/features/narrators/narrators-client.tsx`
-- [ ] T062 [US2] Refatorar `src/components/features/narrators/narrator-row.tsx` + `narrator-row-edit-mode.tsx`
-- [ ] T063 [US2] Refatorar `src/components/features/narrators/narrator-new-row.tsx`
-- [ ] T064 [US2] Refatorar `src/components/features/narrators/delete-narrator-dialog.tsx`
-- [ ] T065 [US2] Validar: cobertura ≥ 80% hooks; smoke `/narrators`; testes filtro narrators verdes
-- [ ] T066 [US2] Self-review e PR `refactor(021): 🎙️ narrators — extrai lógica para hooks`
+- [X] T049 [US2] Criar `src/components/features/narrators/hooks/` e `__tests__/unit/components/features/narrators/`
+- [X] T050 [P] [US2] Escrever testes RED para `useNarratorsList` (espelhando contrato de `useStudiosList`)
+- [X] T051 [P] [US2] Escrever testes RED para `useCreateNarratorForm`
+- [X] T052 [P] [US2] Escrever testes RED para `useNarratorRow`
+- [X] T053 [P] [US2] Escrever testes RED para `useUpdateNarratorForm`
+- [X] T054 [P] [US2] Escrever testes RED para `useDeleteNarrator`
+- [X] T055 [P] [US2] Implementar `useNarratorsList` em `src/components/features/narrators/hooks/use-narrators-list.ts`
+- [X] T056 [P] [US2] Implementar `useCreateNarratorForm` em `src/components/features/narrators/hooks/use-create-narrator-form.ts`
+- [X] T057 [P] [US2] Implementar `useNarratorRow` em `src/components/features/narrators/hooks/use-narrator-row.ts`
+- [X] T058 [P] [US2] Implementar `useUpdateNarratorForm` em `src/components/features/narrators/hooks/use-update-narrator-form.ts`
+- [X] T059 [P] [US2] Implementar `useDeleteNarrator` em `src/components/features/narrators/hooks/use-delete-narrator.ts`
+- [X] T060 [US2] Extrair `NarratorRowEditMode` para `src/components/features/narrators/narrator-row-edit-mode.tsx` (caso seja função interna como em studios)
+- [X] T061 [US2] Refatorar `src/components/features/narrators/narrators-client.tsx`
+- [X] T062 [US2] Refatorar `src/components/features/narrators/narrator-row.tsx` + `narrator-row-edit-mode.tsx`
+- [X] T063 [US2] Refatorar `src/components/features/narrators/narrator-new-row.tsx`
+- [X] T064 [US2] Refatorar `src/components/features/narrators/delete-narrator-dialog.tsx`
+- [X] T065 [US2] Validar: cobertura ≥ 80% hooks; smoke `/narrators`; testes filtro narrators verdes
+- [X] T066 [US2] Self-review e PR `refactor(021): 🎙️ narrators — extrai lógica para hooks`
 
 **Checkpoint C**: Narradores migrada e PR'd.
 
