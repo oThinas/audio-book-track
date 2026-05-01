@@ -27,7 +27,7 @@ export default async function BookDetailPage({ params }: BookDetailPageProps) {
     createBookService().findById(id),
     createNarratorService().list(),
     createEditorService().list(),
-    createStudioService().list(),
+    createStudioService().list({ orderBy: "name" }),
   ]);
   if (!detail) {
     notFound();

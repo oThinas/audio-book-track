@@ -17,7 +17,7 @@ export default async function BooksPage() {
 
   const [books, studios] = await Promise.all([
     createBookService().list(),
-    createStudioService().list(),
+    createStudioService().list({ orderBy: "name" }),
   ]);
 
   return (
