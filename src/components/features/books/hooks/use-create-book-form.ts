@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { UseFormReturn } from "react-hook-form";
+import { type UseFormReturn, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import type { ApiErrorBody } from "@/lib/api/error-response";
 import type { Studio } from "@/lib/domain/studio";
@@ -55,7 +55,7 @@ export function useCreateBookForm({
     return merged;
   }, [studios, inlineStudios]);
 
-  const selectedStudioId = form.watch("studioId");
+  const selectedStudioId = useWatch({ control: form.control, name: "studioId" });
   const selectedStudio = studioOptions.find((s) => s.id === selectedStudioId);
   const dirtyPrice = form.formState.dirtyFields.pricePerHourCents;
 
