@@ -1,9 +1,7 @@
 "use client";
 
 import { Check, Loader2, X } from "lucide-react";
-import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { SecondsInput } from "@/components/ui/seconds-input";
@@ -15,48 +13,13 @@ import { cn } from "@/lib/utils";
 import { ChapterPaidReversionDialog } from "./chapter-paid-reversion-dialog";
 import type { ChapterRowEntity, ChapterRowOption } from "./chapter-row";
 import { ChapterStatusSelect } from "./chapter-status-select";
+import {
+  buildChapterDraft,
+  type ChapterEditDraftValues,
+  useChapterRowEdit,
+} from "./hooks/use-chapter-row-edit";
 
 const EDITED_SECONDS_MAX = 3_600_000;
-const NULL_VALUE = "__none__";
-
-interface DraftValues {
-  readonly status: ChapterStatus;
-  readonly narratorId: string | null;
-  readonly editorId: string | null;
-  readonly editedSeconds: number;
-}
-
-function buildDraft(chapter: ChapterRowEntity): DraftValues {
-  return {
-    status: chapter.status,
-    narratorId: chapter.narrator?.id ?? null,
-    editorId: chapter.editor?.id ?? null,
-    editedSeconds: chapter.editedSeconds,
-  };
-}
-
-function buildPatch(
-  values: DraftValues,
-  current: ChapterRowEntity,
-): Record<string, unknown> | null {
-  const patch: Record<string, unknown> = {};
-
-  if (values.status !== current.status) {
-    patch.status = values.status;
-  }
-  if (values.narratorId !== (current.narrator?.id ?? null)) {
-    patch.narratorId = values.narratorId;
-  }
-  if (values.editorId !== (current.editor?.id ?? null)) {
-    patch.editorId = values.editorId;
-  }
-  if (values.editedSeconds !== current.editedSeconds) {
-    patch.editedSeconds = values.editedSeconds;
-  }
-
-  if (Object.keys(patch).length === 0) return null;
-  return patch;
-}
 
 interface ChapterRowEditModeProps {
   readonly chapter: ChapterRowEntity;
@@ -78,85 +41,22 @@ export function ChapterRowEditMode({
   onSaved,
 }: ChapterRowEditModeProps) {
   const formId = `chapter-edit-row-form-${chapter.id}`;
-  const [reversionPending, setReversionPending] = useState<DraftValues | null>(null);
-
+  const form = useForm<ChapterEditDraftValues>({ defaultValues: buildChapterDraft(chapter) });
   const {
     control,
     handleSubmit,
     formState: { isSubmitting },
-  } = useForm<DraftValues>({ defaultValues: buildDraft(chapter) });
+  } = form;
 
-  async function persist(patch: Record<string, unknown>): Promise<void> {
-    try {
-      const response = await fetch(`/api/v1/chapters/${chapter.id}`, {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(patch),
-      });
-      const body = (await response.json()) as
-        | {
-            data: {
-              id: string;
-              number: number;
-              status: ChapterStatus;
-              narratorId: string | null;
-              editorId: string | null;
-              editedSeconds: number;
-            };
-            meta: { bookStatus: ChapterStatus };
-          }
-        | { error: { code: string; message: string } };
-
-      if (!response.ok) {
-        const message = "error" in body ? body.error.message : "Erro ao atualizar capítulo.";
-        toast.error(message);
-        return;
-      }
-      if ("data" in body) {
-        const data = body.data;
-        const updated: ChapterRowEntity = {
-          id: data.id,
-          number: data.number,
-          status: data.status,
-          editedSeconds: data.editedSeconds,
-          narrator: data.narratorId
-            ? { id: data.narratorId, name: narratorNameById.get(data.narratorId) ?? "—" }
-            : null,
-          editor: data.editorId
-            ? { id: data.editorId, name: editorNameById.get(data.editorId) ?? "—" }
-            : null,
-        };
-        onSaved(updated, body.meta.bookStatus);
-      }
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro de rede ao atualizar capítulo.");
-    }
-  }
-
-  async function onSubmit(values: DraftValues): Promise<void> {
-    const patch = buildPatch(values, chapter);
-    if (!patch) {
-      onCancel();
-      return;
-    }
-    if (chapter.status === "paid" && patch.status === "completed") {
-      setReversionPending(values);
-      return;
-    }
-    await persist(patch);
-  }
-
-  async function confirmReversion(): Promise<void> {
-    const pending = reversionPending;
-    if (!pending) return;
-    setReversionPending(null);
-    const patch = buildPatch(pending, chapter);
-    if (!patch) {
-      onCancel();
-      return;
-    }
-    await persist({ ...patch, confirmReversion: true });
-  }
+  const { nullValue, reversionPending, cancelReversion, confirmReversion, onSubmit } =
+    useChapterRowEdit({
+      chapter,
+      narratorNameById,
+      editorNameById,
+      form,
+      onCancel,
+      onSaved,
+    });
 
   return (
     <>
@@ -186,8 +86,8 @@ export function ChapterRowEditMode({
             control={control}
             render={({ field }) => (
               <Select
-                value={field.value ?? NULL_VALUE}
-                onValueChange={(value) => field.onChange(value === NULL_VALUE ? null : value)}
+                value={field.value ?? nullValue}
+                onValueChange={(value) => field.onChange(value === nullValue ? null : value)}
                 disabled={isSubmitting}
               >
                 <SelectTrigger data-testid={`chapter-narrator-${chapter.id}`} className="w-full">
@@ -200,7 +100,7 @@ export function ChapterRowEditMode({
                   </span>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={NULL_VALUE}>—</SelectItem>
+                  <SelectItem value={nullValue}>—</SelectItem>
                   {narrators.map((narrator) => (
                     <SelectItem key={narrator.id} value={narrator.id}>
                       {narrator.name}
@@ -217,8 +117,8 @@ export function ChapterRowEditMode({
             control={control}
             render={({ field }) => (
               <Select
-                value={field.value ?? NULL_VALUE}
-                onValueChange={(value) => field.onChange(value === NULL_VALUE ? null : value)}
+                value={field.value ?? nullValue}
+                onValueChange={(value) => field.onChange(value === nullValue ? null : value)}
                 disabled={isSubmitting}
               >
                 <SelectTrigger data-testid={`chapter-editor-${chapter.id}`} className="w-full">
@@ -229,7 +129,7 @@ export function ChapterRowEditMode({
                   </span>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={NULL_VALUE}>—</SelectItem>
+                  <SelectItem value={nullValue}>—</SelectItem>
                   {editors.map((editor) => (
                     <SelectItem key={editor.id} value={editor.id}>
                       {editor.name}
@@ -294,7 +194,7 @@ export function ChapterRowEditMode({
       <ChapterPaidReversionDialog
         open={reversionPending !== null}
         chapterNumber={chapter.number}
-        onCancel={() => setReversionPending(null)}
+        onCancel={cancelReversion}
         onConfirm={confirmReversion}
       />
     </>

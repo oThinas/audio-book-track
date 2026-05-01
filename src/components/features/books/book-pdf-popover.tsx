@@ -2,16 +2,15 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ExternalLink, FileText, Loader2 } from "lucide-react";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import type { ApiErrorBody } from "@/lib/api/error-response";
+
+import { type PdfUrlFormValues, useBookPdfPopover } from "./hooks/use-book-pdf-popover";
 
 const PDF_URL_MAX_LENGTH = 2048;
 
@@ -26,8 +25,6 @@ const pdfUrlFormSchema = z.object({
       message: "URL deve começar com http:// ou https://",
     }),
 });
-
-type PdfUrlFormValues = z.infer<typeof pdfUrlFormSchema>;
 
 export interface BookPdfPopoverProps {
   readonly bookId: string;
@@ -44,66 +41,25 @@ export function BookPdfPopover({
   open: controlledOpen,
   onOpenChange,
 }: BookPdfPopoverProps) {
-  const [internalOpen, setInternalOpen] = useState(false);
-  const isControlled = controlledOpen !== undefined;
-  const isOpen = isControlled ? controlledOpen : internalOpen;
-  const {
-    register,
-    handleSubmit,
-    setError,
-    reset,
-    watch,
-    formState: { errors, isSubmitting, isDirty, isValid },
-  } = useForm<PdfUrlFormValues>({
+  const form = useForm<PdfUrlFormValues>({
     resolver: zodResolver(pdfUrlFormSchema),
     mode: "onChange",
     defaultValues: { pdfUrl: pdfUrl ?? "" },
   });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = form;
 
-  const watchedUrl = watch("pdfUrl");
-  const draft = watchedUrl?.trim() ?? "";
-  const isCleared = draft === "";
-  const persistedUrl = pdfUrl ?? "";
-  const hasPersistedChange = draft !== persistedUrl;
-
-  function handleOpenChange(nextOpen: boolean) {
-    if (nextOpen) {
-      // Sempre que abrir, sincroniza o form com o valor persistido.
-      reset({ pdfUrl: pdfUrl ?? "" });
-    }
-    if (!isControlled) setInternalOpen(nextOpen);
-    onOpenChange?.(nextOpen);
-  }
-
-  async function onSubmit(values: PdfUrlFormValues) {
-    const trimmed = values.pdfUrl.trim();
-    const payload: { pdfUrl: string | null } =
-      trimmed === "" ? { pdfUrl: null } : { pdfUrl: trimmed };
-    const response = await fetch(`/api/v1/books/${bookId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    if (response.status === 200) {
-      const next = trimmed === "" ? null : trimmed;
-      onUpdated(next);
-      handleOpenChange(false);
-      toast.success(next === null ? "URL do PDF removida." : "URL do PDF salva.");
-      return;
-    }
-
-    if (response.status === 422) {
-      const body = (await response.json().catch(() => null)) as ApiErrorBody | null;
-      const fieldError = body?.error.details?.find((d) => d.field === "pdfUrl");
-      setError("pdfUrl", { message: fieldError?.message ?? "URL inválida." });
-      return;
-    }
-
-    toast.error("Não foi possível salvar a URL. Tente novamente.");
-  }
-
-  const canSubmit = isValid && (isDirty || hasPersistedChange) && !isSubmitting;
+  const { isOpen, handleOpenChange, onSubmit, canSubmit, isCleared } = useBookPdfPopover({
+    bookId,
+    pdfUrl,
+    form,
+    onUpdated,
+    open: controlledOpen,
+    onOpenChange,
+  });
 
   return (
     <Popover open={isOpen} onOpenChange={handleOpenChange}>

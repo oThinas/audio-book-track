@@ -11,6 +11,8 @@
  * the fields that matter for the test.
  */
 
+import type { BookSummaryRow } from "@/components/features/books/books-table";
+import type { ChapterRowData } from "@/components/features/chapters/chapters-table";
 import type { Editor } from "@/lib/domain/editor";
 import type { Narrator } from "@/lib/domain/narrator";
 import type { Studio } from "@/lib/domain/studio";
@@ -60,4 +62,30 @@ export function buildEditor(overrides: Partial<Editor> = {}): Editor {
 
 export function buildEditorListItem(overrides: Partial<EditorListItem> = {}): EditorListItem {
   return { ...buildEditor(), chaptersCount: 0, ...overrides };
+}
+
+export function buildBookSummaryRow(overrides: Partial<BookSummaryRow> = {}): BookSummaryRow {
+  return {
+    id: "b-1",
+    title: "Book One",
+    studio: { id: "s-1", name: "Studio One" },
+    pricePerHourCents: 8000,
+    status: "pending",
+    totalChapters: 1,
+    completedChapters: 0,
+    totalEarningsCents: 0,
+    ...overrides,
+  };
+}
+
+export function buildChapterRowData(overrides: Partial<ChapterRowData> = {}): ChapterRowData {
+  return {
+    id: "c-1",
+    number: 1,
+    status: "pending",
+    narrator: null,
+    editor: null,
+    editedSeconds: 0,
+    ...overrides,
+  };
 }
