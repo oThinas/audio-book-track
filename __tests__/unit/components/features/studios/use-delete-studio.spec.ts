@@ -62,7 +62,7 @@ describe("useDeleteStudio", () => {
     expect(toast.error).not.toHaveBeenCalled();
   });
 
-  it("on 409 STUDIO_HAS_ACTIVE_BOOKS, sets a PT-BR error and keeps the dialog open", async () => {
+  it("on 409 STUDIO_HAS_ACTIVE_BOOKS, fires a toast with the blocking book titles and closes the dialog without confirming", async () => {
     const onConfirmed = vi.fn();
     const onOpenChange = vi.fn();
     fetchMock.mockResolvedValueOnce(
@@ -82,11 +82,12 @@ describe("useDeleteStudio", () => {
       await result.current.handleConfirm();
     });
 
-    expect(result.current.error).toBeTruthy();
-    expect(result.current.error?.toLowerCase()).toContain("livro");
-    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+    expect(toast.error).toHaveBeenCalledWith(
+      "Não é possível excluir: 1 livro(s) com capítulos ativos.",
+      { description: "Livro X" },
+    );
+    expect(onOpenChange).toHaveBeenCalledWith(false);
     expect(onConfirmed).not.toHaveBeenCalled();
-    expect(toast.error).not.toHaveBeenCalled();
   });
 
   it("on 500, fires toast.error and closes the dialog", async () => {
@@ -125,14 +126,9 @@ describe("useDeleteStudio", () => {
     expect(toast.success).not.toHaveBeenCalled();
   });
 
-  it("resets error when the studio prop changes", async () => {
+  it("error state stays null when the studio prop changes (no inline error path)", async () => {
     const onConfirmed = vi.fn();
     const onOpenChange = vi.fn();
-    fetchMock.mockResolvedValueOnce(
-      jsonResponse(409, {
-        error: { code: "STUDIO_HAS_ACTIVE_BOOKS", message: "x" },
-      }),
-    );
 
     const initialStudio = buildStudio({ id: "first" });
     const { result, rerender } = renderHook(
@@ -141,10 +137,7 @@ describe("useDeleteStudio", () => {
       { initialProps: { studio: initialStudio } },
     );
 
-    await act(async () => {
-      await result.current.handleConfirm();
-    });
-    expect(result.current.error).toBeTruthy();
+    expect(result.current.error).toBeNull();
 
     const otherStudio = buildStudio({ id: "second" });
     rerender({ studio: otherStudio });
