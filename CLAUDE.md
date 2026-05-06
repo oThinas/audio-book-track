@@ -327,3 +327,8 @@ Qualquer mudança no modelo financeiro (preço, horas, responsáveis) requer **r
 ## Active Technologies
 - TypeScript 5.9.3 sobre Bun 1.2 (runtime + package manager + test runner) + Next.js 16.2.1 (App Router + Turbopack), React 19.2.4, React Hook Form 7.72.1 + `@hookform/resolvers` 5.2.2, Zod 4.3.6, `@tanstack/react-table` 8.21.3, shadcn/ui 4.1.2, Tailwind CSS 4.2, `sonner` 2.0.7, `lucide-react` (021-presentation-only-components)
 - N/A (refatoração não toca camada de dados — hooks consomem `/api/v1/**` existentes) (021-presentation-only-components)
+
+<!-- SPECKIT START -->
+For additional context about technologies to be used, project structure,
+shell commands, and other important information, read the current plan
+<!-- SPECKIT END -->
