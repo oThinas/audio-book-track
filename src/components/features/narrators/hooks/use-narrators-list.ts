@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { Narrator } from "@/lib/domain/narrator";
 import type { NarratorListItem } from "@/lib/repositories/narrator-repository";
 
@@ -36,58 +36,47 @@ export function useNarratorsList(initial: readonly NarratorListItem[]): UseNarra
     [narrators],
   );
 
-  const handleNewClick = useCallback(() => {
-    setIsCreating((current) => {
-      if (current) {
-        document.getElementById(NEW_ROW_NAME_INPUT_ID)?.focus();
-        return current;
-      }
-      return true;
-    });
-  }, []);
+  function handleNewClick() {
+    if (isCreating) {
+      document.getElementById(NEW_ROW_NAME_INPUT_ID)?.focus();
+      return;
+    }
+    setIsCreating(true);
+  }
 
-  const handleCreated = useCallback(
-    (narrator: Narrator) => {
-      setNarrators((current) => [...current, { ...narrator, chaptersCount: 0 }]);
-      setIsCreating(false);
-      router.refresh();
-    },
-    [router],
-  );
-
-  const handleCancelled = useCallback(() => {
+  function handleCreated(narrator: Narrator) {
+    setNarrators((current) => [...current, { ...narrator, chaptersCount: 0 }]);
     setIsCreating(false);
-  }, []);
+    router.refresh();
+  }
 
-  const handleUpdated = useCallback(
-    (updated: Narrator) => {
-      setNarrators((current) =>
-        current.map((n) =>
-          n.id === updated.id ? { ...updated, chaptersCount: n.chaptersCount } : n,
-        ),
-      );
-      router.refresh();
-    },
-    [router],
-  );
+  function handleCancelled() {
+    setIsCreating(false);
+  }
 
-  const handleRequestDelete = useCallback((narrator: Narrator) => {
+  function handleUpdated(updated: Narrator) {
+    setNarrators((current) =>
+      current.map((n) =>
+        n.id === updated.id ? { ...updated, chaptersCount: n.chaptersCount } : n,
+      ),
+    );
+    router.refresh();
+  }
+
+  function handleRequestDelete(narrator: Narrator) {
     setNarratorToDelete(narrator);
-  }, []);
+  }
 
-  const handleDeleteDialogChange = useCallback((open: boolean) => {
+  function handleDeleteDialogChange(open: boolean) {
     if (!open) {
       setNarratorToDelete(null);
     }
-  }, []);
+  }
 
-  const handleDeleted = useCallback(
-    (id: string) => {
-      setNarrators((current) => current.filter((n) => n.id !== id));
-      router.refresh();
-    },
-    [router],
-  );
+  function handleDeleted(id: string) {
+    setNarrators((current) => current.filter((n) => n.id !== id));
+    router.refresh();
+  }
 
   return {
     narrators,

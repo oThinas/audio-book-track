@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import type { ChapterRowData } from "@/components/features/chapters/chapters-table";
 import type { BookStatus } from "@/lib/domain/book";
@@ -78,97 +78,79 @@ export function useBookDetail(book: BookDetailData): UseBookDetailReturn {
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
 
-  const nonPaidChapters = useMemo(
-    () => state.chapters.filter((c) => c.status !== "paid"),
-    [state.chapters],
-  );
+  const nonPaidChapters = state.chapters.filter((c) => c.status !== "paid");
   const paidCount = state.chapters.length - nonPaidChapters.length;
   const willDeleteBook =
     selectedIds.size === nonPaidChapters.length && nonPaidChapters.length > 0 && paidCount === 0;
-  const aggregates = useMemo(
-    () => recomputeAggregates(state.chapters, book.pricePerHourCents),
-    [state.chapters, book.pricePerHourCents],
-  );
+  const aggregates = recomputeAggregates(state.chapters, book.pricePerHourCents);
 
-  const handleChapterSaved = useCallback((updated: ChapterRowData, bookStatus: ChapterStatus) => {
+  function handleChapterSaved(updated: ChapterRowData, bookStatus: ChapterStatus) {
     setState((prev) => ({
       ...prev,
       status: bookStatus,
       chapters: prev.chapters.map((chapter) => (chapter.id === updated.id ? updated : chapter)),
     }));
-  }, []);
+  }
 
-  const applyBookUpdate = useCallback(
-    (detail: UpdatedBookDetail) => {
-      setState((prev) => ({
+  function applyBookUpdate(detail: UpdatedBookDetail) {
+    setState((prev) => ({
+      ...prev,
+      status: detail.status,
+      chapters: detail.chapters.map((c) => ({
+        id: c.id,
+        number: c.number,
+        status: c.status,
+        narrator: c.narrator,
+        editor: c.editor,
+        editedSeconds: c.editedSeconds,
+      })),
+    }));
+    router.refresh();
+  }
+
+  function handleChapterDeleted(chapterId: string, bookDeleted: boolean) {
+    if (bookDeleted) {
+      router.push("/books");
+      return;
+    }
+    setState((prev) => {
+      const remaining = prev.chapters.filter((chapter) => chapter.id !== chapterId);
+      return {
         ...prev,
-        status: detail.status,
-        chapters: detail.chapters.map((c) => ({
-          id: c.id,
-          number: c.number,
-          status: c.status,
-          narrator: c.narrator,
-          editor: c.editor,
-          editedSeconds: c.editedSeconds,
-        })),
-      }));
-      router.refresh();
-    },
-    [router],
-  );
+        status: remaining.length === 0 ? prev.status : computeBookStatus(remaining),
+        chapters: remaining,
+      };
+    });
+  }
 
-  const handleChapterDeleted = useCallback(
-    (chapterId: string, bookDeleted: boolean) => {
-      if (bookDeleted) {
-        router.push("/books");
-        return;
-      }
-      setState((prev) => {
-        const remaining = prev.chapters.filter((chapter) => chapter.id !== chapterId);
-        return {
-          ...prev,
-          status: remaining.length === 0 ? prev.status : computeBookStatus(remaining),
-          chapters: remaining,
-        };
-      });
-    },
-    [router],
-  );
+  function handlePdfUrlChange(next: string | null) {
+    setState((prev) => ({ ...prev, pdfUrl: next }));
+    router.refresh();
+  }
 
-  const handlePdfUrlChange = useCallback(
-    (next: string | null) => {
-      setState((prev) => ({ ...prev, pdfUrl: next }));
-      router.refresh();
-    },
-    [router],
-  );
-
-  const exitSelectionMode = useCallback(() => {
+  function exitSelectionMode() {
     setIsSelectionMode(false);
     setSelectedIds(new Set());
-  }, []);
+  }
 
-  const enterSelectionMode = useCallback(() => {
+  function enterSelectionMode() {
     setIsSelectionMode(true);
-  }, []);
+  }
 
-  const handleToggleSelected = useCallback((chapterId: string, selected: boolean) => {
+  function handleToggleSelected(chapterId: string, selected: boolean) {
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (selected) next.add(chapterId);
       else next.delete(chapterId);
       return next;
     });
-  }, []);
+  }
 
-  const handleToggleSelectAll = useCallback(
-    (selected: boolean) => {
-      setSelectedIds(selected ? new Set(nonPaidChapters.map((c) => c.id)) : new Set());
-    },
-    [nonPaidChapters],
-  );
+  function handleToggleSelectAll(selected: boolean) {
+    setSelectedIds(selected ? new Set(nonPaidChapters.map((c) => c.id)) : new Set());
+  }
 
-  const handleBulkDeleteConfirm = useCallback(async () => {
+  async function handleBulkDeleteConfirm() {
     if (selectedIds.size === 0) return;
     setBulkDeleting(true);
     try {
@@ -204,7 +186,7 @@ export function useBookDetail(book: BookDetailData): UseBookDetailReturn {
     } finally {
       setBulkDeleting(false);
     }
-  }, [book.id, selectedIds, router, exitSelectionMode]);
+  }
 
   return {
     state,
