@@ -82,7 +82,7 @@
 - [x] T020 [US2] Verify `db:migrate` step is preserved (creates tables needed by tests) in `.github/workflows/pr-checks.yml`
 - [x] T021 [US2] Verify environment variables `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` are still set in CI in `.github/workflows/pr-checks.yml`
 - [x] T022 [US2] Run integration tests locally and record results (pass/fail per test)
-- [ ] T023 [US2] Push branch and verify CI integration tests produce identical results
+- [x] T023 [US2] Push branch and verify CI integration tests produce identical results
 
 **Checkpoint**: Local and CI environments produce identical test results. Seed is no longer required.
 

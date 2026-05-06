@@ -2,17 +2,16 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Check, Loader2, X } from "lucide-react";
-import { useEffect, useRef } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MoneyInput } from "@/components/ui/money-input";
 import { TableCell, TableRow } from "@/components/ui/table";
-import type { ApiErrorBody } from "@/lib/api/error-response";
 import { type Studio, type StudioFormValues, studioFormSchema } from "@/lib/domain/studio";
+
+import { useCreateStudioForm } from "./hooks/use-create-studio-form";
 
 interface StudioNewRowProps {
   readonly onCreated: (studio: Studio) => void;
@@ -24,57 +23,18 @@ const NAME_FIELD_ID = "studio-new-name";
 const RATE_FIELD_ID = "studio-new-default-hourly-rate";
 
 export function StudioNewRow({ onCreated, onCancelled }: StudioNewRowProps) {
-  const firstFieldRef = useRef<HTMLInputElement | null>(null);
+  const form = useForm<StudioFormValues>({
+    resolver: zodResolver(studioFormSchema),
+    defaultValues: { name: "", defaultHourlyRateCents: 0 },
+  });
   const {
     register,
     handleSubmit,
     control,
     formState: { errors, isSubmitting },
-    setError,
-  } = useForm<StudioFormValues>({
-    resolver: zodResolver(studioFormSchema),
-    defaultValues: { name: "", defaultHourlyRateCents: 0 },
-  });
+  } = form;
 
-  useEffect(() => {
-    firstFieldRef.current?.focus();
-  }, []);
-
-  async function onSubmit(values: StudioFormValues) {
-    const response = await fetch("/api/v1/studios", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values),
-    });
-
-    if (response.status === 201) {
-      const body = (await response.json()) as { data: Studio };
-      onCreated(body.data);
-      return;
-    }
-
-    if (response.status === 422) {
-      const body = (await response.json()) as ApiErrorBody;
-      for (const detail of body.error.details ?? []) {
-        if (detail.field === "name") {
-          setError("name", { message: detail.message });
-        } else if (detail.field === "defaultHourlyRateCents") {
-          setError("defaultHourlyRateCents", { message: detail.message });
-        }
-      }
-      return;
-    }
-
-    if (response.status === 409) {
-      const body = (await response.json()) as ApiErrorBody;
-      if (body.error.code === "NAME_ALREADY_IN_USE") {
-        setError("name", { message: "Nome já cadastrado" });
-      }
-      return;
-    }
-
-    toast.error("Não foi possível salvar o estúdio. Tente novamente.");
-  }
+  const { onSubmit, firstFieldRef } = useCreateStudioForm({ form, onCreated });
 
   const { ref: nameRefCallback, ...nameRegister } = register("name");
 

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { useMobileMenu } from "@/lib/hooks/use-mobile-menu";
+import { useMobileMenu } from "@/components/layout/hooks/use-mobile-menu";
 
 describe("useMobileMenu", () => {
   describe("initial state", () => {

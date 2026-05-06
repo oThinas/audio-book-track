@@ -1,6 +1,10 @@
 import type { CreateStudioInput, Studio, UpdateStudioInput } from "@/lib/domain/studio";
 import { type BlockingBookSummary, StudioHasActiveBooksError } from "@/lib/errors/studio-errors";
-import type { StudioListItem, StudioRepository } from "@/lib/repositories/studio-repository";
+import type {
+  StudioListItem,
+  StudioListOptions,
+  StudioRepository,
+} from "@/lib/repositories/studio-repository";
 
 export interface CreateStudioOptions {
   readonly inline?: boolean;
@@ -26,8 +30,8 @@ export interface SoftDeleteStudioDeps {
 export class StudioService {
   constructor(private readonly repository: StudioRepository) {}
 
-  async list(): Promise<StudioListItem[]> {
-    return this.repository.findAllWithCounts();
+  async list(options?: StudioListOptions): Promise<StudioListItem[]> {
+    return this.repository.findAllWithCounts(options);
   }
 
   async create(

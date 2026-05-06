@@ -44,10 +44,12 @@
 - **Repositories concretos prefixados com o adaptador** — ex: `DrizzleUserPreferenceRepository` implementa `UserPreferenceRepository`, morando em `src/lib/repositories/drizzle/`.
 - **shadcn/ui é a biblioteca de componentes padrão** — usar `bunx --bun shadcn@latest add <component>` antes de construir primitivos do zero. A flag `--bun` é obrigatória com Bun runtime.
 - **Componentes UI (`components/ui/`)** são shadcn/ui primitivos, puramente visuais: sem `useState` de negócio, sem `fetch`.
+- **Componentes client são apenas de renderização** — JSX + chamada de hook. Toda lógica (state machine, mutações, derivações de servidor, side-effects, navegação) DEVE residir em hooks customizados co-localizados em `src/components/features/<feature>/hooks/use-<scope>.ts`. Critério objetivo: estado de domínio (lista, alvo de dialog, `isSubmitting`/`error`) → hook; estado puramente visual (open/close de Popover, hover, foco, input não-validado) → componente. Ver Princípio VII da constituição e [docs/hooks-pattern.md](docs/hooks-pattern.md).
 - **Componentes de feature DEVEM residir em `src/components/features/<feature>/`** e ser importados via alias `@/components/features/<feature>/...`. Pastas `_components/` (ou qualquer variante colocada dentro de `src/app/`) são **PROIBIDAS**, mesmo quando o componente é usado por uma única rota.
 - **NUNCA usar elementos HTML crus** (`<button>`, `<input>`, `<select>`, etc.) quando existe componente equivalente em `components/ui/`. Usar `<Button>`, `<Input>`, `<Select>`, etc.
 - **Páginas autenticadas DEVEM usar componentes de layout** — `<PageContainer>`, `<PageHeader>`, `<PageTitle>`, `<PageDescription>` de `components/layout/page-container.tsx`.
 - **Dark mode obrigatório** — todo componente DEVE funcionar em modo claro e escuro. Usar tokens semânticos do Tailwind (`bg-background`, `text-foreground`). NUNCA cores hardcoded que não se adaptam ao tema.
+- **Toasts apenas para warnings/erros** — `toast.success(...)` (e equivalentes verde+checkmark) são **proibidos**. O feedback de sucesso DEVE vir da própria efetivação da ação na UI (item entrando/saindo da lista, dialog fechando, redirecionamento, status atualizado). Exceção: ações sem efeito visível imediato (envio em background, exportação enfileirada) podem usar toast **neutro informativo** curto, nunca verde de sucesso. Ações destrutivas concluídas preferem `toast.warning(...)` ou undo discreto.
 - **Arquivo `design.pen`** — consultar via Pencil MCP antes de construir qualquer tela nova como referência visual.
 - **`use client` apenas quando necessário** — Server Components são o padrão.
 - **Data fetching** usa Server Components com `async/await`; `useEffect` para fetch é proibido.
@@ -80,11 +82,14 @@
 - Segredos hardcoded — usar variáveis de ambiente.
 - `console.log` em produção — usar structured logger.
 - `useEffect` para derivar estado — usar `useMemo`.
+- `fetch`, `useEffect` de side-effect ou `router.refresh()` em componente client (`"use client"`) — DEVEM viver em hook co-localizado em `src/components/features/<feature>/hooks/`. Componente client só renderiza JSX e chama o hook.
+- `useState` de **estado de domínio** (lista de entidades, alvo de dialog, status de mutação) em componente client — DEVE ir para o hook. Somente estado puramente visual (open/close de Popover, hover, foco, input não-validado) é permitido inline.
 - Valores visuais hardcoded (cores, espaçamentos) fora de design tokens.
 - Elementos HTML crus (`<button>`, `<input>`, etc.) quando existe componente em `components/ui/`.
 - Pasta `_components/` (ou similar) dentro de `src/app/` — componentes de feature DEVEM ficar em `src/components/features/<feature>/`.
 - Página autenticada sem `<PageContainer>` e componentes de layout.
 - Ignorar dark mode — cores que não se adaptam ao tema.
+- `toast.success(...)` (ou equivalente verde + checkmark genérico) para confirmar ações concluídas — feedback de sucesso vem da própria UI; toasts ficam reservados a warnings e erros.
 - Lógica de negócio em controllers.
 - SQL direto fora de repositories.
 - Swallow silencioso de erros: `catch (e) {}`.
@@ -270,6 +275,7 @@ task — isso é ruído desproporcional.
 - [ ] V.    Testes escritos ANTES da implementação, cobertura ≥ 80%?
 - [ ] VI.   Lógica de negócio no Service/Domain, não no Controller?
 - [ ] VII.  Componentes UI puramente visuais? Usando components/ui/ (não HTML cru)?
+- [ ] VII.  Componentes client contêm apenas renderização? Lógica reside em hooks customizados em src/components/features/<feature>/hooks/?
 - [ ] VII.  PageContainer e layout components em páginas autenticadas?
 - [ ] VII.  Dark mode funciona em todos os componentes novos?
 - [ ] VIII. Sem peso desnecessário no bundle do cliente?
@@ -314,10 +320,10 @@ Qualquer mudança no modelo financeiro (preço, horas, responsáveis) requer **r
 
 
 ## Recent Changes
+- 021-presentation-only-components: Added TypeScript 5.9.3 sobre Bun 1.2 (runtime + package manager + test runner) + Next.js 16.2.1 (App Router + Turbopack), React 19.2.4, React Hook Form 7.72.1 + `@hookform/resolvers` 5.2.2, Zod 4.3.6, `@tanstack/react-table` 8.21.3, shadcn/ui 4.1.2, Tailwind CSS 4.2, `sonner` 2.0.7, `lucide-react`
 - 020-books-chapters-crud: Added TypeScript 5.9.3 sobre Bun 1.2 (runtime + package manager + test runner) + Next.js 16.2.1 (App Router + Turbopack), React 19.2.4, Drizzle ORM 0.45.2 + `drizzle-kit` 0.31.10, Zod 4.3.6, better-auth 1.5.6, React Hook Form 7.72.1 + `@hookform/resolvers` 5.2.2, `@tanstack/react-table` 8.21.3, shadcn/ui 4.1.2, Tailwind CSS 4.2, `sonner` 2.0.7 (toasts), `lucide-react` (ícones)
 - 019-studios-crud: Added TypeScript 5.9.3 (Bun runtime 1.2) + Next.js 16.2.1 (App Router), React 19.2.4, Drizzle ORM 0.45.2 + drizzle-kit 0.31.10, Zod 4.3.6, better-auth 1.5.6, React Hook Form 7.72.1 + `@hookform/resolvers` 5.2.2, `@tanstack/react-table` 8.21.3, shadcn/ui 4.1.2, Tailwind CSS 4.2, sonner 2.0.7
-- 018-editors-crud: Added TypeScript 5.9.3 (Bun runtime 1.2) + Next.js 16.2.1 (App Router), React 19.2.4, Drizzle ORM 0.45.2 + drizzle-kit 0.31.10, Zod 4.3.6, better-auth 1.5.6, React Hook Form 7.72.1 + `@hookform/resolvers` 5.2.2, `@tanstack/react-table` 8.21.3, shadcn/ui 4.1.2, Tailwind CSS 4.2, sonner 2.0.7
 
 ## Active Technologies
-- TypeScript 5.9.3 sobre Bun 1.2 (runtime + package manager + test runner) + Next.js 16.2.1 (App Router + Turbopack), React 19.2.4, Drizzle ORM 0.45.2 + `drizzle-kit` 0.31.10, Zod 4.3.6, better-auth 1.5.6, React Hook Form 7.72.1 + `@hookform/resolvers` 5.2.2, `@tanstack/react-table` 8.21.3, shadcn/ui 4.1.2, Tailwind CSS 4.2, `sonner` 2.0.7 (toasts), `lucide-react` (ícones) (020-books-chapters-crud)
-- PostgreSQL (local Dockerized) via Drizzle ORM; migrations com `drizzle-kit generate` + `drizzle-kit migrate` (NUNCA `push`); `TEST_DATABASE_URL` separado para integration e E2E (020-books-chapters-crud)
+- TypeScript 5.9.3 sobre Bun 1.2 (runtime + package manager + test runner) + Next.js 16.2.1 (App Router + Turbopack), React 19.2.4, React Hook Form 7.72.1 + `@hookform/resolvers` 5.2.2, Zod 4.3.6, `@tanstack/react-table` 8.21.3, shadcn/ui 4.1.2, Tailwind CSS 4.2, `sonner` 2.0.7, `lucide-react` (021-presentation-only-components)
+- N/A (refatoração não toca camada de dados — hooks consomem `/api/v1/**` existentes) (021-presentation-only-components)

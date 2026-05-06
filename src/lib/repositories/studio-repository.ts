@@ -10,9 +10,15 @@ export interface StudioListItem extends Studio {
   readonly booksCount: number;
 }
 
+export type StudioListOrderBy = "name" | "createdAt";
+
+export interface StudioListOptions {
+  readonly orderBy?: StudioListOrderBy;
+}
+
 export interface StudioRepository {
-  findAll(): Promise<Studio[]>;
-  findAllWithCounts(): Promise<StudioListItem[]>;
+  findAll(options?: StudioListOptions): Promise<Studio[]>;
+  findAllWithCounts(options?: StudioListOptions): Promise<StudioListItem[]>;
   findById(id: string): Promise<Studio | null>;
   findByIdIncludingDeleted(id: string): Promise<Studio | null>;
   findByName(name: string): Promise<Studio | null>;

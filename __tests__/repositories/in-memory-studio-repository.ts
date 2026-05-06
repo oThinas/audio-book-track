@@ -3,6 +3,7 @@ import { StudioNameAlreadyInUseError, StudioNotFoundError } from "@/lib/errors/s
 import type {
   ReactivateStudioOverrides,
   StudioListItem,
+  StudioListOptions,
   StudioRepository,
 } from "@/lib/repositories/studio-repository";
 
@@ -13,17 +14,21 @@ interface InternalStudio extends Studio {
 export class InMemoryStudioRepository implements StudioRepository {
   private readonly store = new Map<string, InternalStudio>();
 
-  async findAll(): Promise<Studio[]> {
+  async findAll(options?: StudioListOptions): Promise<Studio[]> {
+    const compare =
+      options?.orderBy === "name"
+        ? (a: InternalStudio, b: InternalStudio) => a.name.localeCompare(b.name, "pt-BR")
+        : (a: InternalStudio, b: InternalStudio) => a.createdAt.getTime() - b.createdAt.getTime();
     return Array.from(this.store.values())
       .filter((current) => current.deletedAt === null)
-      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+      .sort(compare)
       .map(stripDeletedAt);
   }
 
-  async findAllWithCounts(): Promise<StudioListItem[]> {
+  async findAllWithCounts(options?: StudioListOptions): Promise<StudioListItem[]> {
     // O fake não tem visibilidade de `book`; service unit tests não validam
     // a contagem aqui — a verificação real fica em integration (T129).
-    const studios = await this.findAll();
+    const studios = await this.findAll(options);
     return studios.map((s) => ({ ...s, booksCount: 0 }));
   }
 

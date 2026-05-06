@@ -1,8 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import { toast } from "sonner";
-
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,6 +11,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import type { Studio } from "@/lib/domain/studio";
+
+import { useDeleteStudio } from "./hooks/use-delete-studio";
 
 interface DeleteStudioDialogProps {
   readonly studio: Studio | null;
@@ -28,55 +27,11 @@ export function DeleteStudioDialog({
   onOpenChange,
   onConfirmed,
 }: DeleteStudioDialogProps) {
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  async function handleConfirm() {
-    if (!studio) return;
-
-    setIsDeleting(true);
-    try {
-      const response = await fetch(`/api/v1/studios/${studio.id}`, {
-        method: "DELETE",
-      });
-
-      if (response.status === 204) {
-        onConfirmed(studio.id);
-        onOpenChange(false);
-        return;
-      }
-
-      if (response.status === 404) {
-        onConfirmed(studio.id);
-        onOpenChange(false);
-        return;
-      }
-
-      if (response.status === 409) {
-        const body = (await response.json()) as {
-          error: {
-            code: string;
-            message: string;
-            details?: { books?: ReadonlyArray<{ id: string; title: string }> };
-          };
-        };
-        if (body.error.code === "STUDIO_HAS_ACTIVE_BOOKS") {
-          const titles = body.error.details?.books?.map((b) => b.title) ?? [];
-          const titlesPreview = titles.slice(0, 3).join(", ");
-          const remainder = titles.length > 3 ? ` e mais ${titles.length - 3}` : "";
-          toast.error(
-            `Não é possível excluir: ${titles.length} livro(s) com capítulos ativos.`,
-            titles.length > 0 ? { description: `${titlesPreview}${remainder}` } : undefined,
-          );
-          onOpenChange(false);
-          return;
-        }
-      }
-
-      toast.error("Não foi possível excluir o estúdio. Tente novamente.");
-    } finally {
-      setIsDeleting(false);
-    }
-  }
+  const { isDeleting, error, handleConfirm } = useDeleteStudio({
+    studio,
+    onConfirmed,
+    onOpenChange,
+  });
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -87,6 +42,11 @@ export function DeleteStudioDialog({
             Esta ação não pode ser desfeita. O estúdio será removido permanentemente.
           </AlertDialogDescription>
         </AlertDialogHeader>
+        {error && (
+          <p className="text-sm text-destructive" role="alert">
+            {error}
+          </p>
+        )}
         <AlertDialogFooter className="bg-transparent border-t-0">
           <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
           <AlertDialogAction

@@ -28,3 +28,35 @@ vi.mock("@/lib/env", () => ({
     NODE_ENV: "test",
   },
 }));
+
+// Canonical mock for next/navigation. Hooks consumed by client components
+// (`useRouter`, `useSearchParams`, `usePathname`, `useParams`) and the imperative
+// helpers (`redirect`, `notFound`) are stubbed with vi.fn() so renderHook tests
+// don't need to redeclare them per spec. Individual specs can still override
+// via their own `vi.mock("next/navigation", ...)` (file-local mocks win).
+vi.mock("next/navigation", () => {
+  const router = {
+    push: vi.fn(),
+    replace: vi.fn(),
+    refresh: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    prefetch: vi.fn(),
+  };
+  return {
+    useRouter: vi.fn(() => router),
+    useSearchParams: vi.fn(() => new URLSearchParams()),
+    usePathname: vi.fn(() => "/"),
+    useParams: vi.fn(() => ({})),
+    redirect: vi.fn((url: string) => {
+      const error = new Error("NEXT_REDIRECT") as Error & { digest: string };
+      error.digest = `NEXT_REDIRECT;replace;${url};307;`;
+      throw error;
+    }),
+    notFound: vi.fn(() => {
+      const error = new Error("NEXT_NOT_FOUND") as Error & { digest: string };
+      error.digest = "NEXT_NOT_FOUND";
+      throw error;
+    }),
+  };
+});

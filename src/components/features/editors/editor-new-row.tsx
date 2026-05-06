@@ -2,16 +2,15 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Check, Loader2, X } from "lucide-react";
-import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TableCell, TableRow } from "@/components/ui/table";
-import type { ApiErrorBody } from "@/lib/api/error-response";
 import { type Editor, type EditorFormValues, editorFormSchema } from "@/lib/domain/editor";
+
+import { useCreateEditorForm } from "./hooks/use-create-editor-form";
 
 interface EditorNewRowProps {
   readonly onCreated: (editor: Editor) => void;
@@ -23,56 +22,17 @@ const NAME_FIELD_ID = "editor-new-name";
 const EMAIL_FIELD_ID = "editor-new-email";
 
 export function EditorNewRow({ onCreated, onCancelled }: EditorNewRowProps) {
-  const firstFieldRef = useRef<HTMLInputElement | null>(null);
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-    setError,
-  } = useForm<EditorFormValues>({
+  const form = useForm<EditorFormValues>({
     resolver: zodResolver(editorFormSchema),
     defaultValues: { name: "", email: "" },
   });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = form;
 
-  useEffect(() => {
-    firstFieldRef.current?.focus();
-  }, []);
-
-  async function onSubmit(values: EditorFormValues) {
-    const response = await fetch("/api/v1/editors", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values),
-    });
-
-    if (response.status === 201) {
-      const body = (await response.json()) as { data: Editor };
-      onCreated(body.data);
-      return;
-    }
-
-    if (response.status === 422) {
-      const body = (await response.json()) as ApiErrorBody;
-      for (const detail of body.error.details ?? []) {
-        if (detail.field === "name" || detail.field === "email") {
-          setError(detail.field, { message: detail.message });
-        }
-      }
-      return;
-    }
-
-    if (response.status === 409) {
-      const body = (await response.json()) as ApiErrorBody;
-      if (body.error.code === "NAME_ALREADY_IN_USE") {
-        setError("name", { message: "Nome já cadastrado" });
-      } else if (body.error.code === "EMAIL_ALREADY_IN_USE") {
-        setError("email", { message: "E-mail já cadastrado" });
-      }
-      return;
-    }
-
-    toast.error("Não foi possível salvar o editor. Tente novamente.");
-  }
+  const { onSubmit, isSubmitting, firstFieldRef } = useCreateEditorForm({ form, onCreated });
 
   const { ref: nameRefCallback, ...nameRegister } = register("name");
 

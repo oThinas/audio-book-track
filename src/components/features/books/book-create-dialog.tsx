@@ -2,9 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronsUpDown, Loader2, Plus } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -28,12 +26,12 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field
 import { Input } from "@/components/ui/input";
 import { MoneyInput } from "@/components/ui/money-input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import type { ApiErrorBody } from "@/lib/api/error-response";
 import type { Studio } from "@/lib/domain/studio";
 import { type CreateBookInput, createBookSchema } from "@/lib/schemas/book";
 import { cn, formatCentsBRL } from "@/lib/utils";
 
 import { CHAPTER_COUNT_MAX, CHAPTER_COUNT_MIN, ChapterCountInput } from "./chapter-count-input";
+import { useCreateBookForm } from "./hooks/use-create-book-form";
 import { StudioInlineCreator } from "./studio-inline-creator";
 
 const PRICE_PER_HOUR_MIN_CENTS = 1;
@@ -60,33 +58,7 @@ export function BookCreateDialog({
   studios,
   onCreated,
 }: BookCreateDialogProps) {
-  const [studioPickerOpen, setStudioPickerOpen] = useState(false);
-  const [showInlineCreator, setShowInlineCreator] = useState(false);
-  const [inlineStudios, setInlineStudios] = useState<readonly Studio[]>([]);
-  const [inlineStudioId, setInlineStudioId] = useState<string | null>(null);
-
-  const sortedStudios = useMemo(() => {
-    const merged = [...studios, ...inlineStudios];
-    const seen = new Set<string>();
-    const deduped: Studio[] = [];
-    for (const s of merged) {
-      if (seen.has(s.id)) continue;
-      seen.add(s.id);
-      deduped.push(s);
-    }
-    return deduped.sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
-  }, [studios, inlineStudios]);
-
-  const {
-    register,
-    control,
-    handleSubmit,
-    reset,
-    formState: { errors, isSubmitting, isValid, dirtyFields },
-    setError,
-    setValue,
-    watch,
-  } = useForm<CreateBookInput>({
+  const form = useForm<CreateBookInput>({
     resolver: zodResolver(createBookSchema),
     mode: "onChange",
     defaultValues: {
@@ -96,110 +68,24 @@ export function BookCreateDialog({
       numChapters: 1,
     },
   });
+  const {
+    register,
+    control,
+    handleSubmit,
+    formState: { errors, isSubmitting, isValid },
+  } = form;
 
-  const selectedStudioId = watch("studioId");
-  const selectedStudio = sortedStudios.find((s) => s.id === selectedStudioId);
-
-  // When the user picks a studio and hasn't typed a custom price yet, suggest
-  // the studio's default hourly rate. The field stays pristine so a subsequent
-  // studio switch still updates the suggestion; the first manual keystroke
-  // marks it dirty and locks in the user's value.
-  useEffect(() => {
-    if (!selectedStudio) return;
-    if (dirtyFields.pricePerHourCents) return;
-    setValue("pricePerHourCents", selectedStudio.defaultHourlyRateCents, {
-      shouldValidate: true,
-      shouldDirty: false,
-    });
-  }, [selectedStudio, setValue, dirtyFields.pricePerHourCents]);
-
-  function resetState() {
-    reset();
-    setStudioPickerOpen(false);
-    setShowInlineCreator(false);
-    setInlineStudios([]);
-    setInlineStudioId(null);
-  }
-
-  function handleOpenChange(next: boolean) {
-    if (!next) {
-      if (inlineStudioId) {
-        toast.warning(
-          "Estúdio criado mas não vinculado: o valor/hora ficou em R$ 0,01. Edite-o quando puder.",
-        );
-      }
-      resetState();
-    }
-    onOpenChange(next);
-  }
-
-  function handleInlineStudioCreated(studio: Studio) {
-    setInlineStudios((current) => [...current, studio]);
-    setInlineStudioId(studio.id);
-    setValue("studioId", studio.id, { shouldValidate: true, shouldDirty: true });
-    setShowInlineCreator(false);
-    setStudioPickerOpen(false);
-  }
-
-  async function onSubmit(values: CreateBookInput) {
-    const payload =
-      inlineStudioId && inlineStudioId === values.studioId ? { ...values, inlineStudioId } : values;
-    const response = await fetch("/api/v1/books", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    if (response.status === 201) {
-      const body = (await response.json()) as {
-        data: {
-          readonly id: string;
-          readonly title: string;
-          readonly studioId: string;
-          readonly pricePerHourCents: number;
-          readonly chapters: ReadonlyArray<{ readonly id: string; readonly number: number }>;
-        };
-      };
-      const studio = sortedStudios.find((s) => s.id === body.data.studioId);
-      const created: CreatedBook = {
-        id: body.data.id,
-        title: body.data.title,
-        studio: { id: body.data.studioId, name: studio?.name ?? "" },
-        pricePerHourCents: body.data.pricePerHourCents,
-        chapters: body.data.chapters,
-      };
-      resetState();
-      onCreated(created);
-      return;
-    }
-
-    if (response.status === 422) {
-      const body = (await response.json()) as ApiErrorBody;
-      if (body.error.code === "STUDIO_NOT_FOUND") {
-        setError("studioId", { message: "Estúdio não encontrado ou arquivado." });
-        return;
-      }
-      if (body.error.code === "INLINE_STUDIO_INVALID") {
-        setError("studioId", {
-          message: "Estúdio inline inválido. Selecione outro estúdio.",
-        });
-        return;
-      }
-      for (const detail of body.error.details ?? []) {
-        if (detail.field && detail.field in values) {
-          setError(detail.field as keyof CreateBookInput, { message: detail.message });
-        }
-      }
-      return;
-    }
-
-    if (response.status === 409) {
-      setError("title", { message: "Já existe um livro com este título neste estúdio." });
-      return;
-    }
-
-    toast.error("Não foi possível criar o livro. Tente novamente.");
-  }
+  const {
+    studioOptions,
+    selectedStudio,
+    studioPickerOpen,
+    setStudioPickerOpen,
+    showInlineCreator,
+    setShowInlineCreator,
+    handleInlineStudioCreated,
+    handleOpenChange,
+    onSubmit,
+  } = useCreateBookForm({ studios, form, onCreated, onOpenChange });
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -269,7 +155,7 @@ export function BookCreateDialog({
                           <CommandList>
                             <CommandEmpty>Nenhum estúdio encontrado.</CommandEmpty>
                             <CommandGroup>
-                              {sortedStudios.map((studio) => (
+                              {studioOptions.map((studio) => (
                                 <CommandItem
                                   key={studio.id}
                                   value={studio.name}

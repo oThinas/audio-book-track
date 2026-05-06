@@ -2,9 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronsUpDown, Loader2, Plus } from "lucide-react";
-import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -29,12 +27,12 @@ import { Input } from "@/components/ui/input";
 import { MoneyInput } from "@/components/ui/money-input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import type { ApiErrorBody } from "@/lib/api/error-response";
 import type { Studio } from "@/lib/domain/studio";
 import { type UpdateBookInput, updateBookSchema } from "@/lib/schemas/book";
 import { cn, formatCentsBRL } from "@/lib/utils";
 
 import { ChapterCountInput } from "./chapter-count-input";
+import { useEditBookForm } from "./hooks/use-edit-book-form";
 import { StudioInlineCreator } from "./studio-inline-creator";
 
 const PRICE_PER_HOUR_MIN_CENTS = 1;
@@ -81,34 +79,7 @@ export function BookEditDialog({
   studios,
   onUpdated,
 }: BookEditDialogProps) {
-  const [studioPickerOpen, setStudioPickerOpen] = useState(false);
-  const [reduceHint, setReduceHint] = useState(false);
-  const [showInlineCreator, setShowInlineCreator] = useState(false);
-  const [inlineStudios, setInlineStudios] = useState<readonly Studio[]>([]);
-  const [inlineStudioId, setInlineStudioId] = useState<string | null>(null);
-
-  const sortedStudios = useMemo(() => {
-    const merged = [...studios, ...inlineStudios];
-    const seen = new Set<string>();
-    const deduped: Studio[] = [];
-    for (const s of merged) {
-      if (seen.has(s.id)) continue;
-      seen.add(s.id);
-      deduped.push(s);
-    }
-    return deduped.sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
-  }, [studios, inlineStudios]);
-
-  const {
-    register,
-    control,
-    handleSubmit,
-    reset,
-    setError,
-    watch,
-    setValue: formSetValue,
-    formState: { errors, isSubmitting, isDirty, isValid },
-  } = useForm<UpdateBookInput>({
+  const form = useForm<UpdateBookInput>({
     resolver: zodResolver(updateBookSchema),
     mode: "onChange",
     // `values` (not `defaultValues`) keeps the form synced with the latest
@@ -121,137 +92,26 @@ export function BookEditDialog({
       numChapters: book.currentChapters,
     },
   });
+  const {
+    register,
+    control,
+    handleSubmit,
+    formState: { errors, isSubmitting, isDirty, isValid },
+  } = form;
 
-  const selectedStudioId = watch("studioId");
-  const selectedStudio = sortedStudios.find((s) => s.id === selectedStudioId);
-
-  function resetState() {
-    reset();
-    setStudioPickerOpen(false);
-    setShowInlineCreator(false);
-    setInlineStudios([]);
-    setInlineStudioId(null);
-    setReduceHint(false);
-  }
-
-  function handleOpenChange(next: boolean) {
-    if (!next) {
-      // Reaching this path means the dialog is closing without a successful
-      // save (Cancel button, ESC, or backdrop click) — the inline studio
-      // exists but was never bound to a book, so the placeholder rate
-      // (R$ 0,01) lingers and the user should fix it manually.
-      if (inlineStudioId) {
-        toast.warning(
-          "Estúdio criado mas não vinculado: o valor/hora ficou em R$ 0,01. Edite-o quando puder.",
-        );
-      }
-      resetState();
-    }
-    onOpenChange(next);
-  }
-
-  function handleInlineStudioCreated(studio: Studio) {
-    setInlineStudios((current) => [...current, studio]);
-    setInlineStudioId(studio.id);
-    // RHF's setValue lives behind the form instance — we use the controlled
-    // field via Controller, so we just nudge the studioId here.
-    formSetValue("studioId", studio.id, { shouldValidate: true, shouldDirty: true });
-    setShowInlineCreator(false);
-    setStudioPickerOpen(false);
-  }
-
-  async function onSubmit(values: UpdateBookInput) {
-    const patch: UpdateBookInput = {};
-    if (values.title !== undefined && values.title.trim() !== book.title) {
-      patch.title = values.title.trim();
-    }
-    if (values.studioId !== undefined && values.studioId !== book.studioId) {
-      patch.studioId = values.studioId;
-    }
-    if (
-      values.pricePerHourCents !== undefined &&
-      values.pricePerHourCents !== book.pricePerHourCents
-    ) {
-      patch.pricePerHourCents = values.pricePerHourCents;
-    }
-    if (values.numChapters !== undefined && values.numChapters !== book.currentChapters) {
-      patch.numChapters = values.numChapters;
-    }
-    if (inlineStudioId && values.studioId === inlineStudioId && patch.studioId === inlineStudioId) {
-      patch.inlineStudioId = inlineStudioId;
-    }
-
-    if (Object.keys(patch).length === 0) {
-      handleOpenChange(false);
-      return;
-    }
-
-    const response = await fetch(`/api/v1/books/${book.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(patch),
-    });
-
-    if (response.status === 200) {
-      const body = (await response.json()) as { data: UpdatedBookDetail };
-      // Bypass handleOpenChange's "orphan studio" warning: the PATCH
-      // succeeded, so the inline studio is now linked and its rate has been
-      // propagated to the book's pricePerHourCents.
-      resetState();
-      onOpenChange(false);
-      onUpdated(body.data);
-      return;
-    }
-
-    if (response.status === 422) {
-      const body = (await response.json()) as ApiErrorBody;
-      if (body.error.code === "CANNOT_REDUCE_CHAPTERS") {
-        setError("numChapters", {
-          message: "Para reduzir a quantidade, use 'Excluir capítulos'.",
-        });
-        return;
-      }
-      if (body.error.code === "STUDIO_NOT_FOUND") {
-        setError("studioId", { message: "Estúdio não encontrado ou arquivado." });
-        return;
-      }
-      if (body.error.code === "INLINE_STUDIO_INVALID") {
-        setError("studioId", { message: "Estúdio inline inválido. Selecione outro estúdio." });
-        return;
-      }
-      for (const detail of body.error.details ?? []) {
-        if (detail.field && detail.field in values) {
-          setError(detail.field as keyof UpdateBookInput, { message: detail.message });
-        }
-      }
-      return;
-    }
-
-    if (response.status === 409) {
-      const body = (await response.json()) as ApiErrorBody;
-      switch (body.error.code) {
-        case "TITLE_ALREADY_IN_USE":
-          setError("title", {
-            message: "Já existe um livro com este título neste estúdio.",
-          });
-          return;
-        case "BOOK_PAID_PRICE_LOCKED":
-          setError("pricePerHourCents", {
-            message: "Valor/hora não pode ser alterado: já há capítulo pago.",
-          });
-          return;
-        case "BOOK_PAID_STUDIO_LOCKED":
-          setError("studioId", {
-            message: "Estúdio não pode ser alterado: já há capítulo pago.",
-          });
-          return;
-        default:
-          break;
-      }
-    }
-
-    toast.error("Não foi possível atualizar o livro. Tente novamente.");
-  }
+  const {
+    studioOptions,
+    selectedStudio,
+    studioPickerOpen,
+    setStudioPickerOpen,
+    showInlineCreator,
+    setShowInlineCreator,
+    reduceHint,
+    setReduceHint,
+    handleInlineStudioCreated,
+    handleOpenChange,
+    onSubmit,
+  } = useEditBookForm({ book, studios, form, onUpdated, onOpenChange });
 
   const studioDisabled = book.hasPaidChapter;
   const priceDisabled = book.hasPaidChapter;
@@ -338,7 +198,7 @@ export function BookEditDialog({
                               <CommandList>
                                 <CommandEmpty>Nenhum estúdio encontrado.</CommandEmpty>
                                 <CommandGroup>
-                                  {sortedStudios.map((studio) => (
+                                  {studioOptions.map((studio) => (
                                     <CommandItem
                                       key={studio.id}
                                       value={studio.name}

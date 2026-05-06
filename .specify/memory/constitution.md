@@ -1,45 +1,32 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 2.14.0 → 2.15.0 (MINOR: data/persistence guidance
-materially expanded after the 020-books-chapters-crud feature
-introduced four reusable patterns now mandatory for new entities.
-No principle removed or redefined; existing principles I and XI
-gained explicit sub-rules covering: BookStatus as materialized cache
-with synchronous transactional recompute, unified soft-delete
-(deleted_at + partial unique index, no ON DELETE SET NULL),
-auto-undelete on name collision (desarquive automático), service-level
-Unit of Work via SavepointUnitOfWork, and derived columns through
-findAllWithCounts() with *ListItem view types. These were already
-required de facto by the production codebase; this amendment lifts
-them from CLAUDE.md inline rules to constitutional principles so they
-bind future features.)
+Version change: 2.16.0 → 2.17.0 (MINOR: critério objetivo adicionado
+ao Princípio VII para distinguir componente "apenas de renderização"
+de componente com lógica, e dois anti-padrões frontend novos
+formalizados no Princípio XII — `fetch`/`useEffect` de side-effect/
+`router.refresh` em componente client e `useState` de estado de
+domínio em componente client. Nenhum princípio removido ou redefinido.)
 
 Modified principles:
-  - I. Capítulo como Unidade de Trabalho:
-    - Adicionado: `book.status` é cache materializado computado a
-      partir do mínimo do ciclo dos capítulos via
-      `BookStatusRecomputeService`; capítulo permanece a fonte da
-      verdade. Recomputação ocorre na MESMA transação de qualquer
-      mutação de capítulo (create/update/delete/bulk-delete).
-  - XI. PostgreSQL e Banco de Dados:
-    - Adicionado: padrão de soft-delete unificado para entidades
-      soft-deletáveis (`studio`, `narrator`, `editor`) — coluna
-      `deleted_at` (nullable, `withTimezone`) + índice único parcial
-      `WHERE deleted_at IS NULL` + índice de apoio em
-      `deleted_at IS NOT NULL`; FKs entrantes usam `RESTRICT` e nunca
-      `ON DELETE SET NULL`.
-    - Adicionado: desarquive automático por colisão de nome — criar
-      uma entidade soft-deletável com nome igual ao de um registro
-      arquivado reativa o registro original (mesmo `id`); service
-      retorna `reactivated: true`.
-    - Adicionado: transações multi-tabela em services usam
-      `SavepointUnitOfWork` (port `UnitOfWork` com adapter Drizzle)
-      em vez de `db.transaction()` direto na rota.
-    - Adicionado: derived columns via `findAllWithCounts()` no
-      repository (single query com `LEFT JOIN + GROUP BY`); tipos
-      `*ListItem` extendem a entidade com o campo derivado, mantendo
-      o tipo base inalterado.
+  - VII. Frontend: Composição, Atomicidade e Mobile First:
+    - Adicionado: subseção "Componentes apresentacionais — critérios
+      objetivos" — componentes em `src/components/features/**` DEVEM
+      ser puramente apresentacionais (JSX + chamada de hook). Toda
+      lógica (state machine, mutações, derivações de servidor,
+      side-effects, navegação) DEVE residir em hooks customizados
+      co-localizados em `src/components/features/<feature>/hooks/`.
+      Tabela "Estado de domínio vs. estado visual local" define o
+      critério objetivo para distinguir o que vai para o hook do
+      que fica no componente.
+  - XII. Anti-Padrões Proibidos:
+    - Adicionado em "Frontend": (a) `fetch`, `useEffect` de
+      side-effect ou `router.refresh()` em componente client —
+      DEVEM residir em hook customizado co-localizado;
+      (b) `useState` de estado de domínio (lista de entidades,
+      alvo de dialog, status de mutação) em componente client —
+      somente estado puramente visual (open/close de Popover,
+      hover, foco) é permitido inline.
 
 Added sections: N/A
 
@@ -47,13 +34,19 @@ Removed sections: N/A
 
 Templates requiring updates:
   ✅ .specify/memory/constitution.md — este arquivo (atualizado agora)
-  ✅ CLAUDE.md — já contém os blocos correspondentes (T140 da feature
-     020), refletindo as mesmas regras agora elevadas a princípios
-  ⚠ docs/ — nenhuma referência cruzada exigia atualização; nenhum
-     diagrama de arquitetura mencionava soft-delete unificado ou
-     UnitOfWork explicitamente
+  ⚠ CLAUDE.md — adicionar a regra na seção "Arquitetura" e
+     anti-padrões correspondentes em "Anti-padrões proibidos"
+     → tracked em tasks.md T132/T133
+  ⚠ Self-Review Checklist (CLAUDE.md) — adicionar item dedicado para
+     componentes-apenas-de-renderização → tracked em tasks.md T134
 
 Follow-up TODOs: N/A.
+
+---
+HISTÓRICO PRÉVIO
+================
+Version 2.15.0 → 2.16.0 (MINOR: toasts de sucesso proibidos no
+Princípio VII; anti-padrão refletido no XII).
 -->
 
 # AudioBook Track Constitution
@@ -479,6 +472,33 @@ herança. Componentes DEVEM ser atômicos e independentes.
 - Testar visualmente ambos os modos antes de considerar a
   implementação concluída.
 
+**Toasts e feedback de sucesso:**
+
+- Toasts (via `sonner` ou similar) DEVEM ser usados **apenas para
+  warnings e erros** — nunca para confirmar sucesso de uma ação.
+- O feedback visual de sucesso DEVE vir da própria efetivação da
+  ação na UI: item aparecendo/desaparecendo da lista, dialog
+  fechando, redirecionamento, badge/status atualizado em tempo
+  real, contagem incrementada, etc.
+- `toast.success(...)` e variantes equivalentes (cor verde +
+  checkmark genérico) são **proibidos**. Em código existente,
+  remover essas chamadas e garantir que a UI reflita o novo estado
+  sem necessidade de notificação.
+- Exceção limitada: ações cujo efeito não é visível imediatamente
+  na tela atual (ex: envio assíncrono em background, exportação
+  enfileirada) PODEM usar um toast **neutro e informativo** curto
+  descrevendo o efeito ("E-mail enviado", "Exportação iniciada"),
+  nunca um toast genérico de sucesso.
+- Para ações destrutivas concluídas, preferir
+  `toast.warning(...)` ou um confirm-then-undo discreto em vez de
+  toast de sucesso.
+
+**Rationale (toasts):** confirmar sucesso com toast é redundante
+quando a UI já reflete o novo estado, polui a tela com ruído
+descartável e desvia a atenção do usuário. Reservar toasts para
+warnings e erros aumenta o sinal: quando um toast aparece, ele
+sempre exige atenção.
+
 **Arquivo de design como referência:**
 
 - O arquivo `design.pen` na raiz do projeto é a referência visual
@@ -529,8 +549,60 @@ hooks/                → Custom hooks isolam lógica de estado e side effects
 - Composição via `children` e slot props é preferida a boolean props que
   alteram renderização.
 
+**Componentes apresentacionais — critérios objetivos:**
+
+Componentes em `src/components/features/<feature>/` (e seus equivalentes
+em `src/components/layout/`) DEVEM ser **apenas de renderização** — JSX
++ chamada de hook. Toda lógica que interage com estado de domínio,
+servidor ou navegação DEVE viver em hooks customizados co-localizados em
+`src/components/features/<feature>/hooks/use-<scope>.ts`.
+
+Critério objetivo para distinguir o que **vai para o hook** (estado de
+domínio, lógica) do que **fica no componente** (estado visual local):
+
+| Tipo de estado | Vai para... | Exemplo |
+|---|---|---|
+| Lista de entidades carregadas (`studios`, `chapters`) | **Hook** | `useStudiosList` |
+| Modo de edição inline de uma entidade | **Hook** | `useStudioRow.isEditing` |
+| Alvo de dialog (`studioToDelete`, `chapterToRevert`) | **Hook** | `useStudiosList.studioToDelete` |
+| Filtros, paginação, seleção em massa | **Hook** | `useBooksTable.selectedIds` |
+| Status de mutação (`isSubmitting`, `error`) | **Hook** | hooks de mutação |
+| Open/close de Popover/Tooltip controlado por composição Radix | **Componente** | `<Popover open={open} onOpenChange={setOpen}>` |
+| Valor temporário de input não-validado (digitando) | **Componente** | `<Input value={local} onChange={...}>` quando não há validação cross-field |
+| Foco, hover ou state CSS-only | **Componente** | classes condicionais |
+| Valor de form **com validação** (RHF) | **`useForm` no componente** + **hook para submit** | hook recebe `form` como argumento |
+
+**Heurística rápida**: se o estado descreve **"o que existe no domínio"**
+ou **"qual ação está em andamento"**, vai para hook. Se descreve
+**"como esta UI está desenhada agora"** e desaparece com o componente
+sem afetar lógica, fica no componente.
+
+**Convenções do hook co-localizado:**
+
+- Localização: `src/components/features/<feature>/hooks/use-<scope>.ts`.
+  `src/lib/hooks/` é reservado para hooks usados por **≥ 2 features
+  distintas** — não criar lá enquanto for de feature única.
+- Naming: `use-<feature>-<scope>` (ex.: `use-studios-list`,
+  `use-studio-row`, `use-create-studio-form`).
+- Retorno: objeto nomeado (`{ data, isLoading, callbacks, ... }`),
+  nunca tupla.
+- RHF: `useForm()` permanece no componente; o hook recebe `form` por
+  argumento e expõe `onSubmit`.
+- Refetch pós-mutação: `router.refresh()` é o mecanismo padrão.
+- Testes: `renderHook` (`@testing-library/react`); cobertura ≥ 80%
+  por hook; helpers puros (ex.: `lib/domain/chapter-transitions.ts`):
+  100%.
+
+Detalhamento canônico, contratos e exemplo replicável: ver
+[docs/hooks-pattern.md](../../docs/hooks-pattern.md) e a feature de
+referência em
+[src/components/features/studios/](../../src/components/features/studios/).
+
 **Rationale**: Separar lógica de renderização permite testar cada parte
-isoladamente e facilita SSR sem hidratação desnecessária no cliente.
+isoladamente, facilita SSR sem hidratação desnecessária no cliente, e
+mantém o JSX legível (≤ 200 LOC, Princípio XII). Critério objetivo
+elimina debate em code review — qualquer revisor consegue apontar com
+referência exata em vez de "parece sujo".
 
 ### VIII. Performance em Primeiro Lugar
 
@@ -733,6 +805,23 @@ Os seguintes padrões são **explicitamente proibidos** neste projeto:
   colocar componentes de UI junto à rota. Componentes de feature
   DEVEM ficar em `src/components/features/<feature>/` (ver
   Princípio VII).
+- Toast/sonner com variante `success` (ou equivalente verde +
+  checkmark genérico) para confirmar ações concluídas. O feedback
+  de sucesso DEVE vir da própria UI refletindo o novo estado
+  (ver Princípio VII, "Toasts e feedback de sucesso"). Toasts ficam
+  reservados a warnings e erros.
+- `fetch`, `useEffect` de side-effect, ou `router.refresh()` em
+  componente client (`"use client"`) — DEVEM residir em hook
+  customizado co-localizado em
+  `src/components/features/<feature>/hooks/`. O componente client
+  apenas renderiza JSX e chama o hook (ver Princípio VII,
+  "Componentes apresentacionais — critérios objetivos").
+- `useState` de **estado de domínio** em componente client (lista de
+  entidades, alvo de dialog/modal, status de mutação,
+  flags `isSubmitting`/`error`) — DEVE ir para o hook. Apenas estado
+  puramente visual (open/close de Popover/Tooltip controlado por
+  composição Radix, hover, foco, valor temporário de input
+  não-validado) é permitido inline no componente.
 
 **Banco de dados:**
 - `float` ou `double` para valores financeiros.
@@ -1072,6 +1161,8 @@ submeter para review ou merge:
 - [ ] Nenhuma página sem `<PageContainer>` e componentes de layout?
 - [ ] Nenhuma pasta `_components/` dentro de `src/app/` (componentes de feature em `src/components/features/<feature>/`)?
 - [ ] Dark mode funciona corretamente em todos os componentes novos?
+- [ ] Nenhum `toast.success(...)` (ou equivalente) — sucesso é mostrado pela própria UI?
+- [ ] Toasts presentes são apenas para warnings/erros (ou neutro informativo em ações sem efeito visível)?
 - [ ] Erros são tratados explicitamente (sem `catch (e) {}`)?
 ```
 
@@ -1079,4 +1170,4 @@ submeter para review ou merge:
 revisar por outros e cria responsabilidade pessoal com os padrões
 definidos nesta constituição.
 
-**Version**: 2.15.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-04-29
+**Version**: 2.16.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-04-30

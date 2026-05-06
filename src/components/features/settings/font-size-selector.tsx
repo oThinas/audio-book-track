@@ -1,9 +1,9 @@
 "use client";
 
+import { useAutoSavePreference } from "@/components/features/settings/hooks/use-auto-save-preference";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import type { FontSize } from "@/lib/domain/user-preference";
-import { useAutoSavePreference } from "@/lib/hooks/use-auto-save-preference";
 import { cn } from "@/lib/utils";
 
 const FONT_SIZE_OPTIONS = [

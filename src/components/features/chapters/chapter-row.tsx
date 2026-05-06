@@ -1,8 +1,7 @@
 "use client";
 
 import { Loader2, Pencil, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { memo, useCallback } from "react";
 
 import { StatusBadge } from "@/components/features/books/status-badge";
 import { Button } from "@/components/ui/button";
@@ -13,6 +12,8 @@ import { formatSecondsAsHHMMSS } from "@/lib/utils";
 
 import { ChapterDeleteDialog } from "./chapter-delete-dialog";
 import { ChapterRowEditMode } from "./chapter-row-edit-mode";
+import { useChapterRow } from "./hooks/use-chapter-row";
+import { useDeleteChapter } from "./hooks/use-delete-chapter";
 
 export interface ChapterRowEntity {
   readonly id: string;
@@ -42,7 +43,7 @@ interface ChapterRowProps {
   readonly onToggleSelected: (chapterId: string, selected: boolean) => void;
 }
 
-export function ChapterRow({
+function ChapterRowImpl({
   chapter,
   narrators,
   editors,
@@ -55,39 +56,22 @@ export function ChapterRow({
   onDeleted,
   onToggleSelected,
 }: ChapterRowProps) {
-  const [mode, setMode] = useState<"view" | "edit">("view");
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-
-  // Bulk-delete mode and inline edit mode are mutually exclusive: when the
-  // parent enters selection mode, drop any in-flight edit so the row renders
-  // its checkbox instead of the edit form.
-  useEffect(() => {
-    if (isSelectionMode) {
-      setMode("view");
-    }
-  }, [isSelectionMode]);
-
-  async function handleDelete() {
-    setDeleting(true);
-    try {
-      const response = await fetch(`/api/v1/chapters/${chapter.id}`, { method: "DELETE" });
-      if (response.status !== 204) {
-        const body = (await response.json().catch(() => null)) as {
-          error?: { message?: string };
-        } | null;
-        toast.error(body?.error?.message ?? "Erro ao excluir capítulo.");
-        return;
-      }
-      const bookDeleted = response.headers.get("X-Book-Deleted") === "true";
-      setDeleteOpen(false);
-      onDeleted(chapter.id, bookDeleted);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro de rede ao excluir capítulo.");
-    } finally {
-      setDeleting(false);
-    }
-  }
+  const { mode, enterEditMode, exitEditMode } = useChapterRow({ isSelectionMode });
+  const { deleteOpen, deleting, openDelete, cancelDelete, handleDelete } = useDeleteChapter({
+    chapterId: chapter.id,
+    onDeleted,
+  });
+  const handleEditSaved = useCallback(
+    (updated: ChapterRowEntity, bookStatus: ChapterStatus) => {
+      exitEditMode();
+      onSaved(updated, bookStatus);
+    },
+    [exitEditMode, onSaved],
+  );
+  const handleCheckedChange = useCallback(
+    (value: boolean | "indeterminate") => onToggleSelected(chapter.id, value === true),
+    [chapter.id, onToggleSelected],
+  );
 
   if (mode === "edit") {
     return (
@@ -97,11 +81,8 @@ export function ChapterRow({
         editors={editors}
         narratorNameById={narratorNameById}
         editorNameById={editorNameById}
-        onCancel={() => setMode("view")}
-        onSaved={(updated, bookStatus) => {
-          setMode("view");
-          onSaved(updated, bookStatus);
-        }}
+        onCancel={exitEditMode}
+        onSaved={handleEditSaved}
       />
     );
   }
@@ -116,7 +97,7 @@ export function ChapterRow({
             <Checkbox
               checked={isSelected}
               disabled={isPaid}
-              onCheckedChange={(value) => onToggleSelected(chapter.id, value === true)}
+              onCheckedChange={handleCheckedChange}
               aria-label={`Selecionar capítulo ${chapter.number}`}
               data-testid={`chapter-select-${chapter.id}`}
             />
@@ -144,7 +125,7 @@ export function ChapterRow({
                 size="icon"
                 aria-label={`Editar capítulo ${chapter.number}`}
                 data-testid={`chapter-edit-${chapter.id}`}
-                onClick={() => setMode("edit")}
+                onClick={enterEditMode}
               >
                 <Pencil aria-hidden="true" className="size-4" />
               </Button>
@@ -154,7 +135,7 @@ export function ChapterRow({
                 size="icon"
                 aria-label={`Excluir capítulo ${chapter.number}`}
                 data-testid={`chapter-delete-${chapter.id}`}
-                onClick={() => setDeleteOpen(true)}
+                onClick={openDelete}
                 disabled={isPaid || deleting}
                 className="text-destructive hover:text-destructive"
               >
@@ -172,9 +153,11 @@ export function ChapterRow({
         open={deleteOpen}
         chapterNumber={chapter.number}
         isLastNonPaid={isLastNonPaid}
-        onCancel={() => setDeleteOpen(false)}
+        onCancel={cancelDelete}
         onConfirm={handleDelete}
       />
     </>
   );
 }
+
+export const ChapterRow = memo(ChapterRowImpl);

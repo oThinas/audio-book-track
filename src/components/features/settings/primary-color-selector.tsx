@@ -1,10 +1,10 @@
 "use client";
 
 import { Check } from "lucide-react";
-import { useState } from "react";
+import { useAutoSavePreference } from "@/components/features/settings/hooks/use-auto-save-preference";
+import { usePrimaryColorSelector } from "@/components/features/settings/hooks/use-primary-color-selector";
 import type { PrimaryColor } from "@/lib/domain/user-preference";
 import { PRIMARY_COLORS } from "@/lib/domain/user-preference";
-import { useAutoSavePreference } from "@/lib/hooks/use-auto-save-preference";
 import { cn } from "@/lib/utils";
 
 const COLOR_MAP: Record<PrimaryColor, { bg: string; ring: string }> = {
@@ -20,17 +20,8 @@ interface PrimaryColorSelectorProps {
 }
 
 export function PrimaryColorSelector({ initialValue }: PrimaryColorSelectorProps) {
-  const [selected, setSelected] = useState(initialValue);
   const { save } = useAutoSavePreference();
-
-  function handleSelect(color: PrimaryColor) {
-    setSelected(color);
-    document.documentElement.setAttribute("data-primary-color", color);
-    try {
-      localStorage.setItem("primary-color", color);
-    } catch {}
-    save({ primaryColor: color });
-  }
+  const { selected, handleSelect } = usePrimaryColorSelector({ initialValue, save });
 
   return (
     <div className="flex gap-2 ml-auto md:ml-0">

@@ -2,11 +2,11 @@
 
 import { usePathname } from "next/navigation";
 import { type PropsWithChildren, useEffect, useRef } from "react";
+import { useMobileMenu } from "@/components/layout/hooks/use-mobile-menu";
+import { useSidebar } from "@/components/layout/hooks/use-sidebar";
 import { MobileHeader } from "@/components/layout/mobile-header";
 import { MobileSidebar } from "@/components/layout/mobile-sidebar";
 import { Sidebar } from "@/components/layout/sidebar";
-import { useMobileMenu } from "@/lib/hooks/use-mobile-menu";
-import { useSidebar } from "@/lib/hooks/use-sidebar";
 
 interface AuthenticatedLayoutClientProps {
   readonly initialCollapsed: boolean;

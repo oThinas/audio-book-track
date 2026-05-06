@@ -1,9 +1,9 @@
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { PreferenceInitializer } from "@/components/features/settings/preference-initializer";
+import { getSidebarCollapsed, SIDEBAR_COOKIE_NAME } from "@/components/layout/sidebar-constants";
 import { auth } from "@/lib/auth/server";
 import { createUserPreferenceService } from "@/lib/factories/user-preference";
-import { getSidebarCollapsed, SIDEBAR_COOKIE_NAME } from "@/lib/hooks/sidebar-constants";
 import { AuthenticatedLayoutClient } from "./layout-client";
 
 export default async function AuthenticatedLayout({

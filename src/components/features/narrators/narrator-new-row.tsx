@@ -2,16 +2,15 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Check, Loader2, X } from "lucide-react";
-import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TableCell, TableRow } from "@/components/ui/table";
-import type { ApiErrorBody } from "@/lib/api/error-response";
 import { type Narrator, type NarratorFormValues, narratorFormSchema } from "@/lib/domain/narrator";
+
+import { useCreateNarratorForm } from "./hooks/use-create-narrator-form";
 
 interface NarratorNewRowProps {
   readonly onCreated: (narrator: Narrator) => void;
@@ -19,51 +18,17 @@ interface NarratorNewRowProps {
 }
 
 export function NarratorNewRow({ onCreated, onCancelled }: NarratorNewRowProps) {
-  const firstFieldRef = useRef<HTMLInputElement | null>(null);
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-    setError,
-  } = useForm<NarratorFormValues>({
+  const form = useForm<NarratorFormValues>({
     resolver: zodResolver(narratorFormSchema),
     defaultValues: { name: "" },
   });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = form;
 
-  useEffect(() => {
-    firstFieldRef.current?.focus();
-  }, []);
-
-  async function onSubmit(values: NarratorFormValues) {
-    const response = await fetch("/api/v1/narrators", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values),
-    });
-
-    if (response.status === 201) {
-      const body = (await response.json()) as { data: Narrator };
-      onCreated(body.data);
-      return;
-    }
-
-    if (response.status === 422) {
-      const body = (await response.json()) as ApiErrorBody;
-      for (const detail of body.error.details ?? []) {
-        if (detail.field === "name") {
-          setError("name", { message: detail.message });
-        }
-      }
-      return;
-    }
-
-    if (response.status === 409) {
-      setError("name", { message: "Nome já cadastrado" });
-      return;
-    }
-
-    toast.error("Não foi possível salvar o narrador. Tente novamente.");
-  }
+  const { onSubmit, isSubmitting, firstFieldRef } = useCreateNarratorForm({ form, onCreated });
 
   const { ref: nameRefCallback, ...nameRegister } = register("name");
 

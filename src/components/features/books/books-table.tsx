@@ -1,16 +1,8 @@
 "use client";
 
-import {
-  type ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  getSortedRowModel,
-  type SortingState,
-  useReactTable,
-} from "@tanstack/react-table";
+import { type ColumnDef, flexRender } from "@tanstack/react-table";
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -25,6 +17,7 @@ import {
 import type { BookStatus } from "@/lib/domain/book";
 import { formatCentsBRL } from "@/lib/utils";
 
+import { useBooksTable } from "./hooks/use-books-table";
 import { StatusBadge } from "./status-badge";
 
 export interface BookSummaryRow {
@@ -49,9 +42,6 @@ function SortIcon({ direction }: { direction: false | "asc" | "desc" }) {
 }
 
 export function BooksTable({ books }: BooksTableProps) {
-  const router = useRouter();
-  const [sorting, setSorting] = useState<SortingState>([]);
-
   const columns = useMemo<ColumnDef<BookSummaryRow>[]>(
     () => [
       {
@@ -105,15 +95,7 @@ export function BooksTable({ books }: BooksTableProps) {
     [],
   );
 
-  const table = useReactTable({
-    data: books as BookSummaryRow[],
-    columns,
-    state: { sorting },
-    onSortingChange: setSorting,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-  });
-
+  const { table, handleRowClick, handleRowKeyDown } = useBooksTable({ books, columns });
   const rows = table.getRowModel().rows;
 
   return (
@@ -161,14 +143,9 @@ export function BooksTable({ books }: BooksTableProps) {
               key={row.original.id}
               data-testid={`book-row-${row.original.id}`}
               className="cursor-pointer"
-              onClick={() => router.push(`/books/${row.original.id}`)}
+              onClick={() => handleRowClick(row.original.id)}
               tabIndex={0}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  router.push(`/books/${row.original.id}`);
-                }
-              }}
+              onKeyDown={(event) => handleRowKeyDown(event, row.original.id)}
             >
               {row.getVisibleCells().map((cell) => (
                 <TableCell key={cell.id}>

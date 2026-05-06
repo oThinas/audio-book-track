@@ -10,6 +10,7 @@ import type { RepositoryTx } from "@/lib/repositories/book-repository";
 import type {
   ReactivateStudioOverrides,
   StudioListItem,
+  StudioListOptions,
   StudioRepository,
 } from "@/lib/repositories/studio-repository";
 
@@ -50,16 +51,18 @@ export class DrizzleStudioRepository implements StudioRepository {
     return (tx as Executor | undefined) ?? this.db;
   }
 
-  async findAll(): Promise<Studio[]> {
+  async findAll(options?: StudioListOptions): Promise<Studio[]> {
+    const order = options?.orderBy === "name" ? asc(studio.name) : asc(studio.createdAt);
     const rows = await this.db
       .select(STUDIO_COLUMNS)
       .from(studio)
       .where(isNull(studio.deletedAt))
-      .orderBy(asc(studio.createdAt));
+      .orderBy(order);
     return rows.map(toDomain);
   }
 
-  async findAllWithCounts(): Promise<StudioListItem[]> {
+  async findAllWithCounts(options?: StudioListOptions): Promise<StudioListItem[]> {
+    const order = options?.orderBy === "name" ? asc(studio.name) : asc(studio.createdAt);
     // LEFT JOIN book + COUNT — usa o índice book_studio_id_idx (T008).
     const rows = await this.db
       .select({
@@ -70,7 +73,7 @@ export class DrizzleStudioRepository implements StudioRepository {
       .leftJoin(book, eq(book.studioId, studio.id))
       .where(isNull(studio.deletedAt))
       .groupBy(studio.id)
-      .orderBy(asc(studio.createdAt));
+      .orderBy(order);
 
     return rows.map((row) => ({
       ...toDomain(row),
