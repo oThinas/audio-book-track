@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { Editor } from "@/lib/domain/editor";
 import type { EditorListItem } from "@/lib/repositories/editor-repository";
 
@@ -36,58 +36,47 @@ export function useEditorsList(initial: readonly EditorListItem[]): UseEditorsLi
     [editors],
   );
 
-  const handleNewClick = useCallback(() => {
-    setIsCreating((current) => {
-      if (current) {
-        document.getElementById(NEW_ROW_NAME_INPUT_ID)?.focus();
-        return current;
-      }
-      return true;
-    });
-  }, []);
+  function handleNewClick() {
+    if (isCreating) {
+      document.getElementById(NEW_ROW_NAME_INPUT_ID)?.focus();
+      return;
+    }
+    setIsCreating(true);
+  }
 
-  const handleCreated = useCallback(
-    (editor: Editor) => {
-      setEditors((current) => [...current, { ...editor, chaptersCount: 0 }]);
-      setIsCreating(false);
-      router.refresh();
-    },
-    [router],
-  );
-
-  const handleCancelled = useCallback(() => {
+  function handleCreated(editor: Editor) {
+    setEditors((current) => [...current, { ...editor, chaptersCount: 0 }]);
     setIsCreating(false);
-  }, []);
+    router.refresh();
+  }
 
-  const handleUpdated = useCallback(
-    (updated: Editor) => {
-      setEditors((current) =>
-        current.map((e) =>
-          e.id === updated.id ? { ...updated, chaptersCount: e.chaptersCount } : e,
-        ),
-      );
-      router.refresh();
-    },
-    [router],
-  );
+  function handleCancelled() {
+    setIsCreating(false);
+  }
 
-  const handleRequestDelete = useCallback((editor: Editor) => {
+  function handleUpdated(updated: Editor) {
+    setEditors((current) =>
+      current.map((e) =>
+        e.id === updated.id ? { ...updated, chaptersCount: e.chaptersCount } : e,
+      ),
+    );
+    router.refresh();
+  }
+
+  function handleRequestDelete(editor: Editor) {
     setEditorToDelete(editor);
-  }, []);
+  }
 
-  const handleDeleteDialogChange = useCallback((open: boolean) => {
+  function handleDeleteDialogChange(open: boolean) {
     if (!open) {
       setEditorToDelete(null);
     }
-  }, []);
+  }
 
-  const handleDeleted = useCallback(
-    (id: string) => {
-      setEditors((current) => current.filter((e) => e.id !== id));
-      router.refresh();
-    },
-    [router],
-  );
+  function handleDeleted(id: string) {
+    setEditors((current) => current.filter((e) => e.id !== id));
+    router.refresh();
+  }
 
   return {
     editors,

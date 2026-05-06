@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import type { Studio } from "@/lib/domain/studio";
 import type { StudioListItem } from "@/lib/repositories/studio-repository";
 
@@ -26,25 +26,22 @@ export function useStudioRow({
 }: UseStudioRowArgs): UseStudioRowReturn {
   const [isEditing, setIsEditing] = useState(false);
 
-  const handleStartEdit = useCallback(() => {
+  function handleStartEdit() {
     setIsEditing(true);
-  }, []);
+  }
 
-  const handleCancelEdit = useCallback(() => {
+  function handleCancelEdit() {
     setIsEditing(false);
-  }, []);
+  }
 
-  const handleEditCompleted = useCallback(
-    (updated: Studio) => {
-      onUpdated?.(updated);
-      setIsEditing(false);
-    },
-    [onUpdated],
-  );
+  function handleEditCompleted(updated: Studio) {
+    onUpdated?.(updated);
+    setIsEditing(false);
+  }
 
-  const handleRequestDelete = useCallback(() => {
+  function handleRequestDelete() {
     onRequestDelete?.(studio);
-  }, [onRequestDelete, studio]);
+  }
 
   return {
     isEditing,

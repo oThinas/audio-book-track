@@ -1,7 +1,6 @@
 "use client";
 
 import { Pencil, Trash2 } from "lucide-react";
-import { memo } from "react";
 
 import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
@@ -17,7 +16,7 @@ interface EditorRowProps {
   readonly onRequestDelete?: (editor: Editor) => void;
 }
 
-function EditorRowImpl({ editor, onUpdated, onRequestDelete }: EditorRowProps) {
+export function EditorRow({ editor, onUpdated, onRequestDelete }: EditorRowProps) {
   const {
     isEditing,
     handleStartEdit,
@@ -79,5 +78,3 @@ function EditorRowImpl({ editor, onUpdated, onRequestDelete }: EditorRowProps) {
     </TableRow>
   );
 }
-
-export const EditorRow = memo(EditorRowImpl);

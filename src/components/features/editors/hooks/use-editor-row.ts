@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import type { Editor } from "@/lib/domain/editor";
 import type { EditorListItem } from "@/lib/repositories/editor-repository";
 
@@ -26,25 +26,22 @@ export function useEditorRow({
 }: UseEditorRowArgs): UseEditorRowReturn {
   const [isEditing, setIsEditing] = useState(false);
 
-  const handleStartEdit = useCallback(() => {
+  function handleStartEdit() {
     setIsEditing(true);
-  }, []);
+  }
 
-  const handleCancelEdit = useCallback(() => {
+  function handleCancelEdit() {
     setIsEditing(false);
-  }, []);
+  }
 
-  const handleEditCompleted = useCallback(
-    (updated: Editor) => {
-      onUpdated?.(updated);
-      setIsEditing(false);
-    },
-    [onUpdated],
-  );
+  function handleEditCompleted(updated: Editor) {
+    onUpdated?.(updated);
+    setIsEditing(false);
+  }
 
-  const handleRequestDelete = useCallback(() => {
+  function handleRequestDelete() {
     onRequestDelete?.(editor);
-  }, [onRequestDelete, editor]);
+  }
 
   return {
     isEditing,
