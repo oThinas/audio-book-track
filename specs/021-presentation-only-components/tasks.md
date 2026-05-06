@@ -296,14 +296,14 @@ Targets: 14 componentes em `src/components/features/books/` + `src/components/fe
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T136 [P] Auditoria final componente-por-componente comparando estado pós-refatoração com [data-model.md §1](./data-model.md#1-auditoria-de-conformidade--srccomponentsfeatures); marcar 🟢 nas linhas que migraram; gravar em `specs/021-presentation-only-components/audit-final.md`
-- [ ] T137 [P] Verificar Princípio XII (componentes ≤ 200 LOC) em todos os arquivos `.tsx` em `src/components/features/**`; documentar quaisquer remanescentes acima do limite com justificativa ou follow-up
-- [ ] T138 [P] Adicionar entrada em `docs/CODEMAPS/` (se diretório existir) ou em `docs/architecture/frontend.md` mencionando a estrutura `<feature>/hooks/` como padrão canônico
+- [X] T136 [P] Auditoria final componente-por-componente — gravada em [audit-final.md](./audit-final.md): 38/41 (93%) componentes 🟢; 3 remanescentes na feature `books` documentados com justificativa
+- [X] T137 [P] Verificar Princípio XII (≤ 200 LOC) — 3 componentes acima do limite (`book-edit-dialog` 341, `book-create-dialog` 266, `chapter-row-edit-mode` 202), todos com lógica em hook; justificativa e follow-ups em [audit-final.md §2](./audit-final.md#2-componentes-acima-de-200-loc--justificativa)
+- [X] T138 [P] Criada [docs/architecture/frontend.md](../../docs/architecture/frontend.md) documentando a estrutura `<feature>/hooks/` como padrão canônico
 - [ ] T139 [P] Aplicar `React.memo` aos componentes row consumidos em listas longas (`src/components/features/studios/studio-row.tsx`, `narrators/narrator-row.tsx`, `editors/editor-row.tsx`, `chapters/chapter-row.tsx`) e adicionar teste unitário garantindo que callbacks expostos pelos hooks pais (`useStudiosList`, `useNarratorsList`, `useEditorsList`, `useChaptersList`) são estáveis entre re-renders do pai (R9 — depende de US1 e US2-C/D/E mergeados)
 - [ ] T140 [P] Lazy-load do `book-edit-dialog.tsx` via `lazy(() => import("@/components/features/books/book-edit-dialog"))` + `<Suspense fallback={<BookDialogSkeleton />}>` na rota/componente que o abre; criar `BookDialogSkeleton` mínimo em `src/components/features/books/book-dialog-skeleton.tsx` (R9 — gap apontado por `/frontend-patterns`; depende de US2-E mergeado)
 - [ ] T141 [P] Lazy-load do `book-create-dialog.tsx` via `lazy(...)` + `<Suspense>` na mesma página, reusando `BookDialogSkeleton` (R9; depende de US2-E mergeado)
 - [ ] T142 [P] Validar redução de bundle size pós lazy loading: rodar `bun run build`, comparar `.next/static/chunks/` com baseline pré-T140/T141, registrar redução em `specs/021-presentation-only-components/bundle-impact.md`
-- [ ] T143 Limpar arquivos de smoke/baselines temporários (`__tests__/unit/_smoke/`, `specs/021-presentation-only-components/baseline-tests.md` se já redundante)
+- [X] T143 Limpeza: `__tests__/unit/_smoke/` já estava removido; `baseline-tests.md` deletado por redundância (estado atual coberto por audit-final.md + tasks.md)
 
 > **Nota sobre Phase 6**: T139–T142 são **gap-fillers identificados na reconciliação com `/frontend-patterns`** (research.md R9). Se cronograma apertar, T136–T138 + T143 são o mínimo viável; T139 (memoization), T140–T142 (lazy loading + bundle audit) podem virar PR separado pós-merge.
 
