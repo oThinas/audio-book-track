@@ -269,8 +269,8 @@ Targets: 14 componentes em `src/components/features/books/` + `src/components/fe
 
 - [X] T125 [US2] Validar: cobertura `books/hooks` 87.24/73.83/81.53/88.96, `chapters/hooks` 92.4/75/100/95.83 (ambos ≥ 80%); `chapter-transitions.ts` 100/100/100/100
 - [ ] T126 [US2] Smoke manual `/books` e `/books/:id` (responsabilidade do usuário)
-- [ ] T127 [US2] `bun run test:integration` (PostgreSQL não estava disponível durante a sessão; será re-validado pelo usuário)
-- [ ] T128 [US2] `bun run test:e2e` filtros books/chapters (pendente; depende de DB e build server)
+- [X] T127 [US2] `bun run test:integration` (32 arquivos / 216 testes ✓)
+- [X] T128 [US2] `bun run test:e2e` filtros books/chapters (214 testes ✓ — incluindo correções para `useWatch` e toast de delete em commits 80b528f / a47792f)
 - [X] T129 [US2] Self-review concluído; pronto para `refactor(021): 📚 books+chapters — extrai lógica para hooks`
 
 **Checkpoint E**: Books & Chapters migrada e PR'd. **US2 completo** — toda base em conformidade.
@@ -283,12 +283,12 @@ Targets: 14 componentes em `src/components/features/books/` + `src/components/fe
 
 **Independent Test**: abrir PR sintético com violação intencional (ex.: `fetch` em `studios-client.tsx`); o reviewer detecta na primeira passada porque o checklist tem item dedicado e o anti-padrão é citado explicitamente.
 
-- [ ] T130 [US3] Emendar `.specify/memory/constitution.md` Princípio VII (Frontend) adicionando subseção "Componentes apresentacionais — critérios objetivos" com a tabela "estado de domínio vs. estado visual local" de [data-model.md §3](./data-model.md#3-estado-de-domínio-vs-estado-visual-local--critério-objetivo); registrar SYNC IMPACT REPORT no topo (versão MINOR — `2.16.0 → 2.17.0`)
-- [ ] T131 [US3] Emendar `.specify/memory/constitution.md` Princípio XII (Anti-Padrões) adicionando explicitamente em "Frontend": (a) `fetch`/`useEffect` de side-effect/`router.refresh` em componente client (deve estar em hook), (b) `useState` de **estado de domínio** em componente client (UI-only state permitido)
-- [ ] T132 [US3] Atualizar `CLAUDE.md` na seção "Arquitetura" listando a regra "Componentes client são apresentacionais — lógica em hooks customizados co-localizados em `src/components/features/<feature>/hooks/`" com o critério objetivo (estado domínio vs. visual)
-- [ ] T133 [US3] Atualizar `CLAUDE.md` na seção "Anti-padrões proibidos" adicionando os anti-padrões formalizados em T131
-- [ ] T134 [US3] Atualizar `CLAUDE.md` Self-Review Checklist adicionando item: `- [ ] VII. Componentes client contêm apenas renderização? Lógica reside em hooks customizados em src/components/features/<feature>/hooks/?`
-- [ ] T135 [US3] Atualizar [docs/hooks-pattern.md](../../docs/hooks-pattern.md) (criado em T003) com link permanente para os contratos canônicos em [contracts/](./contracts/) e para o quickstart como receita reutilizável
+- [X] T130 [US3] Emendar `.specify/memory/constitution.md` Princípio VII (Frontend) adicionando subseção "Componentes apresentacionais — critérios objetivos" com a tabela "estado de domínio vs. estado visual local" de [data-model.md §3](./data-model.md#3-estado-de-domínio-vs-estado-visual-local--critério-objetivo); registrar SYNC IMPACT REPORT no topo (versão MINOR — `2.16.0 → 2.17.0`)
+- [X] T131 [US3] Emendar `.specify/memory/constitution.md` Princípio XII (Anti-Padrões) adicionando explicitamente em "Frontend": (a) `fetch`/`useEffect` de side-effect/`router.refresh` em componente client (deve estar em hook), (b) `useState` de **estado de domínio** em componente client (UI-only state permitido)
+- [X] T132 [US3] Atualizar `CLAUDE.md` na seção "Arquitetura" listando a regra "Componentes client são apresentacionais — lógica em hooks customizados co-localizados em `src/components/features/<feature>/hooks/`" com o critério objetivo (estado domínio vs. visual)
+- [X] T133 [US3] Atualizar `CLAUDE.md` na seção "Anti-padrões proibidos" adicionando os anti-padrões formalizados em T131
+- [X] T134 [US3] Atualizar `CLAUDE.md` Self-Review Checklist adicionando item: `- [ ] VII. Componentes client contêm apenas renderização? Lógica reside em hooks customizados em src/components/features/<feature>/hooks/?`
+- [X] T135 [US3] Atualizar [docs/hooks-pattern.md](../../docs/hooks-pattern.md) (criado em T003) com link permanente para os contratos canônicos em [contracts/](./contracts/) e para o quickstart como receita reutilizável
 
 **Checkpoint US3**: enforcement humano-assistido em vigor. Constituição + CLAUDE.md + checklist documentam o padrão.
 

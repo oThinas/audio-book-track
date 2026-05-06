@@ -44,6 +44,7 @@
 - **Repositories concretos prefixados com o adaptador** — ex: `DrizzleUserPreferenceRepository` implementa `UserPreferenceRepository`, morando em `src/lib/repositories/drizzle/`.
 - **shadcn/ui é a biblioteca de componentes padrão** — usar `bunx --bun shadcn@latest add <component>` antes de construir primitivos do zero. A flag `--bun` é obrigatória com Bun runtime.
 - **Componentes UI (`components/ui/`)** são shadcn/ui primitivos, puramente visuais: sem `useState` de negócio, sem `fetch`.
+- **Componentes client são apenas de renderização** — JSX + chamada de hook. Toda lógica (state machine, mutações, derivações de servidor, side-effects, navegação) DEVE residir em hooks customizados co-localizados em `src/components/features/<feature>/hooks/use-<scope>.ts`. Critério objetivo: estado de domínio (lista, alvo de dialog, `isSubmitting`/`error`) → hook; estado puramente visual (open/close de Popover, hover, foco, input não-validado) → componente. Ver Princípio VII da constituição e [docs/hooks-pattern.md](docs/hooks-pattern.md).
 - **Componentes de feature DEVEM residir em `src/components/features/<feature>/`** e ser importados via alias `@/components/features/<feature>/...`. Pastas `_components/` (ou qualquer variante colocada dentro de `src/app/`) são **PROIBIDAS**, mesmo quando o componente é usado por uma única rota.
 - **NUNCA usar elementos HTML crus** (`<button>`, `<input>`, `<select>`, etc.) quando existe componente equivalente em `components/ui/`. Usar `<Button>`, `<Input>`, `<Select>`, etc.
 - **Páginas autenticadas DEVEM usar componentes de layout** — `<PageContainer>`, `<PageHeader>`, `<PageTitle>`, `<PageDescription>` de `components/layout/page-container.tsx`.
@@ -81,6 +82,8 @@
 - Segredos hardcoded — usar variáveis de ambiente.
 - `console.log` em produção — usar structured logger.
 - `useEffect` para derivar estado — usar `useMemo`.
+- `fetch`, `useEffect` de side-effect ou `router.refresh()` em componente client (`"use client"`) — DEVEM viver em hook co-localizado em `src/components/features/<feature>/hooks/`. Componente client só renderiza JSX e chama o hook.
+- `useState` de **estado de domínio** (lista de entidades, alvo de dialog, status de mutação) em componente client — DEVE ir para o hook. Somente estado puramente visual (open/close de Popover, hover, foco, input não-validado) é permitido inline.
 - Valores visuais hardcoded (cores, espaçamentos) fora de design tokens.
 - Elementos HTML crus (`<button>`, `<input>`, etc.) quando existe componente em `components/ui/`.
 - Pasta `_components/` (ou similar) dentro de `src/app/` — componentes de feature DEVEM ficar em `src/components/features/<feature>/`.
@@ -272,6 +275,7 @@ task — isso é ruído desproporcional.
 - [ ] V.    Testes escritos ANTES da implementação, cobertura ≥ 80%?
 - [ ] VI.   Lógica de negócio no Service/Domain, não no Controller?
 - [ ] VII.  Componentes UI puramente visuais? Usando components/ui/ (não HTML cru)?
+- [ ] VII.  Componentes client contêm apenas renderização? Lógica reside em hooks customizados em src/components/features/<feature>/hooks/?
 - [ ] VII.  PageContainer e layout components em páginas autenticadas?
 - [ ] VII.  Dark mode funciona em todos os componentes novos?
 - [ ] VIII. Sem peso desnecessário no bundle do cliente?

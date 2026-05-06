@@ -12,13 +12,18 @@ Componentes em `src/components/features/<feature>/` ficam **apenas de renderiza�
 - **Princípio XII** — anti-padrão de componente > 200 LOC.
 - **Princípio V** — TDD: hooks são testáveis com `renderHook` sem montar a árvore de componentes.
 
-## Onde olhar
+## Onde olhar (referências permanentes)
+
+Estes documentos são a **fonte canônica do padrão** — citáveis em PRs e
+code review como base objetiva. Ao migrar uma nova feature, abrir
+`quickstart.md` (receita reutilizável) e os arquivos em `contracts/`
+(modelos de cabeçalho de hook) lado a lado.
 
 | Recurso | Para |
 |---|---|
-| [../specs/021-presentation-only-components/quickstart.md](../specs/021-presentation-only-components/quickstart.md) | Receita passo-a-passo (10 passos: inventário → extração → testes → smoke → cleanup) |
-| [../specs/021-presentation-only-components/contracts/](../specs/021-presentation-only-components/contracts/) | Contratos canônicos dos hooks da feature de Estúdios — input, output, side-effects, invariantes |
-| [../specs/021-presentation-only-components/data-model.md](../specs/021-presentation-only-components/data-model.md) | Auditoria componente-por-componente + tabela "estado de domínio vs. estado visual local" (critério objetivo) |
+| [../specs/021-presentation-only-components/quickstart.md](../specs/021-presentation-only-components/quickstart.md) | **Receita reutilizável** passo-a-passo (10 passos: inventário → extração → testes → smoke → cleanup) — repetir para cada feature nova |
+| [../specs/021-presentation-only-components/contracts/](../specs/021-presentation-only-components/contracts/) | **Contratos canônicos** dos hooks da feature de Estúdios — input, output, side-effects, invariantes; copiar como template ao escrever um hook novo |
+| [../specs/021-presentation-only-components/data-model.md](../specs/021-presentation-only-components/data-model.md) | Auditoria componente-por-componente + tabela "estado de domínio vs. estado visual local" (critério objetivo, espelhado no Princípio VII da constituição) |
 | [../specs/021-presentation-only-components/research.md](../specs/021-presentation-only-components/research.md) | Decisões técnicas (convenções de retorno, granularidade, RHF, refetch, naming) |
 
 ## Convenções resumidas

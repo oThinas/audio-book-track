@@ -1,26 +1,32 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 2.15.0 → 2.16.0 (MINOR: nova diretriz de UX adicionada
-ao Princípio VII proibindo toasts de sucesso; o feedback visual de
-sucesso DEVE vir da própria efetivação da ação na UI. Anti-padrão
-correspondente refletido no Princípio XII. Nenhum princípio removido
-ou redefinido.)
+Version change: 2.16.0 → 2.17.0 (MINOR: critério objetivo adicionado
+ao Princípio VII para distinguir componente "apenas de renderização"
+de componente com lógica, e dois anti-padrões frontend novos
+formalizados no Princípio XII — `fetch`/`useEffect` de side-effect/
+`router.refresh` em componente client e `useState` de estado de
+domínio em componente client. Nenhum princípio removido ou redefinido.)
 
 Modified principles:
   - VII. Frontend: Composição, Atomicidade e Mobile First:
-    - Adicionado: subseção "Toasts e feedback de sucesso" — toasts
-      DEVEM ser usados apenas para warnings e erros. Sucesso deve
-      ser comunicado pela própria mudança visual (item adicionado
-      à lista, dialog fechando, redirecionamento, badge atualizado,
-      etc.). Exceções limitadas: ações sem efeito visível imediato
-      (ex: envio de e-mail em background) podem usar toast neutro
-      curto, e nunca verde com checkmark genérico.
+    - Adicionado: subseção "Componentes apresentacionais — critérios
+      objetivos" — componentes em `src/components/features/**` DEVEM
+      ser puramente apresentacionais (JSX + chamada de hook). Toda
+      lógica (state machine, mutações, derivações de servidor,
+      side-effects, navegação) DEVE residir em hooks customizados
+      co-localizados em `src/components/features/<feature>/hooks/`.
+      Tabela "Estado de domínio vs. estado visual local" define o
+      critério objetivo para distinguir o que vai para o hook do
+      que fica no componente.
   - XII. Anti-Padrões Proibidos:
-    - Adicionado em "Frontend": uso de toast/sonner com variante
-      `success` (ou cor verde + checkmark) para confirmar ações
-      concluídas — proibido. O feedback de sucesso DEVE vir da
-      própria UI refletindo o novo estado.
+    - Adicionado em "Frontend": (a) `fetch`, `useEffect` de
+      side-effect ou `router.refresh()` em componente client —
+      DEVEM residir em hook customizado co-localizado;
+      (b) `useState` de estado de domínio (lista de entidades,
+      alvo de dialog, status de mutação) em componente client —
+      somente estado puramente visual (open/close de Popover,
+      hover, foco) é permitido inline.
 
 Added sections: N/A
 
@@ -28,12 +34,19 @@ Removed sections: N/A
 
 Templates requiring updates:
   ✅ .specify/memory/constitution.md — este arquivo (atualizado agora)
-  ⚠ CLAUDE.md — adicionar a regra na seção "Arquitetura" (UI) e
-     no bloco de "Anti-padrões proibidos" → flagged abaixo
-  ⚠ Self-Review Checklist — adicionar item correspondente no
-     bloco "Anti-Padrões"
+  ⚠ CLAUDE.md — adicionar a regra na seção "Arquitetura" e
+     anti-padrões correspondentes em "Anti-padrões proibidos"
+     → tracked em tasks.md T132/T133
+  ⚠ Self-Review Checklist (CLAUDE.md) — adicionar item dedicado para
+     componentes-apenas-de-renderização → tracked em tasks.md T134
 
 Follow-up TODOs: N/A.
+
+---
+HISTÓRICO PRÉVIO
+================
+Version 2.15.0 → 2.16.0 (MINOR: toasts de sucesso proibidos no
+Princípio VII; anti-padrão refletido no XII).
 -->
 
 # AudioBook Track Constitution
@@ -536,8 +549,60 @@ hooks/                → Custom hooks isolam lógica de estado e side effects
 - Composição via `children` e slot props é preferida a boolean props que
   alteram renderização.
 
+**Componentes apresentacionais — critérios objetivos:**
+
+Componentes em `src/components/features/<feature>/` (e seus equivalentes
+em `src/components/layout/`) DEVEM ser **apenas de renderização** — JSX
++ chamada de hook. Toda lógica que interage com estado de domínio,
+servidor ou navegação DEVE viver em hooks customizados co-localizados em
+`src/components/features/<feature>/hooks/use-<scope>.ts`.
+
+Critério objetivo para distinguir o que **vai para o hook** (estado de
+domínio, lógica) do que **fica no componente** (estado visual local):
+
+| Tipo de estado | Vai para... | Exemplo |
+|---|---|---|
+| Lista de entidades carregadas (`studios`, `chapters`) | **Hook** | `useStudiosList` |
+| Modo de edição inline de uma entidade | **Hook** | `useStudioRow.isEditing` |
+| Alvo de dialog (`studioToDelete`, `chapterToRevert`) | **Hook** | `useStudiosList.studioToDelete` |
+| Filtros, paginação, seleção em massa | **Hook** | `useBooksTable.selectedIds` |
+| Status de mutação (`isSubmitting`, `error`) | **Hook** | hooks de mutação |
+| Open/close de Popover/Tooltip controlado por composição Radix | **Componente** | `<Popover open={open} onOpenChange={setOpen}>` |
+| Valor temporário de input não-validado (digitando) | **Componente** | `<Input value={local} onChange={...}>` quando não há validação cross-field |
+| Foco, hover ou state CSS-only | **Componente** | classes condicionais |
+| Valor de form **com validação** (RHF) | **`useForm` no componente** + **hook para submit** | hook recebe `form` como argumento |
+
+**Heurística rápida**: se o estado descreve **"o que existe no domínio"**
+ou **"qual ação está em andamento"**, vai para hook. Se descreve
+**"como esta UI está desenhada agora"** e desaparece com o componente
+sem afetar lógica, fica no componente.
+
+**Convenções do hook co-localizado:**
+
+- Localização: `src/components/features/<feature>/hooks/use-<scope>.ts`.
+  `src/lib/hooks/` é reservado para hooks usados por **≥ 2 features
+  distintas** — não criar lá enquanto for de feature única.
+- Naming: `use-<feature>-<scope>` (ex.: `use-studios-list`,
+  `use-studio-row`, `use-create-studio-form`).
+- Retorno: objeto nomeado (`{ data, isLoading, callbacks, ... }`),
+  nunca tupla.
+- RHF: `useForm()` permanece no componente; o hook recebe `form` por
+  argumento e expõe `onSubmit`.
+- Refetch pós-mutação: `router.refresh()` é o mecanismo padrão.
+- Testes: `renderHook` (`@testing-library/react`); cobertura ≥ 80%
+  por hook; helpers puros (ex.: `lib/domain/chapter-transitions.ts`):
+  100%.
+
+Detalhamento canônico, contratos e exemplo replicável: ver
+[docs/hooks-pattern.md](../../docs/hooks-pattern.md) e a feature de
+referência em
+[src/components/features/studios/](../../src/components/features/studios/).
+
 **Rationale**: Separar lógica de renderização permite testar cada parte
-isoladamente e facilita SSR sem hidratação desnecessária no cliente.
+isoladamente, facilita SSR sem hidratação desnecessária no cliente, e
+mantém o JSX legível (≤ 200 LOC, Princípio XII). Critério objetivo
+elimina debate em code review — qualquer revisor consegue apontar com
+referência exata em vez de "parece sujo".
 
 ### VIII. Performance em Primeiro Lugar
 
@@ -745,6 +810,18 @@ Os seguintes padrões são **explicitamente proibidos** neste projeto:
   de sucesso DEVE vir da própria UI refletindo o novo estado
   (ver Princípio VII, "Toasts e feedback de sucesso"). Toasts ficam
   reservados a warnings e erros.
+- `fetch`, `useEffect` de side-effect, ou `router.refresh()` em
+  componente client (`"use client"`) — DEVEM residir em hook
+  customizado co-localizado em
+  `src/components/features/<feature>/hooks/`. O componente client
+  apenas renderiza JSX e chama o hook (ver Princípio VII,
+  "Componentes apresentacionais — critérios objetivos").
+- `useState` de **estado de domínio** em componente client (lista de
+  entidades, alvo de dialog/modal, status de mutação,
+  flags `isSubmitting`/`error`) — DEVE ir para o hook. Apenas estado
+  puramente visual (open/close de Popover/Tooltip controlado por
+  composição Radix, hover, foco, valor temporário de input
+  não-validado) é permitido inline no componente.
 
 **Banco de dados:**
 - `float` ou `double` para valores financeiros.
