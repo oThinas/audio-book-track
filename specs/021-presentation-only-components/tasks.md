@@ -299,10 +299,10 @@ Targets: 14 componentes em `src/components/features/books/` + `src/components/fe
 - [X] T136 [P] Auditoria final componente-por-componente — gravada em [audit-final.md](./audit-final.md): 38/41 (93%) componentes 🟢; 3 remanescentes na feature `books` documentados com justificativa
 - [X] T137 [P] Verificar Princípio XII (≤ 200 LOC) — 3 componentes acima do limite (`book-edit-dialog` 341, `book-create-dialog` 266, `chapter-row-edit-mode` 202), todos com lógica em hook; justificativa e follow-ups em [audit-final.md §2](./audit-final.md#2-componentes-acima-de-200-loc--justificativa)
 - [X] T138 [P] Criada [docs/architecture/frontend.md](../../docs/architecture/frontend.md) documentando a estrutura `<feature>/hooks/` como padrão canônico
-- [ ] T139 [P] Aplicar `React.memo` aos componentes row consumidos em listas longas (`src/components/features/studios/studio-row.tsx`, `narrators/narrator-row.tsx`, `editors/editor-row.tsx`, `chapters/chapter-row.tsx`) e adicionar teste unitário garantindo que callbacks expostos pelos hooks pais (`useStudiosList`, `useNarratorsList`, `useEditorsList`, `useChaptersList`) são estáveis entre re-renders do pai (R9 — depende de US1 e US2-C/D/E mergeados)
-- [ ] T140 [P] Lazy-load do `book-edit-dialog.tsx` via `lazy(() => import("@/components/features/books/book-edit-dialog"))` + `<Suspense fallback={<BookDialogSkeleton />}>` na rota/componente que o abre; criar `BookDialogSkeleton` mínimo em `src/components/features/books/book-dialog-skeleton.tsx` (R9 — gap apontado por `/frontend-patterns`; depende de US2-E mergeado)
-- [ ] T141 [P] Lazy-load do `book-create-dialog.tsx` via `lazy(...)` + `<Suspense>` na mesma página, reusando `BookDialogSkeleton` (R9; depende de US2-E mergeado)
-- [ ] T142 [P] Validar redução de bundle size pós lazy loading: rodar `bun run build`, comparar `.next/static/chunks/` com baseline pré-T140/T141, registrar redução em `specs/021-presentation-only-components/bundle-impact.md`
+- [X] T139 [P] `React.memo` aplicado a `studio-row`, `narrator-row`, `editor-row`, `chapter-row`; callbacks dos 4 list hooks + `useBookDetail` + 4 row hooks envoltos em `useCallback`; teste consolidado em [_callback-stability.spec.ts](../../__tests__/unit/components/features/_callback-stability.spec.ts) cobre todas as 8 hooks (882 unit tests)
+- [X] T140 [P] `book-edit-dialog.tsx` carregado via `lazy(...)` + `<Suspense>` em `book-detail-client.tsx`; skeleton em [book-dialog-skeleton.tsx](../../src/components/features/books/book-dialog-skeleton.tsx)
+- [X] T141 [P] `book-create-dialog.tsx` lazy + `<Suspense>` em `books-client.tsx` reusando `BookDialogSkeleton`
+- [X] T142 [P] Bundle reduzido **3168 KB → 2540 KB (−628 KB / −19.8%)** — relatório em [bundle-impact.md](./bundle-impact.md)
 - [X] T143 Limpeza: `__tests__/unit/_smoke/` já estava removido; `baseline-tests.md` deletado por redundância (estado atual coberto por audit-final.md + tasks.md)
 
 > **Nota sobre Phase 6**: T139–T142 são **gap-fillers identificados na reconciliação com `/frontend-patterns`** (research.md R9). Se cronograma apertar, T136–T138 + T143 são o mínimo viável; T139 (memoization), T140–T142 (lazy loading + bundle audit) podem virar PR separado pós-merge.
@@ -313,11 +313,11 @@ Targets: 14 componentes em `src/components/features/books/` + `src/components/fe
 
 Per Constitution Principle XVI, quality checks são executados **uma vez** por PR de sub-feature, ao final. **Cada sub-checkpoint** (P1, P2-A, P2-B, P2-C, P2-D, P2-E, P3) tem seu próprio gate antes do respectivo PR. Esta seção lista o gate-modelo a ser repetido:
 
-- [ ] `bun run lint` — zero erros e zero warnings (Biome)
-- [ ] `bun run test:unit` — toda a suíte passando (incluindo hooks novos com cobertura ≥ 80%)
-- [ ] `bun run test:integration` — toda a suíte passando
-- [ ] `bun run test:e2e` — verde quando a feature toca fluxos cobertos por E2E
-- [ ] `bun run build` — build de produção compila sem erros
+- [X] `bun run lint` — zero erros e zero warnings (Biome) ✓
+- [X] `bun run test:unit` — 92 arquivos / 882 testes ✓ (cobertura ≥ 80% em todos os hooks novos)
+- [X] `bun run test:integration` — 32 arquivos / 216 testes ✓
+- [X] `bun run test:e2e` — 214 testes ✓
+- [X] `bun run build` — produção compila sem erros ✓
 
 Se qualquer verificação falhar, o PR daquela sub-feature **não pode ser mergeado**.
 

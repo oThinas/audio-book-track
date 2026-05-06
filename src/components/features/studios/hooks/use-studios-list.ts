@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { Studio } from "@/lib/domain/studio";
 import type { StudioListItem } from "@/lib/repositories/studio-repository";
 
@@ -36,45 +36,56 @@ export function useStudiosList(initial: readonly StudioListItem[]): UseStudiosLi
     [studios],
   );
 
-  function handleNewClick() {
-    if (isCreating) {
-      document.getElementById(NEW_ROW_NAME_INPUT_ID)?.focus();
-      return;
-    }
-    setIsCreating(true);
-  }
+  const handleNewClick = useCallback(() => {
+    setIsCreating((current) => {
+      if (current) {
+        document.getElementById(NEW_ROW_NAME_INPUT_ID)?.focus();
+        return current;
+      }
+      return true;
+    });
+  }, []);
 
-  function handleCreated(studio: Studio) {
-    setStudios((current) => [...current, { ...studio, booksCount: 0 }]);
+  const handleCreated = useCallback(
+    (studio: Studio) => {
+      setStudios((current) => [...current, { ...studio, booksCount: 0 }]);
+      setIsCreating(false);
+      router.refresh();
+    },
+    [router],
+  );
+
+  const handleCancelled = useCallback(() => {
     setIsCreating(false);
-    router.refresh();
-  }
+  }, []);
 
-  function handleCancelled() {
-    setIsCreating(false);
-  }
+  const handleUpdated = useCallback(
+    (updated: Studio) => {
+      setStudios((current) =>
+        current.map((s) => (s.id === updated.id ? { ...updated, booksCount: s.booksCount } : s)),
+      );
+      router.refresh();
+    },
+    [router],
+  );
 
-  function handleUpdated(updated: Studio) {
-    setStudios((current) =>
-      current.map((s) => (s.id === updated.id ? { ...updated, booksCount: s.booksCount } : s)),
-    );
-    router.refresh();
-  }
-
-  function handleRequestDelete(studio: Studio) {
+  const handleRequestDelete = useCallback((studio: Studio) => {
     setStudioToDelete(studio);
-  }
+  }, []);
 
-  function handleDeleteDialogChange(open: boolean) {
+  const handleDeleteDialogChange = useCallback((open: boolean) => {
     if (!open) {
       setStudioToDelete(null);
     }
-  }
+  }, []);
 
-  function handleDeleted(id: string) {
-    setStudios((current) => current.filter((s) => s.id !== id));
-    router.refresh();
-  }
+  const handleDeleted = useCallback(
+    (id: string) => {
+      setStudios((current) => current.filter((s) => s.id !== id));
+      router.refresh();
+    },
+    [router],
+  );
 
   return {
     studios,

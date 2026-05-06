@@ -1,14 +1,20 @@
 "use client";
 
+import { lazy, Suspense } from "react";
+
 import { ChaptersBulkDeleteBar } from "@/components/features/chapters/chapters-bulk-delete-bar";
 import { ChaptersBulkDeleteConfirm } from "@/components/features/chapters/chapters-bulk-delete-confirm";
 import { type ChapterRowData, ChaptersTable } from "@/components/features/chapters/chapters-table";
 import type { BookStatus } from "@/lib/domain/book";
 import type { Studio } from "@/lib/domain/studio";
 
-import { BookEditDialog } from "./book-edit-dialog";
+import { BookDialogSkeleton } from "./book-dialog-skeleton";
 import { BookHeader } from "./book-header";
 import { useBookDetail } from "./hooks/use-book-detail";
+
+const BookEditDialog = lazy(() =>
+  import("./book-edit-dialog").then((mod) => ({ default: mod.BookEditDialog })),
+);
 
 export interface BookDetailData {
   readonly id: string;
@@ -106,20 +112,24 @@ export function BookDetailClient({ book, narrators, editors, studios }: BookDeta
         }}
         onConfirm={handleBulkDeleteConfirm}
       />
-      <BookEditDialog
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        book={{
-          id: book.id,
-          title: book.title,
-          studioId: book.studio.id,
-          pricePerHourCents: book.pricePerHourCents,
-          currentChapters: state.chapters.length,
-          hasPaidChapter: paidCount > 0,
-        }}
-        studios={studios}
-        onUpdated={(detail) => applyBookUpdate(detail)}
-      />
+      {editOpen && (
+        <Suspense fallback={<BookDialogSkeleton open onOpenChange={setEditOpen} />}>
+          <BookEditDialog
+            open={editOpen}
+            onOpenChange={setEditOpen}
+            book={{
+              id: book.id,
+              title: book.title,
+              studioId: book.studio.id,
+              pricePerHourCents: book.pricePerHourCents,
+              currentChapters: state.chapters.length,
+              hasPaidChapter: paidCount > 0,
+            }}
+            studios={studios}
+            onUpdated={applyBookUpdate}
+          />
+        </Suspense>
+      )}
     </>
   );
 }

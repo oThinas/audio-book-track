@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { ChapterRowData } from "@/components/features/chapters/chapters-table";
 import type { BookStatus } from "@/lib/domain/book";
@@ -78,79 +78,97 @@ export function useBookDetail(book: BookDetailData): UseBookDetailReturn {
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
 
-  const nonPaidChapters = state.chapters.filter((c) => c.status !== "paid");
+  const nonPaidChapters = useMemo(
+    () => state.chapters.filter((c) => c.status !== "paid"),
+    [state.chapters],
+  );
   const paidCount = state.chapters.length - nonPaidChapters.length;
   const willDeleteBook =
     selectedIds.size === nonPaidChapters.length && nonPaidChapters.length > 0 && paidCount === 0;
-  const aggregates = recomputeAggregates(state.chapters, book.pricePerHourCents);
+  const aggregates = useMemo(
+    () => recomputeAggregates(state.chapters, book.pricePerHourCents),
+    [state.chapters, book.pricePerHourCents],
+  );
 
-  function handleChapterSaved(updated: ChapterRowData, bookStatus: ChapterStatus) {
+  const handleChapterSaved = useCallback((updated: ChapterRowData, bookStatus: ChapterStatus) => {
     setState((prev) => ({
       ...prev,
       status: bookStatus,
       chapters: prev.chapters.map((chapter) => (chapter.id === updated.id ? updated : chapter)),
     }));
-  }
+  }, []);
 
-  function applyBookUpdate(detail: UpdatedBookDetail) {
-    setState((prev) => ({
-      ...prev,
-      status: detail.status,
-      chapters: detail.chapters.map((c) => ({
-        id: c.id,
-        number: c.number,
-        status: c.status,
-        narrator: c.narrator,
-        editor: c.editor,
-        editedSeconds: c.editedSeconds,
-      })),
-    }));
-    router.refresh();
-  }
-
-  function handleChapterDeleted(chapterId: string, bookDeleted: boolean) {
-    if (bookDeleted) {
-      router.push("/books");
-      return;
-    }
-    setState((prev) => {
-      const remaining = prev.chapters.filter((chapter) => chapter.id !== chapterId);
-      return {
+  const applyBookUpdate = useCallback(
+    (detail: UpdatedBookDetail) => {
+      setState((prev) => ({
         ...prev,
-        status: remaining.length === 0 ? prev.status : computeBookStatus(remaining),
-        chapters: remaining,
-      };
-    });
-  }
+        status: detail.status,
+        chapters: detail.chapters.map((c) => ({
+          id: c.id,
+          number: c.number,
+          status: c.status,
+          narrator: c.narrator,
+          editor: c.editor,
+          editedSeconds: c.editedSeconds,
+        })),
+      }));
+      router.refresh();
+    },
+    [router],
+  );
 
-  function handlePdfUrlChange(next: string | null) {
-    setState((prev) => ({ ...prev, pdfUrl: next }));
-    router.refresh();
-  }
+  const handleChapterDeleted = useCallback(
+    (chapterId: string, bookDeleted: boolean) => {
+      if (bookDeleted) {
+        router.push("/books");
+        return;
+      }
+      setState((prev) => {
+        const remaining = prev.chapters.filter((chapter) => chapter.id !== chapterId);
+        return {
+          ...prev,
+          status: remaining.length === 0 ? prev.status : computeBookStatus(remaining),
+          chapters: remaining,
+        };
+      });
+    },
+    [router],
+  );
 
-  function exitSelectionMode() {
+  const handlePdfUrlChange = useCallback(
+    (next: string | null) => {
+      setState((prev) => ({ ...prev, pdfUrl: next }));
+      router.refresh();
+    },
+    [router],
+  );
+
+  const exitSelectionMode = useCallback(() => {
     setIsSelectionMode(false);
     setSelectedIds(new Set());
-  }
+  }, []);
 
-  function enterSelectionMode() {
+  const enterSelectionMode = useCallback(() => {
     setIsSelectionMode(true);
-  }
+  }, []);
 
-  function handleToggleSelected(chapterId: string, selected: boolean) {
+  const handleToggleSelected = useCallback((chapterId: string, selected: boolean) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (selected) next.add(chapterId);
       else next.delete(chapterId);
       return next;
     });
-  }
+  }, []);
 
-  function handleToggleSelectAll(selected: boolean) {
-    setSelectedIds(selected ? new Set(nonPaidChapters.map((c) => c.id)) : new Set());
-  }
+  const handleToggleSelectAll = useCallback(
+    (selected: boolean) => {
+      setSelectedIds(selected ? new Set(nonPaidChapters.map((c) => c.id)) : new Set());
+    },
+    [nonPaidChapters],
+  );
 
-  async function handleBulkDeleteConfirm() {
+  const handleBulkDeleteConfirm = useCallback(async () => {
     if (selectedIds.size === 0) return;
     setBulkDeleting(true);
     try {
@@ -186,7 +204,7 @@ export function useBookDetail(book: BookDetailData): UseBookDetailReturn {
     } finally {
       setBulkDeleting(false);
     }
-  }
+  }, [book.id, selectedIds, router, exitSelectionMode]);
 
   return {
     state,

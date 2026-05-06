@@ -1,6 +1,7 @@
 "use client";
 
 import { Pencil, Trash2 } from "lucide-react";
+import { memo } from "react";
 
 import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
@@ -16,7 +17,7 @@ interface NarratorRowProps {
   readonly onRequestDelete?: (narrator: Narrator) => void;
 }
 
-export function NarratorRow({ narrator, onUpdated, onRequestDelete }: NarratorRowProps) {
+function NarratorRowImpl({ narrator, onUpdated, onRequestDelete }: NarratorRowProps) {
   const {
     isEditing,
     handleStartEdit,
@@ -71,3 +72,5 @@ export function NarratorRow({ narrator, onUpdated, onRequestDelete }: NarratorRo
     </TableRow>
   );
 }
+
+export const NarratorRow = memo(NarratorRowImpl);

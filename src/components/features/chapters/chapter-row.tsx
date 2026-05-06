@@ -1,6 +1,7 @@
 "use client";
 
 import { Loader2, Pencil, Trash2 } from "lucide-react";
+import { memo, useCallback } from "react";
 
 import { StatusBadge } from "@/components/features/books/status-badge";
 import { Button } from "@/components/ui/button";
@@ -42,7 +43,7 @@ interface ChapterRowProps {
   readonly onToggleSelected: (chapterId: string, selected: boolean) => void;
 }
 
-export function ChapterRow({
+function ChapterRowImpl({
   chapter,
   narrators,
   editors,
@@ -60,6 +61,17 @@ export function ChapterRow({
     chapterId: chapter.id,
     onDeleted,
   });
+  const handleEditSaved = useCallback(
+    (updated: ChapterRowEntity, bookStatus: ChapterStatus) => {
+      exitEditMode();
+      onSaved(updated, bookStatus);
+    },
+    [exitEditMode, onSaved],
+  );
+  const handleCheckedChange = useCallback(
+    (value: boolean | "indeterminate") => onToggleSelected(chapter.id, value === true),
+    [chapter.id, onToggleSelected],
+  );
 
   if (mode === "edit") {
     return (
@@ -70,10 +82,7 @@ export function ChapterRow({
         narratorNameById={narratorNameById}
         editorNameById={editorNameById}
         onCancel={exitEditMode}
-        onSaved={(updated, bookStatus) => {
-          exitEditMode();
-          onSaved(updated, bookStatus);
-        }}
+        onSaved={handleEditSaved}
       />
     );
   }
@@ -88,7 +97,7 @@ export function ChapterRow({
             <Checkbox
               checked={isSelected}
               disabled={isPaid}
-              onCheckedChange={(value) => onToggleSelected(chapter.id, value === true)}
+              onCheckedChange={handleCheckedChange}
               aria-label={`Selecionar capítulo ${chapter.number}`}
               data-testid={`chapter-select-${chapter.id}`}
             />
@@ -150,3 +159,5 @@ export function ChapterRow({
     </>
   );
 }
+
+export const ChapterRow = memo(ChapterRowImpl);

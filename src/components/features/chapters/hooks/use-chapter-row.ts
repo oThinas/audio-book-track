@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export interface UseChapterRowArgs {
   readonly isSelectionMode: boolean;
@@ -24,9 +24,12 @@ export function useChapterRow({ isSelectionMode }: UseChapterRowArgs): UseChapte
     }
   }, [isSelectionMode]);
 
+  const enterEditMode = useCallback(() => setMode("edit"), []);
+  const exitEditMode = useCallback(() => setMode("view"), []);
+
   return {
     mode,
-    enterEditMode: () => setMode("edit"),
-    exitEditMode: () => setMode("view"),
+    enterEditMode,
+    exitEditMode,
   };
 }

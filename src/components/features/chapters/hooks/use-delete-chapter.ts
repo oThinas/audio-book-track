@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
 export interface UseDeleteChapterArgs {
@@ -23,7 +23,7 @@ export function useDeleteChapter({
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  async function handleDelete() {
+  const handleDelete = useCallback(async () => {
     setDeleting(true);
     try {
       const response = await fetch(`/api/v1/chapters/${chapterId}`, { method: "DELETE" });
@@ -42,13 +42,16 @@ export function useDeleteChapter({
     } finally {
       setDeleting(false);
     }
-  }
+  }, [chapterId, onDeleted]);
+
+  const openDelete = useCallback(() => setDeleteOpen(true), []);
+  const cancelDelete = useCallback(() => setDeleteOpen(false), []);
 
   return {
     deleteOpen,
     deleting,
     handleDelete,
-    openDelete: () => setDeleteOpen(true),
-    cancelDelete: () => setDeleteOpen(false),
+    openDelete,
+    cancelDelete,
   };
 }

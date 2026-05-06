@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import type { Narrator } from "@/lib/domain/narrator";
 import type { NarratorListItem } from "@/lib/repositories/narrator-repository";
 
@@ -26,22 +26,25 @@ export function useNarratorRow({
 }: UseNarratorRowArgs): UseNarratorRowReturn {
   const [isEditing, setIsEditing] = useState(false);
 
-  function handleStartEdit() {
+  const handleStartEdit = useCallback(() => {
     setIsEditing(true);
-  }
+  }, []);
 
-  function handleCancelEdit() {
+  const handleCancelEdit = useCallback(() => {
     setIsEditing(false);
-  }
+  }, []);
 
-  function handleEditCompleted(updated: Narrator) {
-    onUpdated?.(updated);
-    setIsEditing(false);
-  }
+  const handleEditCompleted = useCallback(
+    (updated: Narrator) => {
+      onUpdated?.(updated);
+      setIsEditing(false);
+    },
+    [onUpdated],
+  );
 
-  function handleRequestDelete() {
+  const handleRequestDelete = useCallback(() => {
     onRequestDelete?.(narrator);
-  }
+  }, [onRequestDelete, narrator]);
 
   return {
     isEditing,

@@ -1,15 +1,20 @@
 "use client";
 
 import { Plus, Search } from "lucide-react";
+import { lazy, Suspense } from "react";
 
 import { PageDescription, PageHeader, PageTitle } from "@/components/layout/page-container";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { Studio } from "@/lib/domain/studio";
 
-import { BookCreateDialog } from "./book-create-dialog";
+import { BookDialogSkeleton } from "./book-dialog-skeleton";
 import { type BookSummaryRow, BooksTable } from "./books-table";
 import { useBooksList } from "./hooks/use-books-list";
+
+const BookCreateDialog = lazy(() =>
+  import("./book-create-dialog").then((mod) => ({ default: mod.BookCreateDialog })),
+);
 
 interface BooksClientProps {
   readonly initialBooks: readonly BookSummaryRow[];
@@ -65,12 +70,16 @@ export function BooksClient({ initialBooks, studios }: BooksClientProps) {
 
       <BooksTable books={filteredBooks} />
 
-      <BookCreateDialog
-        open={isCreateDialogOpen}
-        onOpenChange={setCreateDialogOpen}
-        studios={studios}
-        onCreated={handleCreated}
-      />
+      {isCreateDialogOpen && (
+        <Suspense fallback={<BookDialogSkeleton open onOpenChange={setCreateDialogOpen} />}>
+          <BookCreateDialog
+            open={isCreateDialogOpen}
+            onOpenChange={setCreateDialogOpen}
+            studios={studios}
+            onCreated={handleCreated}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }
