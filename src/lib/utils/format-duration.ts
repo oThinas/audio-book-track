@@ -11,7 +11,7 @@ export function formatSecondsAsHours(
   options: FormatSecondsAsHoursOptions = {},
 ): string {
   if (!Number.isFinite(seconds)) {
-    throw new Error(`formatSecondsAsHours: seconds deve ser numérico finito, recebido ${seconds}`);
+    throw new Error(`formatSecondsAsHours: seconds must be a finite number, received ${seconds}`);
   }
   const { minDigits = 2, maxDigits = 2, emptyForZero = false } = options;
   if (emptyForZero && seconds === 0) return "";
@@ -36,7 +36,7 @@ const SECONDS_PER_MINUTE = 60;
 export function formatSecondsAsHHMMSS(seconds: number): string {
   if (!Number.isFinite(seconds) || seconds < 0) {
     throw new Error(
-      `formatSecondsAsHHMMSS: seconds deve ser inteiro não-negativo, recebido ${seconds}`,
+      `formatSecondsAsHHMMSS: seconds must be a non-negative integer, received ${seconds}`,
     );
   }
   const total = Math.floor(seconds);

@@ -34,7 +34,7 @@ export class DrizzleNarratorRepository implements NarratorRepository {
   }
 
   async findAllWithCounts(): Promise<NarratorListItem[]> {
-    // LEFT JOIN chapter ON chapter.narrator_id — usa o índice chapter_narrator_id_idx.
+    // LEFT JOIN chapter ON chapter.narrator_id — uses the chapter_narrator_id_idx index.
     const rows = await this.db
       .select({
         ...NARRATOR_COLUMNS,

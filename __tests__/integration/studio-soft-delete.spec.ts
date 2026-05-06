@@ -73,7 +73,7 @@ describe("DELETE /api/v1/studios/:id (handleStudiosDelete) — STUDIO_HAS_ACTIVE
     });
     await createTestChapter(db, { bookId: blocking.id, number: 1, status: "editing" });
 
-    // Adiciona um livro "OK" (capítulos completed) para garantir que NÃO bloqueia
+    // Add an "OK" book (completed chapters) to ensure it does NOT block
     const { book: okBook } = await createTestBook(db, {
       studioId: created.id,
       title: "Livro OK",
@@ -94,7 +94,7 @@ describe("DELETE /api/v1/studios/:id (handleStudiosDelete) — STUDIO_HAS_ACTIVE
     expect(body.error.details.books.map((b) => b.id)).toEqual([blocking.id]);
     expect(body.error.details.books[0]?.title).toBe("Livro Em Edição");
 
-    // estúdio NÃO foi soft-deletado
+    // studio was NOT soft-deleted
     const [row] = await db.select().from(studio).where(eq(studio.id, created.id));
     expect(row?.deletedAt).toBeNull();
   });
@@ -153,7 +153,7 @@ describe("DELETE /api/v1/studios/:id (handleStudiosDelete) — STUDIO_HAS_ACTIVE
     expect(body.error.details.books[0]?.id).toBe(book.id);
   });
 
-  it("preserves the soft-deleted studio in book-detail history (livro histórico continua resolvendo o estúdio)", async () => {
+  it("preserves the soft-deleted studio in book-detail history (historical book still resolves the studio)", async () => {
     const db = getTestDb();
     const { studio: created } = await createTestStudio(db, { name: "Histórico" });
     const { book } = await createTestBook(db, {
@@ -165,7 +165,7 @@ describe("DELETE /api/v1/studios/:id (handleStudiosDelete) — STUDIO_HAS_ACTIVE
     const response = await handleStudiosDelete(createDeps(), { id: created.id });
     expect(response.status).toBe(204);
 
-    // findByIdIncludingDeleted ainda retorna o estúdio (para resolver histórico do livro)
+    // findByIdIncludingDeleted still returns the studio (to resolve book history)
     const repo = new DrizzleStudioRepository(db);
     const stillResolvable = await repo.findByIdIncludingDeleted(created.id);
     expect(stillResolvable?.id).toBe(created.id);

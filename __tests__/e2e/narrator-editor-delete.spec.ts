@@ -85,7 +85,7 @@ test.describe("Narrator/Editor delete — LINKED_TO_ACTIVE_CHAPTERS precondition
 
     const { id: narratorId } = await seedNarrator(appServer.schemaName, narratorName);
     await attachNarratorToChapter(appServer.schemaName, paidChapter, narratorId);
-    // pendingChapter sem narrador — mas mantém o livro como "ativo"
+    // pendingChapter without narrator — but keeps the book as "active"
     void pendingChapter;
 
     await page.goto("/narrators");
@@ -108,7 +108,7 @@ test.describe("Narrator/Editor delete — LINKED_TO_ACTIVE_CHAPTERS precondition
     await expect(page.getByText(/cap[íi]tulos em \d+ livro\(s\) ativo\(s\)/i)).toBeVisible();
     await expect(page.getByText(new RegExp(`Livro Em Edição ${narratorName}`, "i"))).toBeVisible();
 
-    // narrador NÃO foi removido
+    // narrator was NOT removed
     await expect(page.getByTestId("narrator-row").filter({ hasText: narratorName })).toBeVisible();
   });
 

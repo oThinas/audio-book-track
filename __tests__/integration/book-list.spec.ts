@@ -107,8 +107,8 @@ describe("DrizzleBookRepository.listSummaries (SQL aggregation)", () => {
   it("orders results by createdAt DESC", async () => {
     const db = getTestDb();
     const { studio } = await createTestStudio(db);
-    // createdAt explícito: evita depender de ordering por timing — sob BEGIN/ROLLBACK
-    // todos os INSERTs recebem o mesmo now() (transaction-start timestamp).
+    // explicit createdAt: avoids depending on timing-based ordering — under BEGIN/ROLLBACK
+    // every INSERT receives the same now() (transaction-start timestamp).
     const [older] = await db
       .insert(book)
       .values({

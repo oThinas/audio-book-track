@@ -5,14 +5,14 @@ export interface BlockingBookSummary {
 
 export class StudioNameAlreadyInUseError extends Error {
   constructor(name: string) {
-    super(`Nome já cadastrado: ${name}`);
+    super(`Name already registered: ${name}`);
     this.name = "StudioNameAlreadyInUseError";
   }
 }
 
 export class StudioNotFoundError extends Error {
   constructor(id: string) {
-    super(`Estúdio não encontrado: ${id}`);
+    super(`Studio not found: ${id}`);
     this.name = "StudioNotFoundError";
   }
 }
@@ -22,9 +22,7 @@ export class StudioHasActiveBooksError extends Error {
     id: string,
     readonly books: ReadonlyArray<BlockingBookSummary>,
   ) {
-    super(
-      `Estúdio ${id} possui ${books.length} livro(s) com capítulos ativos — soft-delete bloqueado.`,
-    );
+    super(`Studio ${id} has ${books.length} book(s) with active chapters — soft-delete blocked.`);
     this.name = "StudioHasActiveBooksError";
   }
 }

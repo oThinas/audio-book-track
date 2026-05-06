@@ -39,11 +39,11 @@ describe("StudioService.softDelete — STUDIO_HAS_ACTIVE_BOOKS precondition", ()
       service.softDelete(studioId, { getActiveBooks: async () => blocking }),
     ).rejects.toBeInstanceOf(StudioHasActiveBooksError);
 
-    // estúdio NÃO foi soft-deletado
+    // studio was NOT soft-deleted
     expect(await repo.findById(studioId)).not.toBeNull();
   });
 
-  it("error.books expõe a lista completa de livros bloqueando, na ordem recebida", async () => {
+  it("error.books exposes the full list of blocking books, in the received order", async () => {
     const blocking = [
       { id: "book-1", title: "Livro 1" },
       { id: "book-2", title: "Livro 2" },

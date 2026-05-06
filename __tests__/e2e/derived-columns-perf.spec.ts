@@ -4,8 +4,8 @@ import { closeSeedPool, getSeedPool } from "./helpers/seed";
 const STUDIOS = 50;
 const BOOKS_PER_STUDIO = 10;
 const RUNS = 5;
-// O overhead introduzido pelo LEFT JOIN + COUNT em /api/v1/studios
-// não pode ultrapassar 100ms versus a mesma listagem sem agregação.
+// The overhead introduced by LEFT JOIN + COUNT on /api/v1/studios
+// must not exceed 100ms versus the same listing without aggregation.
 const MAX_OVERHEAD_MS = 100;
 
 test.afterAll(async () => {
@@ -23,8 +23,8 @@ test.describe("Derived columns — SC-011 perf overhead", () => {
     const schema = appServer.schemaName;
     const pool = getSeedPool();
 
-    // Seed 50 estúdios e 10 livros por estúdio em duas inserções de massa,
-    // evitando 500 round-trips individuais.
+    // Seed 50 studios and 10 books per studio in two bulk inserts,
+    // avoiding 500 individual round-trips.
     await pool.query(
       `INSERT INTO "${schema}"."studio" (id, name, default_hourly_rate_cents, created_at, updated_at)
        SELECT gen_random_uuid(), 'Perf Studio ' || lpad(i::text, 3, '0'), 7500, now(), now()
@@ -48,7 +48,7 @@ test.describe("Derived columns — SC-011 perf overhead", () => {
       [BOOKS_PER_STUDIO],
     );
 
-    // Aquece o cache do PostgreSQL antes das medições para reduzir variância.
+    // Warm up the PostgreSQL cache before measurements to reduce variance.
     await pool.query(`SELECT id, name FROM "${schema}"."studio" WHERE deleted_at IS NULL`);
     await pool.query(
       `SELECT s.id, s.name, COUNT(b.id)::int AS books_count
@@ -83,7 +83,7 @@ test.describe("Derived columns — SC-011 perf overhead", () => {
     const joinMs = median(joinSamples);
     const overheadMs = joinMs - baselineMs;
 
-    // Imprime os números reais para poderem ser anotados em quickstart.md §5.
+    // Print the actual numbers so they can be recorded in quickstart.md §5.
     console.info(
       `baseline=${baselineMs.toFixed(2)}ms join=${joinMs.toFixed(2)}ms overhead=${overheadMs.toFixed(2)}ms`,
     );

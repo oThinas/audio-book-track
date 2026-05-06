@@ -14,8 +14,8 @@ import { type PdfUrlFormValues, useBookPdfPopover } from "./hooks/use-book-pdf-p
 
 const PDF_URL_MAX_LENGTH = 2048;
 
-// Schema reflete updateBookSchema.pdfUrl no servidor: aceita string vazia
-// (=> traduzida em null no submit) ou http(s) com no máximo 2048 chars.
+// Schema mirrors updateBookSchema.pdfUrl on the server: accepts empty string
+// (=> translated to null on submit) or http(s) up to 2048 chars.
 const pdfUrlFormSchema = z.object({
   pdfUrl: z
     .string()

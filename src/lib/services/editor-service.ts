@@ -10,11 +10,11 @@ export interface CreateEditorResult {
 
 export interface SoftDeleteEditorDeps {
   /**
-   * Retorna a lista de livros ativos (com pelo menos um capítulo em
-   * `pending|editing|reviewing|retake`) onde o editor possui ao menos um capítulo.
+   * Returns the list of active books (with at least one chapter in
+   * `pending|editing|reviewing|retake`) where the editor has at least one chapter.
    *
-   * Default retorna [] (nenhum bloqueio). A factory de produção liga à
-   * implementação real via Drizzle JOIN `chapter` × `book` × `chapter`.
+   * Default returns [] (no blocking). The production factory wires this to
+   * the real implementation via Drizzle JOIN `chapter` × `book` × `chapter`.
    */
   readonly getActiveBooks?: (editorId: string) => Promise<ReadonlyArray<BlockingBookSummary>>;
 }
@@ -39,7 +39,7 @@ export class EditorService {
           reactivated: false,
         };
       }
-      // Reativa — email global unique preservado (email original mantido para auditabilidade).
+      // Reactivate — global unique email preserved (original email kept for auditability).
       const editor = await this.repository.reactivate(existing.id);
       return { editor, reactivated: true };
     }

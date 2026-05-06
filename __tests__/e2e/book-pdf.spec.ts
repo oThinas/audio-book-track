@@ -35,12 +35,12 @@ test.describe("Book PDF popover", () => {
 
     await page.goto(`/books/${bookId}`);
 
-    // Estado inicial: nenhum PDF salvo
+    // Initial state: no PDF saved
     await page.getByTestId("book-pdf-trigger").click();
     await expect(page.getByTestId("book-pdf-popover")).toBeVisible();
     await expect(page.getByTestId("book-pdf-open-link")).toHaveCount(0);
 
-    // Salva uma URL válida
+    // Save a valid URL
     await page.getByTestId("book-pdf-url-input").fill("https://example.com/livro.pdf");
     const [response] = await Promise.all([
       page.waitForResponse(
@@ -51,7 +51,7 @@ test.describe("Book PDF popover", () => {
     ]);
     expect(response.status()).toBe(200);
 
-    // Fecha o popover (caso ainda esteja aberto após save) e reabre para verificar o estado persistido.
+    // Close the popover (in case it's still open after save) and reopen to verify persisted state.
     await page.keyboard.press("Escape");
     await expect(page.getByTestId("book-pdf-url-input")).toBeHidden();
     await page.getByTestId("book-pdf-trigger").click();
@@ -62,7 +62,7 @@ test.describe("Book PDF popover", () => {
     await expect(openLink).toHaveAttribute("rel", /noopener/);
     await expect(openLink).toHaveAttribute("rel", /noreferrer/);
 
-    // Reload da página: URL persistida
+    // Page reload: URL persists
     await page.reload();
     await page.getByTestId("book-pdf-trigger").click();
     await expect(page.getByTestId("book-pdf-url-input")).toHaveValue(
@@ -95,7 +95,7 @@ test.describe("Book PDF popover", () => {
     const input = page.getByTestId("book-pdf-url-input");
     await input.fill("ftp://example.com/file.pdf");
 
-    // Botão Salvar fica desabilitado quando o RHF marca o form como inválido.
+    // Save button is disabled when RHF marks the form as invalid.
     const saveButton = page.getByTestId("book-pdf-save-button");
     await expect(saveButton).toBeDisabled();
     await expect(page.getByTestId("book-pdf-url-error")).toBeVisible();
@@ -120,7 +120,7 @@ test.describe("Book PDF popover", () => {
       status: "pending",
     });
 
-    // Pré-popula o pdfUrl via API
+    // Pre-populate pdfUrl via API
     const seedResponse = await page.request.patch(`/api/v1/books/${bookId}`, {
       data: { pdfUrl: "https://example.com/old.pdf" },
     });

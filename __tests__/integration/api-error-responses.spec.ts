@@ -13,14 +13,14 @@ import { DrizzleStudioRepository } from "@/lib/repositories/drizzle/drizzle-stud
 import type { BookService } from "@/lib/services/book-service";
 import { BookService as BookServiceImpl } from "@/lib/services/book-service";
 
-// Respostas de erro nunca podem vazar stack traces, mensagens de SQL
-// ou strings que apontem para o filesystem. Estes padrões cobrem os
-// vazamentos mais comuns vistos no Node/PostgreSQL.
+// Error responses must never leak stack traces, SQL messages or strings
+// that point to the filesystem. These patterns cover the most common
+// leaks seen in Node/PostgreSQL.
 const LEAK_PATTERNS = [/Error:/, /\bat \//, /^\s+at /m, /sql:/i, /postgres:\/\//i] as const;
 
 function assertNoLeak(body: string): void {
   for (const pattern of LEAK_PATTERNS) {
-    expect(body, `Resposta de erro vazou padrão ${pattern}`).not.toMatch(pattern);
+    expect(body, `Error response leaked pattern ${pattern}`).not.toMatch(pattern);
   }
 }
 
@@ -47,7 +47,7 @@ function createRealService(): BookService {
 const ROUTE_URL = "http://test.local/api/v1/books/x";
 
 describe("API error responses — FR-017 (no stack/SQL leaks)", () => {
-  it("422 (validation) — corpo não contém stack traces ou SQL", async () => {
+  it("422 (validation) — body should not contain stack traces or SQL", async () => {
     const db = getTestDb();
     const { studio } = await createTestStudio(db);
     const { book } = await createTestBook(db, { studioId: studio.id });
@@ -61,14 +61,14 @@ describe("API error responses — FR-017 (no stack/SQL leaks)", () => {
     expect(response.status).toBe(422);
     const body = await response.text();
     assertNoLeak(body);
-    // Sanity: o envelope correto é VALIDATION_ERROR.
+    // Sanity: the correct envelope is VALIDATION_ERROR.
     expect(body).toContain("VALIDATION_ERROR");
   });
 
-  it("409 (conflict de domínio) — corpo não contém stack traces ou SQL", async () => {
+  it("409 (domain conflict) — body should not contain stack traces or SQL", async () => {
     const db = getTestDb();
     const { studio } = await createTestStudio(db);
-    // Tentar renomear um livro para o título de outro dispara
+    // Renaming a book to another book's title triggers
     // BookTitleAlreadyInUseError → conflictResponse(409).
     const { book: existing } = await createTestBook(db, {
       studioId: studio.id,
@@ -92,11 +92,11 @@ describe("API error responses — FR-017 (no stack/SQL leaks)", () => {
     expect(body).toContain("TITLE_ALREADY_IN_USE");
   });
 
-  it("500-equivalente (erro não mapeado) — handler rethrows sem produzir corpo vazante", async () => {
-    // Quando service.update lança um erro que NÃO é mapeado pelos catches do
-    // handler, a única ação correta é rethrow — Next.js converte em 500
-    // genérico. Aqui validamos que o handler nunca constrói um Response
-    // contendo a mensagem original (que poderia conter SQL/stack).
+  it("500-equivalent (unmapped error) — handler rethrows without producing a leaky body", async () => {
+    // When service.update throws an error NOT mapped by the handler's catches,
+    // the only correct action is to rethrow — Next.js converts it into a generic
+    // 500. Here we verify the handler never builds a Response containing the
+    // original message (which could contain SQL/stack).
     const leakyError = new Error(
       'postgres://user:pw@host/db: relation "book" does not exist\n    at /home/app/db.ts:42:7\n    at processTicksAndRejections',
     );
@@ -115,7 +115,7 @@ describe("API error responses — FR-017 (no stack/SQL leaks)", () => {
         createRouteDeps(stubService),
       ),
     ).rejects.toBe(leakyError);
-    // Se chegamos aqui, o handler rethrow corretamente — nenhum corpo de
-    // resposta foi construído com a mensagem do erro.
+    // If we got here, the handler rethrew correctly — no response body was
+    // built with the error message.
   });
 });

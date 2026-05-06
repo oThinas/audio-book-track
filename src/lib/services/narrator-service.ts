@@ -10,11 +10,11 @@ export interface CreateNarratorResult {
 
 export interface SoftDeleteNarratorDeps {
   /**
-   * Retorna a lista de livros ativos (com pelo menos um capítulo em
-   * `pending|editing|reviewing|retake`) onde o narrador possui ao menos um capítulo.
+   * Returns the list of active books (with at least one chapter in
+   * `pending|editing|reviewing|retake`) where the narrator has at least one chapter.
    *
-   * Default retorna [] (nenhum bloqueio). A factory de produção liga à
-   * implementação real via Drizzle JOIN `chapter` × `book` × `chapter`.
+   * Default returns [] (no blocking). The production factory wires this to
+   * the real implementation via Drizzle JOIN `chapter` × `book` × `chapter`.
    */
   readonly getActiveBooks?: (narratorId: string) => Promise<ReadonlyArray<BlockingBookSummary>>;
 }

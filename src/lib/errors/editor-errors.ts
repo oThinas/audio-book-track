@@ -2,21 +2,21 @@ import type { BlockingBookSummary } from "@/lib/errors/studio-errors";
 
 export class EditorNameAlreadyInUseError extends Error {
   constructor(name: string) {
-    super(`Nome já cadastrado: ${name}`);
+    super(`Name already registered: ${name}`);
     this.name = "EditorNameAlreadyInUseError";
   }
 }
 
 export class EditorEmailAlreadyInUseError extends Error {
   constructor(email: string) {
-    super(`E-mail já cadastrado: ${email}`);
+    super(`Email already registered: ${email}`);
     this.name = "EditorEmailAlreadyInUseError";
   }
 }
 
 export class EditorNotFoundError extends Error {
   constructor(id: string) {
-    super(`Editor não encontrado: ${id}`);
+    super(`Editor not found: ${id}`);
     this.name = "EditorNotFoundError";
   }
 }
@@ -27,7 +27,7 @@ export class EditorLinkedToActiveChaptersError extends Error {
     readonly books: ReadonlyArray<BlockingBookSummary>,
   ) {
     super(
-      `Editor ${id} está vinculado a capítulos em ${books.length} livro(s) ativo(s) — soft-delete bloqueado.`,
+      `Editor ${id} is linked to chapters in ${books.length} active book(s) — soft-delete blocked.`,
     );
     this.name = "EditorLinkedToActiveChaptersError";
   }

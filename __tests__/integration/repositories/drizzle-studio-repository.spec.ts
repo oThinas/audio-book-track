@@ -74,11 +74,11 @@ describe("DrizzleStudioRepository", () => {
     });
 
     it("returns all studios with createdAt non-decreasing", async () => {
-      // Note: Postgres `now()` é transaction-aligned, então dentro do
-      // BEGIN/ROLLBACK do setup de integração todos os inserts recebem o
-      // mesmo createdAt. A propriedade testável é: todos os registros
-      // aparecem e createdAt nunca decresce. Em produção (fora de transação
-      // envolvente) os timestamps diferem naturalmente por request.
+      // Note: Postgres `now()` is transaction-aligned, so inside the
+      // integration BEGIN/ROLLBACK setup all inserts receive the same
+      // createdAt. The testable property is: every record shows up and
+      // createdAt never decreases. In production (outside an enclosing
+      // transaction) timestamps differ naturally per request.
       const repo = createRepo();
       const first = await repo.create({ name: "Primeiro", defaultHourlyRateCents: 5000 });
       const second = await repo.create({ name: "Segundo", defaultHourlyRateCents: 6000 });

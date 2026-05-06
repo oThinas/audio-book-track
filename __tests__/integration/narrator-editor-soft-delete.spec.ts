@@ -166,7 +166,7 @@ describe("DELETE /api/v1/narrators/:id (handleNarratorsDelete) — NARRATOR_LINK
     expect(body.error.details.books.map((b) => b.id)).toEqual([blockingBook.id]);
     expect(body.error.details.books[0]?.title).toBe("Livro Em Produção");
 
-    // narrator NÃO foi soft-deletado
+    // narrator was NOT soft-deleted
     const [row] = await db.select().from(narrator).where(eq(narrator.id, created.id));
     expect(row?.deletedAt).toBeNull();
   });

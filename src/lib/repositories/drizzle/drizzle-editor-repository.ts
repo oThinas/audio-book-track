@@ -46,7 +46,7 @@ export class DrizzleEditorRepository implements EditorRepository {
   }
 
   async findAllWithCounts(): Promise<EditorListItem[]> {
-    // LEFT JOIN chapter ON chapter.editor_id — usa o índice chapter_editor_id_idx.
+    // LEFT JOIN chapter ON chapter.editor_id — uses the chapter_editor_id_idx index.
     const rows = await this.db
       .select({
         ...EDITOR_COLUMNS,

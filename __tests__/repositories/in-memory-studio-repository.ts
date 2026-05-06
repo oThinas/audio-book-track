@@ -26,8 +26,8 @@ export class InMemoryStudioRepository implements StudioRepository {
   }
 
   async findAllWithCounts(options?: StudioListOptions): Promise<StudioListItem[]> {
-    // O fake não tem visibilidade de `book`; service unit tests não validam
-    // a contagem aqui — a verificação real fica em integration (T129).
+    // The fake has no visibility of `book`; service unit tests do not validate
+    // the count here — the real check lives in integration (T129).
     const studios = await this.findAll(options);
     return studios.map((s) => ({ ...s, booksCount: 0 }));
   }

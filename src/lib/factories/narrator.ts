@@ -18,8 +18,8 @@ export function createGetActiveBooksForNarrator(): (
   narratorId: string,
 ) => Promise<ReadonlyArray<BlockingBookSummary>> {
   return async (narratorId) => {
-    // Livros que (a) contêm um capítulo do narrador E (b) ainda têm
-    // ao menos um capítulo em status ativo (independente do narrador).
+    // Books that (a) contain a chapter from the narrator AND (b) still have
+    // at least one chapter in active status (regardless of the narrator).
     const activeChapter = alias(chapter, "active_chapter");
 
     const rows = await db
