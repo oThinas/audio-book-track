@@ -99,7 +99,7 @@ Web app monolito Next.js — uma única árvore `src/` na raiz do repo. Testes e
 - [X] T023 [US1] Rodar `bun run test:unit -- --coverage src/components/features/studios/hooks` e confirmar cobertura ≥ 80% (linhas e branches) — Success Criteria SC-003
 - [X] T024 [US1] Rodar `bun run test:integration -- studios` e confirmar verde sem alteração nos testes existentes (oráculo de não-regressão)
 - [X] T025 [US1] Rodar `bun run test:e2e -- studios` e confirmar verde sem alteração
-- [ ] T026 [US1] Smoke manual: subir `bun run dev`, navegar para `/studios`, executar fluxos completos (criar, editar, excluir, criar duplicado → 409, recarregar página)
+- [X] T026 [US1] Smoke manual `/studios` aprovado pelo usuário — fluxos criar/editar/excluir/duplicado/reload OK
 - [X] T027 [US1] Self-review por componente refatorado conforme checklist em [quickstart.md Passo 9](./quickstart.md#passo-9--self-review-checklist); confirmar para cada um: hook não retorna JSX, hook não importa de `@/components/`, componente não importa `@/lib/services/`, componente < 200 LOC, sem `useEffect` de side-effect, sem `fetch`, zero `toast.success` introduzido
 
 **Checkpoint**: User Story 1 completa. Estúdios é o exemplo canônico replicável. Padrão validado por testes, smoke e self-review. **Esta é a entrega MVP da feature** — pode ser PR independente.
@@ -268,7 +268,7 @@ Targets: 14 componentes em `src/components/features/books/` + `src/components/fe
 #### E.5 — Validação
 
 - [X] T125 [US2] Validar: cobertura `books/hooks` 87.24/73.83/81.53/88.96, `chapters/hooks` 92.4/75/100/95.83 (ambos ≥ 80%); `chapter-transitions.ts` 100/100/100/100
-- [ ] T126 [US2] Smoke manual `/books` e `/books/:id` (responsabilidade do usuário)
+- [X] T126 [US2] Smoke manual `/books` e `/books/:id` aprovado pelo usuário
 - [X] T127 [US2] `bun run test:integration` (32 arquivos / 216 testes ✓)
 - [X] T128 [US2] `bun run test:e2e` filtros books/chapters (214 testes ✓ — incluindo correções para `useWatch` e toast de delete em commits 80b528f / a47792f)
 - [X] T129 [US2] Self-review concluído; pronto para `refactor(021): 📚 books+chapters — extrai lógica para hooks`
