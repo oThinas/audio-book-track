@@ -29,7 +29,7 @@ description: "Task list template for feature implementation"
   ============================================================================
   IMPORTANT: The tasks below are SAMPLE TASKS for illustration purposes only.
   
-  The /speckit.tasks command MUST replace these with actual tasks based on:
+  The /speckit-tasks command MUST replace these with actual tasks based on:
   - User stories from spec.md (with their priorities P1, P2, P3...)
   - Feature requirements from plan.md
   - Entities from data-model.md
@@ -156,21 +156,6 @@ Examples of foundational tasks (adjust based on your project):
 - [ ] TXXX [P] Additional unit tests (if requested) in tests/unit/
 - [ ] TXXX Security hardening
 - [ ] TXXX Run quickstart.md validation
-
----
-
-## Final Quality Gate (single, before PR)
-
-Per Constitution Principle XVI, quality checks are NOT run per-phase.
-Run them once here, before marking the feature done or opening the PR:
-
-- [ ] `bun run lint` — zero erros e zero warnings
-- [ ] `bun run test:unit` — toda a suíte passando
-- [ ] `bun run test:integration` — toda a suíte passando
-- [ ] `bun run test:e2e` — quando a mudança afeta fluxos E2E
-- [ ] `bun run build` — build de produção compila sem erros
-
-Se qualquer verificação falhar, a feature não está pronta.
 
 ---
 
