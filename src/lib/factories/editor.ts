@@ -18,8 +18,8 @@ export function createGetActiveBooksForEditor(): (
   editorId: string,
 ) => Promise<ReadonlyArray<BlockingBookSummary>> {
   return async (editorId) => {
-    // Livros que (a) contêm um capítulo do editor E (b) ainda têm
-    // ao menos um capítulo em status ativo (independente do editor).
+    // Books that (a) contain a chapter from the editor AND (b) still have
+    // at least one chapter in active status (regardless of the editor).
     const activeChapter = alias(chapter, "active_chapter");
 
     const rows = await db

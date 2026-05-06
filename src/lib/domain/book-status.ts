@@ -6,7 +6,7 @@ interface ChapterStatusOnly {
 
 export function computeBookStatus(chapters: ReadonlyArray<ChapterStatusOnly>): BookStatus {
   if (chapters.length === 0) {
-    throw new Error("computeBookStatus: invariante violada — livro sem capítulos.");
+    throw new Error("computeBookStatus: invariant violated — book without chapters.");
   }
   if (chapters.every((c) => c.status === "paid")) {
     return "paid";

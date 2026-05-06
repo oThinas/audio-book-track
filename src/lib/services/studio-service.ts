@@ -18,11 +18,11 @@ export interface CreateStudioResult {
 
 export interface SoftDeleteStudioDeps {
   /**
-   * Retorna a lista de livros do estúdio com pelo menos um capítulo ativo
+   * Returns the list of studio books with at least one active chapter
    * (`pending`, `editing`, `reviewing`, `retake`).
    *
-   * Default retorna [] (nenhum bloqueio). A factory de produção liga à
-   * implementação real via Drizzle JOIN `book` × `chapter`.
+   * Default returns [] (no blocking). The production factory wires this to
+   * the real implementation via Drizzle JOIN `book` × `chapter`.
    */
   readonly getActiveBooks?: (studioId: string) => Promise<ReadonlyArray<BlockingBookSummary>>;
 }

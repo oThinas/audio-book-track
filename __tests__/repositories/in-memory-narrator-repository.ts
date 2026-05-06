@@ -17,7 +17,7 @@ export class InMemoryNarratorRepository implements NarratorRepository {
   }
 
   async findAllWithCounts(): Promise<NarratorListItem[]> {
-    // Fake não tem visibilidade de `chapter`; integration (T130) valida a contagem real.
+    // The fake has no visibility of `chapter`; integration (T130) validates the real count.
     const all = await this.findAll();
     return all.map((n) => ({ ...n, chaptersCount: 0 }));
   }

@@ -69,7 +69,7 @@ describe("GET /api/v1/studios — booksCount", () => {
     const { studio: visible } = await createTestStudio(db, { name: "Visível" });
     const { studio: hidden } = await createTestStudio(db, { name: "Oculto" });
 
-    // Soft-delete o estúdio "Oculto" via repo
+    // Soft-delete the "Oculto" studio via repo
     const repo = new DrizzleStudioRepository(db);
     await repo.softDelete(hidden.id);
 

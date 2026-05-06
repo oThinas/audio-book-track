@@ -22,7 +22,7 @@ describe("recomputeBookStatus", () => {
 
   it("throws when the book has no chapters", async () => {
     await expect(recomputeBookStatus(book.id, { bookRepo, chapterRepo })).rejects.toThrow(
-      /sem capítulos/,
+      /without chapters/,
     );
   });
 

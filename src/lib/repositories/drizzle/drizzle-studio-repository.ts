@@ -63,7 +63,7 @@ export class DrizzleStudioRepository implements StudioRepository {
 
   async findAllWithCounts(options?: StudioListOptions): Promise<StudioListItem[]> {
     const order = options?.orderBy === "name" ? asc(studio.name) : asc(studio.createdAt);
-    // LEFT JOIN book + COUNT — usa o índice book_studio_id_idx (T008).
+    // LEFT JOIN book + COUNT — uses the book_studio_id_idx index (T008).
     const rows = await this.db
       .select({
         ...STUDIO_COLUMNS,

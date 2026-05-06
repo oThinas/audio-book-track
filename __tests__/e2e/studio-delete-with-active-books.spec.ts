@@ -46,11 +46,11 @@ test.describe("Studio delete — STUDIO_HAS_ACTIVE_BOOKS precondition", () => {
     ]);
     expect(response.status()).toBe(409);
 
-    // toast aparece com a mensagem do bloqueio
+    // toast appears with the blocking message
     await expect(page.getByText(/livro\(s\) com cap[íi]tulos ativos/i)).toBeVisible();
     await expect(page.getByText(/livro em edi[çc]ão/i)).toBeVisible();
 
-    // Estúdio NÃO foi removido — ainda aparece na listagem
+    // Studio was NOT removed — still appears in the listing
     await expect(page.getByTestId("studio-row").filter({ hasText: studioName })).toBeVisible();
   });
 
@@ -97,7 +97,7 @@ test.describe("Studio delete — STUDIO_HAS_ACTIVE_BOOKS precondition", () => {
     ]);
     expect(response.status()).toBe(204);
 
-    // Estúdio sumiu da listagem (soft-deleted).
+    // Studio disappeared from the listing (soft-deleted).
     await expect(page.getByTestId("studio-row").filter({ hasText: studioName })).toHaveCount(0);
   });
 
@@ -106,7 +106,7 @@ test.describe("Studio delete — STUDIO_HAS_ACTIVE_BOOKS precondition", () => {
   }) => {
     const studioName = `Reativar ${Math.random().toString(36).slice(2, 8)}`;
 
-    // Cria, soft-deleta (sem livros bloqueando), depois recria com o mesmo nome.
+    // Create, soft-delete (with no blocking books), then recreate with the same name.
     await seedStudio(page, studioName, 50);
 
     // Soft-delete via UI
@@ -117,15 +117,15 @@ test.describe("Studio delete — STUDIO_HAS_ACTIVE_BOOKS precondition", () => {
     await dialog.getByRole("button", { name: /^excluir$/i }).click();
     await expect(page.getByTestId("studio-row").filter({ hasText: studioName })).toHaveCount(0);
 
-    // Recria pelo mesmo nome com rate diferente — deve reativar (não criar duplicado).
+    // Recreate with the same name and a different rate — should reactivate (not create a duplicate).
     const response = await page.request.post("/api/v1/studios", {
       data: { name: studioName, defaultHourlyRateCents: 9000 },
     });
-    expect(response.status()).toBe(200); // 200 = reativado (não 201)
+    expect(response.status()).toBe(200); // 200 = reactivated (not 201)
     const body = (await response.json()) as { meta: { reactivated: boolean } };
     expect(body.meta.reactivated).toBe(true);
 
-    // Recarrega /studios — o estúdio voltou.
+    // Reload /studios — the studio is back.
     await page.goto("/studios");
     await expect(page.getByTestId("studio-row").filter({ hasText: studioName })).toBeVisible();
   });

@@ -1,13 +1,13 @@
 export class ChapterNotFoundError extends Error {
   constructor(id: string) {
-    super(`Capítulo não encontrado: ${id}`);
+    super(`Chapter not found: ${id}`);
     this.name = "ChapterNotFoundError";
   }
 }
 
 export class ChapterNumberAlreadyInUseError extends Error {
   constructor(bookId: string, number: number) {
-    super(`Número ${number} já existe no livro ${bookId}`);
+    super(`Number ${number} already exists in book ${bookId}`);
     this.name = "ChapterNumberAlreadyInUseError";
   }
 }
@@ -15,7 +15,7 @@ export class ChapterNumberAlreadyInUseError extends Error {
 export class ChapterPaidLockedError extends Error {
   constructor(id: string) {
     super(
-      `Capítulo ${id} está em status 'paid' — narrador, editor e horas editadas não podem ser alterados.`,
+      `Chapter ${id} is in 'paid' status — narrator, editor and edited seconds cannot be changed.`,
     );
     this.name = "ChapterPaidLockedError";
   }
@@ -26,35 +26,35 @@ export class ChapterInvalidTransitionError extends Error {
     readonly from: string,
     readonly to: string,
   ) {
-    super(`Transição inválida de '${from}' para '${to}'.`);
+    super(`Invalid transition from '${from}' to '${to}'.`);
     this.name = "ChapterInvalidTransitionError";
   }
 }
 
 export class ChapterNarratorRequiredError extends Error {
   constructor() {
-    super("Narrador é obrigatório para iniciar edição.");
+    super("Narrator is required to start editing.");
     this.name = "ChapterNarratorRequiredError";
   }
 }
 
 export class ChapterEditorOrSecondsRequiredError extends Error {
   constructor() {
-    super("Editor e horas editadas (> 0) são obrigatórios para enviar para revisão.");
+    super("Editor and edited seconds (> 0) are required to send to review.");
     this.name = "ChapterEditorOrSecondsRequiredError";
   }
 }
 
 export class ChapterReversionConfirmationRequiredError extends Error {
   constructor() {
-    super("Reversão de 'paid' para 'completed' exige confirmação explícita.");
+    super("Reverting from 'paid' to 'completed' requires explicit confirmation.");
     this.name = "ChapterReversionConfirmationRequiredError";
   }
 }
 
 export class ChaptersNotInBookError extends Error {
   constructor(bookId: string, chapterIds: ReadonlyArray<string>) {
-    super(`Capítulos não pertencem ao livro ${bookId}: ${chapterIds.join(", ")}`);
+    super(`Chapters do not belong to book ${bookId}: ${chapterIds.join(", ")}`);
     this.name = "ChaptersNotInBookError";
   }
 }

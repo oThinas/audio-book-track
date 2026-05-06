@@ -26,10 +26,10 @@ export function PrimaryColorSelector({ initialValue }: PrimaryColorSelectorProps
   return (
     <div className="flex gap-2 ml-auto md:ml-0">
       {PRIMARY_COLORS.map((color) => (
-        // Botão nativo em vez de <Button> do shadcn: o componente Button aplica
-        // variantes de hover (ghost torna branco) e estilos de foco que conflitam
-        // com o swatch circular colorido. Um <button> nativo permite controle total
-        // sobre bg, ring e hover sem overrides.
+        // Native button instead of shadcn's <Button>: the Button component applies
+        // hover variants (ghost turns it white) and focus styles that conflict
+        // with the colored circular swatch. A native <button> allows full control
+        // over bg, ring and hover without overrides.
         <button
           key={color}
           type="button"

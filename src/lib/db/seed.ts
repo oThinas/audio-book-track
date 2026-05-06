@@ -2,6 +2,7 @@
 // (sample studios, books, chapters). NOT used by tests — tests bootstrap
 // through src/lib/db/seed-test.ts (admin only) and create their own data
 // via factories. See CLAUDE.md › "Nova entidade: factory, não seed".
+// (Heading kept in PT to match the section anchor in CLAUDE.md.)
 import "dotenv/config";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";

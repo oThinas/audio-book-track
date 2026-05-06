@@ -89,7 +89,7 @@ describe("BookService.update — pdfUrl", () => {
     });
     await service.update(book.id, { pdfUrl: "https://example.com/file.pdf" });
 
-    // Agora atualiza só o título — pdfUrl deve ser preservada.
+    // Now update only the title — pdfUrl must be preserved.
     await service.update(book.id, { title: "Novo título" });
 
     const refreshed = await bookRepo.findById(book.id);

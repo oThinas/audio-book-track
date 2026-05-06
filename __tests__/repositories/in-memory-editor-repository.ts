@@ -25,7 +25,7 @@ export class InMemoryEditorRepository implements EditorRepository {
   }
 
   async findAllWithCounts(): Promise<EditorListItem[]> {
-    // Fake não tem visibilidade de `chapter`; integration (T130) valida a contagem real.
+    // The fake has no visibility of `chapter`; integration (T130) validates the real count.
     const all = await this.findAll();
     return all.map((e) => ({ ...e, chaptersCount: 0 }));
   }

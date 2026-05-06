@@ -52,7 +52,7 @@ export const updateBookSchema = z
     pricePerHourCents: pricePerHourCentsSchema.optional(),
     numChapters: numChaptersSchema.optional(),
     inlineStudioId: z.string().uuid("inlineStudioId deve ser UUID válido").optional(),
-    // `null` → remove a URL. `undefined` → não altera. String válida → seta.
+    // `null` → remove the URL. `undefined` → no change. Valid string → set.
     pdfUrl: pdfUrlSchema.nullable().optional(),
   })
   .refine(

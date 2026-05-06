@@ -66,7 +66,7 @@ describe("computeBookStatus", () => {
   }
 
   it("(f) throws when the chapter list is empty (invariant: a book without chapters is invalid)", () => {
-    expect(() => computeBookStatus([])).toThrow(/sem capítulos/);
+    expect(() => computeBookStatus([])).toThrow(/without chapters/);
   });
 
   it("(g) after deleting a pending chapter, only paid remains → paid", () => {
