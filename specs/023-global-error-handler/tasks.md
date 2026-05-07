@@ -130,9 +130,9 @@ Single Next.js project (existing layout):
 
 ### Tests (RED)
 
-- [ ] T036 [P] [US1] Criar `__tests__/unit/schemas/zod-error-map.spec.ts` (RED) verificando que `errorMap` global traduz issues default (`required`, `invalid_type`, `too_small`, `too_big`, `invalid_string`, `invalid_email`) para mensagens PT-BR.
-- [ ] T037 [P] [US1] Criar `__tests__/unit/schemas/messages-pt-br.spec.ts` (RED) que importa cada schema em `src/lib/schemas/**` e `src/lib/domain/**`, exercita `safeParse` com payloads inválidos representativos, e assere que cada `issue.message` está em PT-BR (regex anti-leak + presença de caractere acentuado ou palavra-chave PT). Cobre todos os schemas existentes.
-- [ ] T038 [P] [US1] Criar `__tests__/e2e/error-toasts.spec.ts` (RED) cobrindo um cenário por entidade:
+- [X] T036 [P] [US1] Criar `__tests__/unit/schemas/zod-error-map.spec.ts` (RED) verificando que `errorMap` global traduz issues default (`required`, `invalid_type`, `too_small`, `too_big`, `invalid_string`, `invalid_email`) para mensagens PT-BR.
+- [X] T037 [P] [US1] Criar `__tests__/unit/schemas/messages-pt-br.spec.ts` (RED) que importa cada schema em `src/lib/schemas/**` e `src/lib/domain/**`, exercita `safeParse` com payloads inválidos representativos, e assere que cada `issue.message` está em PT-BR (regex anti-leak + presença de caractere acentuado ou palavra-chave PT). Cobre todos os schemas existentes.
+- [ ] T038 [P] [US1] **Diferido para Phase 5 (consolidado com T050)**: Criar `__tests__/e2e/error-toasts.spec.ts` (RED) cobrindo um cenário por entidade:
   - Studio: criar duplicado → toast `"Já existe um cadastro com esse nome."` (warning não, error).
   - Studio com livros ativos → toast warning `"Este estúdio possui livros com capítulos ativos…"`.
   - Livro: criar com título duplicado no mesmo estúdio → toast `"Já existe um livro com este título neste estúdio."`.
@@ -144,16 +144,16 @@ Single Next.js project (existing layout):
 
 ### Implementation
 
-- [ ] T039 [P] [US1] Criar `src/lib/schemas/_zod-error-map.ts` exportando `ptBrZodErrorMap: z.ZodErrorMap` com mapeamentos default → PT-BR conforme [research.md D-04](./research.md). T036 GREEN.
-- [ ] T040 [US1] Registrar `ptBrZodErrorMap` em ponto único: criar `src/lib/schemas/_zod-bootstrap.ts` que invoca `z.setErrorMap(ptBrZodErrorMap)` em side-effect de import. Importar este arquivo **uma única vez** em `src/lib/api/with-error-handler.ts` (top of file) — assim toda rota que usa o handler ativa o errorMap automaticamente. Em testes, importar também em `__tests__/unit/setup.ts` e `__tests__/integration/setup.ts`. T036/T037 baseline GREEN.
-- [ ] T041 [P] [US1] Migrar `src/lib/schemas/book.ts`: adicionar mensagens PT-BR explícitas em todos `.min/.max/.email/.url/.regex/.refine`.
-- [ ] T042 [P] [US1] Migrar `src/lib/domain/studio.ts` (`updateStudioSchema`, schemas relacionados) para mensagens PT-BR.
-- [ ] T043 [P] [US1] Migrar schemas de narrator, editor, chapter (verificar `src/lib/schemas/**` e `src/lib/domain/**` e cobrir todos).
-- [ ] T044 [P] [US1] Migrar schemas de user-preferences e auth se houver mensagens default em inglês.
-- [ ] T045 [US1] Auditoria final: `grep -rn 'z\.\(string\|number\|boolean\)' src/lib/schemas/ src/lib/domain/ | grep -v ', \"' | grep -v "errorMap"` para encontrar regras sem mensagem explícita; cada acerto é avaliado caso a caso (errorMap cobre defaults; refinos específicos exigem mensagem). Documentar resultado.
-- [ ] T046 [US1] Validar T037 GREEN (todos os schemas com mensagens PT-BR ou cobertos por errorMap).
-- [ ] T047 [US1] Verificar T018 (cross-route leak audit) ainda GREEN após mudanças de schema.
-- [ ] T048 [US1] Validar T038 E2E GREEN (toasts mostram PT-BR exato sem leak).
+- [X] T039 [P] [US1] Criar `src/lib/schemas/zod-error-map.ts` exportando `ptBrZodErrorMap: $ZodErrorMap` que delega ao locale `pt` built-in do Zod 4.3 e adiciona pre-pass para `invalid_type` com `undefined`/`null` → "Campo obrigatório.". T036 GREEN.
+- [X] T040 [US1] Registrar `ptBrZodErrorMap` em ponto único: criado `src/lib/schemas/zod-bootstrap.ts` que invoca `z.config({ customError: ptBrZodErrorMap })` em side-effect. Importado em `src/lib/api/with-error-handler.ts`, `__tests__/unit/setup.ts` e `__tests__/integration/setup.ts`. T036/T037 baseline GREEN.
+- [X] T041 [P] [US1] Migrar `src/lib/schemas/book.ts`: mensagens PT-BR + remover jargão `studioId`/`inlineStudioId` das mensagens user-facing.
+- [X] T042 [P] [US1] Migrar `src/lib/domain/studio.ts` para mensagens PT-BR com pontuação consistente.
+- [X] T043 [P] [US1] Migrar schemas de narrator, editor, chapter — remover jargão `narratorId`/`editorId`/`chapterId`/`editedSeconds`. Editor agora pipeia `.string().trim()` em `z.email()` para preservar comportamento de trim antes da validação.
+- [X] T044 [P] [US1] Migrar `src/lib/schemas/auth.ts` (login) — `Username` → `Usuário`, pontuação consistente. user-preference já estava PT-BR.
+- [X] T045 [US1] Auditoria final: `grep` por `z.(string|number|boolean)` sem mensagem explícita retornou apenas `confirmReversion: z.boolean().optional()` — coberto pelo errorMap global. Sem outros sites bare.
+- [X] T046 [US1] T037 GREEN: 51 casos cobrindo todos os schemas, todos sem leak.
+- [X] T047 [US1] T018 (cross-route leak audit) re-executado pós-Phase 4: 12 cenários GREEN.
+- [ ] T048 [US1] **Diferido para Phase 5 (consolidado com T050)**: Validar T038 E2E GREEN.
 
 **Checkpoint**: Todas as mensagens user-facing em PT-BR e sem leak. Schemas Zod consistentes. Princípio X (REST patterns) reforçado.
 

@@ -10,6 +10,7 @@ import { auth } from "@/lib/auth/server";
 import type { Session } from "@/lib/auth/session";
 import { DomainError } from "@/lib/errors/domain-error";
 import { type ServerLogger, serverLogger } from "@/lib/logger/server-logger";
+import "@/lib/schemas/zod-bootstrap";
 
 interface RouteContext<TParams> {
   readonly params: Promise<TParams>;
