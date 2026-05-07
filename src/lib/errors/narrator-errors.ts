@@ -1,27 +1,32 @@
-import type { BlockingBookSummary } from "@/lib/errors/studio-errors";
+import { DomainError } from "./domain-error";
+import type { BlockingBookSummary } from "./studio-errors";
 
-export class NarratorNameAlreadyInUseError extends Error {
-  constructor(name: string) {
-    super(`Name already registered: ${name}`);
+export class NarratorNameAlreadyInUseError extends DomainError {
+  readonly code = "NAME_ALREADY_IN_USE";
+  constructor(readonly narratorName: string) {
+    super("Narrator name already in use");
     this.name = "NarratorNameAlreadyInUseError";
   }
 }
 
-export class NarratorNotFoundError extends Error {
-  constructor(id: string) {
-    super(`Narrator not found: ${id}`);
+export class NarratorNotFoundError extends DomainError {
+  readonly code = "NARRATOR_NOT_FOUND";
+  constructor(readonly id: string) {
+    super("Narrator not found");
     this.name = "NarratorNotFoundError";
   }
 }
 
-export class NarratorLinkedToActiveChaptersError extends Error {
+export class NarratorLinkedToActiveChaptersError extends DomainError {
+  readonly code = "NARRATOR_LINKED_TO_ACTIVE_CHAPTERS";
   constructor(
-    id: string,
+    readonly id: string,
     readonly books: ReadonlyArray<BlockingBookSummary>,
   ) {
-    super(
-      `Narrator ${id} is linked to chapters in ${books.length} active book(s) — soft-delete blocked.`,
-    );
+    super("Narrator linked to active chapters");
     this.name = "NarratorLinkedToActiveChaptersError";
+  }
+  getDetails() {
+    return { books: this.books };
   }
 }

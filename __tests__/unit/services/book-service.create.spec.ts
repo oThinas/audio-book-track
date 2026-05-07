@@ -6,7 +6,8 @@ import { InMemoryNarratorRepository } from "@tests/repositories/in-memory-narrat
 import { InMemoryStudioRepository } from "@tests/repositories/in-memory-studio-repository";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { BookStudioNotFoundError, BookTitleAlreadyInUseError } from "@/lib/errors/book-errors";
+import { BookTitleAlreadyInUseError } from "@/lib/errors/book-errors";
+import { StudioReferenceInvalidError } from "@/lib/errors/studio-errors";
 import { BookService } from "@/lib/services/book-service";
 
 async function makeStudio(
@@ -117,7 +118,7 @@ describe("BookService.create", () => {
     expect(second.book.studioId).toBe(outro.id);
   });
 
-  it("throws BookStudioNotFoundError when studioId does not exist", async () => {
+  it("throws StudioReferenceInvalidError when studioId does not exist", async () => {
     await expect(
       service.create({
         title: "Dom Casmurro",
@@ -125,10 +126,10 @@ describe("BookService.create", () => {
         pricePerHourCents: 7500,
         numChapters: 1,
       }),
-    ).rejects.toBeInstanceOf(BookStudioNotFoundError);
+    ).rejects.toBeInstanceOf(StudioReferenceInvalidError);
   });
 
-  it("throws BookStudioNotFoundError when studio is soft-deleted", async () => {
+  it("throws StudioReferenceInvalidError when studio is soft-deleted", async () => {
     const studio = await makeStudio(studioRepo);
     await studioRepo.softDelete(studio.id);
 
@@ -139,7 +140,7 @@ describe("BookService.create", () => {
         pricePerHourCents: 7500,
         numChapters: 1,
       }),
-    ).rejects.toBeInstanceOf(BookStudioNotFoundError);
+    ).rejects.toBeInstanceOf(StudioReferenceInvalidError);
   });
 
   it("does not persist a book or chapters when chapter insertion fails (transactional intent)", async () => {

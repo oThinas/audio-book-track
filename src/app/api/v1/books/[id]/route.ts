@@ -17,9 +17,9 @@ import {
   BookNotFoundError,
   BookPaidPriceLockedError,
   BookPaidStudioLockedError,
-  BookStudioNotFoundError,
   BookTitleAlreadyInUseError,
 } from "@/lib/errors/book-errors";
+import { StudioReferenceInvalidError } from "@/lib/errors/studio-errors";
 import { createBookService } from "@/lib/factories/book";
 import { bookIdParamsSchema, updateBookSchema } from "@/lib/schemas/book";
 import type { BookService } from "@/lib/services/book-service";
@@ -98,8 +98,11 @@ export async function handleBookUpdate(
     if (error instanceof BookCannotReduceChaptersError) {
       return unprocessableEntityResponse("CANNOT_REDUCE_CHAPTERS", error.message);
     }
-    if (error instanceof BookStudioNotFoundError) {
-      return unprocessableEntityResponse("STUDIO_NOT_FOUND", error.message);
+    if (error instanceof StudioReferenceInvalidError) {
+      return unprocessableEntityResponse(
+        "STUDIO_REFERENCE_INVALID",
+        "O estúdio selecionado não existe ou está arquivado.",
+      );
     }
     if (error instanceof BookInlineStudioInvalidError) {
       return unprocessableEntityResponse("INLINE_STUDIO_INVALID", error.message);

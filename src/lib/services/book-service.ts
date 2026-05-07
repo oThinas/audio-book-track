@@ -7,8 +7,8 @@ import {
   BookNotFoundError,
   BookPaidPriceLockedError,
   BookPaidStudioLockedError,
-  BookStudioNotFoundError,
 } from "@/lib/errors/book-errors";
+import { StudioReferenceInvalidError } from "@/lib/errors/studio-errors";
 import type { BookRepository, BookSummary } from "@/lib/repositories/book-repository";
 import type { ChapterRepository } from "@/lib/repositories/chapter-repository";
 import type { EditorRepository } from "@/lib/repositories/editor-repository";
@@ -179,7 +179,7 @@ export class BookService {
     } else {
       const studio = await this.deps.studioRepo.findById(input.studioId);
       if (!studio) {
-        throw new BookStudioNotFoundError(input.studioId);
+        throw new StudioReferenceInvalidError(input.studioId);
       }
     }
 
@@ -250,7 +250,7 @@ export class BookService {
     } else if (input.studioId !== undefined && input.studioId !== current.studioId) {
       const studio = await this.deps.studioRepo.findById(input.studioId);
       if (!studio) {
-        throw new BookStudioNotFoundError(input.studioId);
+        throw new StudioReferenceInvalidError(input.studioId);
       }
     }
 
