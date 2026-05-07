@@ -1,10 +1,11 @@
 import { getTestDb } from "@tests/helpers/db";
 import { createTestBook, createTestChapter } from "@tests/helpers/factories";
+import { wrapForTest } from "@tests/helpers/route-context";
 import { SavepointUnitOfWork } from "@tests/helpers/test-unit-of-work";
 import { eq } from "drizzle-orm";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { handleChapterDelete } from "@/app/api/v1/chapters/[id]/route";
+import { type ChapterByIdRouteDeps, handleChapterDelete } from "@/app/api/v1/chapters/[id]/route";
 import { book as bookTable, chapter as chapterTable } from "@/lib/db/schema";
 import { DrizzleBookRepository } from "@/lib/repositories/drizzle/drizzle-book-repository";
 import { DrizzleChapterRepository } from "@/lib/repositories/drizzle/drizzle-chapter-repository";
@@ -12,7 +13,7 @@ import { DrizzleEditorRepository } from "@/lib/repositories/drizzle/drizzle-edit
 import { DrizzleNarratorRepository } from "@/lib/repositories/drizzle/drizzle-narrator-repository";
 import { ChapterService } from "@/lib/services/chapter-service";
 
-function createRouteDeps(session: { user: { id: string } } | null) {
+function buildTestRouteDeps(): ChapterByIdRouteDeps {
   const db = getTestDb();
   const service = new ChapterService({
     bookRepo: new DrizzleBookRepository(db),
@@ -21,24 +22,36 @@ function createRouteDeps(session: { user: { id: string } } | null) {
     editorRepo: new DrizzleEditorRepository(db),
     uow: new SavepointUnitOfWork(db),
   });
-  return {
-    getSession: vi.fn().mockResolvedValue(session),
-    createService: vi.fn().mockReturnValue(service),
-    headersFn: vi.fn().mockResolvedValue(new Headers()),
-  };
+  return { createService: () => service };
+}
+
+function buildDelete(session: { user: { id: string } } | null) {
+  return wrapForTest<{ id: string }>(
+    (req, ctx) => handleChapterDelete(req, ctx, buildTestRouteDeps()),
+    { session },
+  );
+}
+
+function makeRequest(): Request {
+  return new Request("http://test.local/api/v1/chapters/x", { method: "DELETE" });
 }
 
 describe("DELETE /api/v1/chapters/:id (handleChapterDelete)", () => {
+  const session = { user: { id: crypto.randomUUID() } };
+
   it("returns 401 when there is no session", async () => {
-    const response = await handleChapterDelete(crypto.randomUUID(), createRouteDeps(null));
+    const DELETE = buildDelete(null);
+    const response = await DELETE(makeRequest(), {
+      params: Promise.resolve({ id: crypto.randomUUID() }),
+    });
     expect(response.status).toBe(401);
   });
 
   it("returns 404 NOT_FOUND when chapter does not exist", async () => {
-    const response = await handleChapterDelete(
-      crypto.randomUUID(),
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
-    );
+    const DELETE = buildDelete(session);
+    const response = await DELETE(makeRequest(), {
+      params: Promise.resolve({ id: crypto.randomUUID() }),
+    });
     expect(response.status).toBe(404);
   });
 
@@ -52,16 +65,13 @@ describe("DELETE /api/v1/chapters/:id (handleChapterDelete)", () => {
       editedSeconds: 3600,
     });
 
-    const response = await handleChapterDelete(
-      chapter.id,
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
-    );
+    const DELETE = buildDelete(session);
+    const response = await DELETE(makeRequest(), { params: Promise.resolve({ id: chapter.id }) });
 
     expect(response.status).toBe(409);
     const body = await response.json();
     expect(body.error.code).toBe("CHAPTER_PAID_LOCKED");
 
-    // Chapter still persisted.
     const stillThere = await db.select().from(chapterTable).where(eq(chapterTable.id, chapter.id));
     expect(stillThere).toHaveLength(1);
   });
@@ -76,10 +86,8 @@ describe("DELETE /api/v1/chapters/:id (handleChapterDelete)", () => {
       status: "pending",
     });
 
-    const response = await handleChapterDelete(
-      target.id,
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
-    );
+    const DELETE = buildDelete(session);
+    const response = await DELETE(makeRequest(), { params: Promise.resolve({ id: target.id }) });
 
     expect(response.status).toBe(204);
     expect(response.headers.get("X-Book-Deleted")).toBeNull();
@@ -100,10 +108,8 @@ describe("DELETE /api/v1/chapters/:id (handleChapterDelete)", () => {
       status: "pending",
     });
 
-    const response = await handleChapterDelete(
-      only.id,
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
-    );
+    const DELETE = buildDelete(session);
+    const response = await DELETE(makeRequest(), { params: Promise.resolve({ id: only.id }) });
 
     expect(response.status).toBe(204);
     expect(response.headers.get("X-Book-Deleted")).toBe("true");
@@ -132,10 +138,8 @@ describe("DELETE /api/v1/chapters/:id (handleChapterDelete)", () => {
       status: "pending",
     });
 
-    const response = await handleChapterDelete(
-      target.id,
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
-    );
+    const DELETE = buildDelete(session);
+    const response = await DELETE(makeRequest(), { params: Promise.resolve({ id: target.id }) });
 
     expect(response.status).toBe(204);
     expect(response.headers.get("X-Book-Deleted")).toBeNull();

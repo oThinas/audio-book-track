@@ -1,11 +1,12 @@
 import { getTestDb } from "@tests/helpers/db";
 import { createTestBook, createTestChapter, createTestStudio } from "@tests/helpers/factories";
 import { jsonRequest } from "@tests/helpers/http";
+import { wrapForTest } from "@tests/helpers/route-context";
 import { SavepointUnitOfWork } from "@tests/helpers/test-unit-of-work";
 import { count, eq } from "drizzle-orm";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { handleBookUpdate } from "@/app/api/v1/books/[id]/route";
+import { type BookByIdRouteDeps, handleBookUpdate } from "@/app/api/v1/books/[id]/route";
 import { book as bookTable, chapter as chapterTable } from "@/lib/db/schema";
 import { DrizzleBookRepository } from "@/lib/repositories/drizzle/drizzle-book-repository";
 import { DrizzleChapterRepository } from "@/lib/repositories/drizzle/drizzle-chapter-repository";
@@ -14,7 +15,7 @@ import { DrizzleNarratorRepository } from "@/lib/repositories/drizzle/drizzle-na
 import { DrizzleStudioRepository } from "@/lib/repositories/drizzle/drizzle-studio-repository";
 import { BookService } from "@/lib/services/book-service";
 
-function createRouteDeps(session: { user: { id: string } } | null) {
+function buildTestRouteDeps(): BookByIdRouteDeps {
   const db = getTestDb();
   const service = new BookService({
     bookRepo: new DrizzleBookRepository(db),
@@ -24,42 +25,44 @@ function createRouteDeps(session: { user: { id: string } } | null) {
     editorRepo: new DrizzleEditorRepository(db),
     uow: new SavepointUnitOfWork(db),
   });
-  return {
-    getSession: vi.fn().mockResolvedValue(session),
-    createService: vi.fn().mockReturnValue(service),
-    headersFn: vi.fn().mockResolvedValue(new Headers()),
-  };
+  return { createService: () => service };
+}
+
+function buildPatch(session: { user: { id: string } } | null) {
+  return wrapForTest<{ id: string }>(
+    (req, ctx) => handleBookUpdate(req, ctx, buildTestRouteDeps()),
+    { session },
+  );
 }
 
 const URL = "http://test.local/api/v1/books/x";
 
 describe("PATCH /api/v1/books/:id (handleBookUpdate)", () => {
+  const session = { user: { id: crypto.randomUUID() } };
+
   it("returns 401 without a session", async () => {
-    const response = await handleBookUpdate(
-      jsonRequest(URL, { title: "Novo" }, { method: "PATCH" }),
-      crypto.randomUUID(),
-      createRouteDeps(null),
-    );
+    const PATCH = buildPatch(null);
+    const response = await PATCH(jsonRequest(URL, { title: "Novo" }, { method: "PATCH" }), {
+      params: Promise.resolve({ id: crypto.randomUUID() }),
+    });
     expect(response.status).toBe(401);
   });
 
   it("returns 422 when payload is empty", async () => {
-    const response = await handleBookUpdate(
-      jsonRequest(URL, {}, { method: "PATCH" }),
-      crypto.randomUUID(),
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
-    );
+    const PATCH = buildPatch(session);
+    const response = await PATCH(jsonRequest(URL, {}, { method: "PATCH" }), {
+      params: Promise.resolve({ id: crypto.randomUUID() }),
+    });
     expect(response.status).toBe(422);
     const body = await response.json();
     expect(body.error.code).toBe("VALIDATION_ERROR");
   });
 
   it("returns 404 NOT_FOUND when the book does not exist", async () => {
-    const response = await handleBookUpdate(
-      jsonRequest(URL, { title: "Algo" }, { method: "PATCH" }),
-      crypto.randomUUID(),
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
-    );
+    const PATCH = buildPatch(session);
+    const response = await PATCH(jsonRequest(URL, { title: "Algo" }, { method: "PATCH" }), {
+      params: Promise.resolve({ id: crypto.randomUUID() }),
+    });
     expect(response.status).toBe(404);
   });
 
@@ -68,11 +71,10 @@ describe("PATCH /api/v1/books/:id (handleBookUpdate)", () => {
     const { book } = await createTestBook(db, { title: "Antigo" });
     await createTestChapter(db, { bookId: book.id, number: 1, status: "pending" });
 
-    const response = await handleBookUpdate(
-      jsonRequest(URL, { title: "Novo" }, { method: "PATCH" }),
-      book.id,
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
-    );
+    const PATCH = buildPatch(session);
+    const response = await PATCH(jsonRequest(URL, { title: "Novo" }, { method: "PATCH" }), {
+      params: Promise.resolve({ id: book.id }),
+    });
     expect(response.status).toBe(200);
     const body = (await response.json()) as { data: { id: string; title: string } };
     expect(body.data.id).toBe(book.id);
@@ -88,11 +90,10 @@ describe("PATCH /api/v1/books/:id (handleBookUpdate)", () => {
     await createTestChapter(db, { bookId: book.id, number: 1, status: "pending" });
     await createTestChapter(db, { bookId: book.id, number: 2, status: "pending" });
 
-    const response = await handleBookUpdate(
-      jsonRequest(URL, { numChapters: 5 }, { method: "PATCH" }),
-      book.id,
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
-    );
+    const PATCH = buildPatch(session);
+    const response = await PATCH(jsonRequest(URL, { numChapters: 5 }, { method: "PATCH" }), {
+      params: Promise.resolve({ id: book.id }),
+    });
     expect(response.status).toBe(200);
 
     const [{ n }] = await db
@@ -119,14 +120,13 @@ describe("PATCH /api/v1/books/:id (handleBookUpdate)", () => {
     await createTestChapter(db, { bookId: book.id, number: 2, status: "pending" });
     await createTestChapter(db, { bookId: book.id, number: 3, status: "pending" });
 
-    const response = await handleBookUpdate(
-      jsonRequest(URL, { numChapters: 2 }, { method: "PATCH" }),
-      book.id,
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
-    );
+    const PATCH = buildPatch(session);
+    const response = await PATCH(jsonRequest(URL, { numChapters: 2 }, { method: "PATCH" }), {
+      params: Promise.resolve({ id: book.id }),
+    });
     expect(response.status).toBe(422);
     const body = await response.json();
-    expect(body.error.code).toBe("CANNOT_REDUCE_CHAPTERS");
+    expect(body.error.code).toBe("BOOK_CANNOT_REDUCE_CHAPTERS");
   });
 
   it("returns 409 BOOK_PAID_PRICE_LOCKED when changing pricePerHourCents with a paid chapter", async () => {
@@ -139,10 +139,12 @@ describe("PATCH /api/v1/books/:id (handleBookUpdate)", () => {
       editedSeconds: 3600,
     });
 
-    const response = await handleBookUpdate(
+    const PATCH = buildPatch(session);
+    const response = await PATCH(
       jsonRequest(URL, { pricePerHourCents: 9000 }, { method: "PATCH" }),
-      book.id,
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
+      {
+        params: Promise.resolve({ id: book.id }),
+      },
     );
     expect(response.status).toBe(409);
     const body = await response.json();
@@ -163,11 +165,10 @@ describe("PATCH /api/v1/books/:id (handleBookUpdate)", () => {
     });
     const { studio: other } = await createTestStudio(db, { name: "Outro estúdio" });
 
-    const response = await handleBookUpdate(
-      jsonRequest(URL, { studioId: other.id }, { method: "PATCH" }),
-      book.id,
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
-    );
+    const PATCH = buildPatch(session);
+    const response = await PATCH(jsonRequest(URL, { studioId: other.id }, { method: "PATCH" }), {
+      params: Promise.resolve({ id: book.id }),
+    });
     expect(response.status).toBe(409);
     const body = await response.json();
     expect(body.error.code).toBe("BOOK_PAID_STUDIO_LOCKED");
@@ -183,32 +184,30 @@ describe("PATCH /api/v1/books/:id (handleBookUpdate)", () => {
     const { book: b } = await createTestBook(db, { studioId: studio.id, title: "Outro" });
     await createTestChapter(db, { bookId: b.id, number: 1, status: "pending" });
 
-    const response = await handleBookUpdate(
-      jsonRequest(URL, { title: "dom casmurro" }, { method: "PATCH" }),
-      b.id,
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
-    );
+    const PATCH = buildPatch(session);
+    const response = await PATCH(jsonRequest(URL, { title: "dom casmurro" }, { method: "PATCH" }), {
+      params: Promise.resolve({ id: b.id }),
+    });
     expect(response.status).toBe(409);
     const body = await response.json();
     expect(body.error.code).toBe("TITLE_ALREADY_IN_USE");
 
-    // a is unchanged.
     const [refreshed] = await db.select().from(bookTable).where(eq(bookTable.id, a.id));
     expect(refreshed.title).toBe("Dom Casmurro");
   });
 
-  it("returns 422 STUDIO_NOT_FOUND when target studioId does not exist", async () => {
+  it("returns 422 STUDIO_REFERENCE_INVALID when target studioId does not exist", async () => {
     const db = getTestDb();
     const { book } = await createTestBook(db);
     await createTestChapter(db, { bookId: book.id, number: 1, status: "pending" });
 
-    const response = await handleBookUpdate(
+    const PATCH = buildPatch(session);
+    const response = await PATCH(
       jsonRequest(URL, { studioId: crypto.randomUUID() }, { method: "PATCH" }),
-      book.id,
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
+      { params: Promise.resolve({ id: book.id }) },
     );
     expect(response.status).toBe(422);
     const body = await response.json();
-    expect(body.error.code).toBe("STUDIO_NOT_FOUND");
+    expect(body.error.code).toBe("STUDIO_REFERENCE_INVALID");
   });
 });

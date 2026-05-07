@@ -1,11 +1,12 @@
 import { getTestDb } from "@tests/helpers/db";
 import { createTestBook, createTestStudio } from "@tests/helpers/factories";
 import { jsonRequest } from "@tests/helpers/http";
+import { wrapForTest } from "@tests/helpers/route-context";
 import { SavepointUnitOfWork } from "@tests/helpers/test-unit-of-work";
 import { eq } from "drizzle-orm";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { handleBookUpdate } from "@/app/api/v1/books/[id]/route";
+import { type BookByIdRouteDeps, handleBookUpdate } from "@/app/api/v1/books/[id]/route";
 import { book as bookTable } from "@/lib/db/schema";
 import { DrizzleBookRepository } from "@/lib/repositories/drizzle/drizzle-book-repository";
 import { DrizzleChapterRepository } from "@/lib/repositories/drizzle/drizzle-chapter-repository";
@@ -14,7 +15,7 @@ import { DrizzleNarratorRepository } from "@/lib/repositories/drizzle/drizzle-na
 import { DrizzleStudioRepository } from "@/lib/repositories/drizzle/drizzle-studio-repository";
 import { BookService } from "@/lib/services/book-service";
 
-function createRouteDeps(session: { user: { id: string } } | null) {
+function buildTestRouteDeps(): BookByIdRouteDeps {
   const db = getTestDb();
   const service = new BookService({
     bookRepo: new DrizzleBookRepository(db),
@@ -24,25 +25,30 @@ function createRouteDeps(session: { user: { id: string } } | null) {
     editorRepo: new DrizzleEditorRepository(db),
     uow: new SavepointUnitOfWork(db),
   });
-  return {
-    getSession: vi.fn().mockResolvedValue(session),
-    createService: vi.fn().mockReturnValue(service),
-    headersFn: vi.fn().mockResolvedValue(new Headers()),
-  };
+  return { createService: () => service };
+}
+
+function buildPatch(session: { user: { id: string } } | null) {
+  return wrapForTest<{ id: string }>(
+    (req, ctx) => handleBookUpdate(req, ctx, buildTestRouteDeps()),
+    { session },
+  );
 }
 
 const ROUTE_URL = "http://test.local/api/v1/books/x";
 
 describe("PATCH /api/v1/books/:id — pdfUrl", () => {
+  const session = { user: { id: crypto.randomUUID() } };
+
   it("persists an https URL and returns it in the detail response", async () => {
     const db = getTestDb();
     const { studio } = await createTestStudio(db);
     const { book } = await createTestBook(db, { studioId: studio.id });
 
-    const response = await handleBookUpdate(
+    const PATCH = buildPatch(session);
+    const response = await PATCH(
       jsonRequest(ROUTE_URL, { pdfUrl: "https://example.com/livro.pdf" }, { method: "PATCH" }),
-      book.id,
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
+      { params: Promise.resolve({ id: book.id }) },
     );
 
     expect(response.status).toBe(200);
@@ -58,10 +64,10 @@ describe("PATCH /api/v1/books/:id — pdfUrl", () => {
     const { studio } = await createTestStudio(db);
     const { book } = await createTestBook(db, { studioId: studio.id });
 
-    const response = await handleBookUpdate(
+    const PATCH = buildPatch(session);
+    const response = await PATCH(
       jsonRequest(ROUTE_URL, { pdfUrl: "http://internal.example/file.pdf" }, { method: "PATCH" }),
-      book.id,
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
+      { params: Promise.resolve({ id: book.id }) },
     );
 
     expect(response.status).toBe(200);
@@ -77,11 +83,10 @@ describe("PATCH /api/v1/books/:id — pdfUrl", () => {
       pdfUrl: "https://example.com/old.pdf",
     });
 
-    const response = await handleBookUpdate(
-      jsonRequest(ROUTE_URL, { pdfUrl: null }, { method: "PATCH" }),
-      book.id,
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
-    );
+    const PATCH = buildPatch(session);
+    const response = await PATCH(jsonRequest(ROUTE_URL, { pdfUrl: null }, { method: "PATCH" }), {
+      params: Promise.resolve({ id: book.id }),
+    });
 
     expect(response.status).toBe(200);
     const body = (await response.json()) as { data: { pdfUrl: string | null } };
@@ -96,10 +101,10 @@ describe("PATCH /api/v1/books/:id — pdfUrl", () => {
     const { studio } = await createTestStudio(db);
     const { book } = await createTestBook(db, { studioId: studio.id });
 
-    const response = await handleBookUpdate(
+    const PATCH = buildPatch(session);
+    const response = await PATCH(
       jsonRequest(ROUTE_URL, { pdfUrl: "example.com/file.pdf" }, { method: "PATCH" }),
-      book.id,
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
+      { params: Promise.resolve({ id: book.id }) },
     );
 
     expect(response.status).toBe(422);
@@ -115,10 +120,10 @@ describe("PATCH /api/v1/books/:id — pdfUrl", () => {
     const { studio } = await createTestStudio(db);
     const { book } = await createTestBook(db, { studioId: studio.id });
 
-    const response = await handleBookUpdate(
+    const PATCH = buildPatch(session);
+    const response = await PATCH(
       jsonRequest(ROUTE_URL, { pdfUrl: "ftp://example.com/file.pdf" }, { method: "PATCH" }),
-      book.id,
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
+      { params: Promise.resolve({ id: book.id }) },
     );
 
     expect(response.status).toBe(422);
@@ -129,10 +134,10 @@ describe("PATCH /api/v1/books/:id — pdfUrl", () => {
     const { studio } = await createTestStudio(db);
     const { book } = await createTestBook(db, { studioId: studio.id });
 
-    const response = await handleBookUpdate(
+    const PATCH = buildPatch(session);
+    const response = await PATCH(
       jsonRequest(ROUTE_URL, { pdfUrl: "javascript:alert(1)" }, { method: "PATCH" }),
-      book.id,
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
+      { params: Promise.resolve({ id: book.id }) },
     );
 
     expect(response.status).toBe(422);
@@ -146,10 +151,10 @@ describe("PATCH /api/v1/books/:id — pdfUrl", () => {
       pdfUrl: "https://example.com/keep.pdf",
     });
 
-    const response = await handleBookUpdate(
+    const PATCH = buildPatch(session);
+    const response = await PATCH(
       jsonRequest(ROUTE_URL, { title: "Novo título" }, { method: "PATCH" }),
-      book.id,
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
+      { params: Promise.resolve({ id: book.id }) },
     );
 
     expect(response.status).toBe(200);
@@ -163,14 +168,14 @@ describe("PATCH /api/v1/books/:id — pdfUrl", () => {
     const { studio } = await createTestStudio(db);
     const { book } = await createTestBook(db, { studioId: studio.id });
 
-    const response = await handleBookUpdate(
+    const PATCH = buildPatch(session);
+    const response = await PATCH(
       jsonRequest(
         ROUTE_URL,
         { pdfUrl: "  https://example.com/trimmed.pdf  " },
         { method: "PATCH" },
       ),
-      book.id,
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
+      { params: Promise.resolve({ id: book.id }) },
     );
 
     expect(response.status).toBe(200);

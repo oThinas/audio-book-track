@@ -1,11 +1,15 @@
 import { getTestDb } from "@tests/helpers/db";
 import { createTestBook, createTestChapter } from "@tests/helpers/factories";
 import { jsonRequest } from "@tests/helpers/http";
+import { wrapForTest } from "@tests/helpers/route-context";
 import { SavepointUnitOfWork } from "@tests/helpers/test-unit-of-work";
 import { eq } from "drizzle-orm";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { handleChaptersBulkDelete } from "@/app/api/v1/books/[id]/chapters/bulk-delete/route";
+import {
+  type ChaptersBulkDeleteRouteDeps,
+  handleChaptersBulkDelete,
+} from "@/app/api/v1/books/[id]/chapters/bulk-delete/route";
 import { book as bookTable, chapter as chapterTable } from "@/lib/db/schema";
 import { DrizzleBookRepository } from "@/lib/repositories/drizzle/drizzle-book-repository";
 import { DrizzleChapterRepository } from "@/lib/repositories/drizzle/drizzle-chapter-repository";
@@ -13,7 +17,7 @@ import { DrizzleEditorRepository } from "@/lib/repositories/drizzle/drizzle-edit
 import { DrizzleNarratorRepository } from "@/lib/repositories/drizzle/drizzle-narrator-repository";
 import { ChapterService } from "@/lib/services/chapter-service";
 
-function createRouteDeps(session: { user: { id: string } } | null) {
+function buildTestRouteDeps(): ChaptersBulkDeleteRouteDeps {
   const db = getTestDb();
   const service = new ChapterService({
     bookRepo: new DrizzleBookRepository(db),
@@ -22,45 +26,47 @@ function createRouteDeps(session: { user: { id: string } } | null) {
     editorRepo: new DrizzleEditorRepository(db),
     uow: new SavepointUnitOfWork(db),
   });
-  return {
-    getSession: vi.fn().mockResolvedValue(session),
-    createService: vi.fn().mockReturnValue(service),
-    headersFn: vi.fn().mockResolvedValue(new Headers()),
-  };
+  return { createService: () => service };
+}
+
+function buildPost(session: { user: { id: string } } | null) {
+  return wrapForTest<{ id: string }>(
+    (req, ctx) => handleChaptersBulkDelete(req, ctx, buildTestRouteDeps()),
+    { session },
+  );
 }
 
 const URL = "http://test.local/api/v1/books/x/chapters/bulk-delete";
 
 describe("POST /api/v1/books/:id/chapters/bulk-delete (handleChaptersBulkDelete)", () => {
+  const session = { user: { id: crypto.randomUUID() } };
+
   it("returns 401 when there is no session", async () => {
-    const response = await handleChaptersBulkDelete(
-      jsonRequest(URL, { chapterIds: [crypto.randomUUID()] }),
-      crypto.randomUUID(),
-      createRouteDeps(null),
-    );
+    const POST = buildPost(null);
+    const response = await POST(jsonRequest(URL, { chapterIds: [crypto.randomUUID()] }), {
+      params: Promise.resolve({ id: crypto.randomUUID() }),
+    });
     expect(response.status).toBe(401);
   });
 
   it("returns 422 VALIDATION_ERROR for an empty chapterIds list", async () => {
-    const response = await handleChaptersBulkDelete(
-      jsonRequest(URL, { chapterIds: [] }),
-      crypto.randomUUID(),
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
-    );
+    const POST = buildPost(session);
+    const response = await POST(jsonRequest(URL, { chapterIds: [] }), {
+      params: Promise.resolve({ id: crypto.randomUUID() }),
+    });
     expect(response.status).toBe(422);
     const body = await response.json();
     expect(body.error.code).toBe("VALIDATION_ERROR");
   });
 
-  it("returns 404 NOT_FOUND when book does not exist", async () => {
-    const response = await handleChaptersBulkDelete(
-      jsonRequest(URL, { chapterIds: [crypto.randomUUID()] }),
-      crypto.randomUUID(),
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
-    );
+  it("returns 404 BOOK_NOT_FOUND when book does not exist", async () => {
+    const POST = buildPost(session);
+    const response = await POST(jsonRequest(URL, { chapterIds: [crypto.randomUUID()] }), {
+      params: Promise.resolve({ id: crypto.randomUUID() }),
+    });
     expect(response.status).toBe(404);
     const body = await response.json();
-    expect(body.error.code).toBe("NOT_FOUND");
+    expect(body.error.code).toBe("BOOK_NOT_FOUND");
   });
 
   it("returns 422 CHAPTERS_NOT_IN_BOOK when an id belongs to a different book", async () => {
@@ -78,16 +84,14 @@ describe("POST /api/v1/books/:id/chapters/bulk-delete (handleChaptersBulkDelete)
       status: "pending",
     });
 
-    const response = await handleChaptersBulkDelete(
-      jsonRequest(URL, { chapterIds: [chA.id, chB.id] }),
-      a.id,
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
-    );
+    const POST = buildPost(session);
+    const response = await POST(jsonRequest(URL, { chapterIds: [chA.id, chB.id] }), {
+      params: Promise.resolve({ id: a.id }),
+    });
     expect(response.status).toBe(422);
     const body = await response.json();
     expect(body.error.code).toBe("CHAPTERS_NOT_IN_BOOK");
 
-    // Atomic — neither chapter was deleted.
     const remaining = await db.select().from(chapterTable);
     expect(remaining).toHaveLength(2);
   });
@@ -107,11 +111,10 @@ describe("POST /api/v1/books/:id/chapters/bulk-delete (handleChaptersBulkDelete)
       editedSeconds: 3600,
     });
 
-    const response = await handleChaptersBulkDelete(
-      jsonRequest(URL, { chapterIds: [c1.id, c2.id] }),
-      book.id,
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
-    );
+    const POST = buildPost(session);
+    const response = await POST(jsonRequest(URL, { chapterIds: [c1.id, c2.id] }), {
+      params: Promise.resolve({ id: book.id }),
+    });
     expect(response.status).toBe(409);
     const body = await response.json();
     expect(body.error.code).toBe("CHAPTER_PAID_LOCKED");
@@ -140,11 +143,10 @@ describe("POST /api/v1/books/:id/chapters/bulk-delete (handleChaptersBulkDelete)
       editedSeconds: 3600,
     });
 
-    const response = await handleChaptersBulkDelete(
-      jsonRequest(URL, { chapterIds: [c1.id, c2.id] }),
-      book.id,
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
-    );
+    const POST = buildPost(session);
+    const response = await POST(jsonRequest(URL, { chapterIds: [c1.id, c2.id] }), {
+      params: Promise.resolve({ id: book.id }),
+    });
     expect(response.status).toBe(204);
     expect(response.headers.get("X-Book-Deleted")).toBeNull();
 
@@ -169,11 +171,10 @@ describe("POST /api/v1/books/:id/chapters/bulk-delete (handleChaptersBulkDelete)
       editedSeconds: 3600,
     });
 
-    const response = await handleChaptersBulkDelete(
-      jsonRequest(URL, { chapterIds: [c1.id, c2.id] }),
-      book.id,
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
-    );
+    const POST = buildPost(session);
+    const response = await POST(jsonRequest(URL, { chapterIds: [c1.id, c2.id] }), {
+      params: Promise.resolve({ id: book.id }),
+    });
     expect(response.status).toBe(204);
     expect(response.headers.get("X-Book-Deleted")).toBe("true");
 
@@ -201,11 +202,10 @@ describe("POST /api/v1/books/:id/chapters/bulk-delete (handleChaptersBulkDelete)
       editedSeconds: 3600,
     });
 
-    const response = await handleChaptersBulkDelete(
-      jsonRequest(URL, { chapterIds: [c1.id] }),
-      book.id,
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
-    );
+    const POST = buildPost(session);
+    const response = await POST(jsonRequest(URL, { chapterIds: [c1.id] }), {
+      params: Promise.resolve({ id: book.id }),
+    });
     expect(response.status).toBe(204);
     expect(response.headers.get("X-Book-Deleted")).toBeNull();
 

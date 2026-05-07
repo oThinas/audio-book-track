@@ -94,7 +94,7 @@ Single Next.js project (existing layout):
   - extractDetails: handler lança `StudioHasActiveBooksError` → wrapper inclui `details.books`.
   - 500 fallback: handler lança `new Error("internal: select * from users")` → wrapper retorna 500 `INTERNAL_ERROR` PT-BR; logger fake recebe a exceção original com stack e `requestId`; nenhum dos LEAK_PATTERNS aparece no body.
   - `X-Request-Id`: presente em todas as variações acima; ecoa header de entrada quando válido.
-- [ ] T018 [P] [US2] Estender `__tests__/integration/api-error-responses.spec.ts` (RED) para iterar **todas** as rotas `/api/v1/**` e **todas** as classes de erro mapeáveis, asserindo `LEAK_PATTERNS` ampliado (incluindo UUID, inglês de domínio, jargão técnico — ver [research.md D-09](./research.md)). Adicionar fixtures factory para acionar cada `errorClass` real do registry via service real (não mock).
+- [X] T018 [P] [US2] Estender `__tests__/integration/api-error-responses.spec.ts` (RED) para iterar **todas** as rotas `/api/v1/**` e **todas** as classes de erro mapeáveis, asserindo `LEAK_PATTERNS` ampliado (incluindo UUID, inglês de domínio, jargão técnico — ver [research.md D-09](./research.md)). Adicionar fixtures factory para acionar cada `errorClass` real do registry via service real (não mock).
 
 ### Implementation
 
@@ -116,7 +116,7 @@ Single Next.js project (existing layout):
 - [X] T034 [US2] Renomear classes de erro para alinhamento com seus codes (FR-007a): `BookStudioNotFoundError` → `StudioReferenceInvalidError` (move para `src/lib/errors/studio-errors.ts`, junto com `StudioNotFoundError` e `StudioHasActiveBooksError`). Atualizar todos os imports/usos em `src/lib/services/**`, `src/app/api/**` e `__tests__/**`. Manter `name` da classe = nome do construtor (assignment via `this.name`).
 - [X] T034a [US2] Refatorar **todos os constructors** de classes em `src/lib/errors/*-errors.ts` para FR-018: `super(...)` recebe string **estática descritiva** (ex.: `"Book not found"`, `"Studio has active books"`), sem interpolação de IDs ou dados dinâmicos. IDs/dados continuam expostos como propriedades públicas (`readonly id: string`, `readonly books: BlockingBookSummary[]`, `readonly title: string`, etc.) — `getDetails()` na própria classe os pesca quando relevante. Testes unitários novos: `__tests__/unit/errors/error-classes.spec.ts` verifica que `Error.message` de cada classe é estático (não muda quando construída com IDs diferentes), `instanceof DomainError`, e `code` declarado bate com o catálogo.
 - [X] T034b [US2] Verificar grep `grep -rn "BookStudioNotFoundError" src/ __tests__/` retorna zero ocorrências (totalmente substituído por `StudioReferenceInvalidError`).
-- [ ] T035 [US2] Verificar grep de auditoria: `grep -rn "instanceof.*Error" src/app/api/` deve retornar **zero** ocorrências; idem `grep -rn "try {" src/app/api/v1/`. Documentar contagem antes/depois no PR.
+- [X] T035 [US2] Verificar grep de auditoria: `grep -rn "instanceof.*Error" src/app/api/` deve retornar **zero** ocorrências; idem `grep -rn "try {" src/app/api/v1/`. Documentar contagem antes/depois no PR.
 
 **Checkpoint**: Handler global cobre todas as rotas. T018 (integration leak audit) GREEN. Anti-padrão FR-006 eliminado. Constituição Princípio VI mantido.
 

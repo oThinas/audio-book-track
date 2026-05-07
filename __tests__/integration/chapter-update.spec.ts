@@ -5,16 +5,17 @@ import {
   createTestEditor,
   createTestNarrator,
 } from "@tests/helpers/factories";
-import { describe, expect, it, vi } from "vitest";
+import { wrapForTest } from "@tests/helpers/route-context";
+import { describe, expect, it } from "vitest";
 
-import { handleChapterUpdate } from "@/app/api/v1/chapters/[id]/route";
+import { type ChapterByIdRouteDeps, handleChapterUpdate } from "@/app/api/v1/chapters/[id]/route";
 import { DrizzleBookRepository } from "@/lib/repositories/drizzle/drizzle-book-repository";
 import { DrizzleChapterRepository } from "@/lib/repositories/drizzle/drizzle-chapter-repository";
 import { DrizzleEditorRepository } from "@/lib/repositories/drizzle/drizzle-editor-repository";
 import { DrizzleNarratorRepository } from "@/lib/repositories/drizzle/drizzle-narrator-repository";
 import { ChapterService } from "@/lib/services/chapter-service";
 
-function createRouteDeps(session: { user: { id: string } } | null) {
+function buildTestRouteDeps(): ChapterByIdRouteDeps {
   const db = getTestDb();
   const service = new ChapterService({
     bookRepo: new DrizzleBookRepository(db),
@@ -22,11 +23,14 @@ function createRouteDeps(session: { user: { id: string } } | null) {
     narratorRepo: new DrizzleNarratorRepository(db),
     editorRepo: new DrizzleEditorRepository(db),
   });
-  return {
-    getSession: vi.fn().mockResolvedValue(session),
-    createService: vi.fn().mockReturnValue(service),
-    headersFn: vi.fn().mockResolvedValue(new Headers()),
-  };
+  return { createService: () => service };
+}
+
+function buildPatch(session: { user: { id: string } } | null) {
+  return wrapForTest<{ id: string }>(
+    (req, ctx) => handleChapterUpdate(req, ctx, buildTestRouteDeps()),
+    { session },
+  );
 }
 
 function makeRequest(body: unknown): Request {
@@ -38,35 +42,34 @@ function makeRequest(body: unknown): Request {
 }
 
 describe("PATCH /api/v1/chapters/:id (handleChapterUpdate)", () => {
+  const session = { user: { id: crypto.randomUUID() } };
+
   it("returns 401 when there is no session", async () => {
-    const response = await handleChapterUpdate(
-      makeRequest({ status: "editing" }),
-      crypto.randomUUID(),
-      createRouteDeps(null),
-    );
+    const PATCH = buildPatch(null);
+    const response = await PATCH(makeRequest({ status: "editing" }), {
+      params: Promise.resolve({ id: crypto.randomUUID() }),
+    });
     expect(response.status).toBe(401);
   });
 
   it("returns 422 VALIDATION_ERROR for empty body", async () => {
-    const response = await handleChapterUpdate(
-      makeRequest({}),
-      crypto.randomUUID(),
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
-    );
+    const PATCH = buildPatch(session);
+    const response = await PATCH(makeRequest({}), {
+      params: Promise.resolve({ id: crypto.randomUUID() }),
+    });
     expect(response.status).toBe(422);
     const body = await response.json();
     expect(body.error.code).toBe("VALIDATION_ERROR");
   });
 
-  it("returns 404 NOT_FOUND when chapter does not exist", async () => {
-    const response = await handleChapterUpdate(
-      makeRequest({ status: "editing" }),
-      crypto.randomUUID(),
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
-    );
+  it("returns 404 CHAPTER_NOT_FOUND when chapter does not exist", async () => {
+    const PATCH = buildPatch(session);
+    const response = await PATCH(makeRequest({ status: "editing" }), {
+      params: Promise.resolve({ id: crypto.randomUUID() }),
+    });
     expect(response.status).toBe(404);
     const body = await response.json();
-    expect(body.error.code).toBe("NOT_FOUND");
+    expect(body.error.code).toBe("CHAPTER_NOT_FOUND");
   });
 
   it("transitions pending → editing with narrator and recomputes book.status", async () => {
@@ -79,11 +82,10 @@ describe("PATCH /api/v1/chapters/:id (handleChapterUpdate)", () => {
       status: "pending",
     });
 
-    const response = await handleChapterUpdate(
-      makeRequest({ status: "editing", narratorId: narrator.id }),
-      chapter.id,
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
-    );
+    const PATCH = buildPatch(session);
+    const response = await PATCH(makeRequest({ status: "editing", narratorId: narrator.id }), {
+      params: Promise.resolve({ id: chapter.id }),
+    });
 
     expect(response.status).toBe(200);
     const body = (await response.json()) as {
@@ -104,14 +106,13 @@ describe("PATCH /api/v1/chapters/:id (handleChapterUpdate)", () => {
       status: "pending",
     });
 
-    const response = await handleChapterUpdate(
-      makeRequest({ status: "editing" }),
-      chapter.id,
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
-    );
+    const PATCH = buildPatch(session);
+    const response = await PATCH(makeRequest({ status: "editing" }), {
+      params: Promise.resolve({ id: chapter.id }),
+    });
     expect(response.status).toBe(422);
     const body = await response.json();
-    expect(body.error.code).toBe("NARRATOR_REQUIRED");
+    expect(body.error.code).toBe("CHAPTER_NARRATOR_REQUIRED");
   });
 
   it("returns 422 EDITOR_OR_SECONDS_REQUIRED for editing → reviewing without editor/seconds", async () => {
@@ -125,14 +126,13 @@ describe("PATCH /api/v1/chapters/:id (handleChapterUpdate)", () => {
       narratorId: narrator.id,
     });
 
-    const response = await handleChapterUpdate(
-      makeRequest({ status: "reviewing" }),
-      chapter.id,
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
-    );
+    const PATCH = buildPatch(session);
+    const response = await PATCH(makeRequest({ status: "reviewing" }), {
+      params: Promise.resolve({ id: chapter.id }),
+    });
     expect(response.status).toBe(422);
     const body = await response.json();
-    expect(body.error.code).toBe("EDITOR_OR_SECONDS_REQUIRED");
+    expect(body.error.code).toBe("CHAPTER_EDITOR_OR_SECONDS_REQUIRED");
   });
 
   it("returns 409 CHAPTER_PAID_LOCKED when mutating narrator on a paid chapter", async () => {
@@ -145,11 +145,10 @@ describe("PATCH /api/v1/chapters/:id (handleChapterUpdate)", () => {
       status: "paid",
     });
 
-    const response = await handleChapterUpdate(
-      makeRequest({ narratorId: narrator.id }),
-      chapter.id,
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
-    );
+    const PATCH = buildPatch(session);
+    const response = await PATCH(makeRequest({ narratorId: narrator.id }), {
+      params: Promise.resolve({ id: chapter.id }),
+    });
     expect(response.status).toBe(409);
     const body = await response.json();
     expect(body.error.code).toBe("CHAPTER_PAID_LOCKED");
@@ -164,14 +163,13 @@ describe("PATCH /api/v1/chapters/:id (handleChapterUpdate)", () => {
       status: "paid",
     });
 
-    const response = await handleChapterUpdate(
-      makeRequest({ status: "completed" }),
-      chapter.id,
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
-    );
+    const PATCH = buildPatch(session);
+    const response = await PATCH(makeRequest({ status: "completed" }), {
+      params: Promise.resolve({ id: chapter.id }),
+    });
     expect(response.status).toBe(422);
     const body = await response.json();
-    expect(body.error.code).toBe("REVERSION_CONFIRMATION_REQUIRED");
+    expect(body.error.code).toBe("CHAPTER_REVERSION_CONFIRMATION_REQUIRED");
   });
 
   it("accepts paid → completed with confirmReversion: true", async () => {
@@ -183,11 +181,10 @@ describe("PATCH /api/v1/chapters/:id (handleChapterUpdate)", () => {
       status: "paid",
     });
 
-    const response = await handleChapterUpdate(
-      makeRequest({ status: "completed", confirmReversion: true }),
-      chapter.id,
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
-    );
+    const PATCH = buildPatch(session);
+    const response = await PATCH(makeRequest({ status: "completed", confirmReversion: true }), {
+      params: Promise.resolve({ id: chapter.id }),
+    });
     expect(response.status).toBe(200);
     const body = (await response.json()) as {
       data: { status: string };
@@ -197,7 +194,7 @@ describe("PATCH /api/v1/chapters/:id (handleChapterUpdate)", () => {
     expect(body.meta.bookStatus).toBe("completed");
   });
 
-  it("returns 422 NARRATOR_NOT_FOUND when referenced narrator does not exist", async () => {
+  it("returns 422 NARRATOR_REFERENCE_INVALID when referenced narrator does not exist", async () => {
     const db = getTestDb();
     const { book } = await createTestBook(db);
     const { chapter } = await createTestChapter(db, {
@@ -206,17 +203,17 @@ describe("PATCH /api/v1/chapters/:id (handleChapterUpdate)", () => {
       status: "pending",
     });
 
-    const response = await handleChapterUpdate(
+    const PATCH = buildPatch(session);
+    const response = await PATCH(
       makeRequest({ status: "editing", narratorId: crypto.randomUUID() }),
-      chapter.id,
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
+      { params: Promise.resolve({ id: chapter.id }) },
     );
     expect(response.status).toBe(422);
     const body = await response.json();
-    expect(body.error.code).toBe("NARRATOR_NOT_FOUND");
+    expect(body.error.code).toBe("NARRATOR_REFERENCE_INVALID");
   });
 
-  it("returns 422 EDITOR_NOT_FOUND when referenced editor does not exist", async () => {
+  it("returns 422 EDITOR_REFERENCE_INVALID when referenced editor does not exist", async () => {
     const db = getTestDb();
     const { book } = await createTestBook(db);
     const { chapter } = await createTestChapter(db, {
@@ -225,14 +222,13 @@ describe("PATCH /api/v1/chapters/:id (handleChapterUpdate)", () => {
       status: "editing",
     });
 
-    const response = await handleChapterUpdate(
-      makeRequest({ editorId: crypto.randomUUID() }),
-      chapter.id,
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
-    );
+    const PATCH = buildPatch(session);
+    const response = await PATCH(makeRequest({ editorId: crypto.randomUUID() }), {
+      params: Promise.resolve({ id: chapter.id }),
+    });
     expect(response.status).toBe(422);
     const body = await response.json();
-    expect(body.error.code).toBe("EDITOR_NOT_FOUND");
+    expect(body.error.code).toBe("EDITOR_REFERENCE_INVALID");
   });
 
   it("updates editorId/editedSeconds without changing status", async () => {
@@ -245,11 +241,10 @@ describe("PATCH /api/v1/chapters/:id (handleChapterUpdate)", () => {
       status: "editing",
     });
 
-    const response = await handleChapterUpdate(
-      makeRequest({ editorId: editor.id, editedSeconds: 1800 }),
-      chapter.id,
-      createRouteDeps({ user: { id: crypto.randomUUID() } }),
-    );
+    const PATCH = buildPatch(session);
+    const response = await PATCH(makeRequest({ editorId: editor.id, editedSeconds: 1800 }), {
+      params: Promise.resolve({ id: chapter.id }),
+    });
     expect(response.status).toBe(200);
     const body = (await response.json()) as {
       data: { status: string; editorId: string; editedSeconds: number };
