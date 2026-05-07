@@ -15,15 +15,26 @@ interface RouteContext<TParams> {
   readonly params: Promise<TParams>;
 }
 
-export interface ApiHandlerContext<TParams> {
+export interface AuthenticatedContext<TParams> {
   readonly params: Promise<TParams>;
-  readonly session: Session | null;
+  readonly session: Session;
   readonly requestId: string;
 }
 
-export type ApiHandler<TParams> = (
+export interface PublicContext<TParams> {
+  readonly params: Promise<TParams>;
+  readonly session: null;
+  readonly requestId: string;
+}
+
+export type AuthenticatedHandler<TParams> = (
   request: Request,
-  context: ApiHandlerContext<TParams>,
+  context: AuthenticatedContext<TParams>,
+) => Promise<NextResponse>;
+
+export type PublicHandler<TParams> = (
+  request: Request,
+  context: PublicContext<TParams>,
 ) => Promise<NextResponse>;
 
 export interface WithApiErrorHandlerOptions {
@@ -110,12 +121,32 @@ function mapError(error: unknown, requestId: string, logger: ServerLogger): Next
   );
 }
 
+type AnyHandler<TParams> = (
+  request: Request,
+  context: {
+    params: Promise<TParams>;
+    session: Session | null;
+    requestId: string;
+  },
+) => Promise<NextResponse>;
+
 export function withApiErrorHandler<TParams = Record<string, never>>(
-  handler: ApiHandler<TParams>,
+  handler: AuthenticatedHandler<TParams>,
+  options?: { requireAuth?: true },
+  deps?: WithApiErrorHandlerDeps,
+): (request: Request, context: RouteContext<TParams>) => Promise<NextResponse>;
+export function withApiErrorHandler<TParams = Record<string, never>>(
+  handler: PublicHandler<TParams>,
+  options: { requireAuth: false },
+  deps?: WithApiErrorHandlerDeps,
+): (request: Request, context: RouteContext<TParams>) => Promise<NextResponse>;
+export function withApiErrorHandler<TParams = Record<string, never>>(
+  handler: AuthenticatedHandler<TParams> | PublicHandler<TParams>,
   options: WithApiErrorHandlerOptions = {},
   deps: WithApiErrorHandlerDeps = defaultDeps,
 ): (request: Request, context: RouteContext<TParams>) => Promise<NextResponse> {
   const requireAuth = options.requireAuth ?? true;
+  const anyHandler = handler as AnyHandler<TParams>;
 
   return async (request, context) => {
     const incomingHeaders = await deps.headersFn();
@@ -133,7 +164,7 @@ export function withApiErrorHandler<TParams = Record<string, never>>(
             );
           }
         }
-        const response = await handler(request, {
+        const response = await anyHandler(request, {
           params: context.params,
           session,
           requestId,

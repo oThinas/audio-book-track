@@ -17,6 +17,14 @@ export class NarratorNotFoundError extends DomainError {
   }
 }
 
+export class NarratorReferenceInvalidError extends DomainError {
+  readonly code = "NARRATOR_REFERENCE_INVALID";
+  constructor(readonly narratorId: string) {
+    super("Narrator reference invalid");
+    this.name = "NarratorReferenceInvalidError";
+  }
+}
+
 export class NarratorLinkedToActiveChaptersError extends DomainError {
   readonly code = "NARRATOR_LINKED_TO_ACTIVE_CHAPTERS";
   constructor(

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { withApiErrorHandler } from "@/lib/api/with-error-handler";
 import { db } from "@/lib/db";
 import {
   checkDatabaseConnection,
@@ -8,20 +9,21 @@ import {
 } from "@/lib/db/health-check";
 import { createDatabasePing } from "@/lib/db/ping";
 
-interface HealthCheckDeps {
+export interface HealthCheckDeps {
   createPing: () => PingFn;
   checkConnection: (ping: PingFn) => Promise<HealthCheckResult>;
 }
 
+const defaultDeps: HealthCheckDeps = {
+  createPing: () => createDatabasePing(db),
+  checkConnection: checkDatabaseConnection,
+};
+
 export async function handleHealthCheck(
-  deps: HealthCheckDeps = {
-    createPing: () => createDatabasePing(db),
-    checkConnection: checkDatabaseConnection,
-  },
+  deps: HealthCheckDeps = defaultDeps,
 ): Promise<NextResponse> {
   const ping = deps.createPing();
   const result = await deps.checkConnection(ping);
-
   const status = result.healthy ? "healthy" : "unhealthy";
 
   return NextResponse.json(
@@ -33,6 +35,4 @@ export async function handleHealthCheck(
   );
 }
 
-export async function GET(): Promise<NextResponse> {
-  return handleHealthCheck();
-}
+export const GET = withApiErrorHandler(async () => handleHealthCheck(), { requireAuth: false });

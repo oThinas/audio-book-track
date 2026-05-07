@@ -14,8 +14,8 @@ import {
   ChapterPaidLockedError,
   ChapterReversionConfirmationRequiredError,
 } from "@/lib/errors/chapter-errors";
-import { EditorNotFoundError } from "@/lib/errors/editor-errors";
-import { NarratorNotFoundError } from "@/lib/errors/narrator-errors";
+import { EditorReferenceInvalidError } from "@/lib/errors/editor-errors";
+import { NarratorReferenceInvalidError } from "@/lib/errors/narrator-errors";
 import { ChapterService } from "@/lib/services/chapter-service";
 
 interface Setup {
@@ -224,7 +224,7 @@ describe("ChapterService.update", () => {
           status: "editing",
           narratorId: crypto.randomUUID(),
         }),
-      ).rejects.toBeInstanceOf(NarratorNotFoundError);
+      ).rejects.toBeInstanceOf(NarratorReferenceInvalidError);
     });
 
     it("rejects editorId pointing to a non-existent editor", async () => {
@@ -237,7 +237,7 @@ describe("ChapterService.update", () => {
         setup.service.update(chapter.id, {
           editorId: crypto.randomUUID(),
         }),
-      ).rejects.toBeInstanceOf(EditorNotFoundError);
+      ).rejects.toBeInstanceOf(EditorReferenceInvalidError);
     });
   });
 

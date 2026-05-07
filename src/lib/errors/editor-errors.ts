@@ -25,6 +25,14 @@ export class EditorNotFoundError extends DomainError {
   }
 }
 
+export class EditorReferenceInvalidError extends DomainError {
+  readonly code = "EDITOR_REFERENCE_INVALID";
+  constructor(readonly editorId: string) {
+    super("Editor reference invalid");
+    this.name = "EditorReferenceInvalidError";
+  }
+}
+
 export class EditorLinkedToActiveChaptersError extends DomainError {
   readonly code = "EDITOR_LINKED_TO_ACTIVE_CHAPTERS";
   constructor(

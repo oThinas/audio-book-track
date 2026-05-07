@@ -1,116 +1,42 @@
-import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { NO_STORE_HEADERS } from "@/lib/api/headers";
-import {
-  conflictResponse,
-  notFoundResponse,
-  unauthorizedResponse,
-  validationErrorResponse,
-} from "@/lib/api/responses";
-import { auth } from "@/lib/auth/server";
-import type { Session } from "@/lib/auth/session";
+import { type AuthenticatedContext, withApiErrorHandler } from "@/lib/api/with-error-handler";
 import { updateStudioSchema } from "@/lib/domain/studio";
-import {
-  StudioHasActiveBooksError,
-  StudioNameAlreadyInUseError,
-  StudioNotFoundError,
-} from "@/lib/errors/studio-errors";
 import { createStudioService, createStudioSoftDeleteDeps } from "@/lib/factories/studio";
 import type { SoftDeleteStudioDeps, StudioService } from "@/lib/services/studio-service";
 
-interface StudioByIdDeps {
-  readonly getSession: (args: { headers: Headers }) => Promise<Session | null>;
+export interface StudioByIdRouteDeps {
   readonly createService: () => StudioService;
-  readonly headersFn: () => Promise<Headers>;
   readonly createSoftDeleteDeps: () => SoftDeleteStudioDeps;
 }
 
-function defaultDeps(): StudioByIdDeps {
-  return {
-    getSession: (args) => auth.api.getSession(args) as Promise<Session | null>,
-    createService: createStudioService,
-    headersFn: headers,
-    createSoftDeleteDeps: createStudioSoftDeleteDeps,
-  };
-}
+const defaultRouteDeps: StudioByIdRouteDeps = {
+  createService: createStudioService,
+  createSoftDeleteDeps: createStudioSoftDeleteDeps,
+};
 
 export async function handleStudiosUpdate(
   request: Request,
-  deps: StudioByIdDeps,
-  params: { id: string },
+  ctx: AuthenticatedContext<{ id: string }>,
+  routeDeps: StudioByIdRouteDeps = defaultRouteDeps,
 ): Promise<NextResponse> {
-  const session = await deps.getSession({ headers: await deps.headersFn() });
-  if (!session) {
-    return unauthorizedResponse();
-  }
-
+  const { id } = await ctx.params;
   const body: unknown = await request.json();
-  const parsed = updateStudioSchema.safeParse(body);
-  if (!parsed.success) {
-    return validationErrorResponse(parsed.error);
-  }
-
-  const service = deps.createService();
-  try {
-    const studio = await service.update(params.id, parsed.data);
-    return NextResponse.json({ data: studio }, { headers: NO_STORE_HEADERS });
-  } catch (error: unknown) {
-    if (error instanceof StudioNotFoundError) {
-      return notFoundResponse("STUDIO_NOT_FOUND", "Estúdio não encontrado");
-    }
-    if (error instanceof StudioNameAlreadyInUseError) {
-      return conflictResponse("NAME_ALREADY_IN_USE", "Nome já cadastrado");
-    }
-    throw error;
-  }
+  const parsed = updateStudioSchema.parse(body);
+  const studio = await routeDeps.createService().update(id, parsed);
+  return NextResponse.json({ data: studio }, { headers: NO_STORE_HEADERS });
 }
 
 export async function handleStudiosDelete(
-  deps: StudioByIdDeps,
-  params: { id: string },
-): Promise<NextResponse> {
-  const session = await deps.getSession({ headers: await deps.headersFn() });
-  if (!session) {
-    return unauthorizedResponse();
-  }
-
-  const service = deps.createService();
-  try {
-    await service.softDelete(params.id, deps.createSoftDeleteDeps());
-    return new NextResponse(null, { status: 204, headers: NO_STORE_HEADERS });
-  } catch (error: unknown) {
-    if (error instanceof StudioNotFoundError) {
-      return notFoundResponse("STUDIO_NOT_FOUND", "Estúdio não encontrado");
-    }
-    if (error instanceof StudioHasActiveBooksError) {
-      return NextResponse.json(
-        {
-          error: {
-            code: "STUDIO_HAS_ACTIVE_BOOKS",
-            message: "Estúdio possui livros com capítulos ativos.",
-            details: { books: error.books },
-          },
-        },
-        { status: 409 },
-      );
-    }
-    throw error;
-  }
-}
-
-export async function PATCH(
-  request: Request,
-  context: { params: Promise<{ id: string }> },
-): Promise<NextResponse> {
-  const params = await context.params;
-  return handleStudiosUpdate(request, defaultDeps(), params);
-}
-
-export async function DELETE(
   _request: Request,
-  context: { params: Promise<{ id: string }> },
+  ctx: AuthenticatedContext<{ id: string }>,
+  routeDeps: StudioByIdRouteDeps = defaultRouteDeps,
 ): Promise<NextResponse> {
-  const params = await context.params;
-  return handleStudiosDelete(defaultDeps(), params);
+  const { id } = await ctx.params;
+  await routeDeps.createService().softDelete(id, routeDeps.createSoftDeleteDeps());
+  return new NextResponse(null, { status: 204, headers: NO_STORE_HEADERS });
 }
+
+export const PATCH = withApiErrorHandler<{ id: string }>(handleStudiosUpdate);
+export const DELETE = withApiErrorHandler<{ id: string }>(handleStudiosDelete);

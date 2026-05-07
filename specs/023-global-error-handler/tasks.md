@@ -101,18 +101,18 @@ Single Next.js project (existing layout):
 - [X] T019 [US2] ~~Criar `src/lib/api/error-registry.ts`~~ **Substituído**: criada `src/lib/errors/domain-error.ts` (`abstract class DomainError extends Error { abstract readonly code: ErrorCode; getDetails?(): unknown; }`). Todas as classes em `src/lib/errors/*-errors.ts` migradas para `extends DomainError` com `readonly code = "..."` e `getDetails()` nas três classes que carregam `books[]`. Handler global (T020) usa `instanceof DomainError → catalogue[error.code]`, sem array central.
 - [X] T020 [US2] Criar `src/lib/api/with-error-handler.ts` exportando `withApiErrorHandler<TParams>(handler, options?, deps?)`. Comportamento conforme [research.md D-03](./research.md), com mapeamento ZodError/SyntaxError/`DomainError`/fallback. Aceita `logger`, `getSession`, `headersFn` injetáveis (default real, fakes em teste). T017 GREEN.
 - [X] T021 [US2] Atualizar `src/lib/api/responses.ts` para exportar somente helpers que ainda fazem sentido como utilitários puros (e.g. `jsonOk`, `jsonCreated`); marcar `unauthorizedResponse`/`validationErrorResponse` como **deprecated** com JSDoc apontando para o handler global. Não remover ainda — rotas legadas usam até T022..T031.
-- [ ] T022 [US2] Migrar `src/app/api/v1/books/route.ts` para `withApiErrorHandler`. Remover `try/catch instanceof Book*Error`; lançamentos vêm dos services intocados. Usar `request.json()` direto (sem try) — wrapper trata `SyntaxError`. Schema `createBookSchema.parse(...)` (não `safeParse`).
-- [ ] T023 [US2] Migrar `src/app/api/v1/books/[id]/route.ts` (`PATCH`, `DELETE`) — remover try/catch; substituir uso de `BookStudioNotFoundError` pela classe renomeada `StudioReferenceInvalidError` (importada do mesmo arquivo de erros; ver T034b). Code emitido passa a ser `STUDIO_REFERENCE_INVALID` (Q2 / D-05).
-- [ ] T024 [US2] Migrar `src/app/api/v1/books/[id]/chapters/bulk-delete/route.ts`.
-- [ ] T025 [US2] Migrar `src/app/api/v1/chapters/[id]/route.ts`.
-- [ ] T026 [US2] Migrar `src/app/api/v1/studios/route.ts`.
-- [ ] T027 [US2] Migrar `src/app/api/v1/studios/[id]/route.ts`.
-- [ ] T028 [US2] Migrar `src/app/api/v1/narrators/route.ts`.
-- [ ] T029 [US2] Migrar `src/app/api/v1/narrators/[id]/route.ts`.
-- [ ] T030 [US2] Migrar `src/app/api/v1/editors/route.ts`.
-- [ ] T031 [US2] Migrar `src/app/api/v1/editors/[id]/route.ts`.
-- [ ] T032 [US2] Migrar `src/app/api/v1/user-preferences/route.ts`.
-- [ ] T033 [US2] Avaliar `src/app/api/health/route.ts`: envolver com `withApiErrorHandler({ requireAuth: false })` para ganhar `X-Request-Id` consistente; tratamento de erro mantém comportamento atual via fallback 500.
+- [X] T022 [US2] Migrar `src/app/api/v1/books/route.ts` para `withApiErrorHandler`. Remover `try/catch instanceof Book*Error`; lançamentos vêm dos services intocados. Usar `request.json()` direto (sem try) — wrapper trata `SyntaxError`. Schema `createBookSchema.parse(...)` (não `safeParse`).
+- [X] T023 [US2] Migrar `src/app/api/v1/books/[id]/route.ts` (`PATCH`, `DELETE`) — remover try/catch; substituir uso de `BookStudioNotFoundError` pela classe renomeada `StudioReferenceInvalidError` (importada do mesmo arquivo de erros; ver T034b). Code emitido passa a ser `STUDIO_REFERENCE_INVALID` (Q2 / D-05).
+- [X] T024 [US2] Migrar `src/app/api/v1/books/[id]/chapters/bulk-delete/route.ts`.
+- [X] T025 [US2] Migrar `src/app/api/v1/chapters/[id]/route.ts`. Inclui adoção de `NarratorReferenceInvalidError` / `EditorReferenceInvalidError` (novas classes em `narrator-errors.ts` / `editor-errors.ts`) lançadas em `ChapterService.assertReferences` quando narrator/editor não existem (D-05).
+- [X] T026 [US2] Migrar `src/app/api/v1/studios/route.ts`.
+- [X] T027 [US2] Migrar `src/app/api/v1/studios/[id]/route.ts`.
+- [X] T028 [US2] Migrar `src/app/api/v1/narrators/route.ts`.
+- [X] T029 [US2] Migrar `src/app/api/v1/narrators/[id]/route.ts`.
+- [X] T030 [US2] Migrar `src/app/api/v1/editors/route.ts`.
+- [X] T031 [US2] Migrar `src/app/api/v1/editors/[id]/route.ts`.
+- [X] T032 [US2] Migrar `src/app/api/v1/user-preferences/route.ts`.
+- [X] T033 [US2] Avaliar `src/app/api/health/route.ts`: envolver com `withApiErrorHandler({ requireAuth: false })` para ganhar `X-Request-Id` consistente; tratamento de erro mantém comportamento atual via fallback 500.
 - [X] T034 [US2] Renomear classes de erro para alinhamento com seus codes (FR-007a): `BookStudioNotFoundError` → `StudioReferenceInvalidError` (move para `src/lib/errors/studio-errors.ts`, junto com `StudioNotFoundError` e `StudioHasActiveBooksError`). Atualizar todos os imports/usos em `src/lib/services/**`, `src/app/api/**` e `__tests__/**`. Manter `name` da classe = nome do construtor (assignment via `this.name`).
 - [X] T034a [US2] Refatorar **todos os constructors** de classes em `src/lib/errors/*-errors.ts` para FR-018: `super(...)` recebe string **estática descritiva** (ex.: `"Book not found"`, `"Studio has active books"`), sem interpolação de IDs ou dados dinâmicos. IDs/dados continuam expostos como propriedades públicas (`readonly id: string`, `readonly books: BlockingBookSummary[]`, `readonly title: string`, etc.) — `getDetails()` na própria classe os pesca quando relevante. Testes unitários novos: `__tests__/unit/errors/error-classes.spec.ts` verifica que `Error.message` de cada classe é estático (não muda quando construída com IDs diferentes), `instanceof DomainError`, e `code` declarado bate com o catálogo.
 - [X] T034b [US2] Verificar grep `grep -rn "BookStudioNotFoundError" src/ __tests__/` retorna zero ocorrências (totalmente substituído por `StudioReferenceInvalidError`).

@@ -1,18 +1,19 @@
 import { InMemoryEditorRepository } from "@tests/repositories/in-memory-editor-repository";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import { handleEditorsList } from "@/app/api/v1/editors/route";
+import type { AuthenticatedContext } from "@/lib/api/with-error-handler";
 import { EditorService } from "@/lib/services/editor-service";
 
-function createDeps(options: { session: { user: { id: string } } | null; service: EditorService }) {
+function buildContext(): AuthenticatedContext<Record<string, never>> {
   return {
-    getSession: vi.fn().mockResolvedValue(options.session),
-    createService: vi.fn().mockReturnValue(options.service),
-    headersFn: vi.fn().mockResolvedValue(new Headers()),
+    params: Promise.resolve({}),
+    session: { user: { id: "u1" } },
+    requestId: "test-request-id",
   };
 }
 
-describe("GET /api/v1/editors (handleEditorsList)", () => {
+describe("handleEditorsList", () => {
   let repo: InMemoryEditorRepository;
   let service: EditorService;
 
@@ -21,22 +22,12 @@ describe("GET /api/v1/editors (handleEditorsList)", () => {
     service = new EditorService(repo);
   });
 
-  it("returns 401 when there is no session", async () => {
-    const deps = createDeps({ session: null, service });
-
-    const response = await handleEditorsList(deps);
-    const body = await response.json();
-
-    expect(response.status).toBe(401);
-    expect(body).toEqual({
-      error: { code: "UNAUTHORIZED", message: expect.any(String) },
-    });
-  });
-
   it("returns 200 with empty array when no editors exist", async () => {
-    const deps = createDeps({ session: { user: { id: "user-1" } }, service });
-
-    const response = await handleEditorsList(deps);
+    const response = await handleEditorsList(
+      new Request("http://localhost/api/v1/editors"),
+      buildContext(),
+      { createService: () => service },
+    );
     const body = await response.json();
 
     expect(response.status).toBe(200);
@@ -50,9 +41,11 @@ describe("GET /api/v1/editors (handleEditorsList)", () => {
     await new Promise((resolve) => setTimeout(resolve, 2));
     const third = await repo.create({ name: "Ana", email: "3@s.com" });
 
-    const deps = createDeps({ session: { user: { id: "user-1" } }, service });
-
-    const response = await handleEditorsList(deps);
+    const response = await handleEditorsList(
+      new Request("http://localhost/api/v1/editors"),
+      buildContext(),
+      { createService: () => service },
+    );
     const body = (await response.json()) as {
       data: Array<{ id: string; name: string; email: string }>;
     };
@@ -63,9 +56,11 @@ describe("GET /api/v1/editors (handleEditorsList)", () => {
   });
 
   it("sets Cache-Control: no-store header", async () => {
-    const deps = createDeps({ session: { user: { id: "user-1" } }, service });
-
-    const response = await handleEditorsList(deps);
+    const response = await handleEditorsList(
+      new Request("http://localhost/api/v1/editors"),
+      buildContext(),
+      { createService: () => service },
+    );
 
     expect(response.headers.get("Cache-Control")).toBe("no-store");
   });

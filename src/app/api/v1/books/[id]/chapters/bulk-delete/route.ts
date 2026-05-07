@@ -1,93 +1,35 @@
-import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { NO_STORE_HEADERS } from "@/lib/api/headers";
-import {
-  conflictResponse,
-  notFoundResponse,
-  unauthorizedResponse,
-  unprocessableEntityResponse,
-  validationErrorResponse,
-} from "@/lib/api/responses";
-import { auth } from "@/lib/auth/server";
-import type { Session } from "@/lib/auth/session";
-import { BookNotFoundError } from "@/lib/errors/book-errors";
-import { ChapterPaidLockedError, ChaptersNotInBookError } from "@/lib/errors/chapter-errors";
+import { type AuthenticatedContext, withApiErrorHandler } from "@/lib/api/with-error-handler";
 import { createChapterService } from "@/lib/factories/chapter";
 import { bookIdParamsSchema } from "@/lib/schemas/book";
 import { bulkDeleteChaptersSchema } from "@/lib/schemas/chapter";
 import type { ChapterService } from "@/lib/services/chapter-service";
 
-interface BulkDeleteDeps {
-  readonly getSession: (args: { headers: Headers }) => Promise<Session | null>;
+export interface ChaptersBulkDeleteRouteDeps {
   readonly createService: () => ChapterService;
-  readonly headersFn: () => Promise<Headers>;
 }
 
-function defaultDeps(): BulkDeleteDeps {
-  return {
-    getSession: (args) => auth.api.getSession(args) as Promise<Session | null>,
-    createService: createChapterService,
-    headersFn: headers,
-  };
-}
+const defaultRouteDeps: ChaptersBulkDeleteRouteDeps = {
+  createService: createChapterService,
+};
 
 export async function handleChaptersBulkDelete(
   request: Request,
-  rawBookId: string,
-  deps: BulkDeleteDeps,
+  ctx: AuthenticatedContext<{ id: string }>,
+  routeDeps: ChaptersBulkDeleteRouteDeps = defaultRouteDeps,
 ): Promise<NextResponse> {
-  const session = await deps.getSession({ headers: await deps.headersFn() });
-  if (!session) {
-    return unauthorizedResponse();
+  const { id: rawBookId } = await ctx.params;
+  const params = bookIdParamsSchema.parse({ id: rawBookId });
+  const body: unknown = await request.json();
+  const parsed = bulkDeleteChaptersSchema.parse(body);
+  const result = await routeDeps.createService().bulkDelete(params.id, parsed.chapterIds);
+  const responseHeaders = new Headers(NO_STORE_HEADERS);
+  if (result.bookDeleted) {
+    responseHeaders.set("X-Book-Deleted", "true");
   }
-
-  const params = bookIdParamsSchema.safeParse({ id: rawBookId });
-  if (!params.success) {
-    return validationErrorResponse(params.error);
-  }
-
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return unprocessableEntityResponse(
-      "VALIDATION_ERROR",
-      "Corpo da requisição não é um JSON válido.",
-    );
-  }
-
-  const parsed = bulkDeleteChaptersSchema.safeParse(body);
-  if (!parsed.success) {
-    return validationErrorResponse(parsed.error);
-  }
-
-  const service = deps.createService();
-  try {
-    const result = await service.bulkDelete(params.data.id, parsed.data.chapterIds);
-    const responseHeaders = new Headers(NO_STORE_HEADERS);
-    if (result.bookDeleted) {
-      responseHeaders.set("X-Book-Deleted", "true");
-    }
-    return new NextResponse(null, { status: 204, headers: responseHeaders });
-  } catch (error) {
-    if (error instanceof BookNotFoundError) {
-      return notFoundResponse("NOT_FOUND", error.message);
-    }
-    if (error instanceof ChaptersNotInBookError) {
-      return unprocessableEntityResponse("CHAPTERS_NOT_IN_BOOK", error.message);
-    }
-    if (error instanceof ChapterPaidLockedError) {
-      return conflictResponse("CHAPTER_PAID_LOCKED", error.message);
-    }
-    throw error;
-  }
+  return new NextResponse(null, { status: 204, headers: responseHeaders });
 }
 
-export async function POST(
-  request: Request,
-  context: { params: Promise<{ id: string }> },
-): Promise<NextResponse> {
-  const { id } = await context.params;
-  return handleChaptersBulkDelete(request, id, defaultDeps());
-}
+export const POST = withApiErrorHandler<{ id: string }>(handleChaptersBulkDelete);

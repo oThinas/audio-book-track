@@ -25,11 +25,13 @@ import {
   EditorLinkedToActiveChaptersError,
   EditorNameAlreadyInUseError,
   EditorNotFoundError,
+  EditorReferenceInvalidError,
 } from "@/lib/errors/editor-errors";
 import {
   NarratorLinkedToActiveChaptersError,
   NarratorNameAlreadyInUseError,
   NarratorNotFoundError,
+  NarratorReferenceInvalidError,
 } from "@/lib/errors/narrator-errors";
 import {
   StudioHasActiveBooksError,
@@ -72,11 +74,13 @@ describe("domain Error classes — static messages (FR-018)", () => {
         { id: "22222222-2222-4222-8222-222222222222", title: "Livro Bloqueante" },
       ]),
       new NarratorNotFoundError("11111111-1111-4111-8111-111111111111"),
+      new NarratorReferenceInvalidError("11111111-1111-4111-8111-111111111111"),
       new NarratorNameAlreadyInUseError("Pedro Narrador"),
       new NarratorLinkedToActiveChaptersError("11111111-1111-4111-8111-111111111111", [
         { id: "22222222-2222-4222-8222-222222222222", title: "Livro" },
       ]),
       new EditorNotFoundError("11111111-1111-4111-8111-111111111111"),
+      new EditorReferenceInvalidError("11111111-1111-4111-8111-111111111111"),
       new EditorNameAlreadyInUseError("Editor Beta"),
       new EditorEmailAlreadyInUseError("alguem@example.com"),
       new EditorLinkedToActiveChaptersError("11111111-1111-4111-8111-111111111111", [
@@ -145,9 +149,11 @@ describe("DomainError contract", () => {
     new StudioReferenceInvalidError("studio-id"),
     new StudioHasActiveBooksError("studio-id", [{ id: "book-id", title: "Livro" }]),
     new NarratorNotFoundError("id"),
+    new NarratorReferenceInvalidError("narrator-id"),
     new NarratorNameAlreadyInUseError("Pedro"),
     new NarratorLinkedToActiveChaptersError("id", [{ id: "book-id", title: "Livro" }]),
     new EditorNotFoundError("id"),
+    new EditorReferenceInvalidError("editor-id"),
     new EditorNameAlreadyInUseError("Editor"),
     new EditorEmailAlreadyInUseError("alguem@example.com"),
     new EditorLinkedToActiveChaptersError("id", [{ id: "book-id", title: "Livro" }]),

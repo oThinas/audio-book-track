@@ -1,14 +1,16 @@
 import { InMemoryStudioRepository } from "@tests/repositories/in-memory-studio-repository";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import { handleStudiosUpdate } from "@/app/api/v1/studios/[id]/route";
+import type { AuthenticatedContext } from "@/lib/api/with-error-handler";
+import { StudioNameAlreadyInUseError, StudioNotFoundError } from "@/lib/errors/studio-errors";
 import { StudioService } from "@/lib/services/studio-service";
 
-function createDeps(options: { session: { user: { id: string } } | null; service: StudioService }) {
+function buildContext(id: string): AuthenticatedContext<{ id: string }> {
   return {
-    getSession: vi.fn().mockResolvedValue(options.session),
-    createService: vi.fn().mockReturnValue(options.service),
-    headersFn: vi.fn().mockResolvedValue(new Headers()),
+    params: Promise.resolve({ id }),
+    session: { user: { id: "u1" } },
+    requestId: "test-request-id",
   };
 }
 
@@ -20,7 +22,7 @@ function buildRequest(body: unknown, id: string): Request {
   });
 }
 
-describe("PATCH /api/v1/studios/:id (handleStudiosUpdate)", () => {
+describe("handleStudiosUpdate", () => {
   let repo: InMemoryStudioRepository;
   let service: StudioService;
 
@@ -29,76 +31,38 @@ describe("PATCH /api/v1/studios/:id (handleStudiosUpdate)", () => {
     service = new StudioService(repo);
   });
 
-  it("returns 401 when there is no session", async () => {
-    const deps = createDeps({ session: null, service });
-    const request = buildRequest({ name: "Novo" }, "some-id");
-
-    const response = await handleStudiosUpdate(request, deps, { id: "some-id" });
-    const body = await response.json();
-
-    expect(response.status).toBe(401);
-    expect(body.error.code).toBe("UNAUTHORIZED");
-  });
-
-  it("returns 404 when the studio does not exist", async () => {
-    const deps = createDeps({ session: { user: { id: "u1" } }, service });
+  it("throws StudioNotFoundError when the studio does not exist", async () => {
     const request = buildRequest({ name: "Novo" }, "missing");
 
-    const response = await handleStudiosUpdate(request, deps, { id: "missing" });
-    const body = await response.json();
-
-    expect(response.status).toBe(404);
-    expect(body.error.code).toBe("STUDIO_NOT_FOUND");
+    await expect(
+      handleStudiosUpdate(request, buildContext("missing"), {
+        createService: () => service,
+        createSoftDeleteDeps: () => ({}) as never,
+      }),
+    ).rejects.toBeInstanceOf(StudioNotFoundError);
   });
 
-  it("returns 422 with details when name is too short", async () => {
-    const existing = await repo.create({ name: "Original", defaultHourlyRateCents: 8500 });
-    const deps = createDeps({ session: { user: { id: "u1" } }, service });
-    const request = buildRequest({ name: "a" }, existing.id);
-
-    const response = await handleStudiosUpdate(request, deps, { id: existing.id });
-    const body = (await response.json()) as {
-      error: { code: string; details: Array<{ field: string; message: string }> };
-    };
-
-    expect(response.status).toBe(422);
-    expect(body.error.code).toBe("VALIDATION_ERROR");
-    expect(body.error.details.some((d) => d.field === "name")).toBe(true);
-  });
-
-  it("returns 422 when defaultHourlyRateCents is out of range", async () => {
-    const existing = await repo.create({ name: "Original", defaultHourlyRateCents: 8500 });
-    const deps = createDeps({ session: { user: { id: "u1" } }, service });
-    const request = buildRequest({ defaultHourlyRateCents: 0 }, existing.id);
-
-    const response = await handleStudiosUpdate(request, deps, { id: existing.id });
-    const body = (await response.json()) as {
-      error: { code: string; details: Array<{ field: string; message: string }> };
-    };
-
-    expect(response.status).toBe(422);
-    expect(body.error.details.some((d) => d.field === "defaultHourlyRateCents")).toBe(true);
-  });
-
-  it("returns 409 NAME_ALREADY_IN_USE when renaming to another studio's name", async () => {
+  it("throws StudioNameAlreadyInUseError when renaming to another studio's name", async () => {
     const first = await repo.create({ name: "First", defaultHourlyRateCents: 5000 });
     await repo.create({ name: "Second", defaultHourlyRateCents: 6000 });
-    const deps = createDeps({ session: { user: { id: "u1" } }, service });
     const request = buildRequest({ name: "Second" }, first.id);
 
-    const response = await handleStudiosUpdate(request, deps, { id: first.id });
-    const body = await response.json();
-
-    expect(response.status).toBe(409);
-    expect(body.error.code).toBe("NAME_ALREADY_IN_USE");
+    await expect(
+      handleStudiosUpdate(request, buildContext(first.id), {
+        createService: () => service,
+        createSoftDeleteDeps: () => ({}) as never,
+      }),
+    ).rejects.toBeInstanceOf(StudioNameAlreadyInUseError);
   });
 
   it("returns 200 updating only the name (partial, trimmed)", async () => {
     const existing = await repo.create({ name: "Original", defaultHourlyRateCents: 8500 });
-    const deps = createDeps({ session: { user: { id: "u1" } }, service });
     const request = buildRequest({ name: "  Novo Nome  " }, existing.id);
 
-    const response = await handleStudiosUpdate(request, deps, { id: existing.id });
+    const response = await handleStudiosUpdate(request, buildContext(existing.id), {
+      createService: () => service,
+      createSoftDeleteDeps: () => ({}) as never,
+    });
     const body = (await response.json()) as {
       data: { id: string; name: string; defaultHourlyRateCents: number };
     };
@@ -111,10 +75,12 @@ describe("PATCH /api/v1/studios/:id (handleStudiosUpdate)", () => {
 
   it("returns 200 updating only the defaultHourlyRateCents (partial)", async () => {
     const existing = await repo.create({ name: "Sonora", defaultHourlyRateCents: 8500 });
-    const deps = createDeps({ session: { user: { id: "u1" } }, service });
     const request = buildRequest({ defaultHourlyRateCents: 12050 }, existing.id);
 
-    const response = await handleStudiosUpdate(request, deps, { id: existing.id });
+    const response = await handleStudiosUpdate(request, buildContext(existing.id), {
+      createService: () => service,
+      createSoftDeleteDeps: () => ({}) as never,
+    });
     const body = (await response.json()) as {
       data: { id: string; name: string; defaultHourlyRateCents: number };
     };
@@ -126,10 +92,12 @@ describe("PATCH /api/v1/studios/:id (handleStudiosUpdate)", () => {
 
   it("returns 200 updating both fields", async () => {
     const existing = await repo.create({ name: "Original", defaultHourlyRateCents: 8500 });
-    const deps = createDeps({ session: { user: { id: "u1" } }, service });
     const request = buildRequest({ name: "Novo", defaultHourlyRateCents: 9999 }, existing.id);
 
-    const response = await handleStudiosUpdate(request, deps, { id: existing.id });
+    const response = await handleStudiosUpdate(request, buildContext(existing.id), {
+      createService: () => service,
+      createSoftDeleteDeps: () => ({}) as never,
+    });
     const body = (await response.json()) as {
       data: { id: string; name: string; defaultHourlyRateCents: number };
     };
@@ -141,10 +109,12 @@ describe("PATCH /api/v1/studios/:id (handleStudiosUpdate)", () => {
 
   it("returns 200 when body is empty (idempotent no-op)", async () => {
     const existing = await repo.create({ name: "Sonora", defaultHourlyRateCents: 8500 });
-    const deps = createDeps({ session: { user: { id: "u1" } }, service });
     const request = buildRequest({}, existing.id);
 
-    const response = await handleStudiosUpdate(request, deps, { id: existing.id });
+    const response = await handleStudiosUpdate(request, buildContext(existing.id), {
+      createService: () => service,
+      createSoftDeleteDeps: () => ({}) as never,
+    });
     const body = (await response.json()) as {
       data: { id: string; name: string; defaultHourlyRateCents: number };
     };
@@ -157,10 +127,12 @@ describe("PATCH /api/v1/studios/:id (handleStudiosUpdate)", () => {
 
   it("returns 200 when PATCH keeps the same name (idempotent, no self-conflict)", async () => {
     const existing = await repo.create({ name: "Sonora", defaultHourlyRateCents: 8500 });
-    const deps = createDeps({ session: { user: { id: "u1" } }, service });
     const request = buildRequest({ name: "Sonora", defaultHourlyRateCents: 8500 }, existing.id);
 
-    const response = await handleStudiosUpdate(request, deps, { id: existing.id });
+    const response = await handleStudiosUpdate(request, buildContext(existing.id), {
+      createService: () => service,
+      createSoftDeleteDeps: () => ({}) as never,
+    });
     const body = (await response.json()) as {
       data: { id: string; name: string; defaultHourlyRateCents: number };
     };
