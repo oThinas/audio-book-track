@@ -3,6 +3,8 @@ import { Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 
+import { NavigationProvider } from "@/components/features/auth/navigation-provider";
+
 import "./globals.css";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -42,6 +44,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <NavigationProvider />
           {children}
         </ThemeProvider>
         <Toaster richColors position="top-right" />

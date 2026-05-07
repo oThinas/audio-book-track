@@ -47,28 +47,28 @@ Single Next.js project (existing layout):
 
 ### Catálogo compartilhado e logger
 
-- [ ] T003 [P] Criar `__tests__/unit/api/error-codes.spec.ts` (RED) com asserções: (a) toda chave do catálogo é `UPPER_SNAKE_CASE`, (b) toda `message` é não-vazia e PT-BR (regex `[À-ÿ]` ou ausência de palavras inglês de domínio), (c) `status` ∈ `{0, 401, 404, 409, 422, 500}`, (d) `variant` ∈ `{undefined, "error", "warning"}`, (e) catálogo cobre exaustivamente o tipo `ErrorCode` (compile-time via `Record<ErrorCode, …>`).
-- [ ] T004 Criar `src/lib/api/error-codes.ts` com a união `ErrorCode` (32 codes — ver [data-model.md](./data-model.md#errorcode-union)) e `errorCodes: Record<ErrorCode, ErrorCatalogEntry>` com `status`/`message` PT-BR/`variant` conforme [contracts/error-codes.md](./contracts/error-codes.md). T003 deve ficar GREEN.
-- [ ] T005 [P] Criar `src/lib/logger/server-logger.ts` exportando `serverLogger: ServerLogger` (interface `error/warn/info(msg, ctx)`) que serializa JSON via `console.error/warn/info`.
-- [ ] T006 [P] Criar `__tests__/unit/logger/server-logger.spec.ts` (RED) com asserções: cada método produz JSON com `level`, `msg`, e mistura de `ctx`. Usar `vi.spyOn(console, "error" /* … */)` para captura.
+- [X] T003 [P] Criar `__tests__/unit/api/error-codes.spec.ts` (RED) com asserções: (a) toda chave do catálogo é `UPPER_SNAKE_CASE`, (b) toda `message` é não-vazia e PT-BR (regex `[À-ÿ]` ou ausência de palavras inglês de domínio), (c) `status` ∈ `{0, 401, 404, 409, 422, 500}`, (d) `variant` ∈ `{undefined, "error", "warning"}`, (e) catálogo cobre exaustivamente o tipo `ErrorCode` (compile-time via `Record<ErrorCode, …>`).
+- [X] T004 Criar `src/lib/api/error-codes.ts` com a união `ErrorCode` (32 codes — ver [data-model.md](./data-model.md#errorcode-union)) e `errorCodes: Record<ErrorCode, ErrorCatalogEntry>` com `status`/`message` PT-BR/`variant` conforme [contracts/error-codes.md](./contracts/error-codes.md). T003 deve ficar GREEN.
+- [X] T005 [P] Criar `src/lib/logger/server-logger.ts` exportando `serverLogger: ServerLogger` (interface `error/warn/info(msg, ctx)`) que serializa JSON via `console.error/warn/info`.
+- [X] T006 [P] Criar `__tests__/unit/logger/server-logger.spec.ts` (RED) com asserções: cada método produz JSON com `level`, `msg`, e mistura de `ctx`. Usar `vi.spyOn(console, "error" /* … */)` para captura.
 
 ### Request ID e contexto de execução
 
-- [ ] T007 [P] Criar `__tests__/unit/api/request-id.spec.ts` (RED): (a) `generateRequestId()` retorna UUID v4 (regex), (b) `extractOrCreateRequestId(headers)` ecoa `X-Request-Id` válido vindo do header de entrada e gera novo quando ausente/inválido.
-- [ ] T008 Criar `src/lib/api/request-id.ts` com `generateRequestId()` e `extractOrCreateRequestId(headers: Headers): string`. T007 GREEN.
-- [ ] T009 [P] Criar `src/lib/api/request-context.ts` exportando `requestContext: AsyncLocalStorage<{ requestId: string }>` e helper `getCurrentRequestId(): string | null`.
-- [ ] T010 [P] Criar `__tests__/unit/api/request-context.spec.ts` (RED) que envolve uma função em `requestContext.run({ requestId: "abc" }, fn)` e verifica que `getCurrentRequestId()` dentro de `fn` retorna `"abc"`.
+- [X] T007 [P] Criar `__tests__/unit/api/request-id.spec.ts` (RED): (a) `generateRequestId()` retorna UUID v4 (regex), (b) `extractOrCreateRequestId(headers)` ecoa `X-Request-Id` válido vindo do header de entrada e gera novo quando ausente/inválido.
+- [X] T008 Criar `src/lib/api/request-id.ts` com `generateRequestId()` e `extractOrCreateRequestId(headers: Headers): string`. T007 GREEN.
+- [X] T009 [P] Criar `src/lib/api/request-context.ts` exportando `requestContext: AsyncLocalStorage<{ requestId: string }>` e helper `getCurrentRequestId(): string | null`.
+- [X] T010 [P] Criar `__tests__/unit/api/request-context.spec.ts` (RED) que envolve uma função em `requestContext.run({ requestId: "abc" }, fn)` e verifica que `getCurrentRequestId()` dentro de `fn` retorna `"abc"`.
 
 ### Headers helper update
 
-- [ ] T011 [P] Atualizar `src/lib/api/headers.ts` adicionando export `requestIdHeader(id: string): Record<string, string>` que retorna `{ "X-Request-Id": id }`. Manter `NO_STORE_HEADERS` intacto.
+- [X] T011 [P] Atualizar `src/lib/api/headers.ts` adicionando export `requestIdHeader(id: string): Record<string, string>` que retorna `{ "X-Request-Id": id }`. Manter `NO_STORE_HEADERS` intacto.
 
 ### Navigation singleton (cliente)
 
-- [ ] T012 [P] Criar `__tests__/unit/api/navigation-singleton.spec.ts` (RED): (a) `registerNavigator(fn)` armazena fn, (b) `navigateToLogin()` invoca a fn registrada com `"/login"`, (c) sem fn registrada cai em fallback `window.location.replace`.
-- [ ] T013 Criar `src/components/features/auth/navigation-singleton.ts` com `registerNavigator(fn: (path: string) => void): void` + `navigateToLogin(): void`. T012 GREEN.
-- [ ] T014 Criar `src/components/features/auth/navigation-provider.tsx` (`"use client"`) que registra `router.replace` no singleton via `useEffect`. (Co-localizado com o singleton em `auth/`; sem nova pasta top-level.)
-- [ ] T015 Montar `<NavigationProvider />` em `src/app/layout.tsx` (ou no provider raiz autenticado existente) sem afetar Server Components.
+- [X] T012 [P] Criar `__tests__/unit/api/navigation-singleton.spec.ts` (RED): (a) `registerNavigator(fn)` armazena fn, (b) `navigateToLogin()` invoca a fn registrada com `"/login"`, (c) sem fn registrada cai em fallback `window.location.replace`.
+- [X] T013 Criar `src/components/features/auth/navigation-singleton.ts` com `registerNavigator(fn: (path: string) => void): void` + `navigateToLogin(): void`. T012 GREEN.
+- [X] T014 Criar `src/components/features/auth/navigation-provider.tsx` (`"use client"`) que registra `router.replace` no singleton via `useEffect`. (Co-localizado com o singleton em `auth/`; sem nova pasta top-level.)
+- [X] T015 Montar `<NavigationProvider />` em `src/app/layout.tsx` (ou no provider raiz autenticado existente) sem afetar Server Components.
 
 **Checkpoint**: Catálogo, logger, request-id e singleton de navegação prontos. US1/US2/US3 podem iniciar.
 
