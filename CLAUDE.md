@@ -95,6 +95,12 @@
 - Swallow silencioso de erros: `catch (e) {}`.
 - Mutação de objetos recebidos como parâmetro — sempre retornar novo objeto.
 - `drizzle-kit push` — usar `generate` + `migrate` para manter journal sincronizado.
+- `try/catch` + `instanceof XxxError` em rota `/api/v1/**` — usar `withApiErrorHandler` ([src/lib/api/with-error-handler.ts](src/lib/api/with-error-handler.ts)). Service lança `DomainError`; o wrapper resolve session, captura `ZodError`/`SyntaxError`/`DomainError` e mapeia para o envelope PT-BR via `errorCodes`. Detalhes em [docs/error-handling.md](docs/error-handling.md).
+- `fetch(...)` direto em hook de feature contra `/api/v1/**` — usar **`apiFetch<T>`** ([src/lib/api/api-fetch.ts](src/lib/api/api-fetch.ts)) que retorna `ApiResult<T>` discriminado, dispara toast por variant do catálogo, redireciona em 401, e expõe `result.headers` para metadata.
+- `toast.error(body?.error?.message ?? "...")` em hook — `apiFetch` já consulta `errorCodes[code]` e dispara toast com a mensagem PT-BR do catálogo. Hook só faz `form.setError(field, ...)` em `kind: "field-errors"` ou em `api-error` com code específico.
+- `Error.message` com interpolação de IDs/dados dinâmicos em subclasse de `DomainError` — `super(...)` recebe string **estática descritiva** (FR-018); IDs/dados saem por propriedades públicas e `getDetails()` quando precisarem chegar à UI.
+- Mensagens de schema Zod com jargão de campo (`studioId`, `narratorId`, `editorId`, `chapterId`, `editedSeconds`) — user vê isso. Usar rótulos PT-BR (`Estúdio`, `Narrador`, `Editor`, `Capítulo`, `Tempo editado`).
+- Helpers legados de resposta (`unauthorizedResponse`, `validationErrorResponse`, `notFoundResponse`, `conflictResponse`, `unprocessableEntityResponse`) — removidos. Toda rota nova passa pelo `withApiErrorHandler`.
 
 ---
 
