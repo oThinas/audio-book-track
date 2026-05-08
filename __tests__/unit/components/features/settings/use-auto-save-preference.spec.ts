@@ -3,17 +3,21 @@ import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useAutoSavePreference } from "@/components/features/settings/hooks/use-auto-save-preference";
 
-describe("useAutoSavePreference", () => {
-  let fetchMock: ReturnType<typeof vi.fn>;
+vi.mock("@/lib/api/api-fetch", () => ({
+  apiFetch: vi.fn(),
+}));
 
+const { apiFetch } = await import("@/lib/api/api-fetch");
+
+describe("useAutoSavePreference", () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
-    globalThis.fetch = fetchMock as unknown as typeof fetch;
+    vi.mocked(apiFetch).mockResolvedValue({ ok: true, data: null, headers: new Headers() });
   });
 
   afterEach(() => {
     vi.useRealTimers();
+    vi.clearAllMocks();
   });
 
   it("returns a stable save callback", () => {
@@ -32,23 +36,19 @@ describe("useAutoSavePreference", () => {
       result.current.save({ primaryColor: "blue" });
     });
 
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(apiFetch).not.toHaveBeenCalled();
 
     await act(async () => {
       vi.advanceTimersByTime(300);
     });
 
-    expect(fetchMock).toHaveBeenCalledWith(
+    expect(apiFetch).toHaveBeenCalledWith(
       "/api/v1/user-preferences",
-      expect.objectContaining({
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ primaryColor: "blue" }),
-      }),
+      expect.objectContaining({ method: "PATCH", body: { primaryColor: "blue" } }),
     );
   });
 
-  it("collapses rapid calls into a single fetch with the last payload", async () => {
+  it("collapses rapid calls into a single apiFetch with the last payload", async () => {
     const { result } = renderHook(() => useAutoSavePreference());
 
     act(() => {
@@ -63,18 +63,16 @@ describe("useAutoSavePreference", () => {
       result.current.save({ primaryColor: "green" });
     });
 
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(apiFetch).not.toHaveBeenCalled();
 
     await act(async () => {
       vi.advanceTimersByTime(300);
     });
 
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(fetchMock).toHaveBeenCalledWith(
+    expect(apiFetch).toHaveBeenCalledTimes(1);
+    expect(apiFetch).toHaveBeenCalledWith(
       "/api/v1/user-preferences",
-      expect.objectContaining({
-        body: JSON.stringify({ primaryColor: "green" }),
-      }),
+      expect.objectContaining({ body: { primaryColor: "green" } }),
     );
   });
 });

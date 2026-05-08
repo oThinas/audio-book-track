@@ -33,7 +33,7 @@ describe("narratorFormSchema", () => {
       const result = narratorFormSchema.safeParse({ name: "A" });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.issues[0]?.message).toBe("Nome deve ter no mínimo 2 caracteres");
+        expect(result.error.issues[0]?.message).toBe("Nome deve ter no mínimo 2 caracteres.");
       }
     });
 
@@ -46,7 +46,7 @@ describe("narratorFormSchema", () => {
       const result = narratorFormSchema.safeParse({ name: "x".repeat(101) });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.issues[0]?.message).toBe("Nome deve ter no máximo 100 caracteres");
+        expect(result.error.issues[0]?.message).toBe("Nome deve ter no máximo 100 caracteres.");
       }
     });
 

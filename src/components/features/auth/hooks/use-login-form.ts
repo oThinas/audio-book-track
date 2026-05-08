@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { apiFetch } from "@/lib/api/api-fetch";
 import { authClient } from "@/lib/auth/client";
 import type { LoginInput } from "@/lib/schemas/auth";
 
@@ -36,20 +37,18 @@ export function useLoginForm(): UseLoginFormReturn {
     });
 
     if (result.error) {
-      toast.error("Credenciais inválidas. Verifique seu username e senha.");
+      toast.error("Credenciais inválidas. Verifique seu usuário e senha.");
       return;
     }
 
-    try {
-      const response = await fetch("/api/v1/user-preferences");
-      if (response.ok) {
-        const { data: prefs } = (await response.json()) as { data: { favoritePage?: string } };
-        const redirectUrl = FAVORITE_PAGE_MAP[prefs?.favoritePage ?? ""] ?? "/dashboard";
-        router.push(redirectUrl);
-        return;
-      }
-    } catch {
-      // Fallback to dashboard if preferences fetch fails
+    const prefsResult = await apiFetch<{ data: { favoritePage?: string } }>(
+      "/api/v1/user-preferences",
+    );
+    if (prefsResult.ok) {
+      const favoritePage = prefsResult.data.data.favoritePage ?? "";
+      const redirectUrl = FAVORITE_PAGE_MAP[favoritePage] ?? "/dashboard";
+      router.push(redirectUrl);
+      return;
     }
 
     router.push("/dashboard");

@@ -34,7 +34,8 @@ code review como base objetiva. Ao migrar uma nova feature, abrir
 - **RHF**: `useForm()` permanece **no componente**; o hook recebe `form` por argumento e expõe `onSubmit`.
 - **Refetch**: `router.refresh()` é o mecanismo padrão pós-mutação.
 - **Toasts**: zero `toast.success` (Princípio VII). Sucesso vem da própria UI.
-- **Testes**: `renderHook` (`@testing-library/react`); fakes injetados para módulos internos; `vi.mock()` apenas para módulos não-injetáveis (ver allowlist em `__tests__/unit/setup.ts`).
+- **Chamadas a `/api/v1/**`**: usar **`apiFetch`** ([src/lib/api/api-fetch.ts](../src/lib/api/api-fetch.ts)) — nunca `fetch` direto. O wrapper centraliza 401 + redirect, 422 → `field-errors`, toast por código, debounce, network fallback. O hook só lida com regra de negócio (`form.setError` para códigos específicos, `result.headers.get("X-Book-Deleted")` quando aplicável). Detalhes em [error-handling.md](./error-handling.md).
+- **Testes**: `renderHook` (`@testing-library/react`); para hooks que usam `apiFetch`, mockar `vi.mock("@/lib/api/api-fetch", () => ({ apiFetch: vi.fn() }))` e retornar `ApiResult<T>` por caso. `vi.mock()` para outros módulos só na allowlist em `__tests__/unit/setup.ts`.
 - **Cobertura**: ≥ 80% por hook (linhas + branches). Helpers puros (ex.: `lib/domain/chapter-transitions.ts`): 100%.
 
 ## Estado de domínio vs. estado visual local — onde colocar

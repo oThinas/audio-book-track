@@ -1,22 +1,22 @@
 import { InMemoryNarratorRepository } from "@tests/repositories/in-memory-narrator-repository";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import { handleNarratorsDelete } from "@/app/api/v1/narrators/[id]/route";
+import type { AuthenticatedContext } from "@/lib/api/with-error-handler";
+import { NarratorNotFoundError } from "@/lib/errors/narrator-errors";
 import { NarratorService } from "@/lib/services/narrator-service";
 
-function createDeps(options: {
-  session: { user: { id: string } } | null;
-  service: NarratorService;
-}) {
+function buildContext(id: string): AuthenticatedContext<{ id: string }> {
   return {
-    getSession: vi.fn().mockResolvedValue(options.session),
-    createService: vi.fn().mockReturnValue(options.service),
-    headersFn: vi.fn().mockResolvedValue(new Headers()),
-    createSoftDeleteDeps: () => ({ getActiveBooks: async () => [] }),
+    params: Promise.resolve({ id }),
+    session: { user: { id: "u1" } },
+    requestId: "test-request-id",
   };
 }
 
-describe("DELETE /api/v1/narrators/:id (handleNarratorsDelete)", () => {
+const noBlockingDeps = () => ({ getActiveBooks: async () => [] });
+
+describe("handleNarratorsDelete", () => {
   let repo: InMemoryNarratorRepository;
   let service: NarratorService;
 
@@ -25,31 +25,27 @@ describe("DELETE /api/v1/narrators/:id (handleNarratorsDelete)", () => {
     service = new NarratorService(repo);
   });
 
-  it("returns 401 when there is no session", async () => {
-    const deps = createDeps({ session: null, service });
+  it("throws NarratorNotFoundError when the narrator does not exist", async () => {
+    const request = new Request("http://localhost/api/v1/narrators/missing", { method: "DELETE" });
 
-    const response = await handleNarratorsDelete(deps, { id: "some-id" });
-    const body = await response.json();
-
-    expect(response.status).toBe(401);
-    expect(body.error.code).toBe("UNAUTHORIZED");
-  });
-
-  it("returns 404 when the narrator does not exist", async () => {
-    const deps = createDeps({ session: { user: { id: "u1" } }, service });
-
-    const response = await handleNarratorsDelete(deps, { id: "missing" });
-    const body = await response.json();
-
-    expect(response.status).toBe(404);
-    expect(body.error.code).toBe("NARRATOR_NOT_FOUND");
+    await expect(
+      handleNarratorsDelete(request, buildContext("missing"), {
+        createService: () => service,
+        createSoftDeleteDeps: noBlockingDeps,
+      }),
+    ).rejects.toBeInstanceOf(NarratorNotFoundError);
   });
 
   it("returns 204 with no body and Cache-Control no-store on success", async () => {
     const existing = await repo.create({ name: "Delete Me" });
-    const deps = createDeps({ session: { user: { id: "u1" } }, service });
+    const request = new Request(`http://localhost/api/v1/narrators/${existing.id}`, {
+      method: "DELETE",
+    });
 
-    const response = await handleNarratorsDelete(deps, { id: existing.id });
+    const response = await handleNarratorsDelete(request, buildContext(existing.id), {
+      createService: () => service,
+      createSoftDeleteDeps: noBlockingDeps,
+    });
 
     expect(response.status).toBe(204);
     expect(response.headers.get("Cache-Control")).toBe("no-store");

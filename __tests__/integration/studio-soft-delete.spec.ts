@@ -1,23 +1,19 @@
 import { getTestDb } from "@tests/helpers/db";
 import { createTestBook, createTestChapter, createTestStudio } from "@tests/helpers/factories";
+import { wrapForTest } from "@tests/helpers/route-context";
 import { and, eq, inArray } from "drizzle-orm";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { handleStudiosDelete } from "@/app/api/v1/studios/[id]/route";
+import { handleStudiosDelete, type StudioByIdRouteDeps } from "@/app/api/v1/studios/[id]/route";
 import { book, chapter, studio } from "@/lib/db/schema";
 import { DrizzleStudioRepository } from "@/lib/repositories/drizzle/drizzle-studio-repository";
 import { StudioService } from "@/lib/services/studio-service";
 
-function createDeps() {
+function buildTestRouteDeps(): StudioByIdRouteDeps {
   const db = getTestDb();
-  const repo = new DrizzleStudioRepository(db);
-  const service = new StudioService(repo);
+  const service = new StudioService(new DrizzleStudioRepository(db));
   return {
-    getSession: vi
-      .fn()
-      .mockResolvedValue({ user: { id: crypto.randomUUID() }, session: { id: "s1" } }),
-    createService: vi.fn().mockReturnValue(service),
-    headersFn: vi.fn().mockResolvedValue(new Headers()),
+    createService: () => service,
     createSoftDeleteDeps: () => ({
       getActiveBooks: async (studioId: string) => {
         const rows = await db
@@ -36,12 +32,26 @@ function createDeps() {
   };
 }
 
+function buildDelete(session: { user: { id: string } } | null) {
+  return wrapForTest<{ id: string }>(
+    (req, ctx) => handleStudiosDelete(req, ctx, buildTestRouteDeps()),
+    { session },
+  );
+}
+
+function makeRequest(): Request {
+  return new Request("http://test.local/api/v1/studios/x", { method: "DELETE" });
+}
+
 describe("DELETE /api/v1/studios/:id (handleStudiosDelete) — STUDIO_HAS_ACTIVE_BOOKS precondition", () => {
+  const session = { user: { id: crypto.randomUUID() } };
+
   it("returns 204 and soft-deletes when studio has no books", async () => {
     const db = getTestDb();
     const { studio: created } = await createTestStudio(db, { name: "Sem Livros" });
 
-    const response = await handleStudiosDelete(createDeps(), { id: created.id });
+    const DELETE = buildDelete(session);
+    const response = await DELETE(makeRequest(), { params: Promise.resolve({ id: created.id }) });
 
     expect(response.status).toBe(204);
 
@@ -52,11 +62,15 @@ describe("DELETE /api/v1/studios/:id (handleStudiosDelete) — STUDIO_HAS_ACTIVE
   it("returns 204 and soft-deletes when all chapters are completed/paid", async () => {
     const db = getTestDb();
     const { studio: created } = await createTestStudio(db, { name: "Tudo Pago" });
-    const { book } = await createTestBook(db, { studioId: created.id, title: "Livro Pago" });
-    await createTestChapter(db, { bookId: book.id, number: 1, status: "completed" });
-    await createTestChapter(db, { bookId: book.id, number: 2, status: "paid" });
+    const { book: createdBook } = await createTestBook(db, {
+      studioId: created.id,
+      title: "Livro Pago",
+    });
+    await createTestChapter(db, { bookId: createdBook.id, number: 1, status: "completed" });
+    await createTestChapter(db, { bookId: createdBook.id, number: 2, status: "paid" });
 
-    const response = await handleStudiosDelete(createDeps(), { id: created.id });
+    const DELETE = buildDelete(session);
+    const response = await DELETE(makeRequest(), { params: Promise.resolve({ id: created.id }) });
 
     expect(response.status).toBe(204);
 
@@ -73,14 +87,14 @@ describe("DELETE /api/v1/studios/:id (handleStudiosDelete) — STUDIO_HAS_ACTIVE
     });
     await createTestChapter(db, { bookId: blocking.id, number: 1, status: "editing" });
 
-    // Add an "OK" book (completed chapters) to ensure it does NOT block
     const { book: okBook } = await createTestBook(db, {
       studioId: created.id,
       title: "Livro OK",
     });
     await createTestChapter(db, { bookId: okBook.id, number: 1, status: "completed" });
 
-    const response = await handleStudiosDelete(createDeps(), { id: created.id });
+    const DELETE = buildDelete(session);
+    const response = await DELETE(makeRequest(), { params: Promise.resolve({ id: created.id }) });
 
     expect(response.status).toBe(409);
     const body = (await response.json()) as {
@@ -94,7 +108,6 @@ describe("DELETE /api/v1/studios/:id (handleStudiosDelete) — STUDIO_HAS_ACTIVE
     expect(body.error.details.books.map((b) => b.id)).toEqual([blocking.id]);
     expect(body.error.details.books[0]?.title).toBe("Livro Em Edição");
 
-    // studio was NOT soft-deleted
     const [row] = await db.select().from(studio).where(eq(studio.id, created.id));
     expect(row?.deletedAt).toBeNull();
   });
@@ -104,20 +117,26 @@ describe("DELETE /api/v1/studios/:id (handleStudiosDelete) — STUDIO_HAS_ACTIVE
 
     for (const status of ["pending", "editing", "reviewing", "retake"] as const) {
       const { studio: created } = await createTestStudio(db, { name: `Studio ${status}` });
-      const { book } = await createTestBook(db, {
+      const { book: createdBook } = await createTestBook(db, {
         studioId: created.id,
         title: `Livro ${status}`,
       });
-      await createTestChapter(db, { bookId: book.id, number: 1, status });
+      await createTestChapter(db, { bookId: createdBook.id, number: 1, status });
 
-      const response = await handleStudiosDelete(createDeps(), { id: created.id });
+      const DELETE = buildDelete(session);
+      const response = await DELETE(makeRequest(), {
+        params: Promise.resolve({ id: created.id }),
+      });
 
       expect(response.status).toBe(409);
     }
   });
 
   it("returns 404 when studio does not exist", async () => {
-    const response = await handleStudiosDelete(createDeps(), { id: crypto.randomUUID() });
+    const DELETE = buildDelete(session);
+    const response = await DELETE(makeRequest(), {
+      params: Promise.resolve({ id: crypto.randomUUID() }),
+    });
 
     expect(response.status).toBe(404);
   });
@@ -127,7 +146,8 @@ describe("DELETE /api/v1/studios/:id (handleStudiosDelete) — STUDIO_HAS_ACTIVE
     const { studio: created } = await createTestStudio(db, { name: "Já Soft-Deletado" });
     await db.update(studio).set({ deletedAt: new Date() }).where(eq(studio.id, created.id));
 
-    const response = await handleStudiosDelete(createDeps(), { id: created.id });
+    const DELETE = buildDelete(session);
+    const response = await DELETE(makeRequest(), { params: Promise.resolve({ id: created.id }) });
 
     expect(response.status).toBe(404);
   });
@@ -135,37 +155,38 @@ describe("DELETE /api/v1/studios/:id (handleStudiosDelete) — STUDIO_HAS_ACTIVE
   it("deduplicates blocking books (one row per book even with multiple active chapters)", async () => {
     const db = getTestDb();
     const { studio: created } = await createTestStudio(db, { name: "Multi Capítulos" });
-    const { book } = await createTestBook(db, {
+    const { book: createdBook } = await createTestBook(db, {
       studioId: created.id,
       title: "Livro Multi",
     });
-    await createTestChapter(db, { bookId: book.id, number: 1, status: "pending" });
-    await createTestChapter(db, { bookId: book.id, number: 2, status: "editing" });
-    await createTestChapter(db, { bookId: book.id, number: 3, status: "reviewing" });
+    await createTestChapter(db, { bookId: createdBook.id, number: 1, status: "pending" });
+    await createTestChapter(db, { bookId: createdBook.id, number: 2, status: "editing" });
+    await createTestChapter(db, { bookId: createdBook.id, number: 3, status: "reviewing" });
 
-    const response = await handleStudiosDelete(createDeps(), { id: created.id });
+    const DELETE = buildDelete(session);
+    const response = await DELETE(makeRequest(), { params: Promise.resolve({ id: created.id }) });
 
     expect(response.status).toBe(409);
     const body = (await response.json()) as {
       error: { details: { books: Array<{ id: string; title: string }> } };
     };
     expect(body.error.details.books).toHaveLength(1);
-    expect(body.error.details.books[0]?.id).toBe(book.id);
+    expect(body.error.details.books[0]?.id).toBe(createdBook.id);
   });
 
   it("preserves the soft-deleted studio in book-detail history (historical book still resolves the studio)", async () => {
     const db = getTestDb();
     const { studio: created } = await createTestStudio(db, { name: "Histórico" });
-    const { book } = await createTestBook(db, {
+    const { book: createdBook } = await createTestBook(db, {
       studioId: created.id,
       title: "Livro Histórico",
     });
-    await createTestChapter(db, { bookId: book.id, number: 1, status: "paid" });
+    await createTestChapter(db, { bookId: createdBook.id, number: 1, status: "paid" });
 
-    const response = await handleStudiosDelete(createDeps(), { id: created.id });
+    const DELETE = buildDelete(session);
+    const response = await DELETE(makeRequest(), { params: Promise.resolve({ id: created.id }) });
     expect(response.status).toBe(204);
 
-    // findByIdIncludingDeleted still returns the studio (to resolve book history)
     const repo = new DrizzleStudioRepository(db);
     const stillResolvable = await repo.findByIdIncludingDeleted(created.id);
     expect(stillResolvable?.id).toBe(created.id);

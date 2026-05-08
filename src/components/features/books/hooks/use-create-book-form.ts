@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { type UseFormReturn, useWatch } from "react-hook-form";
 import { toast } from "sonner";
-import type { ApiErrorBody } from "@/lib/api/error-response";
+import { apiFetch } from "@/lib/api/api-fetch";
 import type { Studio } from "@/lib/domain/studio";
 import type { CreateBookInput } from "@/lib/schemas/book";
 import type { CreatedBook } from "../book-create-dialog";
@@ -99,61 +99,54 @@ export function useCreateBookForm({
   async function onSubmit(values: CreateBookInput) {
     const payload =
       inlineStudioId && inlineStudioId === values.studioId ? { ...values, inlineStudioId } : values;
-    const response = await fetch("/api/v1/books", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    if (response.status === 201) {
-      const body = (await response.json()) as {
-        data: {
-          readonly id: string;
-          readonly title: string;
-          readonly studioId: string;
-          readonly pricePerHourCents: number;
-          readonly chapters: ReadonlyArray<{ readonly id: string; readonly number: number }>;
-        };
+    const result = await apiFetch<{
+      data: {
+        readonly id: string;
+        readonly title: string;
+        readonly studioId: string;
+        readonly pricePerHourCents: number;
+        readonly chapters: ReadonlyArray<{ readonly id: string; readonly number: number }>;
       };
-      const studio = studioOptions.find((s) => s.id === body.data.studioId);
+    }>("/api/v1/books", { method: "POST", body: payload });
+
+    if (result.ok) {
+      const studio = studioOptions.find((s) => s.id === result.data.data.studioId);
       const created: CreatedBook = {
-        id: body.data.id,
-        title: body.data.title,
-        studio: { id: body.data.studioId, name: studio?.name ?? "" },
-        pricePerHourCents: body.data.pricePerHourCents,
-        chapters: body.data.chapters,
+        id: result.data.data.id,
+        title: result.data.data.title,
+        studio: { id: result.data.data.studioId, name: studio?.name ?? "" },
+        pricePerHourCents: result.data.data.pricePerHourCents,
+        chapters: result.data.data.chapters,
       };
       resetState();
       onCreated(created);
       return;
     }
 
-    if (response.status === 422) {
-      const body = (await response.json()) as ApiErrorBody;
-      if (body.error.code === "STUDIO_NOT_FOUND") {
-        form.setError("studioId", { message: "Estúdio não encontrado ou arquivado." });
-        return;
-      }
-      if (body.error.code === "INLINE_STUDIO_INVALID") {
-        form.setError("studioId", {
-          message: "Estúdio inline inválido. Selecione outro estúdio.",
-        });
-        return;
-      }
-      for (const detail of body.error.details ?? []) {
-        if (detail.field && detail.field in values) {
-          form.setError(detail.field as keyof CreateBookInput, { message: detail.message });
+    if (result.kind === "field-errors") {
+      for (const [field, message] of Object.entries(result.fields)) {
+        if (field in values) {
+          form.setError(field as keyof CreateBookInput, { message });
         }
       }
       return;
     }
 
-    if (response.status === 409) {
-      form.setError("title", { message: "Já existe um livro com este título neste estúdio." });
-      return;
+    if (result.kind === "api-error") {
+      if (result.code === "STUDIO_REFERENCE_INVALID" || result.code === "STUDIO_NOT_FOUND") {
+        form.setError("studioId", { message: "Estúdio não encontrado ou arquivado." });
+        return;
+      }
+      if (result.code === "INLINE_STUDIO_INVALID") {
+        form.setError("studioId", {
+          message: "Estúdio inline inválido. Selecione outro estúdio.",
+        });
+        return;
+      }
+      if (result.code === "TITLE_ALREADY_IN_USE") {
+        form.setError("title", { message: "Já existe um livro com este título neste estúdio." });
+      }
     }
-
-    toast.error("Não foi possível criar o livro. Tente novamente.");
   }
 
   return {

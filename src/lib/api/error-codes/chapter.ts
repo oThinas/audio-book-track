@@ -1,0 +1,36 @@
+import type { ErrorCatalogEntry } from "./types";
+
+export const chapterCodes = {
+  CHAPTER_NOT_FOUND: {
+    status: 404,
+    message: "Capítulo não encontrado.",
+  },
+  CHAPTER_NUMBER_ALREADY_IN_USE: {
+    status: 409,
+    message: "Já existe um capítulo com esse número neste livro.",
+  },
+  CHAPTER_PAID_LOCKED: {
+    status: 409,
+    message: "Este capítulo já está pago — narrador, editor e duração não podem ser alterados.",
+  },
+  CHAPTER_INVALID_TRANSITION: {
+    status: 422,
+    message: "Transição de status não permitida para este capítulo.",
+  },
+  CHAPTER_NARRATOR_REQUIRED: {
+    status: 422,
+    message: "É preciso atribuir um narrador antes de iniciar a edição.",
+  },
+  CHAPTER_EDITOR_OR_SECONDS_REQUIRED: {
+    status: 422,
+    message: "Editor e duração editada (acima de zero) são necessários para enviar para revisão.",
+  },
+  CHAPTER_REVERSION_CONFIRMATION_REQUIRED: {
+    status: 422,
+    message: "Reverter de pago para concluído exige confirmação explícita.",
+  },
+  CHAPTERS_NOT_IN_BOOK: {
+    status: 422,
+    message: "Um ou mais capítulos não pertencem a este livro.",
+  },
+} satisfies Readonly<Record<string, ErrorCatalogEntry>>;

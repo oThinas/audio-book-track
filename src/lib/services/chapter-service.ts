@@ -11,8 +11,8 @@ import {
   ChapterReversionConfirmationRequiredError,
   ChaptersNotInBookError,
 } from "@/lib/errors/chapter-errors";
-import { EditorNotFoundError } from "@/lib/errors/editor-errors";
-import { NarratorNotFoundError } from "@/lib/errors/narrator-errors";
+import { EditorReferenceInvalidError } from "@/lib/errors/editor-errors";
+import { NarratorReferenceInvalidError } from "@/lib/errors/narrator-errors";
 import type { BookRepository, RepositoryTx } from "@/lib/repositories/book-repository";
 import type { ChapterRepository } from "@/lib/repositories/chapter-repository";
 import type { EditorRepository } from "@/lib/repositories/editor-repository";
@@ -228,13 +228,13 @@ export class ChapterService {
     if (input.narratorId !== undefined && input.narratorId !== null) {
       const narrator = await this.deps.narratorRepo.findById(input.narratorId);
       if (!narrator) {
-        throw new NarratorNotFoundError(input.narratorId);
+        throw new NarratorReferenceInvalidError(input.narratorId);
       }
     }
     if (input.editorId !== undefined && input.editorId !== null) {
       const editor = await this.deps.editorRepo.findById(input.editorId);
       if (!editor) {
-        throw new EditorNotFoundError(input.editorId);
+        throw new EditorReferenceInvalidError(input.editorId);
       }
     }
   }

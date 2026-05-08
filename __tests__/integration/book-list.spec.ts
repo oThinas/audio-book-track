@@ -1,9 +1,10 @@
 import { getTestDb } from "@tests/helpers/db";
 import { createTestBook, createTestChapter, createTestStudio } from "@tests/helpers/factories";
+import { wrapForTest } from "@tests/helpers/route-context";
 import { SavepointUnitOfWork } from "@tests/helpers/test-unit-of-work";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { handleBooksList } from "@/app/api/v1/books/route";
+import { type BooksRouteDeps, handleBooksList } from "@/app/api/v1/books/route";
 import { book } from "@/lib/db/schema";
 import { DrizzleBookRepository } from "@/lib/repositories/drizzle/drizzle-book-repository";
 import { DrizzleChapterRepository } from "@/lib/repositories/drizzle/drizzle-chapter-repository";
@@ -29,28 +30,25 @@ describe("DrizzleBookRepository.listSummaries (SQL aggregation)", () => {
       name: "Sonora",
       defaultHourlyRateCents: 7500,
     });
-    const { book } = await createTestBook(db, {
+    const { book: createdBook } = await createTestBook(db, {
       title: "Dom Casmurro",
       studioId: studio.id,
       pricePerHourCents: 7500,
     });
-    // 1h completed → 7500 cents
     await createTestChapter(db, {
-      bookId: book.id,
+      bookId: createdBook.id,
       number: 1,
       status: "completed",
       editedSeconds: 3600,
     });
-    // 2h paid → 15000 cents
     await createTestChapter(db, {
-      bookId: book.id,
+      bookId: createdBook.id,
       number: 2,
       status: "paid",
       editedSeconds: 7200,
     });
-    // 0h pending → 0
     await createTestChapter(db, {
-      bookId: book.id,
+      bookId: createdBook.id,
       number: 3,
       status: "pending",
       editedSeconds: 0,
@@ -61,7 +59,7 @@ describe("DrizzleBookRepository.listSummaries (SQL aggregation)", () => {
 
     expect(summaries).toHaveLength(1);
     const [summary] = summaries;
-    expect(summary.id).toBe(book.id);
+    expect(summary.id).toBe(createdBook.id);
     expect(summary.title).toBe("Dom Casmurro");
     expect(summary.studio).toEqual({ id: studio.id, name: "Sonora" });
     expect(summary.pricePerHourCents).toBe(7500);
@@ -72,12 +70,12 @@ describe("DrizzleBookRepository.listSummaries (SQL aggregation)", () => {
 
   it("returns totalChapters=0 and totalEarningsCents=0 for a book with no chapters (LEFT JOIN edge case)", async () => {
     const db = getTestDb();
-    const { book } = await createTestBook(db, { pricePerHourCents: 7500 });
+    const { book: createdBook } = await createTestBook(db, { pricePerHourCents: 7500 });
 
     const repo = createRepo();
     const [summary] = await repo.listSummaries();
 
-    expect(summary.id).toBe(book.id);
+    expect(summary.id).toBe(createdBook.id);
     expect(summary.totalChapters).toBe(0);
     expect(summary.completedChapters).toBe(0);
     expect(summary.totalEarningsCents).toBe(0);
@@ -89,9 +87,12 @@ describe("DrizzleBookRepository.listSummaries (SQL aggregation)", () => {
       name: "Legacy Studio",
       defaultHourlyRateCents: 7500,
     });
-    const { book } = await createTestBook(db, { studioId: studio.id, pricePerHourCents: 7500 });
+    const { book: createdBook } = await createTestBook(db, {
+      studioId: studio.id,
+      pricePerHourCents: 7500,
+    });
     await createTestChapter(db, {
-      bookId: book.id,
+      bookId: createdBook.id,
       number: 1,
       status: "paid",
       editedSeconds: 3600,
@@ -107,8 +108,6 @@ describe("DrizzleBookRepository.listSummaries (SQL aggregation)", () => {
   it("orders results by createdAt DESC", async () => {
     const db = getTestDb();
     const { studio } = await createTestStudio(db);
-    // explicit createdAt: avoids depending on timing-based ordering — under BEGIN/ROLLBACK
-    // every INSERT receives the same now() (transaction-start timestamp).
     const [older] = await db
       .insert(book)
       .values({
@@ -137,17 +136,15 @@ describe("DrizzleBookRepository.listSummaries (SQL aggregation)", () => {
 
   it("rounds earnings per-row before summing (matches JS formula in data-model)", async () => {
     const db = getTestDb();
-    const { book } = await createTestBook(db, { pricePerHourCents: 7500 });
-    // 3601s × 7500 / 3600 = 7502.08… → 7502
+    const { book: createdBook } = await createTestBook(db, { pricePerHourCents: 7500 });
     await createTestChapter(db, {
-      bookId: book.id,
+      bookId: createdBook.id,
       number: 1,
       status: "paid",
       editedSeconds: 3601,
     });
-    // 3599s × 7500 / 3600 = 7497.91… → 7498
     await createTestChapter(db, {
-      bookId: book.id,
+      bookId: createdBook.id,
       number: 2,
       status: "paid",
       editedSeconds: 3599,
@@ -159,7 +156,7 @@ describe("DrizzleBookRepository.listSummaries (SQL aggregation)", () => {
 });
 
 describe("GET /api/v1/books (handleBooksList, real DB)", () => {
-  function createRouteDeps(session: { user: { id: string } } | null) {
+  function buildTestRouteDeps(): BooksRouteDeps {
     const db = getTestDb();
     const service = new BookService({
       bookRepo: new DrizzleBookRepository(db),
@@ -169,15 +166,24 @@ describe("GET /api/v1/books (handleBooksList, real DB)", () => {
       editorRepo: new DrizzleEditorRepository(db),
       uow: new SavepointUnitOfWork(db),
     });
-    return {
-      getSession: vi.fn().mockResolvedValue(session),
-      createService: vi.fn().mockReturnValue(service),
-      headersFn: vi.fn().mockResolvedValue(new Headers()),
-    };
+    return { createService: () => service };
+  }
+
+  function buildGet(session: { user: { id: string } } | null) {
+    return wrapForTest((req, ctx) => handleBooksList(req, ctx, buildTestRouteDeps()), {
+      session,
+    });
+  }
+
+  const ROUTE_CTX = { params: Promise.resolve({}) };
+
+  function makeRequest(): Request {
+    return new Request("http://test.local/api/v1/books");
   }
 
   it("returns 401 when there is no session", async () => {
-    const response = await handleBooksList(createRouteDeps(null));
+    const GET = buildGet(null);
+    const response = await GET(makeRequest(), ROUTE_CTX);
     const body = await response.json();
 
     expect(response.status).toBe(401);
@@ -191,9 +197,6 @@ describe("GET /api/v1/books (handleBooksList, real DB)", () => {
       defaultHourlyRateCents: 7500,
     });
 
-    // Under BEGIN/ROLLBACK every insert shares the same transaction timestamp,
-    // so explicit createdAt is required to test ordering. Use direct inserts
-    // instead of factories (which do not expose createdAt).
     const [bookA] = await db
       .insert(book)
       .values({
@@ -248,7 +251,8 @@ describe("GET /api/v1/books (handleBooksList, real DB)", () => {
       updatedAt: new Date("2026-03-01T00:00:00Z"),
     });
 
-    const response = await handleBooksList(createRouteDeps({ user: { id: crypto.randomUUID() } }));
+    const GET = buildGet({ user: { id: crypto.randomUUID() } });
+    const response = await GET(makeRequest(), ROUTE_CTX);
     const body = (await response.json()) as {
       data: Array<{
         id: string;
@@ -262,19 +266,16 @@ describe("GET /api/v1/books (handleBooksList, real DB)", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("Cache-Control")).toBe("no-store");
     expect(body.data).toHaveLength(3);
-    // ordered by createdAt DESC
     expect(body.data.map((b) => b.title)).toEqual(["Gamma", "Beta", "Alpha"]);
 
     const alpha = body.data.find((b) => b.title === "Alpha") as (typeof body.data)[number];
     expect(alpha.totalChapters).toBe(3);
     expect(alpha.completedChapters).toBe(2);
-    // (7200 × 7500 / 3600) + (3600 × 7500 / 3600) + 0 = 15000 + 7500 = 22500
     expect(alpha.totalEarningsCents).toBe(22_500);
 
     const beta = body.data.find((b) => b.title === "Beta") as (typeof body.data)[number];
     expect(beta.totalChapters).toBe(1);
     expect(beta.completedChapters).toBe(1);
-    // 3600 × 6000 / 3600 = 6000
     expect(beta.totalEarningsCents).toBe(6_000);
 
     const gamma = body.data.find((b) => b.title === "Gamma") as (typeof body.data)[number];

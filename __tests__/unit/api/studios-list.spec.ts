@@ -1,18 +1,19 @@
 import { InMemoryStudioRepository } from "@tests/repositories/in-memory-studio-repository";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import { handleStudiosList } from "@/app/api/v1/studios/route";
+import type { AuthenticatedContext } from "@/lib/api/with-error-handler";
 import { StudioService } from "@/lib/services/studio-service";
 
-function createDeps(options: { session: { user: { id: string } } | null; service: StudioService }) {
+function buildContext(): AuthenticatedContext<Record<string, never>> {
   return {
-    getSession: vi.fn().mockResolvedValue(options.session),
-    createService: vi.fn().mockReturnValue(options.service),
-    headersFn: vi.fn().mockResolvedValue(new Headers()),
+    params: Promise.resolve({}),
+    session: { user: { id: "u1" } },
+    requestId: "test-request-id",
   };
 }
 
-describe("GET /api/v1/studios (handleStudiosList)", () => {
+describe("handleStudiosList", () => {
   let repo: InMemoryStudioRepository;
   let service: StudioService;
 
@@ -21,22 +22,12 @@ describe("GET /api/v1/studios (handleStudiosList)", () => {
     service = new StudioService(repo);
   });
 
-  it("returns 401 when there is no session", async () => {
-    const deps = createDeps({ session: null, service });
-
-    const response = await handleStudiosList(deps);
-    const body = await response.json();
-
-    expect(response.status).toBe(401);
-    expect(body).toEqual({
-      error: { code: "UNAUTHORIZED", message: expect.any(String) },
-    });
-  });
-
   it("returns 200 with empty array when no studios exist", async () => {
-    const deps = createDeps({ session: { user: { id: "user-1" } }, service });
-
-    const response = await handleStudiosList(deps);
+    const response = await handleStudiosList(
+      new Request("http://localhost/api/v1/studios"),
+      buildContext(),
+      { createService: () => service },
+    );
     const body = await response.json();
 
     expect(response.status).toBe(200);
@@ -47,9 +38,11 @@ describe("GET /api/v1/studios (handleStudiosList)", () => {
     const first = await repo.create({ name: "Sonora", defaultHourlyRateCents: 8500 });
     const second = await repo.create({ name: "Voz & Arte", defaultHourlyRateCents: 9050 });
 
-    const deps = createDeps({ session: { user: { id: "user-1" } }, service });
-
-    const response = await handleStudiosList(deps);
+    const response = await handleStudiosList(
+      new Request("http://localhost/api/v1/studios"),
+      buildContext(),
+      { createService: () => service },
+    );
     const body = (await response.json()) as {
       data: Array<{ id: string; name: string; defaultHourlyRateCents: number }>;
     };
@@ -63,9 +56,11 @@ describe("GET /api/v1/studios (handleStudiosList)", () => {
   });
 
   it("sets Cache-Control: no-store header", async () => {
-    const deps = createDeps({ session: { user: { id: "user-1" } }, service });
-
-    const response = await handleStudiosList(deps);
+    const response = await handleStudiosList(
+      new Request("http://localhost/api/v1/studios"),
+      buildContext(),
+      { createService: () => service },
+    );
 
     expect(response.headers.get("Cache-Control")).toBe("no-store");
   });

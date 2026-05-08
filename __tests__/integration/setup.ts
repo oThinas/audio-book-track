@@ -3,6 +3,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import type { PoolClient } from "pg";
 import { afterAll, afterEach, beforeEach } from "vitest";
 import * as schema from "@/lib/db/schema";
+import "@/lib/schemas/zod-bootstrap";
 
 let client: PoolClient;
 

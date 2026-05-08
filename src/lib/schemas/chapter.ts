@@ -16,29 +16,29 @@ const chapterStatusSchema = z.enum([
 export const updateChapterSchema = z
   .object({
     status: chapterStatusSchema.optional(),
-    narratorId: z.string().uuid("narratorId deve ser UUID válido").nullable().optional(),
-    editorId: z.string().uuid("editorId deve ser UUID válido").nullable().optional(),
+    narratorId: z.uuid("Narrador inválido.").nullable().optional(),
+    editorId: z.uuid("Editor inválido.").nullable().optional(),
     editedSeconds: z
-      .number({ error: "editedSeconds deve ser número" })
-      .int("editedSeconds deve ser inteiro (segundos)")
-      .min(EDITED_SECONDS_MIN, "editedSeconds não pode ser negativo")
-      .max(EDITED_SECONDS_MAX, `editedSeconds deve ser no máximo ${EDITED_SECONDS_MAX}`)
+      .number({ error: "Tempo editado deve ser um número." })
+      .int("Tempo editado deve ser inteiro (em segundos).")
+      .min(EDITED_SECONDS_MIN, "Tempo editado não pode ser negativo.")
+      .max(EDITED_SECONDS_MAX, `Tempo editado deve ser no máximo ${EDITED_SECONDS_MAX} segundos.`)
       .optional(),
     confirmReversion: z.boolean().optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
-    message: "Pelo menos um campo deve ser fornecido",
+    message: "Pelo menos um campo deve ser informado.",
   });
 
 export const bulkDeleteChaptersSchema = z.object({
   chapterIds: z
-    .array(z.string().uuid("chapterId deve ser UUID válido"))
-    .min(1, "Ao menos 1 capítulo deve ser informado")
-    .max(BULK_DELETE_MAX, `Máximo de ${BULK_DELETE_MAX} capítulos por requisição`),
+    .array(z.uuid("Capítulo inválido."))
+    .min(1, "Ao menos 1 capítulo deve ser informado.")
+    .max(BULK_DELETE_MAX, `Máximo de ${BULK_DELETE_MAX} capítulos por requisição.`),
 });
 
 export const chapterIdParamsSchema = z.object({
-  id: z.string().uuid("id deve ser UUID válido"),
+  id: z.uuid("Identificador inválido."),
 });
 
 export type UpdateChapterInput = z.infer<typeof updateChapterSchema>;

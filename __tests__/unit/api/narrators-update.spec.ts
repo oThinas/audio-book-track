@@ -1,17 +1,16 @@
 import { InMemoryNarratorRepository } from "@tests/repositories/in-memory-narrator-repository";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import { handleNarratorsUpdate } from "@/app/api/v1/narrators/[id]/route";
+import type { AuthenticatedContext } from "@/lib/api/with-error-handler";
+import { NarratorNameAlreadyInUseError, NarratorNotFoundError } from "@/lib/errors/narrator-errors";
 import { NarratorService } from "@/lib/services/narrator-service";
 
-function createDeps(options: {
-  session: { user: { id: string } } | null;
-  service: NarratorService;
-}) {
+function buildContext(id: string): AuthenticatedContext<{ id: string }> {
   return {
-    getSession: vi.fn().mockResolvedValue(options.session),
-    createService: vi.fn().mockReturnValue(options.service),
-    headersFn: vi.fn().mockResolvedValue(new Headers()),
+    params: Promise.resolve({ id }),
+    session: { user: { id: "u1" } },
+    requestId: "test-request-id",
   };
 }
 
@@ -23,7 +22,9 @@ function buildRequest(body: unknown, id: string): Request {
   });
 }
 
-describe("PATCH /api/v1/narrators/:id (handleNarratorsUpdate)", () => {
+const noBlockingDeps = () => ({ getActiveBooks: async () => [] });
+
+describe("handleNarratorsUpdate", () => {
   let repo: InMemoryNarratorRepository;
   let service: NarratorService;
 
@@ -32,62 +33,35 @@ describe("PATCH /api/v1/narrators/:id (handleNarratorsUpdate)", () => {
     service = new NarratorService(repo);
   });
 
-  it("returns 401 when there is no session", async () => {
-    const deps = createDeps({ session: null, service });
-    const request = buildRequest({ name: "Novo Nome" }, "some-id");
-
-    const response = await handleNarratorsUpdate(request, deps, { id: "some-id" });
-    const body = await response.json();
-
-    expect(response.status).toBe(401);
-    expect(body.error.code).toBe("UNAUTHORIZED");
+  it("throws NarratorNotFoundError when the narrator does not exist", async () => {
+    await expect(
+      handleNarratorsUpdate(buildRequest({ name: "Novo" }, "missing"), buildContext("missing"), {
+        createService: () => service,
+        createSoftDeleteDeps: noBlockingDeps,
+      }),
+    ).rejects.toBeInstanceOf(NarratorNotFoundError);
   });
 
-  it("returns 404 when the narrator does not exist", async () => {
-    const deps = createDeps({ session: { user: { id: "u1" } }, service });
-    const request = buildRequest({ name: "Novo Nome" }, "missing");
-
-    const response = await handleNarratorsUpdate(request, deps, { id: "missing" });
-    const body = await response.json();
-
-    expect(response.status).toBe(404);
-    expect(body.error.code).toBe("NARRATOR_NOT_FOUND");
-  });
-
-  it("returns 422 with details when body is invalid", async () => {
-    const existing = await repo.create({ name: "Original" });
-    const deps = createDeps({ session: { user: { id: "u1" } }, service });
-    const request = buildRequest({ name: "a" }, existing.id);
-
-    const response = await handleNarratorsUpdate(request, deps, { id: existing.id });
-    const body = (await response.json()) as {
-      error: { code: string; details: Array<{ field: string; message: string }> };
-    };
-
-    expect(response.status).toBe(422);
-    expect(body.error.code).toBe("VALIDATION_ERROR");
-    expect(body.error.details.some((d) => d.field === "name")).toBe(true);
-  });
-
-  it("returns 409 when the new name is already in use by another narrator", async () => {
+  it("throws NarratorNameAlreadyInUseError when renaming to another narrator's name", async () => {
     const first = await repo.create({ name: "First" });
     await repo.create({ name: "Second" });
-    const deps = createDeps({ session: { user: { id: "u1" } }, service });
-    const request = buildRequest({ name: "Second" }, first.id);
 
-    const response = await handleNarratorsUpdate(request, deps, { id: first.id });
-    const body = await response.json();
-
-    expect(response.status).toBe(409);
-    expect(body.error.code).toBe("NAME_ALREADY_IN_USE");
+    await expect(
+      handleNarratorsUpdate(buildRequest({ name: "Second" }, first.id), buildContext(first.id), {
+        createService: () => service,
+        createSoftDeleteDeps: noBlockingDeps,
+      }),
+    ).rejects.toBeInstanceOf(NarratorNameAlreadyInUseError);
   });
 
   it("returns 200 when PATCH keeps the same name (idempotent)", async () => {
     const existing = await repo.create({ name: "Mesmo" });
-    const deps = createDeps({ session: { user: { id: "u1" } }, service });
-    const request = buildRequest({ name: "Mesmo" }, existing.id);
 
-    const response = await handleNarratorsUpdate(request, deps, { id: existing.id });
+    const response = await handleNarratorsUpdate(
+      buildRequest({ name: "Mesmo" }, existing.id),
+      buildContext(existing.id),
+      { createService: () => service, createSoftDeleteDeps: noBlockingDeps },
+    );
     const body = (await response.json()) as { data: { id: string; name: string } };
 
     expect(response.status).toBe(200);
@@ -97,10 +71,12 @@ describe("PATCH /api/v1/narrators/:id (handleNarratorsUpdate)", () => {
 
   it("returns 200 updating the name (with trim)", async () => {
     const existing = await repo.create({ name: "Original" });
-    const deps = createDeps({ session: { user: { id: "u1" } }, service });
-    const request = buildRequest({ name: "  Novo Nome  " }, existing.id);
 
-    const response = await handleNarratorsUpdate(request, deps, { id: existing.id });
+    const response = await handleNarratorsUpdate(
+      buildRequest({ name: "  Novo Nome  " }, existing.id),
+      buildContext(existing.id),
+      { createService: () => service, createSoftDeleteDeps: noBlockingDeps },
+    );
     const body = (await response.json()) as { data: { id: string; name: string } };
 
     expect(response.status).toBe(200);
@@ -112,10 +88,12 @@ describe("PATCH /api/v1/narrators/:id (handleNarratorsUpdate)", () => {
 
   it("returns 200 and silently ignores an extra email field", async () => {
     const existing = await repo.create({ name: "Original" });
-    const deps = createDeps({ session: { user: { id: "u1" } }, service });
-    const request = buildRequest({ name: "Atualizado", email: "legacy@example.com" }, existing.id);
 
-    const response = await handleNarratorsUpdate(request, deps, { id: existing.id });
+    const response = await handleNarratorsUpdate(
+      buildRequest({ name: "Atualizado", email: "legacy@example.com" }, existing.id),
+      buildContext(existing.id),
+      { createService: () => service, createSoftDeleteDeps: noBlockingDeps },
+    );
     const body = (await response.json()) as { data: { id: string; name: string } };
 
     expect(response.status).toBe(200);

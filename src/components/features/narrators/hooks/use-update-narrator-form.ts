@@ -2,8 +2,7 @@
 
 import { type RefObject, useEffect, useRef } from "react";
 import type { UseFormReturn } from "react-hook-form";
-import { toast } from "sonner";
-import type { ApiErrorBody } from "@/lib/api/error-response";
+import { apiFetch } from "@/lib/api/api-fetch";
 import type { Narrator, NarratorFormValues } from "@/lib/domain/narrator";
 
 export interface UseUpdateNarratorFormArgs {
@@ -32,40 +31,30 @@ export function useUpdateNarratorForm({
   }, []);
 
   async function onSubmit(values: NarratorFormValues) {
-    const response = await fetch(`/api/v1/narrators/${narratorId}`, {
+    const result = await apiFetch<{ data: Narrator }>(`/api/v1/narrators/${narratorId}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values),
+      body: values,
     });
 
-    if (response.status === 200) {
-      const body = (await response.json()) as { data: Narrator };
-      onUpdated(body.data);
+    if (result.ok) {
+      onUpdated(result.data.data);
       return;
     }
 
-    if (response.status === 422) {
-      const body = (await response.json()) as ApiErrorBody;
-      for (const detail of body.error.details ?? []) {
-        if (detail.field === "name") {
-          form.setError("name", { message: detail.message });
-        }
+    if (result.kind === "field-errors" && result.fields.name) {
+      form.setError("name", { message: result.fields.name });
+      return;
+    }
+
+    if (result.kind === "api-error") {
+      if (result.code === "NAME_ALREADY_IN_USE") {
+        form.setError("name", { message: "Nome já cadastrado." });
+        return;
       }
-      return;
+      if (result.code === "NARRATOR_NOT_FOUND") {
+        onNotFound?.();
+      }
     }
-
-    if (response.status === 409) {
-      form.setError("name", { message: "Nome já cadastrado" });
-      return;
-    }
-
-    if (response.status === 404) {
-      toast.error("Narrador não existe mais.");
-      onNotFound?.();
-      return;
-    }
-
-    toast.error("Não foi possível atualizar o narrador. Tente novamente.");
   }
 
   return {

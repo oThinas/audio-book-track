@@ -6,10 +6,11 @@ import {
   createTestNarrator,
   createTestStudio,
 } from "@tests/helpers/factories";
+import { wrapForTest } from "@tests/helpers/route-context";
 import { SavepointUnitOfWork } from "@tests/helpers/test-unit-of-work";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
-import { handleBookDetail } from "@/app/api/v1/books/[id]/route";
+import { type BookByIdRouteDeps, handleBookDetail } from "@/app/api/v1/books/[id]/route";
 import { DrizzleBookRepository } from "@/lib/repositories/drizzle/drizzle-book-repository";
 import { DrizzleChapterRepository } from "@/lib/repositories/drizzle/drizzle-chapter-repository";
 import { DrizzleEditorRepository } from "@/lib/repositories/drizzle/drizzle-editor-repository";
@@ -17,7 +18,7 @@ import { DrizzleNarratorRepository } from "@/lib/repositories/drizzle/drizzle-na
 import { DrizzleStudioRepository } from "@/lib/repositories/drizzle/drizzle-studio-repository";
 import { BookService } from "@/lib/services/book-service";
 
-function createRouteDeps(session: { user: { id: string } } | null) {
+function buildTestRouteDeps(): BookByIdRouteDeps {
   const db = getTestDb();
   const service = new BookService({
     bookRepo: new DrizzleBookRepository(db),
@@ -27,11 +28,18 @@ function createRouteDeps(session: { user: { id: string } } | null) {
     editorRepo: new DrizzleEditorRepository(db),
     uow: new SavepointUnitOfWork(db),
   });
-  return {
-    getSession: vi.fn().mockResolvedValue(session),
-    createService: vi.fn().mockReturnValue(service),
-    headersFn: vi.fn().mockResolvedValue(new Headers()),
-  };
+  return { createService: () => service };
+}
+
+function buildGet(session: { user: { id: string } } | null) {
+  return wrapForTest<{ id: string }>(
+    (req, ctx) => handleBookDetail(req, ctx, buildTestRouteDeps()),
+    { session },
+  );
+}
+
+function makeRequest(): Request {
+  return new Request("http://test.local/api/v1/books/x");
 }
 
 describe("GET /api/v1/books/:id (handleBookDetail)", () => {
@@ -42,20 +50,23 @@ describe("GET /api/v1/books/:id (handleBookDetail)", () => {
   });
 
   it("returns 401 when there is no session", async () => {
-    const response = await handleBookDetail(crypto.randomUUID(), createRouteDeps(null));
+    const GET = buildGet(null);
+    const response = await GET(makeRequest(), {
+      params: Promise.resolve({ id: crypto.randomUUID() }),
+    });
     expect(response.status).toBe(401);
     const body = await response.json();
     expect(body.error.code).toBe("UNAUTHORIZED");
   });
 
   it("returns 404 when the book does not exist", async () => {
-    const response = await handleBookDetail(
-      crypto.randomUUID(),
-      createRouteDeps({ user: { id: userId } }),
-    );
+    const GET = buildGet({ user: { id: userId } });
+    const response = await GET(makeRequest(), {
+      params: Promise.resolve({ id: crypto.randomUUID() }),
+    });
     expect(response.status).toBe(404);
     const body = await response.json();
-    expect(body.error.code).toBe("NOT_FOUND");
+    expect(body.error.code).toBe("BOOK_NOT_FOUND");
   });
 
   it("returns 200 with the full book detail payload", async () => {
@@ -96,7 +107,8 @@ describe("GET /api/v1/books/:id (handleBookDetail)", () => {
       editedSeconds: 0,
     });
 
-    const response = await handleBookDetail(book.id, createRouteDeps({ user: { id: userId } }));
+    const GET = buildGet({ user: { id: userId } });
+    const response = await GET(makeRequest(), { params: Promise.resolve({ id: book.id }) });
     expect(response.status).toBe(200);
     expect(response.headers.get("Cache-Control")).toBe("no-store");
 
@@ -165,7 +177,8 @@ describe("GET /api/v1/books/:id (handleBookDetail)", () => {
 
     await new DrizzleStudioRepository(db).softDelete(studio.id);
 
-    const response = await handleBookDetail(book.id, createRouteDeps({ user: { id: userId } }));
+    const GET = buildGet({ user: { id: userId } });
+    const response = await GET(makeRequest(), { params: Promise.resolve({ id: book.id }) });
     expect(response.status).toBe(200);
     const body = (await response.json()) as {
       data: { studio: { id: string; name: string } };

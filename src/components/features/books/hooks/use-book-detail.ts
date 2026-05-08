@@ -2,8 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { toast } from "sonner";
 import type { ChapterRowData } from "@/components/features/chapters/chapters-table";
+import { apiFetch } from "@/lib/api/api-fetch";
 import type { BookStatus } from "@/lib/domain/book";
 import { computeBookStatus } from "@/lib/domain/book-status";
 import type { ChapterStatus } from "@/lib/domain/chapter";
@@ -154,19 +154,12 @@ export function useBookDetail(book: BookDetailData): UseBookDetailReturn {
     if (selectedIds.size === 0) return;
     setBulkDeleting(true);
     try {
-      const response = await fetch(`/api/v1/books/${book.id}/chapters/bulk-delete`, {
+      const result = await apiFetch<null>(`/api/v1/books/${book.id}/chapters/bulk-delete`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chapterIds: Array.from(selectedIds) }),
+        body: { chapterIds: Array.from(selectedIds) },
       });
-      if (response.status !== 204) {
-        const body = (await response.json().catch(() => null)) as {
-          error?: { message?: string };
-        } | null;
-        toast.error(body?.error?.message ?? "Erro ao excluir capítulos.");
-        return;
-      }
-      const bookDeleted = response.headers.get("X-Book-Deleted") === "true";
+      if (!result.ok) return;
+      const bookDeleted = result.headers.get("X-Book-Deleted") === "true";
       if (bookDeleted) {
         router.push("/books");
         return;
@@ -181,8 +174,6 @@ export function useBookDetail(book: BookDetailData): UseBookDetailReturn {
       });
       setConfirmOpen(false);
       exitSelectionMode();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro de rede ao excluir capítulos.");
     } finally {
       setBulkDeleting(false);
     }

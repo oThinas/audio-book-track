@@ -12,14 +12,14 @@ export const editorFormSchema = z.object({
   name: z
     .string()
     .trim()
-    .min(2, "Nome deve ter no mínimo 2 caracteres")
-    .max(100, "Nome deve ter no máximo 100 caracteres"),
+    .min(2, "Nome deve ter no mínimo 2 caracteres.")
+    .max(100, "Nome deve ter no máximo 100 caracteres."),
   email: z
     .string()
     .trim()
-    .min(1, "E-mail é obrigatório")
-    .max(255, "E-mail deve ter no máximo 255 caracteres")
-    .email("E-mail inválido"),
+    .min(1, "E-mail é obrigatório.")
+    .max(255, "E-mail deve ter no máximo 255 caracteres.")
+    .pipe(z.email("E-mail inválido.")),
 });
 
 export const createEditorSchema = editorFormSchema;

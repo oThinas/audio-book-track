@@ -1,19 +1,22 @@
 import { InMemoryEditorRepository } from "@tests/repositories/in-memory-editor-repository";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import { handleEditorsDelete } from "@/app/api/v1/editors/[id]/route";
+import type { AuthenticatedContext } from "@/lib/api/with-error-handler";
+import { EditorNotFoundError } from "@/lib/errors/editor-errors";
 import { EditorService } from "@/lib/services/editor-service";
 
-function createDeps(options: { session: { user: { id: string } } | null; service: EditorService }) {
+function buildContext(id: string): AuthenticatedContext<{ id: string }> {
   return {
-    getSession: vi.fn().mockResolvedValue(options.session),
-    createService: vi.fn().mockReturnValue(options.service),
-    headersFn: vi.fn().mockResolvedValue(new Headers()),
-    createSoftDeleteDeps: () => ({ getActiveBooks: async () => [] }),
+    params: Promise.resolve({ id }),
+    session: { user: { id: "u1" } },
+    requestId: "test-request-id",
   };
 }
 
-describe("DELETE /api/v1/editors/:id (handleEditorsDelete)", () => {
+const noBlockingDeps = () => ({ getActiveBooks: async () => [] });
+
+describe("handleEditorsDelete", () => {
   let repo: InMemoryEditorRepository;
   let service: EditorService;
 
@@ -22,31 +25,27 @@ describe("DELETE /api/v1/editors/:id (handleEditorsDelete)", () => {
     service = new EditorService(repo);
   });
 
-  it("returns 401 when there is no session", async () => {
-    const deps = createDeps({ session: null, service });
+  it("throws EditorNotFoundError when the editor does not exist", async () => {
+    const request = new Request("http://localhost/api/v1/editors/missing", { method: "DELETE" });
 
-    const response = await handleEditorsDelete(deps, { id: "some-id" });
-    const body = await response.json();
-
-    expect(response.status).toBe(401);
-    expect(body.error.code).toBe("UNAUTHORIZED");
-  });
-
-  it("returns 404 when the editor does not exist", async () => {
-    const deps = createDeps({ session: { user: { id: "u1" } }, service });
-
-    const response = await handleEditorsDelete(deps, { id: "missing" });
-    const body = await response.json();
-
-    expect(response.status).toBe(404);
-    expect(body.error.code).toBe("EDITOR_NOT_FOUND");
+    await expect(
+      handleEditorsDelete(request, buildContext("missing"), {
+        createService: () => service,
+        createSoftDeleteDeps: noBlockingDeps,
+      }),
+    ).rejects.toBeInstanceOf(EditorNotFoundError);
   });
 
   it("returns 204 with no body and Cache-Control no-store on success", async () => {
     const existing = await repo.create({ name: "Delete Me", email: "del@s.com" });
-    const deps = createDeps({ session: { user: { id: "u1" } }, service });
+    const request = new Request(`http://localhost/api/v1/editors/${existing.id}`, {
+      method: "DELETE",
+    });
 
-    const response = await handleEditorsDelete(deps, { id: existing.id });
+    const response = await handleEditorsDelete(request, buildContext(existing.id), {
+      createService: () => service,
+      createSoftDeleteDeps: noBlockingDeps,
+    });
 
     expect(response.status).toBe(204);
     expect(response.headers.get("Cache-Control")).toBe("no-store");

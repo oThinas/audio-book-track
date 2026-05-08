@@ -1,48 +1,55 @@
-export class BookNotFoundError extends Error {
-  constructor(id: string) {
-    super(`Book not found: ${id}`);
+import { DomainError } from "./domain-error";
+
+export class BookNotFoundError extends DomainError {
+  readonly code = "BOOK_NOT_FOUND";
+  constructor(readonly id: string) {
+    super("Book not found");
     this.name = "BookNotFoundError";
   }
 }
 
-export class BookTitleAlreadyInUseError extends Error {
-  constructor(title: string, studioId: string) {
-    super(`Title already registered in studio ${studioId}: ${title}`);
+export class BookTitleAlreadyInUseError extends DomainError {
+  readonly code = "TITLE_ALREADY_IN_USE";
+  constructor(
+    readonly title: string,
+    readonly studioId: string,
+  ) {
+    super("Book title already in use");
     this.name = "BookTitleAlreadyInUseError";
   }
 }
 
-export class BookStudioNotFoundError extends Error {
-  constructor(studioId: string) {
-    super(`Studio not found or archived: ${studioId}`);
-    this.name = "BookStudioNotFoundError";
-  }
-}
-
-export class BookInlineStudioInvalidError extends Error {
-  constructor(studioId: string) {
-    super(`Invalid inline studio: ${studioId}`);
+export class BookInlineStudioInvalidError extends DomainError {
+  readonly code = "INLINE_STUDIO_INVALID";
+  constructor(readonly studioId: string) {
+    super("Inline studio invalid");
     this.name = "BookInlineStudioInvalidError";
   }
 }
 
-export class BookPaidPriceLockedError extends Error {
-  constructor(bookId: string) {
-    super(`Book ${bookId} has a paid chapter — price/hour cannot be changed.`);
+export class BookPaidPriceLockedError extends DomainError {
+  readonly code = "BOOK_PAID_PRICE_LOCKED";
+  constructor(readonly bookId: string) {
+    super("Book price locked by paid chapter");
     this.name = "BookPaidPriceLockedError";
   }
 }
 
-export class BookPaidStudioLockedError extends Error {
-  constructor(bookId: string) {
-    super(`Book ${bookId} has a paid chapter — studio cannot be changed.`);
+export class BookPaidStudioLockedError extends DomainError {
+  readonly code = "BOOK_PAID_STUDIO_LOCKED";
+  constructor(readonly bookId: string) {
+    super("Book studio locked by paid chapter");
     this.name = "BookPaidStudioLockedError";
   }
 }
 
-export class BookCannotReduceChaptersError extends Error {
-  constructor(currentTotal: number, requested: number) {
-    super(`Cannot reduce chapters: current total ${currentTotal}, requested ${requested}.`);
+export class BookCannotReduceChaptersError extends DomainError {
+  readonly code = "BOOK_CANNOT_REDUCE_CHAPTERS";
+  constructor(
+    readonly currentTotal: number,
+    readonly requested: number,
+  ) {
+    super("Cannot reduce chapters below current total");
     this.name = "BookCannotReduceChaptersError";
   }
 }

@@ -1,20 +1,20 @@
 // @vitest-environment jsdom
 import { act, renderHook } from "@testing-library/react";
-import { jsonResponse } from "@tests/helpers/fetch-response";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   type PdfUrlFormValues,
   useBookPdfPopover,
 } from "@/components/features/books/hooks/use-book-pdf-popover";
 
-vi.mock("sonner", () => ({
-  toast: { success: vi.fn(), error: vi.fn(), warning: vi.fn(), info: vi.fn() },
+vi.mock("@/lib/api/api-fetch", () => ({
+  apiFetch: vi.fn(),
 }));
 
-function renderPdfHook(opts: { pdfUrl: string | null; onUpdated?: ReturnType<typeof vi.fn> }) {
-  const onUpdated = opts.onUpdated ?? vi.fn();
+const { apiFetch } = await import("@/lib/api/api-fetch");
+
+function renderPdfHook(opts: { pdfUrl: string | null; onUpdated?: (next: string | null) => void }) {
+  const onUpdated = opts.onUpdated ?? vi.fn<(next: string | null) => void>();
   return {
     onUpdated,
     ...renderHook(() => {
@@ -34,16 +34,12 @@ function renderPdfHook(opts: { pdfUrl: string | null; onUpdated?: ReturnType<typ
 }
 
 describe("useBookPdfPopover", () => {
-  let fetchMock: ReturnType<typeof vi.fn>;
-
   beforeEach(() => {
     vi.clearAllMocks();
-    fetchMock = vi.fn();
-    globalThis.fetch = fetchMock as unknown as typeof fetch;
   });
 
-  it("on 200 with non-empty url, calls onUpdated with the trimmed value and closes", async () => {
-    fetchMock.mockResolvedValueOnce(jsonResponse(200, { data: {} }));
+  it("on success with non-empty url, calls onUpdated with the trimmed value and closes", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({ ok: true, data: {}, headers: new Headers() });
 
     const { result, onUpdated } = renderPdfHook({ pdfUrl: null });
     act(() => result.current.handleOpenChange(true));
@@ -53,42 +49,37 @@ describe("useBookPdfPopover", () => {
       await result.current.onSubmit({ pdfUrl: "https://example.com/a.pdf" });
     });
 
-    expect(fetchMock).toHaveBeenCalledWith(
+    expect(apiFetch).toHaveBeenCalledWith(
       "/api/v1/books/b-1",
       expect.objectContaining({
         method: "PATCH",
-        body: JSON.stringify({ pdfUrl: "https://example.com/a.pdf" }),
+        body: { pdfUrl: "https://example.com/a.pdf" },
       }),
     );
     expect(onUpdated).toHaveBeenCalledWith("https://example.com/a.pdf");
-    expect(toast.success).not.toHaveBeenCalled();
   });
 
-  it("on 200 with empty url, calls onUpdated(null)", async () => {
-    fetchMock.mockResolvedValueOnce(jsonResponse(200, { data: {} }));
+  it("on success with empty url, calls onUpdated(null)", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({ ok: true, data: {}, headers: new Headers() });
 
     const { result, onUpdated } = renderPdfHook({ pdfUrl: "https://existing.pdf" });
     await act(async () => {
       await result.current.onSubmit({ pdfUrl: "" });
     });
 
-    expect(fetchMock).toHaveBeenCalledWith(
+    expect(apiFetch).toHaveBeenCalledWith(
       "/api/v1/books/b-1",
-      expect.objectContaining({ body: JSON.stringify({ pdfUrl: null }) }),
+      expect.objectContaining({ body: { pdfUrl: null } }),
     );
     expect(onUpdated).toHaveBeenCalledWith(null);
   });
 
-  it("on 422, sets form error from server detail", async () => {
-    fetchMock.mockResolvedValueOnce(
-      jsonResponse(422, {
-        error: {
-          code: "VALIDATION_ERROR",
-          message: "Bad",
-          details: [{ field: "pdfUrl", message: "URL inválida personalizada." }],
-        },
-      }),
-    );
+  it("on field-errors, sets form error from server detail", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: false,
+      kind: "field-errors",
+      fields: { pdfUrl: "URL inválida personalizada." },
+    });
 
     const { result } = renderPdfHook({ pdfUrl: null });
     await act(async () => {
@@ -100,23 +91,18 @@ describe("useBookPdfPopover", () => {
     );
   });
 
-  it("on 500, fires generic toast.error", async () => {
-    fetchMock.mockResolvedValueOnce(jsonResponse(500, { error: { code: "X", message: "x" } }));
+  it("on api-error, hook does not crash (toast handled by wrapper)", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: false,
+      kind: "api-error",
+      code: "INTERNAL_ERROR",
+    });
 
-    const { result } = renderPdfHook({ pdfUrl: null });
+    const { result, onUpdated } = renderPdfHook({ pdfUrl: null });
     await act(async () => {
       await result.current.onSubmit({ pdfUrl: "https://x.com/a.pdf" });
     });
 
-    expect(toast.error).toHaveBeenCalledWith("Não foi possível salvar a URL. Tente novamente.");
-  });
-
-  it("never calls toast.success in any branch (Constitution VII)", async () => {
-    fetchMock.mockResolvedValueOnce(jsonResponse(200, { data: {} }));
-    const { result } = renderPdfHook({ pdfUrl: null });
-    await act(async () => {
-      await result.current.onSubmit({ pdfUrl: "https://x.com/y.pdf" });
-    });
-    expect(toast.success).not.toHaveBeenCalled();
+    expect(onUpdated).not.toHaveBeenCalled();
   });
 });

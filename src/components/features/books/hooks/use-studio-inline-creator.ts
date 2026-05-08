@@ -1,8 +1,7 @@
 "use client";
 
 import { type KeyboardEvent, useState } from "react";
-import { toast } from "sonner";
-import type { ApiErrorBody } from "@/lib/api/error-response";
+import { apiFetch } from "@/lib/api/api-fetch";
 import type { Studio } from "@/lib/domain/studio";
 
 interface CreateStudioResponse {
@@ -51,37 +50,28 @@ export function useStudioInlineCreator({
     setSubmitting(true);
     setError(null);
     try {
-      const response = await fetch("/api/v1/studios", {
+      const result = await apiFetch<CreateStudioResponse>("/api/v1/studios", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        body: {
           name: trimmed,
           defaultHourlyRateCents: INLINE_PLACEHOLDER_RATE_CENTS,
           inline: true,
-        }),
+        },
       });
 
-      if (response.status === 201 || response.status === 200) {
-        const body = (await response.json()) as CreateStudioResponse;
-        onCreated(body.data);
+      if (result.ok) {
+        onCreated(result.data.data);
         return;
       }
 
-      if (response.status === 422) {
-        const body = (await response.json()) as ApiErrorBody;
-        const firstNameError = body.error.details?.find((d) => d.field === "name");
-        setError(firstNameError?.message ?? "Nome inválido.");
+      if (result.kind === "field-errors" && result.fields.name) {
+        setError(result.fields.name);
         return;
       }
 
-      if (response.status === 409) {
+      if (result.kind === "api-error" && result.code === "NAME_ALREADY_IN_USE") {
         setError("Já existe um estúdio com este nome.");
-        return;
       }
-
-      toast.error("Não foi possível criar o estúdio. Tente novamente.");
-    } catch {
-      toast.error("Erro de rede ao criar o estúdio.");
     } finally {
       setSubmitting(false);
     }

@@ -1,95 +1,49 @@
-import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { NO_STORE_HEADERS } from "@/lib/api/headers";
-import {
-  conflictResponse,
-  unauthorizedResponse,
-  validationErrorResponse,
-} from "@/lib/api/responses";
-import { auth } from "@/lib/auth/server";
-import type { Session } from "@/lib/auth/session";
+import { type AuthenticatedContext, withApiErrorHandler } from "@/lib/api/with-error-handler";
 import { createStudioRequestSchema } from "@/lib/domain/studio";
-import { StudioNameAlreadyInUseError } from "@/lib/errors/studio-errors";
 import { createStudioService } from "@/lib/factories/studio";
 import type { StudioService } from "@/lib/services/studio-service";
 
-interface StudiosDeps {
-  readonly getSession: (args: { headers: Headers }) => Promise<Session | null>;
+export interface StudiosRouteDeps {
   readonly createService: () => StudioService;
-  readonly headersFn: () => Promise<Headers>;
 }
 
-function defaultDeps(): StudiosDeps {
-  return {
-    getSession: (args) => auth.api.getSession(args) as Promise<Session | null>,
-    createService: createStudioService,
-    headersFn: headers,
-  };
-}
+const defaultRouteDeps: StudiosRouteDeps = { createService: createStudioService };
 
-export async function handleStudiosList(deps: StudiosDeps): Promise<NextResponse> {
-  const session = await deps.getSession({ headers: await deps.headersFn() });
-  if (!session) {
-    return unauthorizedResponse();
-  }
-
-  const service = deps.createService();
-  const data = await service.list();
-
+export async function handleStudiosList(
+  _request: Request,
+  _ctx: AuthenticatedContext<Record<string, never>>,
+  routeDeps: StudiosRouteDeps = defaultRouteDeps,
+): Promise<NextResponse> {
+  const data = await routeDeps.createService().list();
   return NextResponse.json({ data }, { headers: NO_STORE_HEADERS });
 }
 
 export async function handleStudiosCreate(
   request: Request,
-  deps: StudiosDeps,
+  _ctx: AuthenticatedContext<Record<string, never>>,
+  routeDeps: StudiosRouteDeps = defaultRouteDeps,
 ): Promise<NextResponse> {
-  const session = await deps.getSession({ headers: await deps.headersFn() });
-  if (!session) {
-    return unauthorizedResponse();
-  }
-
   const body: unknown = await request.json();
-  const parsed = createStudioRequestSchema.safeParse(body);
-  if (!parsed.success) {
-    return validationErrorResponse(parsed.error);
-  }
+  const parsed = createStudioRequestSchema.parse(body);
+  const { inline, ...input } = parsed;
+  const { studio, reactivated, rateResetForInline } = await routeDeps
+    .createService()
+    .create(input, inline ? { inline: true } : {});
 
-  const { inline, ...input } = parsed.data;
-  const service = deps.createService();
-  try {
-    const { studio, reactivated, rateResetForInline } = await service.create(
-      input,
-      inline ? { inline: true } : {},
-    );
-    return NextResponse.json(
-      {
-        data: studio,
-        meta: {
-          reactivated,
-          ...(rateResetForInline ? { rateResetForInline: true } : {}),
-        },
-      },
-      {
-        status: reactivated ? 200 : 201,
-        headers: {
-          ...NO_STORE_HEADERS,
-          Location: `/api/v1/studios/${studio.id}`,
-        },
-      },
-    );
-  } catch (error: unknown) {
-    if (error instanceof StudioNameAlreadyInUseError) {
-      return conflictResponse("NAME_ALREADY_IN_USE", "Nome já cadastrado");
-    }
-    throw error;
-  }
+  return NextResponse.json(
+    {
+      data: studio,
+      meta: { reactivated, ...(rateResetForInline ? { rateResetForInline: true } : {}) },
+    },
+    {
+      status: reactivated ? 200 : 201,
+      headers: { ...NO_STORE_HEADERS, Location: `/api/v1/studios/${studio.id}` },
+    },
+  );
 }
 
-export async function GET(): Promise<NextResponse> {
-  return handleStudiosList(defaultDeps());
-}
-
-export async function POST(request: Request): Promise<NextResponse> {
-  return handleStudiosCreate(request, defaultDeps());
-}
+export const GET = withApiErrorHandler(handleStudiosList);
+export const POST = withApiErrorHandler(handleStudiosCreate);

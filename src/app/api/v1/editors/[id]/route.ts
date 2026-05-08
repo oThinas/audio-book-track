@@ -1,120 +1,42 @@
-import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { NO_STORE_HEADERS } from "@/lib/api/headers";
-import {
-  conflictResponse,
-  notFoundResponse,
-  unauthorizedResponse,
-  validationErrorResponse,
-} from "@/lib/api/responses";
-import { auth } from "@/lib/auth/server";
-import type { Session } from "@/lib/auth/session";
+import { type AuthenticatedContext, withApiErrorHandler } from "@/lib/api/with-error-handler";
 import { updateEditorSchema } from "@/lib/domain/editor";
-import {
-  EditorEmailAlreadyInUseError,
-  EditorLinkedToActiveChaptersError,
-  EditorNameAlreadyInUseError,
-  EditorNotFoundError,
-} from "@/lib/errors/editor-errors";
 import { createEditorService, createEditorSoftDeleteDeps } from "@/lib/factories/editor";
 import type { EditorService, SoftDeleteEditorDeps } from "@/lib/services/editor-service";
 
-interface EditorByIdDeps {
-  readonly getSession: (args: { headers: Headers }) => Promise<Session | null>;
+export interface EditorByIdRouteDeps {
   readonly createService: () => EditorService;
-  readonly headersFn: () => Promise<Headers>;
   readonly createSoftDeleteDeps: () => SoftDeleteEditorDeps;
 }
 
-function defaultDeps(): EditorByIdDeps {
-  return {
-    getSession: (args) => auth.api.getSession(args) as Promise<Session | null>,
-    createService: createEditorService,
-    headersFn: headers,
-    createSoftDeleteDeps: createEditorSoftDeleteDeps,
-  };
-}
+const defaultRouteDeps: EditorByIdRouteDeps = {
+  createService: createEditorService,
+  createSoftDeleteDeps: createEditorSoftDeleteDeps,
+};
 
 export async function handleEditorsUpdate(
   request: Request,
-  deps: EditorByIdDeps,
-  params: { id: string },
+  ctx: AuthenticatedContext<{ id: string }>,
+  routeDeps: EditorByIdRouteDeps = defaultRouteDeps,
 ): Promise<NextResponse> {
-  const session = await deps.getSession({ headers: await deps.headersFn() });
-  if (!session) {
-    return unauthorizedResponse();
-  }
-
+  const { id } = await ctx.params;
   const body: unknown = await request.json();
-  const parsed = updateEditorSchema.safeParse(body);
-  if (!parsed.success) {
-    return validationErrorResponse(parsed.error);
-  }
-
-  const service = deps.createService();
-  try {
-    const editor = await service.update(params.id, parsed.data);
-    return NextResponse.json({ data: editor }, { headers: NO_STORE_HEADERS });
-  } catch (error: unknown) {
-    if (error instanceof EditorNotFoundError) {
-      return notFoundResponse("EDITOR_NOT_FOUND", "Editor não encontrado");
-    }
-    if (error instanceof EditorNameAlreadyInUseError) {
-      return conflictResponse("NAME_ALREADY_IN_USE", "Nome já cadastrado");
-    }
-    if (error instanceof EditorEmailAlreadyInUseError) {
-      return conflictResponse("EMAIL_ALREADY_IN_USE", "E-mail já cadastrado");
-    }
-    throw error;
-  }
+  const parsed = updateEditorSchema.parse(body);
+  const editor = await routeDeps.createService().update(id, parsed);
+  return NextResponse.json({ data: editor }, { headers: NO_STORE_HEADERS });
 }
 
 export async function handleEditorsDelete(
-  deps: EditorByIdDeps,
-  params: { id: string },
-): Promise<NextResponse> {
-  const session = await deps.getSession({ headers: await deps.headersFn() });
-  if (!session) {
-    return unauthorizedResponse();
-  }
-
-  const service = deps.createService();
-  try {
-    await service.softDelete(params.id, deps.createSoftDeleteDeps());
-    return new NextResponse(null, { status: 204, headers: NO_STORE_HEADERS });
-  } catch (error: unknown) {
-    if (error instanceof EditorNotFoundError) {
-      return notFoundResponse("EDITOR_NOT_FOUND", "Editor não encontrado");
-    }
-    if (error instanceof EditorLinkedToActiveChaptersError) {
-      return NextResponse.json(
-        {
-          error: {
-            code: "EDITOR_LINKED_TO_ACTIVE_CHAPTERS",
-            message: "Editor está vinculado a capítulos em livros ativos.",
-            details: { books: error.books },
-          },
-        },
-        { status: 409 },
-      );
-    }
-    throw error;
-  }
-}
-
-export async function PATCH(
-  request: Request,
-  context: { params: Promise<{ id: string }> },
-): Promise<NextResponse> {
-  const params = await context.params;
-  return handleEditorsUpdate(request, defaultDeps(), params);
-}
-
-export async function DELETE(
   _request: Request,
-  context: { params: Promise<{ id: string }> },
+  ctx: AuthenticatedContext<{ id: string }>,
+  routeDeps: EditorByIdRouteDeps = defaultRouteDeps,
 ): Promise<NextResponse> {
-  const params = await context.params;
-  return handleEditorsDelete(defaultDeps(), params);
+  const { id } = await ctx.params;
+  await routeDeps.createService().softDelete(id, routeDeps.createSoftDeleteDeps());
+  return new NextResponse(null, { status: 204, headers: NO_STORE_HEADERS });
 }
+
+export const PATCH = withApiErrorHandler<{ id: string }>(handleEditorsUpdate);
+export const DELETE = withApiErrorHandler<{ id: string }>(handleEditorsDelete);

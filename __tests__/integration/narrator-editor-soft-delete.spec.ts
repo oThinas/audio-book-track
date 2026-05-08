@@ -6,12 +6,16 @@ import {
   createTestNarrator,
   createTestStudio,
 } from "@tests/helpers/factories";
+import { wrapForTest } from "@tests/helpers/route-context";
 import { and, eq, exists, inArray } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { handleEditorsDelete } from "@/app/api/v1/editors/[id]/route";
-import { handleNarratorsDelete } from "@/app/api/v1/narrators/[id]/route";
+import { type EditorByIdRouteDeps, handleEditorsDelete } from "@/app/api/v1/editors/[id]/route";
+import {
+  handleNarratorsDelete,
+  type NarratorByIdRouteDeps,
+} from "@/app/api/v1/narrators/[id]/route";
 import { book, chapter, editor, narrator } from "@/lib/db/schema";
 import { DrizzleEditorRepository } from "@/lib/repositories/drizzle/drizzle-editor-repository";
 import { DrizzleNarratorRepository } from "@/lib/repositories/drizzle/drizzle-narrator-repository";
@@ -74,34 +78,51 @@ function buildGetActiveBooksForEditor() {
   };
 }
 
-function createNarratorDeps() {
+function buildNarratorDeps(): NarratorByIdRouteDeps {
   const db = getTestDb();
   const service = new NarratorService(new DrizzleNarratorRepository(db));
   return {
-    getSession: vi.fn().mockResolvedValue({ user: { id: crypto.randomUUID() } }),
-    createService: vi.fn().mockReturnValue(service),
-    headersFn: vi.fn().mockResolvedValue(new Headers()),
+    createService: () => service,
     createSoftDeleteDeps: () => ({ getActiveBooks: buildGetActiveBooksForNarrator() }),
   };
 }
 
-function createEditorDeps() {
+function buildEditorDeps(): EditorByIdRouteDeps {
   const db = getTestDb();
   const service = new EditorService(new DrizzleEditorRepository(db));
   return {
-    getSession: vi.fn().mockResolvedValue({ user: { id: crypto.randomUUID() } }),
-    createService: vi.fn().mockReturnValue(service),
-    headersFn: vi.fn().mockResolvedValue(new Headers()),
+    createService: () => service,
     createSoftDeleteDeps: () => ({ getActiveBooks: buildGetActiveBooksForEditor() }),
   };
 }
 
+function buildNarratorDelete(session: { user: { id: string } } | null) {
+  return wrapForTest<{ id: string }>(
+    (req, ctx) => handleNarratorsDelete(req, ctx, buildNarratorDeps()),
+    { session },
+  );
+}
+
+function buildEditorDelete(session: { user: { id: string } } | null) {
+  return wrapForTest<{ id: string }>(
+    (req, ctx) => handleEditorsDelete(req, ctx, buildEditorDeps()),
+    { session },
+  );
+}
+
+function makeRequest(): Request {
+  return new Request("http://test.local/api/v1/x", { method: "DELETE" });
+}
+
 describe("DELETE /api/v1/narrators/:id (handleNarratorsDelete) — NARRATOR_LINKED_TO_ACTIVE_CHAPTERS", () => {
+  const session = { user: { id: crypto.randomUUID() } };
+
   it("returns 204 and soft-deletes when narrator has no chapters", async () => {
     const db = getTestDb();
     const { narrator: created } = await createTestNarrator(db, { name: "Sem Capítulos" });
 
-    const response = await handleNarratorsDelete(createNarratorDeps(), { id: created.id });
+    const DELETE = buildNarratorDelete(session);
+    const response = await DELETE(makeRequest(), { params: Promise.resolve({ id: created.id }) });
 
     expect(response.status).toBe(204);
     const [row] = await db.select().from(narrator).where(eq(narrator.id, created.id));
@@ -126,7 +147,8 @@ describe("DELETE /api/v1/narrators/:id (handleNarratorsDelete) — NARRATOR_LINK
       narratorId: created.id,
     });
 
-    const response = await handleNarratorsDelete(createNarratorDeps(), { id: created.id });
+    const DELETE = buildNarratorDelete(session);
+    const response = await DELETE(makeRequest(), { params: Promise.resolve({ id: created.id }) });
 
     expect(response.status).toBe(204);
   });
@@ -139,7 +161,6 @@ describe("DELETE /api/v1/narrators/:id (handleNarratorsDelete) — NARRATOR_LINK
       studioId: studio.id,
       title: "Livro Em Produção",
     });
-    // Narrator has a paid chapter, but the book also has an editing chapter (different narrator).
     await createTestChapter(db, {
       bookId: blockingBook.id,
       number: 1,
@@ -150,10 +171,11 @@ describe("DELETE /api/v1/narrators/:id (handleNarratorsDelete) — NARRATOR_LINK
       bookId: blockingBook.id,
       number: 2,
       status: "editing",
-      narratorId: null, // outro capítulo, sem narrador
+      narratorId: null,
     });
 
-    const response = await handleNarratorsDelete(createNarratorDeps(), { id: created.id });
+    const DELETE = buildNarratorDelete(session);
+    const response = await DELETE(makeRequest(), { params: Promise.resolve({ id: created.id }) });
 
     expect(response.status).toBe(409);
     const body = (await response.json()) as {
@@ -166,13 +188,15 @@ describe("DELETE /api/v1/narrators/:id (handleNarratorsDelete) — NARRATOR_LINK
     expect(body.error.details.books.map((b) => b.id)).toEqual([blockingBook.id]);
     expect(body.error.details.books[0]?.title).toBe("Livro Em Produção");
 
-    // narrator was NOT soft-deleted
     const [row] = await db.select().from(narrator).where(eq(narrator.id, created.id));
     expect(row?.deletedAt).toBeNull();
   });
 
   it("returns 404 when narrator does not exist", async () => {
-    const response = await handleNarratorsDelete(createNarratorDeps(), { id: crypto.randomUUID() });
+    const DELETE = buildNarratorDelete(session);
+    const response = await DELETE(makeRequest(), {
+      params: Promise.resolve({ id: crypto.randomUUID() }),
+    });
 
     expect(response.status).toBe(404);
   });
@@ -189,10 +213,10 @@ describe("DELETE /api/v1/narrators/:id (handleNarratorsDelete) — NARRATOR_LINK
       narratorId: created.id,
     });
 
-    const response = await handleNarratorsDelete(createNarratorDeps(), { id: created.id });
+    const DELETE = buildNarratorDelete(session);
+    const response = await DELETE(makeRequest(), { params: Promise.resolve({ id: created.id }) });
     expect(response.status).toBe(204);
 
-    // O registro continua na tabela (apenas com deleted_at preenchido)
     const [persisted] = await db.select().from(narrator).where(eq(narrator.id, created.id));
     expect(persisted?.id).toBe(created.id);
     expect(persisted?.name).toBe("Histórico");
@@ -201,11 +225,14 @@ describe("DELETE /api/v1/narrators/:id (handleNarratorsDelete) — NARRATOR_LINK
 });
 
 describe("DELETE /api/v1/editors/:id (handleEditorsDelete) — EDITOR_LINKED_TO_ACTIVE_CHAPTERS", () => {
+  const session = { user: { id: crypto.randomUUID() } };
+
   it("returns 204 and soft-deletes when editor has no chapters", async () => {
     const db = getTestDb();
     const { editor: created } = await createTestEditor(db, { name: "Sem Capítulos" });
 
-    const response = await handleEditorsDelete(createEditorDeps(), { id: created.id });
+    const DELETE = buildEditorDelete(session);
+    const response = await DELETE(makeRequest(), { params: Promise.resolve({ id: created.id }) });
 
     expect(response.status).toBe(204);
     const [row] = await db.select().from(editor).where(eq(editor.id, created.id));
@@ -230,7 +257,8 @@ describe("DELETE /api/v1/editors/:id (handleEditorsDelete) — EDITOR_LINKED_TO_
       editorId: created.id,
     });
 
-    const response = await handleEditorsDelete(createEditorDeps(), { id: created.id });
+    const DELETE = buildEditorDelete(session);
+    const response = await DELETE(makeRequest(), { params: Promise.resolve({ id: created.id }) });
 
     expect(response.status).toBe(204);
   });
@@ -256,7 +284,8 @@ describe("DELETE /api/v1/editors/:id (handleEditorsDelete) — EDITOR_LINKED_TO_
       editorId: null,
     });
 
-    const response = await handleEditorsDelete(createEditorDeps(), { id: created.id });
+    const DELETE = buildEditorDelete(session);
+    const response = await DELETE(makeRequest(), { params: Promise.resolve({ id: created.id }) });
 
     expect(response.status).toBe(409);
     const body = (await response.json()) as {
@@ -289,14 +318,20 @@ describe("DELETE /api/v1/editors/:id (handleEditorsDelete) — EDITOR_LINKED_TO_
         editorId: created.id,
       });
 
-      const response = await handleEditorsDelete(createEditorDeps(), { id: created.id });
+      const DELETE = buildEditorDelete(session);
+      const response = await DELETE(makeRequest(), {
+        params: Promise.resolve({ id: created.id }),
+      });
 
       expect(response.status).toBe(409);
     }
   });
 
   it("returns 404 when editor does not exist", async () => {
-    const response = await handleEditorsDelete(createEditorDeps(), { id: crypto.randomUUID() });
+    const DELETE = buildEditorDelete(session);
+    const response = await DELETE(makeRequest(), {
+      params: Promise.resolve({ id: crypto.randomUUID() }),
+    });
 
     expect(response.status).toBe(404);
   });

@@ -1,21 +1,19 @@
 import { InMemoryNarratorRepository } from "@tests/repositories/in-memory-narrator-repository";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import { handleNarratorsList } from "@/app/api/v1/narrators/route";
+import type { AuthenticatedContext } from "@/lib/api/with-error-handler";
 import { NarratorService } from "@/lib/services/narrator-service";
 
-function createDeps(options: {
-  session: { user: { id: string } } | null;
-  service: NarratorService;
-}) {
+function buildContext(): AuthenticatedContext<Record<string, never>> {
   return {
-    getSession: vi.fn().mockResolvedValue(options.session),
-    createService: vi.fn().mockReturnValue(options.service),
-    headersFn: vi.fn().mockResolvedValue(new Headers()),
+    params: Promise.resolve({}),
+    session: { user: { id: "u1" } },
+    requestId: "test-request-id",
   };
 }
 
-describe("GET /api/v1/narrators (handleNarratorsList)", () => {
+describe("handleNarratorsList", () => {
   let repo: InMemoryNarratorRepository;
   let service: NarratorService;
 
@@ -24,22 +22,11 @@ describe("GET /api/v1/narrators (handleNarratorsList)", () => {
     service = new NarratorService(repo);
   });
 
-  it("returns 401 when there is no session", async () => {
-    const deps = createDeps({ session: null, service });
-
-    const response = await handleNarratorsList(deps);
-    const body = await response.json();
-
-    expect(response.status).toBe(401);
-    expect(body).toEqual({
-      error: { code: "UNAUTHORIZED", message: expect.any(String) },
-    });
-  });
-
   it("returns 200 with empty array when no narrators exist", async () => {
-    const deps = createDeps({ session: { user: { id: "user-1" } }, service });
-
-    const response = await handleNarratorsList(deps);
+    const request = new Request("http://localhost/api/v1/narrators");
+    const response = await handleNarratorsList(request, buildContext(), {
+      createService: () => service,
+    });
     const body = await response.json();
 
     expect(response.status).toBe(200);
@@ -53,9 +40,10 @@ describe("GET /api/v1/narrators (handleNarratorsList)", () => {
     await new Promise((resolve) => setTimeout(resolve, 2));
     const third = await repo.create({ name: "Pedro" });
 
-    const deps = createDeps({ session: { user: { id: "user-1" } }, service });
-
-    const response = await handleNarratorsList(deps);
+    const request = new Request("http://localhost/api/v1/narrators");
+    const response = await handleNarratorsList(request, buildContext(), {
+      createService: () => service,
+    });
     const body = (await response.json()) as { data: Array<{ id: string; name: string }> };
 
     expect(response.status).toBe(200);
@@ -65,9 +53,10 @@ describe("GET /api/v1/narrators (handleNarratorsList)", () => {
   });
 
   it("sets Cache-Control: no-store header", async () => {
-    const deps = createDeps({ session: { user: { id: "user-1" } }, service });
-
-    const response = await handleNarratorsList(deps);
+    const request = new Request("http://localhost/api/v1/narrators");
+    const response = await handleNarratorsList(request, buildContext(), {
+      createService: () => service,
+    });
 
     expect(response.headers.get("Cache-Control")).toBe("no-store");
   });

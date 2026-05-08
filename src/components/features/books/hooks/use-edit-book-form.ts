@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { type UseFormReturn, useWatch } from "react-hook-form";
 import { toast } from "sonner";
-import type { ApiErrorBody } from "@/lib/api/error-response";
+import { apiFetch } from "@/lib/api/api-fetch";
 import type { Studio } from "@/lib/domain/studio";
 import type { UpdateBookInput } from "@/lib/schemas/book";
 import type { BookEditValues, UpdatedBookDetail } from "../book-edit-dialog";
@@ -118,47 +118,43 @@ export function useEditBookForm({
       return;
     }
 
-    const response = await fetch(`/api/v1/books/${book.id}`, {
+    const result = await apiFetch<{ data: UpdatedBookDetail }>(`/api/v1/books/${book.id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(patch),
+      body: patch,
     });
 
-    if (response.status === 200) {
-      const body = (await response.json()) as { data: UpdatedBookDetail };
+    if (result.ok) {
       resetState();
       onOpenChange(false);
-      onUpdated(body.data);
+      onUpdated(result.data.data);
       return;
     }
 
-    if (response.status === 422) {
-      const body = (await response.json()) as ApiErrorBody;
-      if (body.error.code === "CANNOT_REDUCE_CHAPTERS") {
-        form.setError("numChapters", {
-          message: "Para reduzir a quantidade, use 'Excluir capítulos'.",
-        });
-        return;
-      }
-      if (body.error.code === "STUDIO_NOT_FOUND") {
-        form.setError("studioId", { message: "Estúdio não encontrado ou arquivado." });
-        return;
-      }
-      if (body.error.code === "INLINE_STUDIO_INVALID") {
-        form.setError("studioId", { message: "Estúdio inline inválido. Selecione outro estúdio." });
-        return;
-      }
-      for (const detail of body.error.details ?? []) {
-        if (detail.field && detail.field in values) {
-          form.setError(detail.field as keyof UpdateBookInput, { message: detail.message });
+    if (result.kind === "field-errors") {
+      for (const [field, message] of Object.entries(result.fields)) {
+        if (field in values) {
+          form.setError(field as keyof UpdateBookInput, { message });
         }
       }
       return;
     }
 
-    if (response.status === 409) {
-      const body = (await response.json()) as ApiErrorBody;
-      switch (body.error.code) {
+    if (result.kind === "api-error") {
+      switch (result.code) {
+        case "BOOK_CANNOT_REDUCE_CHAPTERS":
+          form.setError("numChapters", {
+            message: "Para reduzir a quantidade, use 'Excluir capítulos'.",
+          });
+          return;
+        case "STUDIO_REFERENCE_INVALID":
+        case "STUDIO_NOT_FOUND":
+          form.setError("studioId", { message: "Estúdio não encontrado ou arquivado." });
+          return;
+        case "INLINE_STUDIO_INVALID":
+          form.setError("studioId", {
+            message: "Estúdio inline inválido. Selecione outro estúdio.",
+          });
+          return;
         case "TITLE_ALREADY_IN_USE":
           form.setError("title", {
             message: "Já existe um livro com este título neste estúdio.",
@@ -178,8 +174,6 @@ export function useEditBookForm({
           break;
       }
     }
-
-    toast.error("Não foi possível atualizar o livro. Tente novamente.");
   }
 
   return {

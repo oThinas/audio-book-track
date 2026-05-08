@@ -13,9 +13,9 @@ import {
   BookNotFoundError,
   BookPaidPriceLockedError,
   BookPaidStudioLockedError,
-  BookStudioNotFoundError,
   BookTitleAlreadyInUseError,
 } from "@/lib/errors/book-errors";
+import { StudioReferenceInvalidError } from "@/lib/errors/studio-errors";
 import { BookService } from "@/lib/services/book-service";
 
 describe("BookService.update", () => {
@@ -161,7 +161,7 @@ describe("BookService.update", () => {
     );
   });
 
-  it("throws BookStudioNotFoundError when target studioId does not exist", async () => {
+  it("throws StudioReferenceInvalidError when target studioId does not exist", async () => {
     const { book } = await seedInMemoryBook({
       studioRepo,
       bookRepo,
@@ -170,7 +170,7 @@ describe("BookService.update", () => {
     });
 
     await expect(service.update(book.id, { studioId: crypto.randomUUID() })).rejects.toBeInstanceOf(
-      BookStudioNotFoundError,
+      StudioReferenceInvalidError,
     );
   });
 

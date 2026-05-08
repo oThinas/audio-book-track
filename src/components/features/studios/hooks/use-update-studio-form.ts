@@ -2,8 +2,7 @@
 
 import { type RefObject, useEffect, useRef } from "react";
 import type { UseFormReturn } from "react-hook-form";
-import { toast } from "sonner";
-import type { ApiErrorBody } from "@/lib/api/error-response";
+import { apiFetch } from "@/lib/api/api-fetch";
 import type { Studio, StudioFormValues } from "@/lib/domain/studio";
 
 export interface UseUpdateStudioFormArgs {
@@ -19,6 +18,8 @@ export interface UseUpdateStudioFormReturn {
   readonly firstFieldRef: RefObject<HTMLInputElement | null>;
 }
 
+const FIELD_NAMES = new Set<keyof StudioFormValues>(["name", "defaultHourlyRateCents"]);
+
 export function useUpdateStudioForm({
   studioId,
   form,
@@ -32,45 +33,34 @@ export function useUpdateStudioForm({
   }, []);
 
   async function onSubmit(values: StudioFormValues) {
-    const response = await fetch(`/api/v1/studios/${studioId}`, {
+    const result = await apiFetch<{ data: Studio }>(`/api/v1/studios/${studioId}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values),
+      body: values,
     });
 
-    if (response.status === 200) {
-      const body = (await response.json()) as { data: Studio };
-      onUpdated(body.data);
+    if (result.ok) {
+      onUpdated(result.data.data);
       return;
     }
 
-    if (response.status === 422) {
-      const body = (await response.json()) as ApiErrorBody;
-      for (const detail of body.error.details ?? []) {
-        if (detail.field === "name") {
-          form.setError("name", { message: detail.message });
-        } else if (detail.field === "defaultHourlyRateCents") {
-          form.setError("defaultHourlyRateCents", { message: detail.message });
+    if (result.kind === "field-errors") {
+      for (const [field, message] of Object.entries(result.fields)) {
+        if (FIELD_NAMES.has(field as keyof StudioFormValues)) {
+          form.setError(field as keyof StudioFormValues, { message });
         }
       }
       return;
     }
 
-    if (response.status === 409) {
-      const body = (await response.json()) as ApiErrorBody;
-      if (body.error.code === "NAME_ALREADY_IN_USE") {
-        form.setError("name", { message: "Nome já cadastrado" });
+    if (result.kind === "api-error") {
+      if (result.code === "NAME_ALREADY_IN_USE") {
+        form.setError("name", { message: "Nome já cadastrado." });
+        return;
       }
-      return;
+      if (result.code === "STUDIO_NOT_FOUND") {
+        onNotFound?.();
+      }
     }
-
-    if (response.status === 404) {
-      toast.error("Estúdio não existe mais.");
-      onNotFound?.();
-      return;
-    }
-
-    toast.error("Não foi possível salvar o estúdio. Tente novamente.");
   }
 
   return {

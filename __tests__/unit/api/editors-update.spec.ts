@@ -1,14 +1,20 @@
 import { InMemoryEditorRepository } from "@tests/repositories/in-memory-editor-repository";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import { handleEditorsUpdate } from "@/app/api/v1/editors/[id]/route";
+import type { AuthenticatedContext } from "@/lib/api/with-error-handler";
+import {
+  EditorEmailAlreadyInUseError,
+  EditorNameAlreadyInUseError,
+  EditorNotFoundError,
+} from "@/lib/errors/editor-errors";
 import { EditorService } from "@/lib/services/editor-service";
 
-function createDeps(options: { session: { user: { id: string } } | null; service: EditorService }) {
+function buildContext(id: string): AuthenticatedContext<{ id: string }> {
   return {
-    getSession: vi.fn().mockResolvedValue(options.session),
-    createService: vi.fn().mockReturnValue(options.service),
-    headersFn: vi.fn().mockResolvedValue(new Headers()),
+    params: Promise.resolve({ id }),
+    session: { user: { id: "u1" } },
+    requestId: "test-request-id",
   };
 }
 
@@ -20,7 +26,9 @@ function buildRequest(body: unknown, id: string): Request {
   });
 }
 
-describe("PATCH /api/v1/editors/:id (handleEditorsUpdate)", () => {
+const noBlockingDeps = () => ({ getActiveBooks: async () => [] });
+
+describe("handleEditorsUpdate", () => {
   let repo: InMemoryEditorRepository;
   let service: EditorService;
 
@@ -29,90 +37,47 @@ describe("PATCH /api/v1/editors/:id (handleEditorsUpdate)", () => {
     service = new EditorService(repo);
   });
 
-  it("returns 401 when there is no session", async () => {
-    const deps = createDeps({ session: null, service });
-    const request = buildRequest({ name: "Novo" }, "some-id");
-
-    const response = await handleEditorsUpdate(request, deps, { id: "some-id" });
-    const body = await response.json();
-
-    expect(response.status).toBe(401);
-    expect(body.error.code).toBe("UNAUTHORIZED");
+  it("throws EditorNotFoundError when the editor does not exist", async () => {
+    await expect(
+      handleEditorsUpdate(buildRequest({ name: "Novo" }, "missing"), buildContext("missing"), {
+        createService: () => service,
+        createSoftDeleteDeps: noBlockingDeps,
+      }),
+    ).rejects.toBeInstanceOf(EditorNotFoundError);
   });
 
-  it("returns 404 when the editor does not exist", async () => {
-    const deps = createDeps({ session: { user: { id: "u1" } }, service });
-    const request = buildRequest({ name: "Novo" }, "missing");
-
-    const response = await handleEditorsUpdate(request, deps, { id: "missing" });
-    const body = await response.json();
-
-    expect(response.status).toBe(404);
-    expect(body.error.code).toBe("EDITOR_NOT_FOUND");
-  });
-
-  it("returns 422 with details when body is invalid (name)", async () => {
-    const existing = await repo.create({ name: "Original", email: "orig@s.com" });
-    const deps = createDeps({ session: { user: { id: "u1" } }, service });
-    const request = buildRequest({ name: "a" }, existing.id);
-
-    const response = await handleEditorsUpdate(request, deps, { id: existing.id });
-    const body = (await response.json()) as {
-      error: { code: string; details: Array<{ field: string; message: string }> };
-    };
-
-    expect(response.status).toBe(422);
-    expect(body.error.code).toBe("VALIDATION_ERROR");
-    expect(body.error.details.some((d) => d.field === "name")).toBe(true);
-  });
-
-  it("returns 422 with details when body is invalid (email)", async () => {
-    const existing = await repo.create({ name: "Original", email: "orig@s.com" });
-    const deps = createDeps({ session: { user: { id: "u1" } }, service });
-    const request = buildRequest({ email: "not-an-email" }, existing.id);
-
-    const response = await handleEditorsUpdate(request, deps, { id: existing.id });
-    const body = (await response.json()) as {
-      error: { code: string; details: Array<{ field: string; message: string }> };
-    };
-
-    expect(response.status).toBe(422);
-    expect(body.error.code).toBe("VALIDATION_ERROR");
-    expect(body.error.details.some((d) => d.field === "email")).toBe(true);
-  });
-
-  it("returns 409 NAME_ALREADY_IN_USE when renaming to another editor's name", async () => {
+  it("throws EditorNameAlreadyInUseError when renaming to another editor's name", async () => {
     const first = await repo.create({ name: "First", email: "1@s.com" });
     await repo.create({ name: "Second", email: "2@s.com" });
-    const deps = createDeps({ session: { user: { id: "u1" } }, service });
-    const request = buildRequest({ name: "Second" }, first.id);
 
-    const response = await handleEditorsUpdate(request, deps, { id: first.id });
-    const body = await response.json();
-
-    expect(response.status).toBe(409);
-    expect(body.error.code).toBe("NAME_ALREADY_IN_USE");
+    await expect(
+      handleEditorsUpdate(buildRequest({ name: "Second" }, first.id), buildContext(first.id), {
+        createService: () => service,
+        createSoftDeleteDeps: noBlockingDeps,
+      }),
+    ).rejects.toBeInstanceOf(EditorNameAlreadyInUseError);
   });
 
-  it("returns 409 EMAIL_ALREADY_IN_USE when re-emailing to another editor's email", async () => {
+  it("throws EditorEmailAlreadyInUseError when re-emailing to another editor's email", async () => {
     const first = await repo.create({ name: "First", email: "1@s.com" });
     await repo.create({ name: "Second", email: "2@s.com" });
-    const deps = createDeps({ session: { user: { id: "u1" } }, service });
-    const request = buildRequest({ email: "2@s.com" }, first.id);
 
-    const response = await handleEditorsUpdate(request, deps, { id: first.id });
-    const body = await response.json();
-
-    expect(response.status).toBe(409);
-    expect(body.error.code).toBe("EMAIL_ALREADY_IN_USE");
+    await expect(
+      handleEditorsUpdate(buildRequest({ email: "2@s.com" }, first.id), buildContext(first.id), {
+        createService: () => service,
+        createSoftDeleteDeps: noBlockingDeps,
+      }),
+    ).rejects.toBeInstanceOf(EditorEmailAlreadyInUseError);
   });
 
   it("returns 200 updating only the name (partial)", async () => {
     const existing = await repo.create({ name: "Original", email: "orig@s.com" });
-    const deps = createDeps({ session: { user: { id: "u1" } }, service });
-    const request = buildRequest({ name: "  Novo Nome  " }, existing.id);
 
-    const response = await handleEditorsUpdate(request, deps, { id: existing.id });
+    const response = await handleEditorsUpdate(
+      buildRequest({ name: "  Novo Nome  " }, existing.id),
+      buildContext(existing.id),
+      { createService: () => service, createSoftDeleteDeps: noBlockingDeps },
+    );
     const body = (await response.json()) as {
       data: { id: string; name: string; email: string };
     };
@@ -125,10 +90,12 @@ describe("PATCH /api/v1/editors/:id (handleEditorsUpdate)", () => {
 
   it("returns 200 updating only the email (partial, normalized)", async () => {
     const existing = await repo.create({ name: "Carla", email: "orig@s.com" });
-    const deps = createDeps({ session: { user: { id: "u1" } }, service });
-    const request = buildRequest({ email: "  Novo@S.COM  " }, existing.id);
 
-    const response = await handleEditorsUpdate(request, deps, { id: existing.id });
+    const response = await handleEditorsUpdate(
+      buildRequest({ email: "  Novo@S.COM  " }, existing.id),
+      buildContext(existing.id),
+      { createService: () => service, createSoftDeleteDeps: noBlockingDeps },
+    );
     const body = (await response.json()) as {
       data: { id: string; name: string; email: string };
     };
@@ -140,10 +107,12 @@ describe("PATCH /api/v1/editors/:id (handleEditorsUpdate)", () => {
 
   it("returns 200 updating both fields", async () => {
     const existing = await repo.create({ name: "Original", email: "orig@s.com" });
-    const deps = createDeps({ session: { user: { id: "u1" } }, service });
-    const request = buildRequest({ name: "Novo", email: "novo@s.com" }, existing.id);
 
-    const response = await handleEditorsUpdate(request, deps, { id: existing.id });
+    const response = await handleEditorsUpdate(
+      buildRequest({ name: "Novo", email: "novo@s.com" }, existing.id),
+      buildContext(existing.id),
+      { createService: () => service, createSoftDeleteDeps: noBlockingDeps },
+    );
     const body = (await response.json()) as {
       data: { id: string; name: string; email: string };
     };
@@ -155,10 +124,12 @@ describe("PATCH /api/v1/editors/:id (handleEditorsUpdate)", () => {
 
   it("returns 200 when PATCH keeps the same normalized email (idempotent)", async () => {
     const existing = await repo.create({ name: "Carla", email: "carla@s.com" });
-    const deps = createDeps({ session: { user: { id: "u1" } }, service });
-    const request = buildRequest({ email: "Carla@S.COM" }, existing.id);
 
-    const response = await handleEditorsUpdate(request, deps, { id: existing.id });
+    const response = await handleEditorsUpdate(
+      buildRequest({ email: "Carla@S.COM" }, existing.id),
+      buildContext(existing.id),
+      { createService: () => service, createSoftDeleteDeps: noBlockingDeps },
+    );
     const body = (await response.json()) as { data: { id: string; email: string } };
 
     expect(response.status).toBe(200);

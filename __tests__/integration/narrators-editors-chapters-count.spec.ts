@@ -6,41 +6,57 @@ import {
   createTestNarrator,
   createTestStudio,
 } from "@tests/helpers/factories";
-import { describe, expect, it, vi } from "vitest";
+import { wrapForTest } from "@tests/helpers/route-context";
+import { describe, expect, it } from "vitest";
 
-import { handleEditorsList } from "@/app/api/v1/editors/route";
-import { handleNarratorsList } from "@/app/api/v1/narrators/route";
+import { type EditorsRouteDeps, handleEditorsList } from "@/app/api/v1/editors/route";
+import { handleNarratorsList, type NarratorsRouteDeps } from "@/app/api/v1/narrators/route";
 import { DrizzleEditorRepository } from "@/lib/repositories/drizzle/drizzle-editor-repository";
 import { DrizzleNarratorRepository } from "@/lib/repositories/drizzle/drizzle-narrator-repository";
 import { EditorService } from "@/lib/services/editor-service";
 import { NarratorService } from "@/lib/services/narrator-service";
 
-function createNarratorDeps() {
+function buildNarratorDeps(): NarratorsRouteDeps {
   const db = getTestDb();
   const service = new NarratorService(new DrizzleNarratorRepository(db));
-  return {
-    getSession: vi.fn().mockResolvedValue({ user: { id: crypto.randomUUID() } }),
-    createService: vi.fn().mockReturnValue(service),
-    headersFn: vi.fn().mockResolvedValue(new Headers()),
-  };
+  return { createService: () => service };
 }
 
-function createEditorDeps() {
+function buildEditorDeps(): EditorsRouteDeps {
   const db = getTestDb();
   const service = new EditorService(new DrizzleEditorRepository(db));
-  return {
-    getSession: vi.fn().mockResolvedValue({ user: { id: crypto.randomUUID() } }),
-    createService: vi.fn().mockReturnValue(service),
-    headersFn: vi.fn().mockResolvedValue(new Headers()),
-  };
+  return { createService: () => service };
+}
+
+function buildNarratorGet(session: { user: { id: string } } | null) {
+  return wrapForTest((req, ctx) => handleNarratorsList(req, ctx, buildNarratorDeps()), {
+    session,
+  });
+}
+
+function buildEditorGet(session: { user: { id: string } } | null) {
+  return wrapForTest((req, ctx) => handleEditorsList(req, ctx, buildEditorDeps()), { session });
+}
+
+const ROUTE_CTX = { params: Promise.resolve({}) };
+
+function makeNarratorRequest(): Request {
+  return new Request("http://test.local/api/v1/narrators");
+}
+
+function makeEditorRequest(): Request {
+  return new Request("http://test.local/api/v1/editors");
 }
 
 describe("GET /api/v1/narrators — chaptersCount", () => {
+  const session = { user: { id: crypto.randomUUID() } };
+
   it("returns chaptersCount=0 for a narrator with no chapters", async () => {
     const db = getTestDb();
     await createTestNarrator(db, { name: "Sem Capítulos" });
 
-    const response = await handleNarratorsList(createNarratorDeps());
+    const GET = buildNarratorGet(session);
+    const response = await GET(makeNarratorRequest(), ROUTE_CTX);
     const body = (await response.json()) as {
       data: Array<{ name: string; chaptersCount: number }>;
     };
@@ -62,7 +78,8 @@ describe("GET /api/v1/narrators — chaptersCount", () => {
     await createTestChapter(db, { bookId: bookB.id, number: 2, narratorId: narrator.id });
     await createTestChapter(db, { bookId: bookB.id, number: 3, narratorId: narrator.id });
 
-    const response = await handleNarratorsList(createNarratorDeps());
+    const GET = buildNarratorGet(session);
+    const response = await GET(makeNarratorRequest(), ROUTE_CTX);
     const body = (await response.json()) as {
       data: Array<{ name: string; chaptersCount: number }>;
     };
@@ -81,7 +98,8 @@ describe("GET /api/v1/narrators — chaptersCount", () => {
     await createTestChapter(db, { bookId: book.id, number: 2, narratorId: a.id });
     await createTestChapter(db, { bookId: book.id, number: 3, narratorId: b.id });
 
-    const response = await handleNarratorsList(createNarratorDeps());
+    const GET = buildNarratorGet(session);
+    const response = await GET(makeNarratorRequest(), ROUTE_CTX);
     const body = (await response.json()) as {
       data: Array<{ name: string; chaptersCount: number }>;
     };
@@ -98,7 +116,8 @@ describe("GET /api/v1/narrators — chaptersCount", () => {
     const repo = new DrizzleNarratorRepository(db);
     await repo.softDelete(hidden.id);
 
-    const response = await handleNarratorsList(createNarratorDeps());
+    const GET = buildNarratorGet(session);
+    const response = await GET(makeNarratorRequest(), ROUTE_CTX);
     const body = (await response.json()) as {
       data: Array<{ id: string; name: string }>;
     };
@@ -108,11 +127,14 @@ describe("GET /api/v1/narrators — chaptersCount", () => {
 });
 
 describe("GET /api/v1/editors — chaptersCount (US12)", () => {
+  const session = { user: { id: crypto.randomUUID() } };
+
   it("returns chaptersCount=0 for an editor with no chapters", async () => {
     const db = getTestDb();
     await createTestEditor(db, { name: "Sem Capítulos" });
 
-    const response = await handleEditorsList(createEditorDeps());
+    const GET = buildEditorGet(session);
+    const response = await GET(makeEditorRequest(), ROUTE_CTX);
     const body = (await response.json()) as {
       data: Array<{ name: string; chaptersCount: number }>;
     };
@@ -134,7 +156,8 @@ describe("GET /api/v1/editors — chaptersCount (US12)", () => {
       await createTestChapter(db, { bookId: bookB.id, number: num, editorId: editor.id });
     }
 
-    const response = await handleEditorsList(createEditorDeps());
+    const GET = buildEditorGet(session);
+    const response = await GET(makeEditorRequest(), ROUTE_CTX);
     const body = (await response.json()) as {
       data: Array<{ name: string; chaptersCount: number }>;
     };
@@ -159,7 +182,8 @@ describe("GET /api/v1/editors — chaptersCount (US12)", () => {
     await createTestChapter(db, { bookId: book.id, number: 2, editorId: b.id });
     await createTestChapter(db, { bookId: book.id, number: 3, editorId: b.id });
 
-    const response = await handleEditorsList(createEditorDeps());
+    const GET = buildEditorGet(session);
+    const response = await GET(makeEditorRequest(), ROUTE_CTX);
     const body = (await response.json()) as {
       data: Array<{ name: string; chaptersCount: number }>;
     };

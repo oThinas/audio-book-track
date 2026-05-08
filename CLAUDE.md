@@ -95,6 +95,12 @@
 - Swallow silencioso de erros: `catch (e) {}`.
 - Mutação de objetos recebidos como parâmetro — sempre retornar novo objeto.
 - `drizzle-kit push` — usar `generate` + `migrate` para manter journal sincronizado.
+- `try/catch` + `instanceof XxxError` em rota `/api/v1/**` — usar `withApiErrorHandler` ([src/lib/api/with-error-handler.ts](src/lib/api/with-error-handler.ts)). Service lança `DomainError`; o wrapper resolve session, captura `ZodError`/`SyntaxError`/`DomainError` e mapeia para o envelope PT-BR via `errorCodes`. Detalhes em [docs/error-handling.md](docs/error-handling.md).
+- `fetch(...)` direto em hook de feature contra `/api/v1/**` — usar **`apiFetch<T>`** ([src/lib/api/api-fetch.ts](src/lib/api/api-fetch.ts)) que retorna `ApiResult<T>` discriminado, dispara toast por variant do catálogo, redireciona em 401, e expõe `result.headers` para metadata.
+- `toast.error(body?.error?.message ?? "...")` em hook — `apiFetch` já consulta `errorCodes[code]` e dispara toast com a mensagem PT-BR do catálogo. Hook só faz `form.setError(field, ...)` em `kind: "field-errors"` ou em `api-error` com code específico.
+- `Error.message` com interpolação de IDs/dados dinâmicos em subclasse de `DomainError` — `super(...)` recebe string **estática descritiva** (FR-018); IDs/dados saem por propriedades públicas e `getDetails()` quando precisarem chegar à UI.
+- Mensagens de schema Zod com jargão de campo (`studioId`, `narratorId`, `editorId`, `chapterId`, `editedSeconds`) — user vê isso. Usar rótulos PT-BR (`Estúdio`, `Narrador`, `Editor`, `Capítulo`, `Tempo editado`).
+- Helpers legados de resposta (`unauthorizedResponse`, `validationErrorResponse`, `notFoundResponse`, `conflictResponse`, `unprocessableEntityResponse`) — removidos. Toda rota nova passa pelo `withApiErrorHandler`.
 
 ---
 
@@ -320,15 +326,15 @@ Qualquer mudança no modelo financeiro (preço, horas, responsáveis) requer **r
 
 
 ## Recent Changes
+- 023-global-error-handler: Added `src/lib/api/error-codes.ts` (catálogo compartilhado server+client), `src/lib/api/with-error-handler.ts` (wrapper de rota substituindo `try/catch instanceof`), `src/lib/api/api-fetch.ts` (wrapper de cliente que centraliza toast/redirect/field-errors). Mensagens Zod migradas para PT-BR nos schemas. `X-Request-Id` em toda resposta `/api/v1/**`. Sem mudança de schema PostgreSQL.
 - 021-presentation-only-components: Added TypeScript 5.9.3 sobre Bun 1.2 (runtime + package manager + test runner) + Next.js 16.2.1 (App Router + Turbopack), React 19.2.4, React Hook Form 7.72.1 + `@hookform/resolvers` 5.2.2, Zod 4.3.6, `@tanstack/react-table` 8.21.3, shadcn/ui 4.1.2, Tailwind CSS 4.2, `sonner` 2.0.7, `lucide-react`
 - 020-books-chapters-crud: Added TypeScript 5.9.3 sobre Bun 1.2 (runtime + package manager + test runner) + Next.js 16.2.1 (App Router + Turbopack), React 19.2.4, Drizzle ORM 0.45.2 + `drizzle-kit` 0.31.10, Zod 4.3.6, better-auth 1.5.6, React Hook Form 7.72.1 + `@hookform/resolvers` 5.2.2, `@tanstack/react-table` 8.21.3, shadcn/ui 4.1.2, Tailwind CSS 4.2, `sonner` 2.0.7 (toasts), `lucide-react` (ícones)
 - 019-studios-crud: Added TypeScript 5.9.3 (Bun runtime 1.2) + Next.js 16.2.1 (App Router), React 19.2.4, Drizzle ORM 0.45.2 + drizzle-kit 0.31.10, Zod 4.3.6, better-auth 1.5.6, React Hook Form 7.72.1 + `@hookform/resolvers` 5.2.2, `@tanstack/react-table` 8.21.3, shadcn/ui 4.1.2, Tailwind CSS 4.2, sonner 2.0.7
 
 ## Active Technologies
 - TypeScript 5.9.3 sobre Bun 1.2 (runtime + package manager + test runner) + Next.js 16.2.1 (App Router + Turbopack), React 19.2.4, React Hook Form 7.72.1 + `@hookform/resolvers` 5.2.2, Zod 4.3.6, `@tanstack/react-table` 8.21.3, shadcn/ui 4.1.2, Tailwind CSS 4.2, `sonner` 2.0.7, `lucide-react` (021-presentation-only-components)
-- N/A (refatoração não toca camada de dados — hooks consomem `/api/v1/**` existentes) (021-presentation-only-components)
+- N/A (refatoração não toca camada de dados — hooks consomem `/api/v1/**` existentes) (021-presentation-only-components, 023-global-error-handler)
 
 <!-- SPECKIT START -->
-For additional context about technologies to be used, project structure,
-shell commands, and other important information, read the current plan
+Current plan: [specs/023-global-error-handler/plan.md](specs/023-global-error-handler/plan.md)
 <!-- SPECKIT END -->

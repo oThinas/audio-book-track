@@ -1,16 +1,16 @@
 // @vitest-environment jsdom
 import { act, renderHook } from "@testing-library/react";
-import { emptyResponse, jsonResponse } from "@tests/helpers/fetch-response";
 import { buildChapterRowData } from "@tests/helpers/seed";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { BookDetailData } from "@/components/features/books/book-detail-client";
 import { useBookDetail } from "@/components/features/books/hooks/use-book-detail";
 
-vi.mock("sonner", () => ({
-  toast: { success: vi.fn(), error: vi.fn(), warning: vi.fn(), info: vi.fn() },
+vi.mock("@/lib/api/api-fetch", () => ({
+  apiFetch: vi.fn(),
 }));
+
+const { apiFetch } = await import("@/lib/api/api-fetch");
 
 const BASE_BOOK: BookDetailData = {
   id: "b-1",
@@ -31,7 +31,6 @@ const BASE_BOOK: BookDetailData = {
 describe("useBookDetail", () => {
   let routerPush: ReturnType<typeof vi.fn>;
   let routerRefresh: ReturnType<typeof vi.fn>;
-  let fetchMock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -45,8 +44,6 @@ describe("useBookDetail", () => {
       forward: vi.fn(),
       prefetch: vi.fn(),
     } as unknown as ReturnType<typeof useRouter>);
-    fetchMock = vi.fn();
-    globalThis.fetch = fetchMock as unknown as typeof fetch;
   });
 
   it("computes nonPaidChapters and paidCount correctly", () => {
@@ -111,11 +108,11 @@ describe("useBookDetail", () => {
     await act(async () => {
       await result.current.handleBulkDeleteConfirm();
     });
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(apiFetch).not.toHaveBeenCalled();
   });
 
-  it("handleBulkDeleteConfirm on 204 removes selected chapters and exits selection mode", async () => {
-    fetchMock.mockResolvedValueOnce(emptyResponse(204));
+  it("handleBulkDeleteConfirm on success removes selected chapters and exits selection mode", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({ ok: true, data: null, headers: new Headers() });
 
     const { result } = renderHook(() => useBookDetail(BASE_BOOK));
     act(() => result.current.enterSelectionMode());
@@ -125,7 +122,7 @@ describe("useBookDetail", () => {
       await result.current.handleBulkDeleteConfirm();
     });
 
-    expect(fetchMock).toHaveBeenCalledWith(
+    expect(apiFetch).toHaveBeenCalledWith(
       "/api/v1/books/b-1/chapters/bulk-delete",
       expect.objectContaining({ method: "POST" }),
     );
@@ -133,10 +130,12 @@ describe("useBookDetail", () => {
     expect(result.current.isSelectionMode).toBe(false);
   });
 
-  it("handleBulkDeleteConfirm on 204 with X-Book-Deleted redirects to /books", async () => {
-    fetchMock.mockResolvedValueOnce(
-      new Response(null, { status: 204, headers: { "X-Book-Deleted": "true" } }),
-    );
+  it("handleBulkDeleteConfirm on success with X-Book-Deleted redirects to /books", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: true,
+      data: null,
+      headers: new Headers({ "X-Book-Deleted": "true" }),
+    });
 
     const { result } = renderHook(() => useBookDetail(BASE_BOOK));
     act(() => result.current.enterSelectionMode());
@@ -149,10 +148,12 @@ describe("useBookDetail", () => {
     expect(routerPush).toHaveBeenCalledWith("/books");
   });
 
-  it("handleBulkDeleteConfirm on error fires toast.error with server message", async () => {
-    fetchMock.mockResolvedValueOnce(
-      jsonResponse(409, { error: { code: "X", message: "Server reason." } }),
-    );
+  it("handleBulkDeleteConfirm on api-error keeps state intact (toast handled by wrapper)", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: false,
+      kind: "api-error",
+      code: "CHAPTER_PAID_LOCKED",
+    });
 
     const { result } = renderHook(() => useBookDetail(BASE_BOOK));
     act(() => result.current.enterSelectionMode());
@@ -162,6 +163,6 @@ describe("useBookDetail", () => {
       await result.current.handleBulkDeleteConfirm();
     });
 
-    expect(toast.error).toHaveBeenCalledWith("Server reason.");
+    expect(result.current.state.chapters.map((c) => c.id)).toEqual(["c-1", "c-2"]);
   });
 });
