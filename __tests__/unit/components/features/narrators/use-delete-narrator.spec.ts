@@ -1,14 +1,23 @@
 // @vitest-environment jsdom
 import { act, renderHook } from "@testing-library/react";
 import { buildNarrator } from "@tests/helpers/seed";
+import { toast } from "sonner";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useDeleteNarrator } from "@/components/features/narrators/hooks/use-delete-narrator";
+
+vi.mock("sonner", () => ({
+  toast: { error: vi.fn(), warning: vi.fn(), success: vi.fn(), info: vi.fn() },
+}));
 
 vi.mock("@/lib/api/api-fetch", () => ({
   apiFetch: vi.fn(),
 }));
 
 const { apiFetch } = await import("@/lib/api/api-fetch");
+
+function successResult() {
+  return { ok: true as const, data: null, headers: new Headers() };
+}
 
 describe("useDeleteNarrator", () => {
   beforeEach(() => {
@@ -33,7 +42,7 @@ describe("useDeleteNarrator", () => {
   it("on success, calls onConfirmed(id) and closes the dialog", async () => {
     const onConfirmed = vi.fn();
     const onOpenChange = vi.fn();
-    vi.mocked(apiFetch).mockResolvedValueOnce({ ok: true, data: null });
+    vi.mocked(apiFetch).mockResolvedValueOnce(successResult());
     const narrator = buildNarrator({ id: "abc" });
 
     const { result } = renderHook(() => useDeleteNarrator({ narrator, onConfirmed, onOpenChange }));
@@ -44,13 +53,16 @@ describe("useDeleteNarrator", () => {
 
     expect(apiFetch).toHaveBeenCalledWith(
       "/api/v1/narrators/abc",
-      expect.objectContaining({ method: "DELETE" }),
+      expect.objectContaining({
+        method: "DELETE",
+        suppressToastFor: ["NARRATOR_LINKED_TO_ACTIVE_CHAPTERS"],
+      }),
     );
     expect(onConfirmed).toHaveBeenCalledWith("abc");
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
-  it("on NARRATOR_LINKED_TO_ACTIVE_CHAPTERS, closes the dialog without confirming", async () => {
+  it("on NARRATOR_LINKED_TO_ACTIVE_CHAPTERS, fires rich toast.warning with blocking books", async () => {
     const onConfirmed = vi.fn();
     const onOpenChange = vi.fn();
     vi.mocked(apiFetch).mockResolvedValueOnce({
@@ -67,6 +79,10 @@ describe("useDeleteNarrator", () => {
       await result.current.handleConfirm();
     });
 
+    expect(toast.warning).toHaveBeenCalledWith(
+      "Não é possível excluir: capítulos em 1 livro(s) ativo(s).",
+      { description: "Livro X" },
+    );
     expect(onOpenChange).toHaveBeenCalledWith(false);
     expect(onConfirmed).not.toHaveBeenCalled();
   });
@@ -109,5 +125,6 @@ describe("useDeleteNarrator", () => {
 
     expect(onOpenChange).toHaveBeenCalledWith(false);
     expect(onConfirmed).not.toHaveBeenCalled();
+    expect(toast.warning).not.toHaveBeenCalled();
   });
 });

@@ -1,15 +1,24 @@
 // @vitest-environment jsdom
 import { act, renderHook } from "@testing-library/react";
 import { buildStudio } from "@tests/helpers/seed";
+import { toast } from "sonner";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useDeleteStudio } from "@/components/features/studios/hooks/use-delete-studio";
 import type { Studio } from "@/lib/domain/studio";
+
+vi.mock("sonner", () => ({
+  toast: { error: vi.fn(), warning: vi.fn(), success: vi.fn(), info: vi.fn() },
+}));
 
 vi.mock("@/lib/api/api-fetch", () => ({
   apiFetch: vi.fn(),
 }));
 
 const { apiFetch } = await import("@/lib/api/api-fetch");
+
+function successResult() {
+  return { ok: true as const, data: null, headers: new Headers() };
+}
 
 describe("useDeleteStudio", () => {
   beforeEach(() => {
@@ -35,7 +44,7 @@ describe("useDeleteStudio", () => {
   it("on success, calls onConfirmed(id) and closes the dialog", async () => {
     const onConfirmed = vi.fn();
     const onOpenChange = vi.fn();
-    vi.mocked(apiFetch).mockResolvedValueOnce({ ok: true, data: null });
+    vi.mocked(apiFetch).mockResolvedValueOnce(successResult());
     const studio = buildStudio({ id: "abc" });
 
     const { result } = renderHook(() => useDeleteStudio({ studio, onConfirmed, onOpenChange }));
@@ -46,13 +55,16 @@ describe("useDeleteStudio", () => {
 
     expect(apiFetch).toHaveBeenCalledWith(
       "/api/v1/studios/abc",
-      expect.objectContaining({ method: "DELETE" }),
+      expect.objectContaining({
+        method: "DELETE",
+        suppressToastFor: ["STUDIO_HAS_ACTIVE_BOOKS"],
+      }),
     );
     expect(onConfirmed).toHaveBeenCalledWith("abc");
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
-  it("on STUDIO_HAS_ACTIVE_BOOKS, closes the dialog without confirming (toast handled by wrapper)", async () => {
+  it("on STUDIO_HAS_ACTIVE_BOOKS, fires rich toast.warning with blocking books and closes dialog", async () => {
     const onConfirmed = vi.fn();
     const onOpenChange = vi.fn();
     vi.mocked(apiFetch).mockResolvedValueOnce({
@@ -69,6 +81,10 @@ describe("useDeleteStudio", () => {
       await result.current.handleConfirm();
     });
 
+    expect(toast.warning).toHaveBeenCalledWith(
+      "Não é possível excluir: 1 livro(s) com capítulos ativos.",
+      { description: "Livro X" },
+    );
     expect(onOpenChange).toHaveBeenCalledWith(false);
     expect(onConfirmed).not.toHaveBeenCalled();
   });
@@ -111,6 +127,7 @@ describe("useDeleteStudio", () => {
 
     expect(onOpenChange).toHaveBeenCalledWith(false);
     expect(onConfirmed).not.toHaveBeenCalled();
+    expect(toast.warning).not.toHaveBeenCalled();
   });
 
   it("error state stays null when the studio prop changes (no inline error path)", async () => {
@@ -149,7 +166,7 @@ describe("useDeleteStudio", () => {
   it("isDeleting reflects the request lifecycle", async () => {
     const onConfirmed = vi.fn();
     const onOpenChange = vi.fn();
-    let resolveFetch: (value: { ok: true; data: null }) => void = () => {};
+    let resolveFetch: (value: ReturnType<typeof successResult>) => void = () => {};
     vi.mocked(apiFetch).mockReturnValueOnce(
       new Promise((resolve) => {
         resolveFetch = resolve as typeof resolveFetch;
@@ -168,7 +185,7 @@ describe("useDeleteStudio", () => {
     expect(result.current.isDeleting).toBe(true);
 
     await act(async () => {
-      resolveFetch({ ok: true, data: null });
+      resolveFetch(successResult());
       await confirmPromise;
     });
 
