@@ -167,7 +167,7 @@ Single Next.js project (existing layout):
 
 ### Tests (RED)
 
-- [ ] T049 [P] [US3] Criar `__tests__/unit/api/api-fetch.spec.ts` (RED) com `vi.fn()` mocking `fetch` e `sonner` (`toast.error`/`toast.warning` spies). Cobrir cada linha da matriz em [contracts/api-fetch.md](./contracts/api-fetch.md):
+- [X] T049 [P] [US3] Criar `__tests__/unit/api/api-fetch.spec.ts` (RED) com `vi.fn()` mocking `fetch` e `sonner` (`toast.error`/`toast.warning` spies). Cobrir cada linha da matriz em [contracts/api-fetch.md](./contracts/api-fetch.md):
   - 200/201 com JSON → `{ok: true, data}`.
   - 204 → `{ok: true, data: null}`.
   - 401 `UNAUTHORIZED` → toast warning + `navigateToLogin` chamado + `{kind: "session-expired"}`. Debounce: duas chamadas em paralelo (janela ≤ 1s, com `vi.useFakeTimers()`) disparam toast **uma vez**; chamadas espaçadas em > 1s disparam dois toasts.
@@ -179,39 +179,40 @@ Single Next.js project (existing layout):
   - Code desconhecido → `console.warn` + toast.error genérico.
   - `suppressToastFor: ["SOME_CODE"]` (caso raro de UI substituindo o toast) → resposta com mesmo code → **sem** toast disparado, `details` retornado intacto. Testar com um code de exemplo qualquer (não usar `STUDIO_HAS_ACTIVE_BOOKS` — esse mantém comportamento default).
   - Fetch rejeitado → toast.error + `{kind: "network"}`.
-- [ ] T050 [P] [US3] Estender `__tests__/e2e/error-toasts.spec.ts` (de T038) com cenário 401: forçar expiração de sessão (deletar cookie via Playwright), executar PATCH em qualquer rota, verificar toast warning `"Sua sessão expirou…"` + URL final em `/login`.
+- [ ] T050 [P] [US3] **Diferido para Phase 6 (T075 — fase final E2E)**: Estender `__tests__/e2e/error-toasts.spec.ts` com cenário 401.
 
 ### Implementation
 
-- [ ] T051 [US3] Criar `src/lib/api/api-fetch.ts` exportando `apiFetch<T>(url, options?): Promise<ApiResult<T>>` conforme [contracts/api-fetch.md](./contracts/api-fetch.md) e [research.md D-08](./research.md). Inclui:
+- [X] T051 [US3] Criar `src/lib/api/api-fetch.ts` exportando `apiFetch<T>(url, options?): Promise<ApiResult<T>>` conforme [contracts/api-fetch.md](./contracts/api-fetch.md) e [research.md D-08](./research.md). Headers da resposta de sucesso são expostas em `result.headers` para casos como `X-Book-Deleted`. Inclui:
   - Helper interno `dispatchToast(code)` consultando `errorCodes[code]` (lê `variant` do catálogo) — sempre dispara para erro server-side, exceto 422 `VALIDATION_ERROR` (inline) e codes em `suppressToastFor` (escape hatch).
   - Debounce de 401: módulo-local `let pendingSessionToast = false` reset por `setTimeout(() => pendingSessionToast = false, 1000)` na primeira chamada que disparou toast.
   - Conversão de `details[]` para `Record<field, message>` para 422 `VALIDATION_ERROR`.
   - Para erros server-side com `details` estruturado (ex.: `STUDIO_HAS_ACTIVE_BOOKS` com `details.books`): dispara toast E retorna `details` no `ApiResult` para que o hook renderize UI complementar (modal/lista) **junto** ao toast.
   - Pega `X-Request-Id` da resposta para `console.warn` em codes desconhecidos.
   - T049 GREEN.
-- [ ] T052 [P] [US3] Refatorar `src/components/features/studios/hooks/use-create-studio-form.ts` para `apiFetch`. Remover `toast.*`; manter apenas `form.setError` em `kind: "field-errors"`.
-- [ ] T053 [P] [US3] Refatorar `src/components/features/studios/hooks/use-update-studio-form.ts`.
-- [ ] T054 [P] [US3] Refatorar `src/components/features/studios/hooks/use-delete-studio.ts`. **Sem `suppressToastFor`** — comportamento padrão: toast warning é disparado pelo wrapper; o hook lê `result.details.books` e renderiza a lista de livros bloqueantes em UI complementar (dialog/popover já existente). Toast e UI coexistem.
-- [ ] T055 [P] [US3] Refatorar `src/components/features/narrators/hooks/use-create-narrator-form.ts`.
-- [ ] T056 [P] [US3] Refatorar `src/components/features/narrators/hooks/use-update-narrator-form.ts`.
-- [ ] T057 [P] [US3] Refatorar `src/components/features/narrators/hooks/use-delete-narrator.ts`. Mesmo padrão de T054: toast warning automático + UI complementar com `result.details.books` (sem suppress).
-- [ ] T058 [P] [US3] Refatorar `src/components/features/editors/hooks/use-create-editor-form.ts`.
-- [ ] T059 [P] [US3] Refatorar `src/components/features/editors/hooks/use-update-editor-form.ts`.
-- [ ] T060 [P] [US3] Refatorar `src/components/features/editors/hooks/use-delete-editor.ts`. Mesmo padrão de T054: toast warning automático + UI complementar com `result.details.books` (sem suppress).
-- [ ] T061 [P] [US3] Refatorar `src/components/features/books/hooks/use-create-book-form.ts`.
-- [ ] T062 [P] [US3] Refatorar `src/components/features/books/hooks/use-edit-book-form.ts`.
-- [ ] T063 [P] [US3] Refatorar `src/components/features/books/hooks/use-studio-inline-creator.ts`.
-- [ ] T064 [P] [US3] Refatorar `src/components/features/books/hooks/use-book-pdf-popover.ts`.
-- [ ] T065 [P] [US3] Refatorar `src/components/features/books/hooks/use-book-detail.ts` (deletar capítulos em massa).
-- [ ] T066 [P] [US3] Refatorar `src/components/features/chapters/hooks/use-chapter-row-edit.ts`.
-- [ ] T067 [P] [US3] Refatorar `src/components/features/chapters/hooks/use-delete-chapter.ts`.
-- [ ] T068 [P] [US3] Refatorar `src/components/features/auth/hooks/use-login-form.ts`. Tratamento especial: sucesso → navegar; falha 401 do better-auth não passa por `apiFetch` (rota `/api/auth/**` está fora de escopo); manter `toast.error` específico de credenciais inválidas via mecanismo do better-auth, mas remover qualquer leak de mensagem técnica da resposta.
-- [ ] T069 [US3] Auditoria final via grep:
-  - `grep -rn "fetch(" src/components/features/ | grep -v "apiFetch"` → zero hits para `/api/v1/**`.
-  - `grep -rn "toast\.\(error\|warning\)" src/components/features/` → apenas em arquivos de auth/login (justificado) ou casos com `suppressToastFor`.
+- [X] T052 [P] [US3] Refatorar `use-create-studio-form.ts` para `apiFetch`.
+- [X] T053 [P] [US3] Refatorar `use-update-studio-form.ts`.
+- [X] T054 [P] [US3] Refatorar `use-delete-studio.ts` (toast handled by wrapper; UI complementar via `result.details.books` quando aplicável).
+- [X] T055 [P] [US3] Refatorar `use-create-narrator-form.ts`.
+- [X] T056 [P] [US3] Refatorar `use-update-narrator-form.ts`.
+- [X] T057 [P] [US3] Refatorar `use-delete-narrator.ts`.
+- [X] T058 [P] [US3] Refatorar `use-create-editor-form.ts`.
+- [X] T059 [P] [US3] Refatorar `use-update-editor-form.ts`.
+- [X] T060 [P] [US3] Refatorar `use-delete-editor.ts`.
+- [X] T061 [P] [US3] Refatorar `use-create-book-form.ts` (códigos atualizados: `STUDIO_REFERENCE_INVALID`, `TITLE_ALREADY_IN_USE`).
+- [X] T062 [P] [US3] Refatorar `use-edit-book-form.ts` (códigos: `BOOK_CANNOT_REDUCE_CHAPTERS`, `BOOK_PAID_PRICE_LOCKED`, `BOOK_PAID_STUDIO_LOCKED`, `TITLE_ALREADY_IN_USE`, `STUDIO_REFERENCE_INVALID`).
+- [X] T063 [P] [US3] Refatorar `use-studio-inline-creator.ts`.
+- [X] T064 [P] [US3] Refatorar `use-book-pdf-popover.ts`.
+- [X] T065 [P] [US3] Refatorar `use-book-detail.ts` (`X-Book-Deleted` lido via `result.headers`).
+- [X] T066 [P] [US3] Refatorar `use-chapter-row-edit.ts`.
+- [X] T067 [P] [US3] Refatorar `use-delete-chapter.ts` (`X-Book-Deleted` lido via `result.headers`).
+- [X] T068 [P] [US3] Refatorar `use-login-form.ts`. Login segue better-auth (rota `/api/auth/**` fora de escopo); user-preferences fetch migrado para `apiFetch`. Mensagem de credenciais inválidas atualizada para PT-BR sem jargão (`"Credenciais inválidas. Verifique seu usuário e senha."`).
+- [X] T068a [US3] **Bonus** — `use-auto-save-preference.ts` migrado para `apiFetch` (descoberto na auditoria T069).
+- [X] T069 [US3] Auditoria final via grep:
+  - `grep -rn "fetch(" src/components/features/ | grep -v "apiFetch"` → zero hits.
+  - `grep -rn "toast\.\(error\|warning\)" src/components/features/` → 3 hits **justificados**: `use-login-form.ts` (better-auth fora de escopo de apiFetch); `use-create-book-form.ts` + `use-edit-book-form.ts` (toast warning local "estúdio inline criado mas não vinculado" — UX hook, não resposta de API).
   - `grep -rn "body?.error?.message" src/components/features/` → zero.
-- [ ] T070 [US3] Validar T049 GREEN, T050 (E2E 401 redirect) GREEN, T038 (E2E PT-BR toasts) ainda GREEN.
+- [ ] T070 [US3] **Parcial**: T049 GREEN (18/18). T050/T038 (E2E) diferidos para Phase 6 T075 (rodada E2E final).
 
 **Checkpoint**: Hooks de feature livres de tratamento manual de erro. Wrapper centraliza tudo. Constituição Princípio VII (componentes/hooks atomicidade) reforçado.
 

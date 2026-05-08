@@ -1,6 +1,5 @@
 // @vitest-environment jsdom
 import { act, renderHook } from "@testing-library/react";
-import { jsonResponse } from "@tests/helpers/fetch-response";
 import { buildStudio } from "@tests/helpers/seed";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -12,6 +11,12 @@ import type { UpdateBookInput } from "@/lib/schemas/book";
 vi.mock("sonner", () => ({
   toast: { success: vi.fn(), error: vi.fn(), warning: vi.fn(), info: vi.fn() },
 }));
+
+vi.mock("@/lib/api/api-fetch", () => ({
+  apiFetch: vi.fn(),
+}));
+
+const { apiFetch } = await import("@/lib/api/api-fetch");
 
 const BOOK: BookEditValues = {
   id: "b-1",
@@ -28,8 +33,9 @@ function renderEditBookHook(overrides: Partial<BookEditValues> = {}) {
     buildStudio({ id: "s-A", name: "Alpha" }),
     buildStudio({ id: "s-B", name: "Beta" }),
   ];
-  const onUpdated = vi.fn();
-  const onOpenChange = vi.fn();
+  const onUpdated =
+    vi.fn<(d: import("@/components/features/books/book-edit-dialog").UpdatedBookDetail) => void>();
+  const onOpenChange = vi.fn<(open: boolean) => void>();
   return {
     book,
     studios,
@@ -50,13 +56,13 @@ function renderEditBookHook(overrides: Partial<BookEditValues> = {}) {
   };
 }
 
-describe("useEditBookForm", () => {
-  let fetchMock: ReturnType<typeof vi.fn>;
+function successResult(data: unknown) {
+  return { ok: true as const, data, headers: new Headers() };
+}
 
+describe("useEditBookForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    fetchMock = vi.fn();
-    globalThis.fetch = fetchMock as unknown as typeof fetch;
   });
 
   it("studioOptions matches the supplied list when no inline studio added", () => {
@@ -64,7 +70,7 @@ describe("useEditBookForm", () => {
     expect(result.current.studioOptions).toBe(studios);
   });
 
-  it("on no changes, closes the dialog without firing fetch", async () => {
+  it("on no changes, closes the dialog without firing apiFetch", async () => {
     const { result, onOpenChange } = renderEditBookHook();
 
     await act(async () => {
@@ -76,12 +82,12 @@ describe("useEditBookForm", () => {
       });
     });
 
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(apiFetch).not.toHaveBeenCalled();
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
-  it("on 200 success, calls onUpdated with detail and closes", async () => {
-    fetchMock.mockResolvedValueOnce(jsonResponse(200, { data: { id: "b-1" } }));
+  it("on success, calls onUpdated with detail and closes", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce(successResult({ data: { id: "b-1" } }));
 
     const { result, onUpdated, onOpenChange } = renderEditBookHook();
     await act(async () => {
@@ -93,21 +99,20 @@ describe("useEditBookForm", () => {
       });
     });
 
-    expect(fetchMock).toHaveBeenCalledWith(
+    expect(apiFetch).toHaveBeenCalledWith(
       "/api/v1/books/b-1",
-      expect.objectContaining({
-        method: "PATCH",
-        body: JSON.stringify({ title: "New Title" }),
-      }),
+      expect.objectContaining({ method: "PATCH", body: { title: "New Title" } }),
     );
     expect(onUpdated).toHaveBeenCalled();
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
-  it("on 422 CANNOT_REDUCE_CHAPTERS, sets numChapters error", async () => {
-    fetchMock.mockResolvedValueOnce(
-      jsonResponse(422, { error: { code: "CANNOT_REDUCE_CHAPTERS", message: "x" } }),
-    );
+  it("on BOOK_CANNOT_REDUCE_CHAPTERS api-error, sets numChapters error", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: false,
+      kind: "api-error",
+      code: "BOOK_CANNOT_REDUCE_CHAPTERS",
+    });
 
     const { result } = renderEditBookHook();
     await act(async () => {
@@ -124,10 +129,12 @@ describe("useEditBookForm", () => {
     );
   });
 
-  it("on 409 BOOK_PAID_PRICE_LOCKED, sets pricePerHourCents error", async () => {
-    fetchMock.mockResolvedValueOnce(
-      jsonResponse(409, { error: { code: "BOOK_PAID_PRICE_LOCKED", message: "x" } }),
-    );
+  it("on BOOK_PAID_PRICE_LOCKED api-error, sets pricePerHourCents error", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: false,
+      kind: "api-error",
+      code: "BOOK_PAID_PRICE_LOCKED",
+    });
 
     const { result } = renderEditBookHook();
     await act(async () => {
@@ -144,10 +151,12 @@ describe("useEditBookForm", () => {
     );
   });
 
-  it("on 409 BOOK_PAID_STUDIO_LOCKED, sets studioId error", async () => {
-    fetchMock.mockResolvedValueOnce(
-      jsonResponse(409, { error: { code: "BOOK_PAID_STUDIO_LOCKED", message: "x" } }),
-    );
+  it("on BOOK_PAID_STUDIO_LOCKED api-error, sets studioId error", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: false,
+      kind: "api-error",
+      code: "BOOK_PAID_STUDIO_LOCKED",
+    });
 
     const { result } = renderEditBookHook();
     await act(async () => {
@@ -164,10 +173,12 @@ describe("useEditBookForm", () => {
     );
   });
 
-  it("on 409 TITLE_ALREADY_IN_USE, sets title error", async () => {
-    fetchMock.mockResolvedValueOnce(
-      jsonResponse(409, { error: { code: "TITLE_ALREADY_IN_USE", message: "x" } }),
-    );
+  it("on TITLE_ALREADY_IN_USE api-error, sets title error", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: false,
+      kind: "api-error",
+      code: "TITLE_ALREADY_IN_USE",
+    });
 
     const { result } = renderEditBookHook();
     await act(async () => {
@@ -181,24 +192,6 @@ describe("useEditBookForm", () => {
 
     expect(result.current.form.getFieldState("title").error?.message).toBe(
       "Já existe um livro com este título neste estúdio.",
-    );
-  });
-
-  it("on 500, fires generic toast.error", async () => {
-    fetchMock.mockResolvedValueOnce(jsonResponse(500, { error: { code: "X", message: "x" } }));
-
-    const { result } = renderEditBookHook();
-    await act(async () => {
-      await result.current.onSubmit({
-        title: "Different",
-        studioId: "s-A",
-        pricePerHourCents: 5000,
-        numChapters: 3,
-      });
-    });
-
-    expect(toast.error).toHaveBeenCalledWith(
-      "Não foi possível atualizar o livro. Tente novamente.",
     );
   });
 

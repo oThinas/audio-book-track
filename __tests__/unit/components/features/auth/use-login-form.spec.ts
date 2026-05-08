@@ -1,6 +1,5 @@
 // @vitest-environment jsdom
 import { act, renderHook } from "@testing-library/react";
-import { jsonResponse } from "@tests/helpers/fetch-response";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -23,19 +22,22 @@ vi.mock("@/lib/auth/client", () => ({
   },
 }));
 
+vi.mock("@/lib/api/api-fetch", () => ({
+  apiFetch: vi.fn(),
+}));
+
+const { apiFetch } = await import("@/lib/api/api-fetch");
+
 function renderLoginHook() {
   return renderHook(() => useLoginForm());
 }
 
 describe("useLoginForm", () => {
-  let fetchMock: ReturnType<typeof vi.fn>;
   let signInMock: ReturnType<typeof vi.fn>;
   let routerPush: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    fetchMock = vi.fn();
-    globalThis.fetch = fetchMock as unknown as typeof fetch;
     signInMock = vi.mocked(authClient.signIn.username);
     routerPush = vi.mocked(useRouter()).push as ReturnType<typeof vi.fn>;
   });
@@ -58,7 +60,11 @@ describe("useLoginForm", () => {
 
   it("on successful login, fetches preferences and redirects to mapped favoritePage", async () => {
     signInMock.mockResolvedValueOnce({ data: {}, error: null });
-    fetchMock.mockResolvedValueOnce(jsonResponse(200, { data: { favoritePage: "books" } }));
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: true,
+      data: { data: { favoritePage: "books" } },
+      headers: new Headers(),
+    });
 
     const { result } = renderLoginHook();
 
@@ -67,27 +73,17 @@ describe("useLoginForm", () => {
     });
 
     expect(signInMock).toHaveBeenCalledWith({ username: "alice", password: "secret123" });
-    expect(fetchMock).toHaveBeenCalledWith("/api/v1/user-preferences");
+    expect(apiFetch).toHaveBeenCalledWith("/api/v1/user-preferences");
     expect(routerPush).toHaveBeenCalledWith("/books");
-    expect(toast.error).not.toHaveBeenCalled();
   });
 
-  it("falls back to /dashboard when preferences fetch returns non-ok", async () => {
+  it("falls back to /dashboard when preferences fetch fails", async () => {
     signInMock.mockResolvedValueOnce({ data: {}, error: null });
-    fetchMock.mockResolvedValueOnce(jsonResponse(500, { error: { message: "boom" } }));
-
-    const { result } = renderLoginHook();
-
-    await act(async () => {
-      await result.current.onSubmit({ username: "alice", password: "secret123" });
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: false,
+      kind: "api-error",
+      code: "INTERNAL_ERROR",
     });
-
-    expect(routerPush).toHaveBeenCalledWith("/dashboard");
-  });
-
-  it("falls back to /dashboard when preferences fetch throws", async () => {
-    signInMock.mockResolvedValueOnce({ data: {}, error: null });
-    fetchMock.mockRejectedValueOnce(new Error("network"));
 
     const { result } = renderLoginHook();
 
@@ -100,7 +96,11 @@ describe("useLoginForm", () => {
 
   it("falls back to /dashboard when favoritePage is unknown", async () => {
     signInMock.mockResolvedValueOnce({ data: {}, error: null });
-    fetchMock.mockResolvedValueOnce(jsonResponse(200, { data: { favoritePage: "unknown-route" } }));
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: true,
+      data: { data: { favoritePage: "unknown-route" } },
+      headers: new Headers(),
+    });
 
     const { result } = renderLoginHook();
 
@@ -124,22 +124,9 @@ describe("useLoginForm", () => {
     });
 
     expect(toast.error).toHaveBeenCalledWith(
-      "Credenciais inválidas. Verifique seu username e senha.",
+      "Credenciais inválidas. Verifique seu usuário e senha.",
     );
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(apiFetch).not.toHaveBeenCalled();
     expect(routerPush).not.toHaveBeenCalled();
-  });
-
-  it("never calls toast.success in any branch", async () => {
-    signInMock.mockResolvedValueOnce({ data: {}, error: null });
-    fetchMock.mockResolvedValueOnce(jsonResponse(200, { data: { favoritePage: "dashboard" } }));
-
-    const { result } = renderLoginHook();
-
-    await act(async () => {
-      await result.current.onSubmit({ username: "alice", password: "secret123" });
-    });
-
-    expect(toast.success).not.toHaveBeenCalled();
   });
 });

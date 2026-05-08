@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { toast } from "sonner";
-import type { ApiErrorBody } from "@/lib/api/error-response";
+import { apiFetch } from "@/lib/api/api-fetch";
 import type { Studio } from "@/lib/domain/studio";
 
 export interface UseDeleteStudioArgs {
@@ -25,9 +24,6 @@ export function useDeleteStudio({
 }: UseDeleteStudioArgs): UseDeleteStudioReturn {
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Reset error during render when the targeted studio changes — React-recommended
-  // pattern over useEffect for resetting state derived from props
-  // (https://react.dev/learn/you-might-not-need-an-effect#resetting-all-state-when-a-prop-changes).
   const studioId = studio?.id ?? null;
   const [trackedStudioId, setTrackedStudioId] = useState<string | null>(studioId);
   if (studioId !== trackedStudioId) {
@@ -40,34 +36,20 @@ export function useDeleteStudio({
 
     setIsDeleting(true);
     try {
-      const response = await fetch(`/api/v1/studios/${studio.id}`, {
+      const result = await apiFetch<null>(`/api/v1/studios/${studio.id}`, {
         method: "DELETE",
       });
 
-      if (response.status === 204 || response.status === 404) {
+      if (result.ok) {
         onConfirmed(studio.id);
         onOpenChange(false);
         return;
       }
 
-      if (response.status === 409) {
-        const body = (await response.json()) as ApiErrorBody & {
-          error: { details?: { books?: ReadonlyArray<{ id: string; title: string }> } };
-        };
-        if (body.error.code === "STUDIO_HAS_ACTIVE_BOOKS") {
-          const titles = body.error.details?.books?.map((b) => b.title) ?? [];
-          const titlesPreview = titles.slice(0, 3).join(", ");
-          const remainder = titles.length > 3 ? ` e mais ${titles.length - 3}` : "";
-          toast.error(
-            `Não é possível excluir: ${titles.length} livro(s) com capítulos ativos.`,
-            titles.length > 0 ? { description: `${titlesPreview}${remainder}` } : undefined,
-          );
-          onOpenChange(false);
-          return;
-        }
+      if (result.kind === "api-error" && result.code === "STUDIO_NOT_FOUND") {
+        onConfirmed(studio.id);
       }
 
-      toast.error("Não foi possível excluir o estúdio. Tente novamente.");
       onOpenChange(false);
     } finally {
       setIsDeleting(false);

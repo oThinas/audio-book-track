@@ -1,6 +1,5 @@
 // @vitest-environment jsdom
 import { act, renderHook } from "@testing-library/react";
-import { jsonResponse } from "@tests/helpers/fetch-response";
 import { buildStudio } from "@tests/helpers/seed";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -12,19 +11,29 @@ vi.mock("sonner", () => ({
   toast: { success: vi.fn(), error: vi.fn(), warning: vi.fn(), info: vi.fn() },
 }));
 
+vi.mock("@/lib/api/api-fetch", () => ({
+  apiFetch: vi.fn(),
+}));
+
+const { apiFetch } = await import("@/lib/api/api-fetch");
+
 function renderCreateBookHook(
   args: {
     studios?: ReturnType<typeof buildStudio>[];
-    onCreated?: ReturnType<typeof vi.fn>;
-    onOpenChange?: ReturnType<typeof vi.fn>;
+    onCreated?: (
+      book: import("@/components/features/books/book-create-dialog").CreatedBook,
+    ) => void;
+    onOpenChange?: (open: boolean) => void;
   } = {},
 ) {
   const studios = args.studios ?? [
     buildStudio({ id: "s-A", name: "Alpha" }),
     buildStudio({ id: "s-Z", name: "Zeta" }),
   ];
-  const onCreated = args.onCreated ?? vi.fn();
-  const onOpenChange = args.onOpenChange ?? vi.fn();
+  const onCreated =
+    args.onCreated ??
+    vi.fn<(book: import("@/components/features/books/book-create-dialog").CreatedBook) => void>();
+  const onOpenChange = args.onOpenChange ?? vi.fn<(open: boolean) => void>();
   return {
     onCreated,
     onOpenChange,
@@ -39,13 +48,13 @@ function renderCreateBookHook(
   };
 }
 
-describe("useCreateBookForm", () => {
-  let fetchMock: ReturnType<typeof vi.fn>;
+function successResult(data: unknown) {
+  return { ok: true as const, data, headers: new Headers() };
+}
 
+describe("useCreateBookForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    fetchMock = vi.fn();
-    globalThis.fetch = fetchMock as unknown as typeof fetch;
   });
 
   it("studioOptions matches the backend-supplied list when no inline creations exist", () => {
@@ -71,9 +80,9 @@ describe("useCreateBookForm", () => {
     expect(result.current.studioOptions.map((s) => s.id)).toEqual(["s-A", "s-Z", "s-Late"]);
   });
 
-  it("on 201 success, calls onCreated and POSTs payload (without inline marker when no inline)", async () => {
-    fetchMock.mockResolvedValueOnce(
-      jsonResponse(201, {
+  it("on success, calls onCreated and POSTs payload (without inline marker when no inline)", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce(
+      successResult({
         data: {
           id: "b-1",
           title: "Test",
@@ -94,24 +103,19 @@ describe("useCreateBookForm", () => {
       });
     });
 
-    expect(fetchMock).toHaveBeenCalledWith(
+    expect(apiFetch).toHaveBeenCalledWith(
       "/api/v1/books",
       expect.objectContaining({
         method: "POST",
-        body: JSON.stringify({
-          title: "Test",
-          studioId: "s-A",
-          pricePerHourCents: 8000,
-          numChapters: 1,
-        }),
+        body: { title: "Test", studioId: "s-A", pricePerHourCents: 8000, numChapters: 1 },
       }),
     );
     expect(onCreated).toHaveBeenCalledTimes(1);
   });
 
   it("attaches inlineStudioId to payload when the selected studio was inline-created", async () => {
-    fetchMock.mockResolvedValueOnce(
-      jsonResponse(201, {
+    vi.mocked(apiFetch).mockResolvedValueOnce(
+      successResult({
         data: {
           id: "b-1",
           title: "T",
@@ -135,14 +139,16 @@ describe("useCreateBookForm", () => {
       });
     });
 
-    const callBody = JSON.parse(fetchMock.mock.calls[0][1].body) as Record<string, unknown>;
+    const callBody = vi.mocked(apiFetch).mock.calls[0]?.[1]?.body as Record<string, unknown>;
     expect(callBody).toMatchObject({ inlineStudioId: "s-inline" });
   });
 
-  it("on 422 STUDIO_NOT_FOUND, sets studioId field error", async () => {
-    fetchMock.mockResolvedValueOnce(
-      jsonResponse(422, { error: { code: "STUDIO_NOT_FOUND", message: "x" } }),
-    );
+  it("on STUDIO_REFERENCE_INVALID api-error, sets studioId field error", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: false,
+      kind: "api-error",
+      code: "STUDIO_REFERENCE_INVALID",
+    });
 
     const { result } = renderCreateBookHook();
     await act(async () => {
@@ -159,10 +165,12 @@ describe("useCreateBookForm", () => {
     );
   });
 
-  it("on 422 INLINE_STUDIO_INVALID, sets studioId field error", async () => {
-    fetchMock.mockResolvedValueOnce(
-      jsonResponse(422, { error: { code: "INLINE_STUDIO_INVALID", message: "x" } }),
-    );
+  it("on INLINE_STUDIO_INVALID api-error, sets studioId field error", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: false,
+      kind: "api-error",
+      code: "INLINE_STUDIO_INVALID",
+    });
 
     const { result } = renderCreateBookHook();
     await act(async () => {
@@ -179,16 +187,12 @@ describe("useCreateBookForm", () => {
     );
   });
 
-  it("on 422 with field detail, maps to form.setError", async () => {
-    fetchMock.mockResolvedValueOnce(
-      jsonResponse(422, {
-        error: {
-          code: "VALIDATION_ERROR",
-          message: "Bad",
-          details: [{ field: "title", message: "Título é obrigatório" }],
-        },
-      }),
-    );
+  it("on field-errors, maps to form.setError", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: false,
+      kind: "field-errors",
+      fields: { title: "Título é obrigatório" },
+    });
 
     const { result } = renderCreateBookHook();
     await act(async () => {
@@ -203,10 +207,12 @@ describe("useCreateBookForm", () => {
     expect(result.current.form.getFieldState("title").error?.message).toBe("Título é obrigatório");
   });
 
-  it("on 409, sets title field error", async () => {
-    fetchMock.mockResolvedValueOnce(
-      jsonResponse(409, { error: { code: "CONFLICT", message: "x" } }),
-    );
+  it("on TITLE_ALREADY_IN_USE api-error, sets title field error", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: false,
+      kind: "api-error",
+      code: "TITLE_ALREADY_IN_USE",
+    });
 
     const { result } = renderCreateBookHook();
     await act(async () => {
@@ -223,22 +229,6 @@ describe("useCreateBookForm", () => {
     );
   });
 
-  it("on 500, fires generic toast.error", async () => {
-    fetchMock.mockResolvedValueOnce(jsonResponse(500, { error: { code: "X", message: "x" } }));
-
-    const { result } = renderCreateBookHook();
-    await act(async () => {
-      await result.current.onSubmit({
-        title: "T",
-        studioId: "s-A",
-        pricePerHourCents: 1,
-        numChapters: 1,
-      });
-    });
-
-    expect(toast.error).toHaveBeenCalledWith("Não foi possível criar o livro. Tente novamente.");
-  });
-
   it("warns and resets when closing dialog with an unbound inline studio", () => {
     const { result, onOpenChange } = renderCreateBookHook();
     const inline = buildStudio({ id: "s-inline", name: "Inline" });
@@ -250,25 +240,5 @@ describe("useCreateBookForm", () => {
       "Estúdio criado mas não vinculado: o valor/hora ficou em R$ 0,01. Edite-o quando puder.",
     );
     expect(onOpenChange).toHaveBeenCalledWith(false);
-  });
-
-  it("never calls toast.success in any branch", async () => {
-    fetchMock.mockResolvedValueOnce(
-      jsonResponse(201, {
-        data: { id: "b-1", title: "T", studioId: "s-A", pricePerHourCents: 1, chapters: [] },
-      }),
-    );
-
-    const { result } = renderCreateBookHook();
-    await act(async () => {
-      await result.current.onSubmit({
-        title: "T",
-        studioId: "s-A",
-        pricePerHourCents: 1,
-        numChapters: 1,
-      });
-    });
-
-    expect(toast.success).not.toHaveBeenCalled();
   });
 });

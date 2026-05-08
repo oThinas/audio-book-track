@@ -2,8 +2,7 @@
 
 import { type RefObject, useEffect, useRef } from "react";
 import type { UseFormReturn } from "react-hook-form";
-import { toast } from "sonner";
-import type { ApiErrorBody } from "@/lib/api/error-response";
+import { apiFetch } from "@/lib/api/api-fetch";
 import type { Editor, EditorFormValues } from "@/lib/domain/editor";
 
 export interface UseCreateEditorFormArgs {
@@ -17,6 +16,8 @@ export interface UseCreateEditorFormReturn {
   readonly firstFieldRef: RefObject<HTMLInputElement | null>;
 }
 
+const FIELD_NAMES = new Set<keyof EditorFormValues>(["name", "email"]);
+
 export function useCreateEditorForm({
   form,
   onCreated,
@@ -28,39 +29,32 @@ export function useCreateEditorForm({
   }, []);
 
   async function onSubmit(values: EditorFormValues) {
-    const response = await fetch("/api/v1/editors", {
+    const result = await apiFetch<{ data: Editor }>("/api/v1/editors", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values),
+      body: values,
     });
 
-    if (response.status === 201) {
-      const body = (await response.json()) as { data: Editor };
-      onCreated(body.data);
+    if (result.ok) {
+      onCreated(result.data.data);
       return;
     }
 
-    if (response.status === 422) {
-      const body = (await response.json()) as ApiErrorBody;
-      for (const detail of body.error.details ?? []) {
-        if (detail.field === "name" || detail.field === "email") {
-          form.setError(detail.field, { message: detail.message });
+    if (result.kind === "field-errors") {
+      for (const [field, message] of Object.entries(result.fields)) {
+        if (FIELD_NAMES.has(field as keyof EditorFormValues)) {
+          form.setError(field as keyof EditorFormValues, { message });
         }
       }
       return;
     }
 
-    if (response.status === 409) {
-      const body = (await response.json()) as ApiErrorBody;
-      if (body.error.code === "NAME_ALREADY_IN_USE") {
-        form.setError("name", { message: "Nome já cadastrado" });
-      } else if (body.error.code === "EMAIL_ALREADY_IN_USE") {
-        form.setError("email", { message: "E-mail já cadastrado" });
+    if (result.kind === "api-error") {
+      if (result.code === "NAME_ALREADY_IN_USE") {
+        form.setError("name", { message: "Nome já cadastrado." });
+      } else if (result.code === "EMAIL_ALREADY_IN_USE") {
+        form.setError("email", { message: "E-mail já cadastrado." });
       }
-      return;
     }
-
-    toast.error("Não foi possível salvar o editor. Tente novamente.");
   }
 
   return {

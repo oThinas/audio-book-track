@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
-import { toast } from "sonner";
-import type { ApiErrorBody } from "@/lib/api/error-response";
+import { apiFetch } from "@/lib/api/api-fetch";
 
 export interface PdfUrlFormValues {
   readonly pdfUrl: string;
@@ -57,27 +56,18 @@ export function useBookPdfPopover({
     const trimmed = values.pdfUrl.trim();
     const payload: { pdfUrl: string | null } =
       trimmed === "" ? { pdfUrl: null } : { pdfUrl: trimmed };
-    const response = await fetch(`/api/v1/books/${bookId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    const result = await apiFetch(`/api/v1/books/${bookId}`, { method: "PATCH", body: payload });
 
-    if (response.status === 200) {
+    if (result.ok) {
       const next = trimmed === "" ? null : trimmed;
       onUpdated(next);
       handleOpenChange(false);
       return;
     }
 
-    if (response.status === 422) {
-      const body = (await response.json().catch(() => null)) as ApiErrorBody | null;
-      const fieldError = body?.error.details?.find((d) => d.field === "pdfUrl");
-      form.setError("pdfUrl", { message: fieldError?.message ?? "URL inválida." });
-      return;
+    if (result.kind === "field-errors" && result.fields.pdfUrl) {
+      form.setError("pdfUrl", { message: result.fields.pdfUrl });
     }
-
-    toast.error("Não foi possível salvar a URL. Tente novamente.");
   }
 
   const { isDirty, isValid, isSubmitting } = form.formState;

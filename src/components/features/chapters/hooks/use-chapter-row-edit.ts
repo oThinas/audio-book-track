@@ -1,7 +1,7 @@
 "use client";
 
 import type { UseFormReturn } from "react-hook-form";
-import { toast } from "sonner";
+import { apiFetch } from "@/lib/api/api-fetch";
 import type { ChapterStatus } from "@/lib/domain/chapter";
 import type { ChapterRowEntity, ChapterRowOption } from "../chapter-row";
 import { usePaidReversion } from "./use-paid-reversion";
@@ -66,50 +66,33 @@ export function useChapterRowEdit({
   const reversion = usePaidReversion<ChapterEditDraftValues>();
 
   async function persist(patch: Record<string, unknown>): Promise<void> {
-    try {
-      const response = await fetch(`/api/v1/chapters/${chapter.id}`, {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(patch),
-      });
-      const body = (await response.json()) as
-        | {
-            data: {
-              id: string;
-              number: number;
-              status: ChapterStatus;
-              narratorId: string | null;
-              editorId: string | null;
-              editedSeconds: number;
-            };
-            meta: { bookStatus: ChapterStatus };
-          }
-        | { error: { code: string; message: string } };
+    const result = await apiFetch<{
+      data: {
+        id: string;
+        number: number;
+        status: ChapterStatus;
+        narratorId: string | null;
+        editorId: string | null;
+        editedSeconds: number;
+      };
+      meta: { bookStatus: ChapterStatus };
+    }>(`/api/v1/chapters/${chapter.id}`, { method: "PATCH", body: patch });
 
-      if (!response.ok) {
-        const message = "error" in body ? body.error.message : "Erro ao atualizar capítulo.";
-        toast.error(message);
-        return;
-      }
-      if ("data" in body) {
-        const data = body.data;
-        const updated: ChapterRowEntity = {
-          id: data.id,
-          number: data.number,
-          status: data.status,
-          editedSeconds: data.editedSeconds,
-          narrator: data.narratorId
-            ? { id: data.narratorId, name: narratorNameById.get(data.narratorId) ?? "—" }
-            : null,
-          editor: data.editorId
-            ? { id: data.editorId, name: editorNameById.get(data.editorId) ?? "—" }
-            : null,
-        };
-        onSaved(updated, body.meta.bookStatus);
-      }
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro de rede ao atualizar capítulo.");
-    }
+    if (!result.ok) return;
+    const { data, meta } = result.data;
+    const updated: ChapterRowEntity = {
+      id: data.id,
+      number: data.number,
+      status: data.status,
+      editedSeconds: data.editedSeconds,
+      narrator: data.narratorId
+        ? { id: data.narratorId, name: narratorNameById.get(data.narratorId) ?? "—" }
+        : null,
+      editor: data.editorId
+        ? { id: data.editorId, name: editorNameById.get(data.editorId) ?? "—" }
+        : null,
+    };
+    onSaved(updated, meta.bookStatus);
   }
 
   async function onSubmit(values: ChapterEditDraftValues): Promise<void> {

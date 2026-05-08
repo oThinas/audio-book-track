@@ -1,21 +1,16 @@
 // @vitest-environment jsdom
 import { act, renderHook } from "@testing-library/react";
-import { jsonResponse } from "@tests/helpers/fetch-response";
 import { buildStudio } from "@tests/helpers/seed";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useCreateStudioForm } from "@/components/features/studios/hooks/use-create-studio-form";
 import type { StudioFormValues } from "@/lib/domain/studio";
 
-vi.mock("sonner", () => ({
-  toast: {
-    success: vi.fn(),
-    error: vi.fn(),
-    warning: vi.fn(),
-    info: vi.fn(),
-  },
+vi.mock("@/lib/api/api-fetch", () => ({
+  apiFetch: vi.fn(),
 }));
+
+const { apiFetch } = await import("@/lib/api/api-fetch");
 
 function renderCreateHook(onCreated = vi.fn()) {
   return renderHook(() => {
@@ -28,12 +23,8 @@ function renderCreateHook(onCreated = vi.fn()) {
 }
 
 describe("useCreateStudioForm", () => {
-  let fetchMock: ReturnType<typeof vi.fn>;
-
   beforeEach(() => {
     vi.clearAllMocks();
-    fetchMock = vi.fn();
-    globalThis.fetch = fetchMock as unknown as typeof fetch;
   });
 
   it("exposes firstFieldRef for autofocus on mount", () => {
@@ -42,10 +33,10 @@ describe("useCreateStudioForm", () => {
     expect(result.current.firstFieldRef.current).toBeNull();
   });
 
-  it("on 201, calls onCreated with the response data and never toast.error", async () => {
+  it("on success, calls onCreated with the response data", async () => {
     const onCreated = vi.fn();
     const created = buildStudio({ id: "new", name: "Brand New" });
-    fetchMock.mockResolvedValueOnce(jsonResponse(201, { data: created }));
+    vi.mocked(apiFetch).mockResolvedValueOnce({ ok: true, data: { data: created } });
 
     const { result } = renderCreateHook(onCreated);
 
@@ -56,33 +47,23 @@ describe("useCreateStudioForm", () => {
       });
     });
 
-    expect(fetchMock).toHaveBeenCalledWith(
+    expect(apiFetch).toHaveBeenCalledWith(
       "/api/v1/studios",
       expect.objectContaining({
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: "Brand New", defaultHourlyRateCents: 8000 }),
+        body: { name: "Brand New", defaultHourlyRateCents: 8000 },
       }),
     );
-    // JSON roundtrip turns Date → ISO string; the hook does not deserialize.
-    expect(onCreated).toHaveBeenCalledWith(JSON.parse(JSON.stringify(created)));
-    expect(toast.error).not.toHaveBeenCalled();
+    expect(onCreated).toHaveBeenCalledWith(created);
   });
 
-  it("on 422, maps detail.field entries to form.setError", async () => {
+  it("on field-errors, maps issues to form.setError", async () => {
     const onCreated = vi.fn();
-    fetchMock.mockResolvedValueOnce(
-      jsonResponse(422, {
-        error: {
-          code: "VALIDATION_ERROR",
-          message: "Invalid",
-          details: [
-            { field: "name", message: "Nome obrigatório" },
-            { field: "defaultHourlyRateCents", message: "Valor inválido" },
-          ],
-        },
-      }),
-    );
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: false,
+      kind: "field-errors",
+      fields: { name: "Nome obrigatório", defaultHourlyRateCents: "Valor inválido" },
+    });
 
     const { result } = renderCreateHook(onCreated);
 
@@ -95,16 +76,15 @@ describe("useCreateStudioForm", () => {
       "Valor inválido",
     );
     expect(onCreated).not.toHaveBeenCalled();
-    expect(toast.error).not.toHaveBeenCalled();
   });
 
-  it("on 409 NAME_ALREADY_IN_USE, marks the name field with a PT-BR message", async () => {
+  it("on NAME_ALREADY_IN_USE api-error, sets the name field message", async () => {
     const onCreated = vi.fn();
-    fetchMock.mockResolvedValueOnce(
-      jsonResponse(409, {
-        error: { code: "NAME_ALREADY_IN_USE", message: "Já existe" },
-      }),
-    );
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: false,
+      kind: "api-error",
+      code: "NAME_ALREADY_IN_USE",
+    });
 
     const { result } = renderCreateHook(onCreated);
 
@@ -115,16 +95,17 @@ describe("useCreateStudioForm", () => {
       });
     });
 
-    expect(result.current.form.getFieldState("name").error?.message).toBe("Nome já cadastrado");
+    expect(result.current.form.getFieldState("name").error?.message).toBe("Nome já cadastrado.");
     expect(onCreated).not.toHaveBeenCalled();
-    expect(toast.error).not.toHaveBeenCalled();
   });
 
-  it("on 500, fires toast.error and does not call onCreated", async () => {
+  it("on generic api-error, hook does not set field errors and does not call onCreated", async () => {
     const onCreated = vi.fn();
-    fetchMock.mockResolvedValueOnce(
-      jsonResponse(500, { error: { code: "INTERNAL", message: "boom" } }),
-    );
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: false,
+      kind: "api-error",
+      code: "INTERNAL_ERROR",
+    });
 
     const { result } = renderCreateHook(onCreated);
 
@@ -135,23 +116,7 @@ describe("useCreateStudioForm", () => {
       });
     });
 
-    expect(toast.error).toHaveBeenCalledWith("Não foi possível salvar o estúdio. Tente novamente.");
     expect(onCreated).not.toHaveBeenCalled();
-  });
-
-  it("never calls toast.success in any branch", async () => {
-    const onCreated = vi.fn();
-    fetchMock.mockResolvedValueOnce(jsonResponse(201, { data: buildStudio() }));
-
-    const { result } = renderCreateHook(onCreated);
-
-    await act(async () => {
-      await result.current.onSubmit({
-        name: "Anything",
-        defaultHourlyRateCents: 1000,
-      });
-    });
-
-    expect(toast.success).not.toHaveBeenCalled();
+    expect(result.current.form.getFieldState("name").error).toBeUndefined();
   });
 });

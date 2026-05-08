@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef } from "react";
+import { apiFetch } from "@/lib/api/api-fetch";
 import type { UpdateUserPreference } from "@/lib/domain/user-preference";
 
 export function useAutoSavePreference() {
@@ -12,11 +13,7 @@ export function useAutoSavePreference() {
     }
 
     timerRef.current = setTimeout(async () => {
-      await fetch("/api/v1/user-preferences", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+      await apiFetch("/api/v1/user-preferences", { method: "PATCH", body: data });
     }, 300);
   }, []);
 
