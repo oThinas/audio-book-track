@@ -171,7 +171,7 @@ describe("ChapterGroupRow", () => {
     expect(cell.textContent).toContain("123,45");
   });
 
-  it("formats minutagem as Xh Ymin (FR-005 case mixed)", () => {
+  it("formats edited duration as Xh Ymin (FR-005 mixed case)", () => {
     const row = buildRow({
       groupingDimension: "editor",
       groupKey: "ed-2",

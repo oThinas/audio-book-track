@@ -17,13 +17,13 @@ export interface UseChaptersGroupingStateReturn {
 }
 
 /**
- * Sincroniza o estado de agrupamento da tabela de capítulos com o search param
- * `?groupBy=...` da rota atual.
+ * Synchronizes the chapter table grouping state with the current route's
+ * `?groupBy=...` search param.
  *
- * - Leitura: faz parse do param via `parseGroupingParam` — input inválido vira
- *   `[]` (tabela flat) silenciosamente (FR-003).
- * - Escrita: `router.replace` sem scroll, preservando outros search params.
- *   Lista vazia remove o param ao invés de setá-lo como string vazia.
+ * - Read: parses the param via `parseGroupingParam` — invalid input becomes
+ *   `[]` (flat table) silently (FR-003).
+ * - Write: `router.replace` without scroll, preserving other search params.
+ *   Empty list removes the param instead of setting it as an empty string.
  */
 export function useChaptersGroupingState(): UseChaptersGroupingStateReturn {
   const router = useRouter();

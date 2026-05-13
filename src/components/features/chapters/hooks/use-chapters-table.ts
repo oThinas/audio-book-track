@@ -36,13 +36,14 @@ function leafChaptersFromRow(row: Row<ChapterRowEntity>): ReadonlyArray<ChapterR
  * Configures a TanStack Table instance for the chapters table.
  *
  * - Grouping comes from the parent (URL-controlled via useChaptersGroupingState).
- * - Expansion is forced to `true` (all groups always expanded). FR-008 idealmente
- *   pediria colapsado por padrão, mas a integração de expand/collapse com a
- *   versão atual do TanStack + base-ui Menu portal causou conflitos de re-render
- *   que ficam para iteração posterior — totais e bucket "Sem atribuição" são
- *   visíveis sem expand/collapse manual e o relatório continua útil.
- * - Sorting é feito ao redor de uma função custom no `accessorFn` da coluna
- *   `editedSeconds` que empurra o sentinel `__unassigned__` para o fim (FR-006).
+ * - Expansion is forced to `true` (all groups always expanded). FR-008 would
+ *   ideally require collapsed by default, but the expand/collapse integration
+ *   with the current TanStack version + base-ui Menu portal triggered re-render
+ *   conflicts that are deferred to a later iteration — totals and the
+ *   "Sem atribuição" bucket remain visible without manual expand/collapse and
+ *   the report still useful.
+ * - Sorting hangs off a custom function on the `editedSeconds` column's
+ *   `sortingFn` that pushes the `__unassigned__` sentinel to the end (FR-006).
  */
 export function useChaptersTable({
   chapters,
@@ -159,7 +160,7 @@ export function useChaptersTable({
     getGroupedRowModel: getGroupedRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
     enableGrouping: true,
-    enableExpanding: false, // Forçado expandido — vide use-chapters-table doc
+    enableExpanding: false, // Forced expanded — see use-chapters-table doc
   });
 
   return { table };

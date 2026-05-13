@@ -6,9 +6,9 @@ export function isGroupingDimension(value: string): value is GroupingDimension {
 }
 
 /**
- * Parseia o valor do search param `?groupBy=...` para uma hierarquia ordenada
- * de dimensões válidas. Tokens inválidos, duplicados ou desconhecidos invalidam
- * o input inteiro e retornamos `[]` (tabela flat). Função pura, sem throws.
+ * Parses the `?groupBy=...` search param value into an ordered hierarchy of
+ * valid dimensions. Invalid, duplicated or unknown tokens invalidate the entire
+ * input and we return `[]` (flat table). Pure function, no throws.
  */
 export function parseGroupingParam(raw: string | null): GroupingDimension[] {
   if (!raw) return [];
@@ -31,9 +31,9 @@ export function parseGroupingParam(raw: string | null): GroupingDimension[] {
 }
 
 /**
- * Serializa a hierarquia para uso em search param. Retorna `null` quando a
- * hierarquia está vazia, sinalizando ao caller que o param deve ser removido
- * da URL (não setado como string vazia).
+ * Serializes the hierarchy for use in a search param. Returns `null` when the
+ * hierarchy is empty, signaling to the caller that the param must be removed
+ * from the URL (not set as an empty string).
  */
 export function serializeGroupingParam(grouping: ReadonlyArray<GroupingDimension>): string | null {
   if (grouping.length === 0) return null;

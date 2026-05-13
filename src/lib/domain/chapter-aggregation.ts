@@ -12,7 +12,7 @@ const STATUS_ORDER: ReadonlyArray<ChapterStatus> = [
 ];
 
 /**
- * Singular / plural por status. Usado em breakdown ("3 concluídos · 1 em revisão").
+ * Singular / plural per status. Used in breakdown ("3 concluídos · 1 em revisão").
  */
 const STATUS_LABEL: Record<ChapterStatus, { readonly singular: string; readonly plural: string }> =
   {
@@ -36,9 +36,8 @@ interface BookPriceLike {
 }
 
 /**
- * Calcula o ganho em centavos de UM capítulo seguindo a fórmula auditável do
- * domínio (Princípio II). Conversão para reais é responsabilidade da
- * apresentação.
+ * Computes earnings in cents for ONE chapter using the auditable domain formula
+ * (Principle II). Conversion to BRL is the presentation layer's responsibility.
  */
 export function computeChapterEarningsCents(
   chapter: { readonly editedSeconds: number },
@@ -48,11 +47,11 @@ export function computeChapterEarningsCents(
 }
 
 /**
- * Soma o ganho de uma coleção de capítulos.
+ * Sums earnings for a collection of chapters.
  *
- * **Importante**: arredonda POR capítulo antes de somar — Princípio II garante
- * que somar segundos e depois aplicar a fórmula daria um total diferente do
- * total auditável visto pelo usuário em cada linha individual.
+ * **Important**: rounds PER chapter before summing — Principle II guarantees
+ * that summing seconds first and then applying the formula would yield a total
+ * different from the auditable total the user sees on each individual row.
  */
 export function sumChapterEarningsCents(
   chapters: ReadonlyArray<{ readonly editedSeconds: number }>,
@@ -62,17 +61,17 @@ export function sumChapterEarningsCents(
 }
 
 /**
- * Soma a duração editada de uma coleção de capítulos. Capítulos com
- * `editedSeconds = 0` contribuem 0 mas continuam contando como integrantes do
- * grupo (responsabilidade do caller).
+ * Sums edited duration for a collection of chapters. Chapters with
+ * `editedSeconds = 0` contribute 0 but still count as members of the group
+ * (caller's responsibility).
  */
 export function sumEditedSeconds(chapters: ReadonlyArray<ChapterLike>): number {
   return chapters.reduce((total, chapter) => total + chapter.editedSeconds, 0);
 }
 
 /**
- * Conta capítulos por status. Sempre retorna o record completo com todos os
- * status presentes (zerados quando ausentes) para facilitar consumo.
+ * Counts chapters by status. Always returns the full record with every status
+ * present (zeroed when absent) to simplify consumption.
  */
 export function countByStatus(chapters: ReadonlyArray<ChapterLike>): StatusBreakdown {
   const counts: Record<ChapterStatus, number> = {
@@ -90,14 +89,13 @@ export function countByStatus(chapters: ReadonlyArray<ChapterLike>): StatusBreak
 }
 
 /**
- * Formata o breakdown para exibição na linha-resumo do grupo.
+ * Formats the breakdown for display in the group summary row.
  *
- * - Quando `dimensionAtLevel === "status"`, a linha-resumo já representa um
- *   status específico → mostrar apenas a contagem total (evita redundância,
- *   FR-015).
- * - Caso contrário, lista status com contagem > 0 em ordem do enum, separados
- *   por ` · ` (ex: "1 em revisão · 3 concluídos"). Singular/plural por status.
- * - Lista vazia → string vazia.
+ * - When `dimensionAtLevel === "status"`, the summary row already represents a
+ *   specific status → show only the total count (avoids redundancy, FR-015).
+ * - Otherwise, lists statuses with count > 0 in enum order, separated by ` · `
+ *   (e.g. "1 em revisão · 3 concluídos"). Singular/plural per status.
+ * - Empty list → empty string.
  */
 export function formatStatusBreakdown(
   breakdown: StatusBreakdown,

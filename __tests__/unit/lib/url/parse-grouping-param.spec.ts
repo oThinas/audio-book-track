@@ -7,7 +7,7 @@ import {
 } from "@/lib/url/grouping-param";
 
 describe("parseGroupingParam", () => {
-  it("returns empty array when input is null (param ausente)", () => {
+  it("returns empty array when input is null (param absent)", () => {
     expect(parseGroupingParam(null)).toEqual([]);
   });
 

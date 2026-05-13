@@ -47,15 +47,15 @@ export function formatSecondsAsHHMMSS(seconds: number): string {
 }
 
 /**
- * Formato compacto para soma de duração em linhas-resumo de grupos (FR-005).
+ * Compact format for duration sums in group summary rows (FR-005).
  *
- * Casos:
+ * Cases:
  * - 0s → "0min"
- * - apenas minutos → "Ymin" (ex: "23min")
- * - múltiplo exato de hora → "Xh" (ex: "3h")
- * - misto → "Xh Ymin" (ex: "1h 24min")
+ * - minutes only → "Ymin" (e.g. "23min")
+ * - exact hour multiple → "Xh" (e.g. "3h")
+ * - mixed → "Xh Ymin" (e.g. "1h 24min")
  *
- * Segundos parciais são truncados (não arredondados).
+ * Partial seconds are truncated (not rounded).
  */
 export function formatGroupedSeconds(seconds: number): string {
   if (!Number.isFinite(seconds) || seconds < 0) {

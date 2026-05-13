@@ -15,10 +15,10 @@ import type { ChapterRowEntity } from "./chapter-row";
 export interface ChapterGroupRowProps {
   readonly row: Row<ChapterRowEntity>;
   readonly groupingDimension: GroupingDimension;
-  /** Quando `false`, esconde apenas a célula de ganho (R$). Folhas não afetadas. */
+  /** When `false`, hides only the earnings cell (R$). Leaf rows unaffected. */
   readonly showEarningsColumn: boolean;
   readonly columnCount: number;
-  /** Coluna inicial vazia para preservar layout quando selection mode está ativo. */
+  /** Empty leading column to preserve layout when selection mode is active. */
   readonly selectionMode: boolean;
 }
 
@@ -34,7 +34,7 @@ function groupLabel(row: Row<ChapterRowEntity>, dimension: GroupingDimension): R
   if (value === UNASSIGNED_GROUP_KEY || value === null || value === undefined) {
     return <span className="italic text-muted-foreground">Sem atribuição</span>;
   }
-  // Pega o nome da primeira folha — todas folhas do mesmo grupo compartilham a entidade.
+  // Pick the name from the first leaf — every leaf in the same group shares the entity.
   const firstLeaf = row.subRows[0]?.original;
   const name =
     dimension === "narrator"
