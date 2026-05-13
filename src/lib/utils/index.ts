@@ -2,6 +2,7 @@ export { cn } from "./class-names";
 export { BRL_FORMATTER, formatCentsBRL } from "./format-currency";
 export {
   type FormatSecondsAsHoursOptions,
+  formatGroupedSeconds,
   formatSecondsAsHHMMSS,
   formatSecondsAsHours,
   parseHoursInputToSeconds,

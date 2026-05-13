@@ -1,6 +1,7 @@
 "use client";
+"use no memo";
 
-import { useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -13,13 +14,18 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { ChapterStatus } from "@/lib/domain/chapter";
+import type { GroupingDimension } from "@/lib/url/grouping-param";
 
+import { ChapterGroupRow } from "./chapter-group-row";
 import { ChapterRow, type ChapterRowEntity, type ChapterRowOption } from "./chapter-row";
+import { useChaptersTable } from "./hooks/use-chapters-table";
 
 interface ChaptersTableProps {
   readonly chapters: ReadonlyArray<ChapterRowEntity>;
   readonly narrators: ReadonlyArray<ChapterRowOption>;
   readonly editors: ReadonlyArray<ChapterRowOption>;
+  readonly grouping: ReadonlyArray<GroupingDimension>;
+  readonly pricePerHourCents: number;
   readonly isSelectionMode: boolean;
   readonly selectedIds: ReadonlySet<string>;
   readonly onChapterSaved: (updated: ChapterRowEntity, bookStatus: ChapterStatus) => void;
@@ -38,6 +44,8 @@ export function ChaptersTable({
   chapters,
   narrators,
   editors,
+  grouping,
+  pricePerHourCents,
   isSelectionMode,
   selectedIds,
   onChapterSaved,
@@ -57,6 +65,33 @@ export function ChaptersTable({
     chapters.every((c) => c.status === "paid" || selectedIds.has(c.id));
   const someSelected =
     isSelectionMode && chapters.some((c) => c.status !== "paid" && selectedIds.has(c.id));
+
+  const { table } = useChaptersTable({ chapters, grouping, pricePerHourCents });
+  const allRows = table.getRowModel().rows;
+  const [expandedGroups, setExpandedGroups] = useState<ReadonlySet<string>>(() => new Set());
+  const toggleGroup = useCallback((rowId: string) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(rowId)) next.delete(rowId);
+      else next.add(rowId);
+      return next;
+    });
+  }, []);
+
+  // Visibility filter: a row (group or leaf) appears only when every ancestor
+  // group is expanded. Top-level groups have no parent and are always visible.
+  const rows = useMemo(() => {
+    return allRows.filter((row) => {
+      let parent = row.getParentRow();
+      while (parent) {
+        if (!expandedGroups.has(parent.id)) return false;
+        parent = parent.getParentRow();
+      }
+      return true;
+    });
+  }, [allRows, expandedGroups]);
+
+  const columnCount = 7; // Nº, Status, Narrador, Editor, Horas editadas, Ações/Selection
 
   return (
     <ScrollArea
@@ -87,26 +122,44 @@ export function ChaptersTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {chapters.map((chapter) => (
-            <ChapterRow
-              key={chapter.id}
-              chapter={chapter}
-              narrators={narrators}
-              editors={editors}
-              narratorNameById={narratorNameById}
-              editorNameById={editorNameById}
-              isLastNonPaid={chapter.status !== "paid" && nonPaidCount === 1}
-              isSelectionMode={isSelectionMode}
-              isSelected={selectedIds.has(chapter.id)}
-              onSaved={onChapterSaved}
-              onDeleted={onChapterDeleted}
-              onToggleSelected={onToggleSelected}
-            />
-          ))}
+          {rows.map((row) => {
+            if (row.getIsGrouped()) {
+              const groupColId = row.groupingColumnId as GroupingDimension | undefined;
+              if (!groupColId) return null;
+              return (
+                <ChapterGroupRow
+                  key={row.id}
+                  row={row}
+                  groupingDimension={groupColId}
+                  columnCount={columnCount}
+                  selectionMode={isSelectionMode}
+                  isExpanded={expandedGroups.has(row.id)}
+                  onToggle={toggleGroup}
+                />
+              );
+            }
+            const chapter = row.original;
+            return (
+              <ChapterRow
+                key={chapter.id}
+                chapter={chapter}
+                narrators={narrators}
+                editors={editors}
+                narratorNameById={narratorNameById}
+                editorNameById={editorNameById}
+                isLastNonPaid={chapter.status !== "paid" && nonPaidCount === 1}
+                isSelectionMode={isSelectionMode}
+                isSelected={selectedIds.has(chapter.id)}
+                onSaved={onChapterSaved}
+                onDeleted={onChapterDeleted}
+                onToggleSelected={onToggleSelected}
+              />
+            );
+          })}
           {chapters.length === 0 && (
             <TableRow>
               <TableCell
-                colSpan={6}
+                colSpan={columnCount}
                 className="py-12 text-center text-sm text-muted-foreground"
                 data-testid="chapters-empty-state"
               >

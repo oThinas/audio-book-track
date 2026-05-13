@@ -2,9 +2,11 @@
 
 import { lazy, Suspense } from "react";
 
+import { ChapterGroupingControl } from "@/components/features/chapters/chapter-grouping-control";
 import { ChaptersBulkDeleteBar } from "@/components/features/chapters/chapters-bulk-delete-bar";
 import { ChaptersBulkDeleteConfirm } from "@/components/features/chapters/chapters-bulk-delete-confirm";
 import { type ChapterRowData, ChaptersTable } from "@/components/features/chapters/chapters-table";
+import { useChaptersGroupingState } from "@/components/features/chapters/hooks/use-chapters-grouping-state";
 import type { BookStatus } from "@/lib/domain/book";
 import type { Studio } from "@/lib/domain/studio";
 
@@ -65,6 +67,7 @@ export function BookDetailClient({ book, narrators, editors, studios }: BookDeta
     handleToggleSelectAll,
     handleBulkDeleteConfirm,
   } = useBookDetail(book);
+  const { grouping, setGrouping } = useChaptersGroupingState();
 
   return (
     <>
@@ -91,10 +94,17 @@ export function BookDetailClient({ book, narrators, editors, studios }: BookDeta
         onEnterSelectionMode={enterSelectionMode}
         onEdit={() => setEditOpen(true)}
       />
+      {!isSelectionMode && (
+        <div className="mt-4 flex justify-end">
+          <ChapterGroupingControl grouping={grouping} onGroupingChange={setGrouping} />
+        </div>
+      )}
       <ChaptersTable
         chapters={state.chapters}
         narrators={narrators}
         editors={editors}
+        grouping={grouping}
+        pricePerHourCents={book.pricePerHourCents}
         isSelectionMode={isSelectionMode}
         selectedIds={selectedIds}
         onChapterSaved={handleChapterSaved}
