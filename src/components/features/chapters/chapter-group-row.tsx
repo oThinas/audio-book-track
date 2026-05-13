@@ -1,0 +1,129 @@
+"use client";
+
+import type { Row } from "@tanstack/react-table";
+import { ChevronDown, ChevronRight } from "lucide-react";
+
+import { StatusBadge } from "@/components/features/books/status-badge";
+import { Button } from "@/components/ui/button";
+import { TableCell, TableRow } from "@/components/ui/table";
+import { type ChapterStatus, chapterStatusLabel } from "@/lib/domain/chapter";
+import { formatStatusBreakdown, type StatusBreakdown } from "@/lib/domain/chapter-aggregation";
+import { type GroupingDimension, UNASSIGNED_GROUP_KEY } from "@/lib/url/grouping-param";
+import { formatCentsBRL, formatGroupedSeconds } from "@/lib/utils";
+
+import type { ChapterRowEntity } from "./chapter-row";
+
+export interface ChapterGroupRowProps {
+  readonly row: Row<ChapterRowEntity>;
+  readonly groupingDimension: GroupingDimension;
+  /** Quando `false`, esconde apenas a célula de ganho (R$). Folhas não afetadas. */
+  readonly showEarningsColumn: boolean;
+  readonly columnCount: number;
+  /** Coluna inicial vazia para preservar layout quando selection mode está ativo. */
+  readonly selectionMode: boolean;
+}
+
+function indentStyle(depth: number): React.CSSProperties {
+  return { paddingLeft: `${0.75 + depth * 1.25}rem` };
+}
+
+function groupLabel(row: Row<ChapterRowEntity>, dimension: GroupingDimension): React.ReactNode {
+  const value = row.getGroupingValue(dimension);
+  if (dimension === "status") {
+    return <StatusBadge status={value as ChapterStatus} />;
+  }
+  if (value === UNASSIGNED_GROUP_KEY || value === null || value === undefined) {
+    return <span className="italic text-muted-foreground">Sem atribuição</span>;
+  }
+  // Pega o nome da primeira folha — todas folhas do mesmo grupo compartilham a entidade.
+  const firstLeaf = row.subRows[0]?.original;
+  const name =
+    dimension === "narrator"
+      ? firstLeaf?.narrator?.name
+      : dimension === "editor"
+        ? firstLeaf?.editor?.name
+        : null;
+  return <span className="font-medium">{name ?? "—"}</span>;
+}
+
+function countLabel(count: number): string {
+  return count === 1 ? "1 capítulo" : `${count} capítulos`;
+}
+
+export function ChapterGroupRow({
+  row,
+  groupingDimension,
+  showEarningsColumn,
+  columnCount: _columnCount,
+  selectionMode,
+}: ChapterGroupRowProps) {
+  const editedSeconds = (row.getValue("editedSeconds") as number) ?? 0;
+  const earningsCents = (row.getValue("earnings") as number) ?? 0;
+  const breakdown = (row.getValue("statusBreakdown") as StatusBreakdown | undefined) ?? {
+    pending: 0,
+    editing: 0,
+    reviewing: 0,
+    retake: 0,
+    completed: 0,
+    paid: 0,
+  };
+  const breakdownText = formatStatusBreakdown(breakdown, groupingDimension);
+  const groupKey = String(row.getGroupingValue(groupingDimension) ?? "unknown");
+
+  return (
+    <TableRow
+      data-testid={`chapter-group-row-${groupingDimension}-${groupKey}`}
+      className="bg-muted/40 hover:bg-muted/60"
+    >
+      {selectionMode && <TableCell className="w-12" />}
+      <TableCell colSpan={2} className="font-medium" style={indentStyle(row.depth)}>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="-ml-2 h-7 gap-1.5 px-2"
+          data-testid={`chapter-group-toggle-${groupKey}`}
+          aria-expanded={row.getIsExpanded()}
+          onClick={row.getToggleExpandedHandler()}
+        >
+          {row.getIsExpanded() ? (
+            <ChevronDown aria-hidden="true" className="size-3.5" />
+          ) : (
+            <ChevronRight aria-hidden="true" className="size-3.5" />
+          )}
+          {groupLabel(row, groupingDimension)}
+        </Button>
+      </TableCell>
+      <TableCell
+        className="truncate text-sm text-muted-foreground"
+        data-testid={`chapter-group-count-${groupKey}`}
+      >
+        {countLabel(row.subRows.length)}
+      </TableCell>
+      <TableCell
+        className="truncate text-sm text-muted-foreground"
+        data-testid={`chapter-group-breakdown-${groupKey}`}
+      >
+        {breakdownText || (groupingDimension === "status" ? countLabel(row.subRows.length) : "—")}
+        {showEarningsColumn && (
+          <span
+            data-testid={`chapter-group-earnings-${groupKey}`}
+            className="ml-2 text-foreground"
+            title={`Ganho total: ${formatCentsBRL(earningsCents)}`}
+          >
+            · {formatCentsBRL(earningsCents)}
+          </span>
+        )}
+      </TableCell>
+      <TableCell
+        className="text-right tabular-nums"
+        data-testid={`chapter-group-seconds-${groupKey}`}
+      >
+        {formatGroupedSeconds(editedSeconds)}
+      </TableCell>
+      <TableCell />
+    </TableRow>
+  );
+}
+
+export { chapterStatusLabel };

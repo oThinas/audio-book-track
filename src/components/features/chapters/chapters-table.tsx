@@ -1,6 +1,5 @@
 "use client";
 
-import type { ColumnDef } from "@tanstack/react-table";
 import { useMemo } from "react";
 
 import { Checkbox } from "@/components/ui/checkbox";
@@ -13,8 +12,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { featureFlags } from "@/lib/config/feature-flags";
 import type { ChapterStatus } from "@/lib/domain/chapter";
+import type { GroupingDimension } from "@/lib/url/grouping-param";
 
+import { ChapterGroupRow } from "./chapter-group-row";
 import { ChapterRow, type ChapterRowEntity, type ChapterRowOption } from "./chapter-row";
 import { useChaptersTable } from "./hooks/use-chapters-table";
 
@@ -22,6 +24,8 @@ interface ChaptersTableProps {
   readonly chapters: ReadonlyArray<ChapterRowEntity>;
   readonly narrators: ReadonlyArray<ChapterRowOption>;
   readonly editors: ReadonlyArray<ChapterRowOption>;
+  readonly grouping: ReadonlyArray<GroupingDimension>;
+  readonly pricePerHourCents: number;
   readonly isSelectionMode: boolean;
   readonly selectedIds: ReadonlySet<string>;
   readonly onChapterSaved: (updated: ChapterRowEntity, bookStatus: ChapterStatus) => void;
@@ -40,6 +44,8 @@ export function ChaptersTable({
   chapters,
   narrators,
   editors,
+  grouping,
+  pricePerHourCents,
   isSelectionMode,
   selectedIds,
   onChapterSaved,
@@ -60,27 +66,10 @@ export function ChaptersTable({
   const someSelected =
     isSelectionMode && chapters.some((c) => c.status !== "paid" && selectedIds.has(c.id));
 
-  const columns = useMemo<ColumnDef<ChapterRowEntity>[]>(
-    () => [
-      { id: "number", accessorKey: "number", header: "Nº" },
-      { id: "status", accessorKey: "status", header: "Status" },
-      {
-        id: "narrator",
-        accessorFn: (row) => row.narrator?.id ?? null,
-        header: "Narrador",
-      },
-      {
-        id: "editor",
-        accessorFn: (row) => row.editor?.id ?? null,
-        header: "Editor",
-      },
-      { id: "editedSeconds", accessorKey: "editedSeconds", header: "Horas editadas" },
-    ],
-    [],
-  );
-
-  const { table } = useChaptersTable({ chapters, columns });
+  const { table } = useChaptersTable({ chapters, grouping, pricePerHourCents });
   const rows = table.getRowModel().rows;
+
+  const columnCount = isSelectionMode ? 7 : 7; // Nº, Status, Narrador, Editor, Horas editadas, Ações (or selection)
 
   return (
     <ScrollArea
@@ -112,6 +101,23 @@ export function ChaptersTable({
         </TableHeader>
         <TableBody>
           {rows.map((row) => {
+            if (row.getIsGrouped()) {
+              const groupColId = row.groupingColumnId as GroupingDimension | undefined;
+              if (!groupColId) return null;
+              const isNarratorGroup = groupColId === "narrator";
+              const showEarningsColumn =
+                !isNarratorGroup || featureFlags.SHOW_EARNINGS_IN_NARRATOR_GROUPS;
+              return (
+                <ChapterGroupRow
+                  key={row.id}
+                  row={row}
+                  groupingDimension={groupColId}
+                  showEarningsColumn={showEarningsColumn}
+                  columnCount={columnCount}
+                  selectionMode={isSelectionMode}
+                />
+              );
+            }
             const chapter = row.original;
             return (
               <ChapterRow
@@ -133,7 +139,7 @@ export function ChaptersTable({
           {chapters.length === 0 && (
             <TableRow>
               <TableCell
-                colSpan={6}
+                colSpan={columnCount}
                 className="py-12 text-center text-sm text-muted-foreground"
                 data-testid="chapters-empty-state"
               >
