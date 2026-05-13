@@ -78,10 +78,10 @@ export function ChaptersTable({
     });
   }, []);
 
-  // Visibility filter: a leaf row appears only when every ancestor group is expanded.
+  // Visibility filter: a row (group or leaf) appears only when every ancestor
+  // group is expanded. Top-level groups have no parent and are always visible.
   const rows = useMemo(() => {
     return allRows.filter((row) => {
-      if (row.getIsGrouped()) return true;
       let parent = row.getParentRow();
       while (parent) {
         if (!expandedGroups.has(parent.id)) return false;

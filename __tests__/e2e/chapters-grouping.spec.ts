@@ -267,4 +267,49 @@ test.describe("Chapter grouping", () => {
     // No group rows
     await expect(page.locator('[data-testid^="chapter-group-row-"]')).toHaveCount(0);
   });
+
+  test("nested groups hide sub-groups when parent is collapsed", async ({ page, appServer }) => {
+    const suffix = Date.now();
+    const studio = await seedStudio(page, `Nested ${suffix}`, 75);
+    const narrator = await seedNarrator(page, `Nested Narrator ${suffix}`);
+    const { id: bookId } = await seedBook({
+      schema: appServer.schemaName,
+      title: `Nested Book ${suffix}`,
+      studioId: studio.id,
+      pricePerHourCents: PRICE_PER_HOUR_CENTS,
+    });
+    await seedChapter({
+      schema: appServer.schemaName,
+      bookId,
+      number: 1,
+      status: "reviewing",
+      narratorId: narrator.id,
+      editedSeconds: 600,
+    });
+
+    await page.goto(`/books/${bookId}?groupBy=narrator,status`);
+
+    const narratorGroup = page.getByTestId(`chapter-group-row-narrator-${narrator.id}`);
+    const statusGroup = page.getByTestId("chapter-group-row-status-reviewing");
+    const leafRows = page.locator('tr[data-testid^="chapter-row-"]');
+
+    // Initial: only the top-level narrator group is visible
+    await expect(narratorGroup).toBeVisible();
+    await expect(statusGroup).toBeHidden();
+    await expect(leafRows).toHaveCount(0);
+
+    // Expanding the narrator reveals the inner status group, but not leaves yet
+    await narratorGroup.click();
+    await expect(statusGroup).toBeVisible();
+    await expect(leafRows).toHaveCount(0);
+
+    // Expanding the status group reveals the chapter
+    await statusGroup.click();
+    await expect(leafRows.first()).toBeVisible();
+
+    // Collapsing the narrator again hides both the status group and the leaf
+    await narratorGroup.click();
+    await expect(statusGroup).toBeHidden();
+    await expect(leafRows).toHaveCount(0);
+  });
 });
