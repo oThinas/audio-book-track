@@ -1,6 +1,7 @@
 "use client";
+"use no memo";
 
-import { useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -66,7 +67,29 @@ export function ChaptersTable({
     isSelectionMode && chapters.some((c) => c.status !== "paid" && selectedIds.has(c.id));
 
   const { table } = useChaptersTable({ chapters, grouping, pricePerHourCents });
-  const rows = table.getRowModel().rows;
+  const allRows = table.getRowModel().rows;
+  const [expandedGroups, setExpandedGroups] = useState<ReadonlySet<string>>(() => new Set());
+  const toggleGroup = useCallback((rowId: string) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(rowId)) next.delete(rowId);
+      else next.add(rowId);
+      return next;
+    });
+  }, []);
+
+  // Visibility filter: a leaf row appears only when every ancestor group is expanded.
+  const rows = useMemo(() => {
+    return allRows.filter((row) => {
+      if (row.getIsGrouped()) return true;
+      let parent = row.getParentRow();
+      while (parent) {
+        if (!expandedGroups.has(parent.id)) return false;
+        parent = parent.getParentRow();
+      }
+      return true;
+    });
+  }, [allRows, expandedGroups]);
 
   const columnCount = 7; // Nº, Status, Narrador, Editor, Horas editadas, Ações/Selection
 
@@ -110,6 +133,8 @@ export function ChaptersTable({
                   groupingDimension={groupColId}
                   columnCount={columnCount}
                   selectionMode={isSelectionMode}
+                  isExpanded={expandedGroups.has(row.id)}
+                  onToggle={toggleGroup}
                 />
               );
             }

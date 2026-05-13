@@ -1,4 +1,5 @@
 "use client";
+"use no memo";
 
 import {
   type ColumnDef,
@@ -6,12 +7,10 @@ import {
   getCoreRowModel,
   getExpandedRowModel,
   getGroupedRowModel,
-  getSortedRowModel,
   type Row,
-  type SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import { countByStatus, sumChapterEarningsCents } from "@/lib/domain/chapter-aggregation";
 import { type GroupingDimension, UNASSIGNED_GROUP_KEY } from "@/lib/url/grouping-param";
@@ -36,22 +35,20 @@ function leafChaptersFromRow(row: Row<ChapterRowEntity>): ReadonlyArray<ChapterR
  * Configures a TanStack Table instance for the chapters table.
  *
  * - Grouping comes from the parent (URL-controlled via useChaptersGroupingState).
- * - Expansion is forced to `true` (all groups always expanded). FR-008 would
- *   ideally require collapsed by default, but the expand/collapse integration
- *   with the current TanStack version + base-ui Menu portal triggered re-render
- *   conflicts that are deferred to a later iteration — totals and the
- *   "Sem atribuição" bucket remain visible without manual expand/collapse and
- *   the report still useful.
- * - Sorting hangs off a custom function on the `editedSeconds` column's
- *   `sortingFn` that pushes the `__unassigned__` sentinel to the end (FR-006).
+ * - `state.expanded` is forced to `true` so leaves flow through the row model;
+ *   per-group visibility is owned by `ChaptersTable` via a `Set<string>` of
+ *   expanded group ids. TanStack's own expansion state plus React 19 + the
+ *   base-ui Menu portal silently dropped toggle clicks, so manual handling
+ *   keeps the render path simple.
+ * - The file is opted out of React Compiler (`"use no memo"`) because the
+ *   compiler over-memoizes the TanStack options object and the `state.grouping`
+ *   prop stops propagating when the URL changes after a dropdown click.
  */
 export function useChaptersTable({
   chapters,
   grouping,
   pricePerHourCents,
 }: UseChaptersTableArgs): UseChaptersTableReturn {
-  const [sorting, setSorting] = useState<SortingState>([{ id: "editedSeconds", desc: true }]);
-
   const groupingArray = useMemo<GroupingState>(() => [...grouping], [grouping]);
 
   const columns = useMemo<ColumnDef<ChapterRowEntity>[]>(() => {
@@ -151,7 +148,7 @@ export function useChaptersTable({
     columns,
     state: {
       grouping: groupingArray,
-      expanded: true,
+      expanded: true, // Force all groups expanded so leaves flow through the row model
     },
     onGroupingChange: () => {
       // Controlled via URL upstream — no-op here.
@@ -160,12 +157,10 @@ export function useChaptersTable({
     getGroupedRowModel: getGroupedRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
     enableGrouping: true,
-    enableExpanding: false, // Forced expanded — see use-chapters-table doc
+    enableExpanding: true,
     // Pagination isn't used here. The default `autoResetPageIndex` schedules
     // `setState` during render when grouping/data changes, which warns in React
-    // 19 ("state update on a component that hasn't mounted yet"). Disabling all
-    // auto-resets is safe since pagination, expansion, and sorting state aren't
-    // tied to mutable inputs that need to snap back to a clean state.
+    // 19 ("state update on a component that hasn't mounted yet").
     autoResetPageIndex: false,
     autoResetExpanded: false,
   });

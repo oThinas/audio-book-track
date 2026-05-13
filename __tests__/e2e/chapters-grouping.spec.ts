@@ -145,8 +145,14 @@ test.describe("Chapter grouping", () => {
         .textContent(),
     ).toContain("R$");
 
-    // Leaf rows for chapters under Editor A should be visible (groups stay expanded)
+    // Groups start collapsed (FR-008): no leaf rows visible yet
     const leafRows = page.locator('tr[data-testid^="chapter-row-"]');
+    await expect(leafRows).toHaveCount(0);
+    // Expand Editor A and its leaves become visible
+    const toggle = editorAGroup.getByTestId(`chapter-group-toggle-${editorA.id}`);
+    await expect(toggle).toHaveAttribute("aria-expanded", "false");
+    await toggle.click();
+    await expect(toggle).toHaveAttribute("aria-expanded", "true");
     await expect(leafRows.first()).toBeVisible();
 
     // Clear grouping by unchecking the selected dimension

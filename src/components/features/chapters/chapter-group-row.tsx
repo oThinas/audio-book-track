@@ -1,7 +1,7 @@
 "use client";
 
 import type { Row } from "@tanstack/react-table";
-import { ChevronDown } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
 import { StatusBadge } from "@/components/features/books/status-badge";
 import { TableCell, TableRow } from "@/components/ui/table";
@@ -18,6 +18,8 @@ export interface ChapterGroupRowProps {
   readonly columnCount: number;
   /** Empty leading column to preserve layout when selection mode is active. */
   readonly selectionMode: boolean;
+  readonly isExpanded: boolean;
+  readonly onToggle: (rowId: string) => void;
 }
 
 function indentStyle(depth: number): React.CSSProperties {
@@ -52,6 +54,8 @@ export function ChapterGroupRow({
   groupingDimension,
   columnCount: _columnCount,
   selectionMode,
+  isExpanded,
+  onToggle,
 }: ChapterGroupRowProps) {
   const editedSeconds = (row.getValue("editedSeconds") as number) ?? 0;
   const earningsCents = (row.getValue("earnings") as number) ?? 0;
@@ -73,13 +77,20 @@ export function ChapterGroupRow({
     >
       {selectionMode && <TableCell className="w-12" />}
       <TableCell colSpan={2} className="font-medium" style={indentStyle(row.depth)}>
-        <div
-          className="-ml-2 inline-flex h-7 items-center gap-1.5 px-2"
+        <button
+          type="button"
+          onClick={() => onToggle(row.id)}
+          aria-expanded={isExpanded}
+          aria-label={isExpanded ? "Recolher grupo" : "Expandir grupo"}
+          className="-ml-2 inline-flex h-7 items-center gap-1.5 rounded px-2 hover:bg-muted/60"
           data-testid={`chapter-group-toggle-${groupKey}`}
         >
-          <ChevronDown aria-hidden="true" className="size-3.5 opacity-60" />
+          <ChevronRight
+            aria-hidden="true"
+            className={`size-3.5 opacity-60 transition-transform ${isExpanded ? "rotate-90" : ""}`}
+          />
           {groupLabel(row, groupingDimension)}
-        </div>
+        </button>
       </TableCell>
       <TableCell
         className="truncate text-sm text-muted-foreground"

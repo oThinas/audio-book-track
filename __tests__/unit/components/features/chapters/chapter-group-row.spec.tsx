@@ -72,6 +72,8 @@ describe("ChapterGroupRow", () => {
           groupingDimension="narrator"
           columnCount={7}
           selectionMode={false}
+          isExpanded={false}
+          onToggle={() => {}}
         />,
       ),
     );
@@ -101,6 +103,8 @@ describe("ChapterGroupRow", () => {
           groupingDimension="narrator"
           columnCount={7}
           selectionMode={false}
+          isExpanded={false}
+          onToggle={() => {}}
         />,
       ),
     );
@@ -130,6 +134,8 @@ describe("ChapterGroupRow", () => {
           groupingDimension="editor"
           columnCount={7}
           selectionMode={false}
+          isExpanded={false}
+          onToggle={() => {}}
         />,
       ),
     );
@@ -161,6 +167,8 @@ describe("ChapterGroupRow", () => {
           groupingDimension="editor"
           columnCount={7}
           selectionMode={false}
+          isExpanded={false}
+          onToggle={() => {}}
         />,
       ),
     );
@@ -190,6 +198,8 @@ describe("ChapterGroupRow", () => {
           groupingDimension="status"
           columnCount={7}
           selectionMode={false}
+          isExpanded={false}
+          onToggle={() => {}}
         />,
       ),
     );
@@ -229,6 +239,8 @@ describe("ChapterGroupRow", () => {
           groupingDimension="narrator"
           columnCount={7}
           selectionMode={false}
+          isExpanded={false}
+          onToggle={() => {}}
         />,
       ),
     );
