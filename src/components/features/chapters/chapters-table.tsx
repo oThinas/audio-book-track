@@ -1,5 +1,6 @@
 "use client";
 
+import type { ColumnDef } from "@tanstack/react-table";
 import { useMemo } from "react";
 
 import { Checkbox } from "@/components/ui/checkbox";
@@ -15,6 +16,7 @@ import {
 import type { ChapterStatus } from "@/lib/domain/chapter";
 
 import { ChapterRow, type ChapterRowEntity, type ChapterRowOption } from "./chapter-row";
+import { useChaptersTable } from "./hooks/use-chapters-table";
 
 interface ChaptersTableProps {
   readonly chapters: ReadonlyArray<ChapterRowEntity>;
@@ -58,6 +60,28 @@ export function ChaptersTable({
   const someSelected =
     isSelectionMode && chapters.some((c) => c.status !== "paid" && selectedIds.has(c.id));
 
+  const columns = useMemo<ColumnDef<ChapterRowEntity>[]>(
+    () => [
+      { id: "number", accessorKey: "number", header: "Nº" },
+      { id: "status", accessorKey: "status", header: "Status" },
+      {
+        id: "narrator",
+        accessorFn: (row) => row.narrator?.id ?? null,
+        header: "Narrador",
+      },
+      {
+        id: "editor",
+        accessorFn: (row) => row.editor?.id ?? null,
+        header: "Editor",
+      },
+      { id: "editedSeconds", accessorKey: "editedSeconds", header: "Horas editadas" },
+    ],
+    [],
+  );
+
+  const { table } = useChaptersTable({ chapters, columns });
+  const rows = table.getRowModel().rows;
+
   return (
     <ScrollArea
       data-testid="chapters-scroll-area"
@@ -87,22 +111,25 @@ export function ChaptersTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {chapters.map((chapter) => (
-            <ChapterRow
-              key={chapter.id}
-              chapter={chapter}
-              narrators={narrators}
-              editors={editors}
-              narratorNameById={narratorNameById}
-              editorNameById={editorNameById}
-              isLastNonPaid={chapter.status !== "paid" && nonPaidCount === 1}
-              isSelectionMode={isSelectionMode}
-              isSelected={selectedIds.has(chapter.id)}
-              onSaved={onChapterSaved}
-              onDeleted={onChapterDeleted}
-              onToggleSelected={onToggleSelected}
-            />
-          ))}
+          {rows.map((row) => {
+            const chapter = row.original;
+            return (
+              <ChapterRow
+                key={chapter.id}
+                chapter={chapter}
+                narrators={narrators}
+                editors={editors}
+                narratorNameById={narratorNameById}
+                editorNameById={editorNameById}
+                isLastNonPaid={chapter.status !== "paid" && nonPaidCount === 1}
+                isSelectionMode={isSelectionMode}
+                isSelected={selectedIds.has(chapter.id)}
+                onSaved={onChapterSaved}
+                onDeleted={onChapterDeleted}
+                onToggleSelected={onToggleSelected}
+              />
+            );
+          })}
           {chapters.length === 0 && (
             <TableRow>
               <TableCell
