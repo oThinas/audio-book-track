@@ -69,7 +69,7 @@ export function ChaptersTable({
   const { table } = useChaptersTable({ chapters, grouping, pricePerHourCents });
   const rows = table.getRowModel().rows;
 
-  const columnCount = isSelectionMode ? 7 : 7; // Nº, Status, Narrador, Editor, Horas editadas, Ações (or selection)
+  const columnCount = 7; // Nº, Status, Narrador, Editor, Horas editadas, Ações/Selection
 
   return (
     <ScrollArea

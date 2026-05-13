@@ -1,12 +1,11 @@
 "use client";
 
 import type { Row } from "@tanstack/react-table";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 
 import { StatusBadge } from "@/components/features/books/status-badge";
-import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { type ChapterStatus, chapterStatusLabel } from "@/lib/domain/chapter";
+import type { ChapterStatus } from "@/lib/domain/chapter";
 import { formatStatusBreakdown, type StatusBreakdown } from "@/lib/domain/chapter-aggregation";
 import { type GroupingDimension, UNASSIGNED_GROUP_KEY } from "@/lib/url/grouping-param";
 import { formatCentsBRL, formatGroupedSeconds } from "@/lib/utils";
@@ -77,22 +76,13 @@ export function ChapterGroupRow({
     >
       {selectionMode && <TableCell className="w-12" />}
       <TableCell colSpan={2} className="font-medium" style={indentStyle(row.depth)}>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="-ml-2 h-7 gap-1.5 px-2"
+        <div
+          className="-ml-2 inline-flex h-7 items-center gap-1.5 px-2"
           data-testid={`chapter-group-toggle-${groupKey}`}
-          aria-expanded={row.getIsExpanded()}
-          onClick={row.getToggleExpandedHandler()}
         >
-          {row.getIsExpanded() ? (
-            <ChevronDown aria-hidden="true" className="size-3.5" />
-          ) : (
-            <ChevronRight aria-hidden="true" className="size-3.5" />
-          )}
+          <ChevronDown aria-hidden="true" className="size-3.5 opacity-60" />
           {groupLabel(row, groupingDimension)}
-        </Button>
+        </div>
       </TableCell>
       <TableCell
         className="truncate text-sm text-muted-foreground"
@@ -125,5 +115,3 @@ export function ChapterGroupRow({
     </TableRow>
   );
 }
-
-export { chapterStatusLabel };

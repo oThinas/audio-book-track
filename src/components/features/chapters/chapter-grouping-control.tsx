@@ -7,6 +7,7 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -59,15 +60,15 @@ export function ChapterGroupingControl({
         <ChevronDown aria-hidden="true" className="size-3.5 opacity-60" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="min-w-[14rem]">
-        <DropdownMenuLabel>Agrupar por</DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>Agrupar por</DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           data-testid="chapter-grouping-clear"
           disabled={grouping.length === 0}
-          onSelect={(event) => {
-            event.preventDefault();
-            clearAll();
-          }}
+          closeOnClick={false}
+          onClick={() => clearAll()}
         >
           Sem agrupamento
         </DropdownMenuItem>
@@ -80,10 +81,8 @@ export function ChapterGroupingControl({
               key={dim}
               data-testid={`chapter-grouping-item-${dim}`}
               checked={checked}
-              onSelect={(event) => {
-                event.preventDefault();
-                toggleDimension(dim);
-              }}
+              closeOnClick={false}
+              onCheckedChange={() => toggleDimension(dim)}
             >
               <span className="flex-1">{DIMENSION_LABEL[dim]}</span>
               {checked && (

@@ -52,7 +52,7 @@ description: "Task list — 024 Chapter Grouping"
 - [X] T011 GREEN — implementar `src/components/features/chapters/hooks/use-chapters-grouping-state.ts` retornando `{ grouping: GroupingDimension[], setGrouping: (next) => void }` conforme R-007 do research
 - [X] T012 Migração pura (M0) — refatorar `src/components/features/chapters/chapters-table.tsx` para usar `useReactTable` (`@tanstack/react-table` v8) seguindo padrão de `src/components/features/books/books-table.tsx`: definir `ColumnDef<ChapterRowEntity>[]` (number, status, narrator, editor, editedSeconds, ações), `getCoreRowModel`, `getSortedRowModel`. **Renderização**: iterar `table.getRowModel().rows`; cada row continua renderizada por `<ChapterRow chapter={row.original} ... />`. Bulk select, dialogs e modos de edit permanecem inalterados. NÃO adicionar grouping/expansion ainda — esta task é refactor puro sem mudança de UX
 - [X] T013 [P] Criar `src/components/features/chapters/hooks/use-chapters-table.ts` extraindo a config de `useReactTable` (recebe `chapters`, `columns`, e retorna `{ table }`) — espelha o padrão de `use-books-table.ts`. Ajustar `chapters-table.tsx` para consumir o hook
-- [ ] T014 Rodar `bun run test:e2e` para os specs já existentes que tocam `/books/[id]` (chapters edit inline, narrator/editor delete with active books, etc.) e confirmar que TODOS continuam verdes após T012/T013 — se algum quebrar, corrigir antes de prosseguir; **gate**: zero regressões antes de US1
+- [X] T014 Rodar `bun run test:e2e` para os specs já existentes que tocam `/books/[id]` (chapters edit inline, narrator/editor delete with active books, etc.) e confirmar que TODOS continuam verdes após T012/T013 — se algum quebrar, corrigir antes de prosseguir; **gate**: zero regressões antes de US1
 
 **Checkpoint**: Foundation pronta — `chapters-table` agora dirigida por TanStack; agregações, parser, formatter, hook de URL e flag prontos. US1 pode começar.
 
@@ -66,7 +66,7 @@ description: "Task list — 024 Chapter Grouping"
 
 ### Tests for User Story 1 ⚠️ (TDD obrigatório — escrever ANTES da implementação e ver FALHAR)
 
-- [ ] T015 [P] [US1] Escrever `__tests__/e2e/chapters-grouping-by-editor.spec.ts` cobrindo: criar livro com fixtures de 2 editores + capítulos com `edited_seconds`/`status` variados + 2 caps sem editor; navegar para `/books/<id>`; abrir trigger `chapter-grouping-trigger`; clicar `chapter-grouping-item-editor`; validar via testids: 3 group rows (com order esperada), bucket "Sem atribuição" no fundo; **asserção de totais**: computar valores esperados no test via `chapters.reduce(...)` sobre a fixture (não hardcoded) e comparar com texto renderizado da linha-resumo, garantindo SC-003; expandir um grupo e validar capítulos por número asc; copiar URL e abrir nova page → estado preserva agrupamento; clicar `chapter-grouping-clear` → tabela flat e param removido. **Asserção de performance (SC-005)**: medir `performance.now()` antes do click em `chapter-grouping-item-editor` e depois da primeira linha-resumo estar visível; esperar < 300 ms (`expect(elapsed).toBeLessThan(300)`); marcar como soft assertion ou pular em CI lento se necessário. **RED**: deve falhar agora (componentes não existem)
+- [X] T015 [P] [US1] Escrever `__tests__/e2e/chapters-grouping-by-editor.spec.ts` cobrindo: criar livro com fixtures de 2 editores + capítulos com `edited_seconds`/`status` variados + 2 caps sem editor; navegar para `/books/<id>`; abrir trigger `chapter-grouping-trigger`; clicar `chapter-grouping-item-editor`; validar via testids: 3 group rows (com order esperada), bucket "Sem atribuição" no fundo; **asserção de totais**: computar valores esperados no test via `chapters.reduce(...)` sobre a fixture (não hardcoded) e comparar com texto renderizado da linha-resumo, garantindo SC-003; expandir um grupo e validar capítulos por número asc; copiar URL e abrir nova page → estado preserva agrupamento; clicar `chapter-grouping-clear` → tabela flat e param removido. **Asserção de performance (SC-005)**: medir `performance.now()` antes do click em `chapter-grouping-item-editor` e depois da primeira linha-resumo estar visível; esperar < 300 ms (`expect(elapsed).toBeLessThan(300)`); marcar como soft assertion ou pular em CI lento se necessário. **RED**: deve falhar agora (componentes não existem)
 
 ### Implementation for User Story 1
 
@@ -74,7 +74,7 @@ description: "Task list — 024 Chapter Grouping"
 - [X] T017 [P] [US1] Implementar `src/components/features/chapters/chapter-group-row.tsx` conforme `contracts/ui-group-row.md`: célula de label (StatusBadge ou nome ou "Sem atribuição"), botão expand/collapse via `row.getToggleExpandedHandler()`, células de count/seconds/earnings/breakdown via `aggregatedCell`; padding-left por `row.depth`; data-testids; respeita prop `showEarningsColumn` (esta task NÃO implementa o gate da flag — é só o prop)
 - [X] T018 [US1] Em `src/components/features/chapters/chapters-table.tsx` (já dirigida por TanStack após T012/T013): adicionar `enableGrouping` em colunas `narrator`/`editor`/`status` com `accessorFn` mapeando `null` para `UNASSIGNED_GROUP_KEY` (importado de `chapter-aggregation.ts`); configurar `aggregationFn: "sum"` na coluna `editedSeconds`; adicionar coluna virtual `earnings` com aggregation custom `sumCentsRounded` (registrar via opção `aggregationFns` do `useReactTable`); adicionar coluna virtual `statusBreakdown` com aggregation `countByStatus`; ativar `getGroupedRowModel`, `getExpandedRowModel`; estado `expanded` em `useState` local; estado `grouping` injetado via prop (vem do `useChaptersGroupingState` no nível acima); `sortingFn` custom por coluna agrupada que empurra `UNASSIGNED_GROUP_KEY` para o fim + ordena demais por `editedSeconds` desc; renderização condicional: `row.getIsGrouped()` → `<ChapterGroupRow row={row} groupingDimension={...} showEarningsColumn={...} columnCount={...} />`; senão → `<ChapterRow chapter={row.original} ... />`
 - [X] T019 [US1] Em `src/components/features/books/book-detail-client.tsx`: chamar `useChaptersGroupingState()`; passar `grouping`/`setGrouping` para `<ChaptersTable>`; renderizar `<ChapterGroupingControl grouping={grouping} onGroupingChange={setGrouping} />` acima da tabela (ou em barra de ações apropriada). Garantir que o trigger não compete com `<ChaptersBulkDeleteBar>` quando em selection mode (esconder controle de agrupamento durante selection mode, ou desabilitar)
-- [ ] T020 [US1] Rodar `__tests__/e2e/chapters-grouping-by-editor.spec.ts` — agora deve passar (**GREEN**). Se falhar, iterar tasks T016–T019 sem rodar a suíte completa. **Sub-cenário FR-020 (mutação atualiza totais)**: adicionar ao mesmo spec um caso onde, após agrupar por editor e expandir um grupo, edita-se inline o `editedSeconds` de um capítulo dentro do grupo (UI existente em `ChapterRowEditMode`); após salvar, validar que (a) o total de minutagem/ganho da linha-resumo do grupo atualizou refletindo a nova soma calculada via `reduce` no test, (b) o estado de expansão permaneceu (grupo continua expandido), (c) nenhum outro grupo foi afetado
+- [X] T020 [US1] Rodar `__tests__/e2e/chapters-grouping-by-editor.spec.ts` — agora deve passar (**GREEN**). Se falhar, iterar tasks T016–T019 sem rodar a suíte completa. **Sub-cenário FR-020 (mutação atualiza totais)**: adicionar ao mesmo spec um caso onde, após agrupar por editor e expandir um grupo, edita-se inline o `editedSeconds` de um capítulo dentro do grupo (UI existente em `ChapterRowEditMode`); após salvar, validar que (a) o total de minutagem/ganho da linha-resumo do grupo atualizou refletindo a nova soma calculada via `reduce` no test, (b) o estado de expansão permaneceu (grupo continua expandido), (c) nenhum outro grupo foi afetado
 
 **Checkpoint**: P1 (Editor) funcional. Demo possível.
 
@@ -88,12 +88,12 @@ description: "Task list — 024 Chapter Grouping"
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T021 [P] [US2] Escrever `__tests__/e2e/chapters-grouping-by-narrator.spec.ts`: fixtures com 3 narradores + 1 cap `pending` sem narrador; navegar; clicar `chapter-grouping-item-narrator`; validar 4 grupos com ordenação esperada e bucket "Sem atribuição" como último; expandir bucket e ver o cap pending; validar que cap com `editedSeconds = 0` incrementa count mas contribui 0 à minutagem/ganho. **Asserção de totais**: computar valores esperados via `chapters.reduce(...)` no test (não hardcoded) e comparar com texto renderizado — garantindo SC-003 também aqui
+- [X] T021 [P] [US2] Escrever `__tests__/e2e/chapters-grouping-by-narrator.spec.ts`: fixtures com 3 narradores + 1 cap `pending` sem narrador; navegar; clicar `chapter-grouping-item-narrator`; validar 4 grupos com ordenação esperada e bucket "Sem atribuição" como último; expandir bucket e ver o cap pending; validar que cap com `editedSeconds = 0` incrementa count mas contribui 0 à minutagem/ganho. **Asserção de totais**: computar valores esperados via `chapters.reduce(...)` no test (não hardcoded) e comparar com texto renderizado — garantindo SC-003 também aqui
 
 ### Implementation for User Story 2
 
-- [ ] T022 [US2] Verificar que a coluna `narrator` configurada em T018 já satisfaz US2 (mesma infraestrutura). Caso aparecem ajustes específicos (ex: label correta da célula de grupo de narrador puxando `narrator.name` da primeira folha), corrigir em `chapter-group-row.tsx` (mesmo arquivo de T017 — sequencial)
-- [ ] T023 [US2] Rodar `__tests__/e2e/chapters-grouping-by-narrator.spec.ts` — **GREEN**
+- [X] T022 [US2] Verificar que a coluna `narrator` configurada em T018 já satisfaz US2 (mesma infraestrutura). Caso aparecem ajustes específicos (ex: label correta da célula de grupo de narrador puxando `narrator.name` da primeira folha), corrigir em `chapter-group-row.tsx` (mesmo arquivo de T017 — sequencial)
+- [X] T023 [US2] Rodar `__tests__/e2e/chapters-grouping-by-narrator.spec.ts` — **GREEN**
 
 **Checkpoint**: MVP completo (P1 inteiro). Pronto para demo aos stakeholders.
 
@@ -107,12 +107,12 @@ description: "Task list — 024 Chapter Grouping"
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T024 [P] [US3] Escrever `__tests__/e2e/chapters-grouping-by-status.spec.ts`: fixtures com caps em 4 status distintos; clicar `chapter-grouping-item-status`; validar labels PT-BR via `<StatusBadge>`; validar célula de breakdown = "N capítulos" (sem listagem redundante)
+- [X] T024 [P] [US3] Escrever `__tests__/e2e/chapters-grouping-by-status.spec.ts`: fixtures com caps em 4 status distintos; clicar `chapter-grouping-item-status`; validar labels PT-BR via `<StatusBadge>`; validar célula de breakdown = "N capítulos" (sem listagem redundante)
 
 ### Implementation for User Story 3
 
-- [ ] T025 [US3] Em `src/components/features/chapters/chapter-group-row.tsx`: ajustar renderização do `aggregatedCell` de `statusBreakdown` para consultar `groupingDimension` do nível e chamar `formatStatusBreakdown(breakdown, groupingDimension)` — quando dimensão é `"status"`, o helper retorna "N capítulos" (já implementado em T007); garantir que a prop `groupingDimension` reflita a dimensão da row (via `row.column.id` do TanStack quando agrupado, ou via lookup em `grouping[row.depth]`)
-- [ ] T026 [US3] Rodar `__tests__/e2e/chapters-grouping-by-status.spec.ts` — **GREEN**
+- [X] T025 [US3] Em `src/components/features/chapters/chapter-group-row.tsx`: ajustar renderização do `aggregatedCell` de `statusBreakdown` para consultar `groupingDimension` do nível e chamar `formatStatusBreakdown(breakdown, groupingDimension)` — quando dimensão é `"status"`, o helper retorna "N capítulos" (já implementado em T007); garantir que a prop `groupingDimension` reflita a dimensão da row (via `row.column.id` do TanStack quando agrupado, ou via lookup em `grouping[row.depth]`)
+- [X] T026 [US3] Rodar `__tests__/e2e/chapters-grouping-by-status.spec.ts` — **GREEN**
 
 **Checkpoint**: P2 parte 1 funcional.
 
@@ -126,12 +126,12 @@ description: "Task list — 024 Chapter Grouping"
 
 ### Tests for User Story 4 ⚠️
 
-- [ ] T027 [P] [US4] Escrever `__tests__/e2e/chapters-grouping-multi-level.spec.ts`: clicar narrator depois editor; validar URL = `?groupBy=narrator,editor`; validar hierarquia visual (Narrador A com sub-grupos por Editor); somar manualmente sub-grupos e comparar com linha-resumo do nível Narrador; desmarcar ambos e re-marcar em ordem `editor → narrator` → URL atualiza e hierarquia se reorganiza; abrir URL `/books/<id>?groupBy=narrator,editor,status` em nova aba → mesmo estado
+- [X] T027 [P] [US4] Escrever `__tests__/e2e/chapters-grouping-multi-level.spec.ts`: clicar narrator depois editor; validar URL = `?groupBy=narrator,editor`; validar hierarquia visual (Narrador A com sub-grupos por Editor); somar manualmente sub-grupos e comparar com linha-resumo do nível Narrador; desmarcar ambos e re-marcar em ordem `editor → narrator` → URL atualiza e hierarquia se reorganiza; abrir URL `/books/<id>?groupBy=narrator,editor,status` em nova aba → mesmo estado
 
 ### Implementation for User Story 4
 
-- [ ] T028 [US4] Verificar comportamento da `sortingFn` custom em níveis aninhados (TanStack aplica recursivamente). Se grupos internos ordenam corretamente por minutagem desc com "Sem atribuição" no fim em CADA nível, nenhuma mudança necessária. Caso ajuste seja preciso, modificar `chapters-table.tsx` (mesma área de T018 — sequencial dentro do mesmo arquivo)
-- [ ] T029 [US4] Rodar `__tests__/e2e/chapters-grouping-multi-level.spec.ts` — **GREEN**
+- [X] T028 [US4] Verificar comportamento da `sortingFn` custom em níveis aninhados (TanStack aplica recursivamente). Se grupos internos ordenam corretamente por minutagem desc com "Sem atribuição" no fim em CADA nível, nenhuma mudança necessária. Caso ajuste seja preciso, modificar `chapters-table.tsx` (mesma área de T018 — sequencial dentro do mesmo arquivo)
+- [X] T029 [US4] Rodar `__tests__/e2e/chapters-grouping-multi-level.spec.ts` — **GREEN**
 
 **Checkpoint**: P2 completo.
 
@@ -145,13 +145,13 @@ description: "Task list — 024 Chapter Grouping"
 
 ### Tests for User Story 5 ⚠️
 
-- [ ] T030 [P] [US5] Escrever `__tests__/e2e/chapters-grouping-flag-narrator-earnings.spec.ts`: testar com flag `true` (default) → grupo de narrador mostra cell de ganho; estratégia para flag `false`: usar **module mock no Playwright via fixture customizada** OU executar um spec dedicado com `vi.mock` (alternativa: adicionar prop opcional `featureFlagsOverride` no `BookDetailClient` apenas em build de teste — última opção é menos invasiva mas adiciona código condicional; **decisão**: usar o cenário com flag `true` (default real) e cobrir o cenário `false` via unit test em T032 abaixo)
-- [ ] T031 [P] [US5] Escrever unit test `__tests__/unit/components/features/chapters/chapter-group-row.spec.tsx` renderizando `<ChapterGroupRow>` mockado com `showEarningsColumn={false}` (grupo de narrador) e `showEarningsColumn={true}` — validar que a célula de ganho aparece/some conforme a prop. Esse unit cobre o gate sem depender do valor da constante real
+- [X] T030 [P] [US5] Escrever `__tests__/e2e/chapters-grouping-flag-narrator-earnings.spec.ts`: testar com flag `true` (default) → grupo de narrador mostra cell de ganho; estratégia para flag `false`: usar **module mock no Playwright via fixture customizada** OU executar um spec dedicado com `vi.mock` (alternativa: adicionar prop opcional `featureFlagsOverride` no `BookDetailClient` apenas em build de teste — última opção é menos invasiva mas adiciona código condicional; **decisão**: usar o cenário com flag `true` (default real) e cobrir o cenário `false` via unit test em T032 abaixo)
+- [X] T031 [P] [US5] Escrever unit test `__tests__/unit/components/features/chapters/chapter-group-row.spec.tsx` renderizando `<ChapterGroupRow>` mockado com `showEarningsColumn={false}` (grupo de narrador) e `showEarningsColumn={true}` — validar que a célula de ganho aparece/some conforme a prop. Esse unit cobre o gate sem depender do valor da constante real
 
 ### Implementation for User Story 5
 
-- [ ] T032 [US5] Em `src/components/features/chapters/chapters-table.tsx` (área já tocada por T018): calcular `showEarningsColumn` por row de grupo: `const dimAtLevel = grouping[row.depth]; const isNarratorGroup = dimAtLevel === "narrator"; const showEarningsColumn = !isNarratorGroup || featureFlags.SHOW_EARNINGS_IN_NARRATOR_GROUPS;` e passar como prop para `<ChapterGroupRow>`
-- [ ] T033 [US5] Rodar T030 (E2E com flag default) e T031 (unit) — ambos **GREEN**
+- [X] T032 [US5] Em `src/components/features/chapters/chapters-table.tsx` (área já tocada por T018): calcular `showEarningsColumn` por row de grupo: `const dimAtLevel = grouping[row.depth]; const isNarratorGroup = dimAtLevel === "narrator"; const showEarningsColumn = !isNarratorGroup || featureFlags.SHOW_EARNINGS_IN_NARRATOR_GROUPS;` e passar como prop para `<ChapterGroupRow>`
+- [X] T033 [US5] Rodar T030 (E2E com flag default) e T031 (unit) — ambos **GREEN**
 
 **Checkpoint**: P3 completo. Feature inteira coberta.
 
@@ -161,18 +161,18 @@ description: "Task list — 024 Chapter Grouping"
 
 **Purpose**: Edge cases, smoke tests, verificação final, PR.
 
-- [ ] T034 [P] Escrever teste unit no spec do parser (T004) garantindo que `parseGroupingParam("foo")`, `parseGroupingParam("editor,editor")` e `parseGroupingParam("")` retornem `[]` (já coberto se T004 seguiu U-1..U-9; caso não, adicionar)
-- [ ] T035 [P] Escrever E2E `__tests__/e2e/chapters-grouping-invalid-url.spec.ts`: navegar diretamente para `/books/<id>?groupBy=foo` → tabela renderiza flat; após primeira interação com o controle, URL é normalizada (param removido) — confirma FR-003
-- [ ] T036 [P] Adicionar verificação mobile (viewport < 640px) em pelo menos UM dos specs E2E acima (`{ viewport: { width: 375, height: 812 } }` no `test.use()`): controle abre, agrupamento aplica, linha-resumo cabe no ScrollArea
-- [ ] T037 [P] Smoke de dark mode: rodar dev server, abrir `/books/<id>` em ambos os temas (toggle de tema do app), visualmente conferir que `<ChapterGroupingControl>` e `<ChapterGroupRow>` funcionam — capturar screenshot para anexar à PR (manual)
-- [ ] T038 Self-review: percorrer o checklist da constituição (princípios I-XVI) listado em `CLAUDE.md` "Self-Review antes de qualquer entrega" — confirmar cada item; documentar exceções na PR description se houver
-- [ ] T039 Atualizar `CLAUDE.md` se necessário: adicionar entrada em "Recent Changes" descrevendo a feature (1-2 frases); incluir em "Active Technologies" caso uma nova dep tenha sido adicionada (não esperamos nenhuma)
-- [ ] T040 Rodar `bun run lint` — zero warnings (constituição XVI obriga)
-- [ ] T041 Rodar `bun run test:unit` — todos verdes; cobertura ≥ 80% no diff
-- [ ] T042 Rodar `bun run test:integration` — todos verdes (sanity; nenhum teste novo adicionado)
-- [ ] T043 Rodar `bun run test:e2e` — todos verdes (incluindo os 5+ novos specs)
-- [ ] T044 Rodar `bun run build` — compila sem erro
-- [ ] T045 Invocar `/finish-task` para criar PR contra `main` com title `feat(024): ✨ agrupar capítulos por editor/narrador/status com totais` (conventional commit) + body descrevendo escopo, screenshots de ambos os temas, lista de stories cobertas, e referência à spec
+- [X] T034 [P] Escrever teste unit no spec do parser (T004) garantindo que `parseGroupingParam("foo")`, `parseGroupingParam("editor,editor")` e `parseGroupingParam("")` retornem `[]` (já coberto se T004 seguiu U-1..U-9; caso não, adicionar)
+- [X] T035 [P] Escrever E2E `__tests__/e2e/chapters-grouping-invalid-url.spec.ts`: navegar diretamente para `/books/<id>?groupBy=foo` → tabela renderiza flat; após primeira interação com o controle, URL é normalizada (param removido) — confirma FR-003
+- [X] T036 [P] Adicionar verificação mobile (viewport < 640px) em pelo menos UM dos specs E2E acima (`{ viewport: { width: 375, height: 812 } }` no `test.use()`): controle abre, agrupamento aplica, linha-resumo cabe no ScrollArea
+- [X] T037 [P] Smoke de dark mode: rodar dev server, abrir `/books/<id>` em ambos os temas (toggle de tema do app), visualmente conferir que `<ChapterGroupingControl>` e `<ChapterGroupRow>` funcionam — capturar screenshot para anexar à PR (manual)
+- [X] T038 Self-review: percorrer o checklist da constituição (princípios I-XVI) listado em `CLAUDE.md` "Self-Review antes de qualquer entrega" — confirmar cada item; documentar exceções na PR description se houver
+- [X] T039 Atualizar `CLAUDE.md` se necessário: adicionar entrada em "Recent Changes" descrevendo a feature (1-2 frases); incluir em "Active Technologies" caso uma nova dep tenha sido adicionada (não esperamos nenhuma)
+- [X] T040 Rodar `bun run lint` — zero warnings (constituição XVI obriga)
+- [X] T041 Rodar `bun run test:unit` — todos verdes; cobertura ≥ 80% no diff
+- [X] T042 Rodar `bun run test:integration` — todos verdes (sanity; nenhum teste novo adicionado)
+- [X] T043 Rodar `bun run test:e2e` — todos verdes (incluindo os 5+ novos specs)
+- [X] T044 Rodar `bun run build` — compila sem erro
+- [X] T045 Invocar `/finish-task` para criar PR contra `main` com title `feat(024): ✨ agrupar capítulos por editor/narrador/status com totais` (conventional commit) + body descrevendo escopo, screenshots de ambos os temas, lista de stories cobertas, e referência à spec
 
 ---
 
