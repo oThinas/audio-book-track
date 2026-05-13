@@ -70,27 +70,33 @@ export function ChapterGroupRow({
   const breakdownText = formatStatusBreakdown(breakdown, groupingDimension);
   const groupKey = String(row.getGroupingValue(groupingDimension) ?? "unknown");
 
+  function handleKeyDown(event: React.KeyboardEvent<HTMLTableRowElement>) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onToggle(row.id);
+    }
+  }
+
   return (
     <TableRow
       data-testid={`chapter-group-row-${groupingDimension}-${groupKey}`}
-      className="bg-muted/40 hover:bg-muted/60"
+      role="button"
+      tabIndex={0}
+      aria-expanded={isExpanded}
+      aria-label={isExpanded ? "Recolher grupo" : "Expandir grupo"}
+      onClick={() => onToggle(row.id)}
+      onKeyDown={handleKeyDown}
+      className="cursor-pointer bg-muted/40 hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       {selectionMode && <TableCell className="w-12" />}
       <TableCell colSpan={2} className="font-medium" style={indentStyle(row.depth)}>
-        <button
-          type="button"
-          onClick={() => onToggle(row.id)}
-          aria-expanded={isExpanded}
-          aria-label={isExpanded ? "Recolher grupo" : "Expandir grupo"}
-          className="-ml-2 inline-flex h-7 items-center gap-1.5 rounded px-2 hover:bg-muted/60"
-          data-testid={`chapter-group-toggle-${groupKey}`}
-        >
+        <div className="inline-flex items-center gap-1.5">
           <ChevronRight
             aria-hidden="true"
             className={`size-3.5 opacity-60 transition-transform ${isExpanded ? "rotate-90" : ""}`}
           />
           {groupLabel(row, groupingDimension)}
-        </button>
+        </div>
       </TableCell>
       <TableCell
         className="truncate text-sm text-muted-foreground"
