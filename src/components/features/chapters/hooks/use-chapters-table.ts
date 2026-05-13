@@ -161,6 +161,13 @@ export function useChaptersTable({
     getExpandedRowModel: getExpandedRowModel(),
     enableGrouping: true,
     enableExpanding: false, // Forced expanded — see use-chapters-table doc
+    // Pagination isn't used here. The default `autoResetPageIndex` schedules
+    // `setState` during render when grouping/data changes, which warns in React
+    // 19 ("state update on a component that hasn't mounted yet"). Disabling all
+    // auto-resets is safe since pagination, expansion, and sorting state aren't
+    // tied to mutable inputs that need to snap back to a clean state.
+    autoResetPageIndex: false,
+    autoResetExpanded: false,
   });
 
   return { table };
