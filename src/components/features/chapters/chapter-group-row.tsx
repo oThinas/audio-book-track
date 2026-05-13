@@ -15,8 +15,6 @@ import type { ChapterRowEntity } from "./chapter-row";
 export interface ChapterGroupRowProps {
   readonly row: Row<ChapterRowEntity>;
   readonly groupingDimension: GroupingDimension;
-  /** When `false`, hides only the earnings cell (R$). Leaf rows unaffected. */
-  readonly showEarningsColumn: boolean;
   readonly columnCount: number;
   /** Empty leading column to preserve layout when selection mode is active. */
   readonly selectionMode: boolean;
@@ -52,7 +50,6 @@ function countLabel(count: number): string {
 export function ChapterGroupRow({
   row,
   groupingDimension,
-  showEarningsColumn,
   columnCount: _columnCount,
   selectionMode,
 }: ChapterGroupRowProps) {
@@ -95,15 +92,13 @@ export function ChapterGroupRow({
         data-testid={`chapter-group-breakdown-${groupKey}`}
       >
         {breakdownText || (groupingDimension === "status" ? countLabel(row.subRows.length) : "—")}
-        {showEarningsColumn && (
-          <span
-            data-testid={`chapter-group-earnings-${groupKey}`}
-            className="ml-2 text-foreground"
-            title={`Ganho total: ${formatCentsBRL(earningsCents)}`}
-          >
-            · {formatCentsBRL(earningsCents)}
-          </span>
-        )}
+        <span
+          data-testid={`chapter-group-earnings-${groupKey}`}
+          className="ml-2 text-foreground"
+          title={`Ganho total: ${formatCentsBRL(earningsCents)}`}
+        >
+          · {formatCentsBRL(earningsCents)}
+        </span>
       </TableCell>
       <TableCell
         className="text-right tabular-nums"

@@ -70,7 +70,6 @@ describe("ChapterGroupRow", () => {
         <ChapterGroupRow
           row={row}
           groupingDimension="narrator"
-          showEarningsColumn={true}
           columnCount={7}
           selectionMode={false}
         />,
@@ -100,7 +99,6 @@ describe("ChapterGroupRow", () => {
         <ChapterGroupRow
           row={row}
           groupingDimension="narrator"
-          showEarningsColumn={true}
           columnCount={7}
           selectionMode={false}
         />,
@@ -109,37 +107,7 @@ describe("ChapterGroupRow", () => {
     expect(screen.getByText("Ana Silva")).toBeTruthy();
   });
 
-  it("hides earnings cell when showEarningsColumn=false (FR-011)", () => {
-    const row = buildRow({
-      groupingDimension: "narrator",
-      groupKey: "narr-1",
-      editedSeconds: 3600,
-      earningsCents: 7500,
-      subRowsCount: 2,
-      firstLeaf: {
-        id: "c1",
-        number: 1,
-        status: "completed",
-        narrator: { id: "narr-1", name: "Beatriz" },
-        editor: null,
-        editedSeconds: 1800,
-      },
-    });
-    render(
-      wrap(
-        <ChapterGroupRow
-          row={row}
-          groupingDimension="narrator"
-          showEarningsColumn={false}
-          columnCount={7}
-          selectionMode={false}
-        />,
-      ),
-    );
-    expect(screen.queryByTestId("chapter-group-earnings-narr-1")).toBeNull();
-  });
-
-  it("shows earnings cell formatted in BRL when showEarningsColumn=true", () => {
+  it("shows earnings cell formatted in BRL", () => {
     const row = buildRow({
       groupingDimension: "editor",
       groupKey: "ed-1",
@@ -160,7 +128,6 @@ describe("ChapterGroupRow", () => {
         <ChapterGroupRow
           row={row}
           groupingDimension="editor"
-          showEarningsColumn={true}
           columnCount={7}
           selectionMode={false}
         />,
@@ -192,7 +159,6 @@ describe("ChapterGroupRow", () => {
         <ChapterGroupRow
           row={row}
           groupingDimension="editor"
-          showEarningsColumn={true}
           columnCount={7}
           selectionMode={false}
         />,
@@ -222,7 +188,6 @@ describe("ChapterGroupRow", () => {
         <ChapterGroupRow
           row={row}
           groupingDimension="status"
-          showEarningsColumn={true}
           columnCount={7}
           selectionMode={false}
         />,
@@ -262,7 +227,6 @@ describe("ChapterGroupRow", () => {
         <ChapterGroupRow
           row={row}
           groupingDimension="narrator"
-          showEarningsColumn={true}
           columnCount={7}
           selectionMode={false}
         />,

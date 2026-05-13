@@ -12,7 +12,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { featureFlags } from "@/lib/config/feature-flags";
 import type { ChapterStatus } from "@/lib/domain/chapter";
 import type { GroupingDimension } from "@/lib/url/grouping-param";
 
@@ -104,15 +103,11 @@ export function ChaptersTable({
             if (row.getIsGrouped()) {
               const groupColId = row.groupingColumnId as GroupingDimension | undefined;
               if (!groupColId) return null;
-              const isNarratorGroup = groupColId === "narrator";
-              const showEarningsColumn =
-                !isNarratorGroup || featureFlags.SHOW_EARNINGS_IN_NARRATOR_GROUPS;
               return (
                 <ChapterGroupRow
                   key={row.id}
                   row={row}
                   groupingDimension={groupColId}
-                  showEarningsColumn={showEarningsColumn}
                   columnCount={columnCount}
                   selectionMode={isSelectionMode}
                 />

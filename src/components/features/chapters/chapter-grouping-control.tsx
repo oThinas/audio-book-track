@@ -8,7 +8,6 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuGroup,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -46,10 +45,6 @@ export function ChapterGroupingControl({
     }
   }
 
-  function clearAll() {
-    onGroupingChange([]);
-  }
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -63,15 +58,6 @@ export function ChapterGroupingControl({
         <DropdownMenuGroup>
           <DropdownMenuLabel>Agrupar por</DropdownMenuLabel>
         </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          data-testid="chapter-grouping-clear"
-          disabled={grouping.length === 0}
-          closeOnClick={false}
-          onClick={() => clearAll()}
-        >
-          Sem agrupamento
-        </DropdownMenuItem>
         <DropdownMenuSeparator />
         {DIMENSION_ORDER.map((dim) => {
           const orderIdx = grouping.indexOf(dim);

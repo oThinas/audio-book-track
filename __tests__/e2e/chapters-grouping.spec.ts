@@ -138,7 +138,7 @@ test.describe("Chapter grouping", () => {
       await editorAGroup.locator(`[data-testid$="-count-${editorA.id}"]`).textContent(),
     ).toContain("2 capítulos");
 
-    // Earnings present (flag default true) on editor groups
+    // Earnings present on editor groups
     expect(
       await editorBGroup
         .locator(`[data-testid="chapter-group-earnings-${editorB.id}"]`)
@@ -149,9 +149,9 @@ test.describe("Chapter grouping", () => {
     const leafRows = page.locator('tr[data-testid^="chapter-row-"]');
     await expect(leafRows.first()).toBeVisible();
 
-    // Clear grouping
+    // Clear grouping by unchecking the selected dimension
     await trigger.click();
-    await page.getByTestId("chapter-grouping-clear").click();
+    await page.getByTestId("chapter-grouping-item-editor").click();
     await trigger.click();
     await expect(trigger).toHaveAttribute("aria-expanded", "false");
     await expect(page).not.toHaveURL(/groupBy=/);
