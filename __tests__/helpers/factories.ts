@@ -209,6 +209,7 @@ interface CreateTestChapterOptions {
   readonly narratorId?: string | null;
   readonly editorId?: string | null;
   readonly editedSeconds?: number;
+  readonly deadline?: string | null;
 }
 
 interface CreateTestChapterResult {
@@ -230,6 +231,7 @@ export async function createTestChapter(
       narratorId: overrides.narratorId ?? null,
       editorId: overrides.editorId ?? null,
       editedSeconds: overrides.editedSeconds ?? 0,
+      deadline: overrides.deadline ?? null,
     })
     .returning();
 

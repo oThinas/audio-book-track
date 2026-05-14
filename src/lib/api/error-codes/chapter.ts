@@ -11,7 +11,8 @@ export const chapterCodes = {
   },
   CHAPTER_PAID_LOCKED: {
     status: 409,
-    message: "Este capítulo já está pago — narrador, editor e duração não podem ser alterados.",
+    message:
+      "Este capítulo já está pago — narrador, editor, duração e prazo não podem ser alterados.",
   },
   CHAPTER_INVALID_TRANSITION: {
     status: 422,

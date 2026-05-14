@@ -43,50 +43,50 @@ Projeto Next.js single-package: código em `src/`, testes em `__tests__/`, migra
 
 ### Schema e migration
 
-- [ ] T004 Estender `src/lib/db/schema/chapter.ts` adicionando coluna `deadline: date("deadline", { mode: "string" })` (nullable) e índice parcial `chapter_deadline_active_idx` `.on(table.deadline).where(sql\`${table.deadline} IS NOT NULL\`)`.
-- [ ] T005 Gerar migration via `bunx drizzle-kit generate` (deve produzir `drizzle/migrations/0007_chapter_deadline.sql`). Inspecionar SQL gerado: `ALTER TABLE "chapter" ADD COLUMN "deadline" date` + `CREATE INDEX "chapter_deadline_active_idx"`.
-- [ ] T006 Aplicar migration em dev (`bun run db:migrate`) e em teste (`bun run db:test:migrate`). Validar com `\d chapter` no psql que coluna e índice existem.
+- [x] T004 Estender `src/lib/db/schema/chapter.ts` adicionando coluna `deadline: date("deadline", { mode: "string" })` (nullable) e índice parcial `chapter_deadline_active_idx` `.on(table.deadline).where(sql\`${table.deadline} IS NOT NULL\`)`.
+- [x] T005 Gerar migration via `bunx drizzle-kit generate` (deve produzir `drizzle/migrations/0007_chapter_deadline.sql`). Inspecionar SQL gerado: `ALTER TABLE "chapter" ADD COLUMN "deadline" date` + `CREATE INDEX "chapter_deadline_active_idx"`.
+- [x] T006 Aplicar migration em dev (`bun run db:migrate`) e em teste (`bun run db:test:migrate`). Validar com `\d chapter` no psql que coluna e índice existem.
 
 ### Helpers puros de domínio (TDD)
 
-- [ ] T007 [P] Escrever testes unitários em `__tests__/unit/lib/domain/timezone.spec.ts`: `todayInAppTimezone(() => UTC X)` retorna ISO em `America/Sao_Paulo`; cobre virada de meia-noite (00:00–02:59 UTC → dia anterior em SP); `currentWeekRangeInAppTimezone` para segunda/quarta/domingo retorna `{ mondayIso, sundayIso }` corretos com `weekStartsOn=1`. Deve FALHAR.
-- [ ] T008 Implementar `src/lib/domain/timezone.ts` exportando `APP_TIMEZONE = "America/Sao_Paulo" as const`, `todayInAppTimezone(now?: () => Date): string`, `currentWeekRangeInAppTimezone(now?: () => Date): { mondayIso: string; sundayIso: string }`. Usar `date-fns-tz/toZonedTime` + `date-fns/startOfWeek/endOfWeek` com `weekStartsOn: 1` + `date-fns/format` com `"yyyy-MM-dd"`. Rodar T007 até passar.
-- [ ] T009 [P] Escrever testes unitários em `__tests__/unit/lib/domain/chapter-deadline.spec.ts` cobrindo `isOverdue` e `isInFocusWeek` em tabela paramétrica de 6 status × 7 posições de prazo (incluindo `null`, `< hoje`, `= hoje`, `= segunda`, `= domingo`, `= domingo+1`). Deve FALHAR.
-- [ ] T010 Implementar `src/lib/domain/chapter-deadline.ts` com `ACTIVE_STATUSES`, `FocusWeekContext`, `isOverdue(chapter, ctx)`, `isInFocusWeek(chapter, ctx)`. Comparações usam strings ISO (não objetos `Date`) para evitar fuso. Rodar T009 até passar.
-- [ ] T011 [P] Escrever testes unitários em `__tests__/unit/lib/utils/format-date.spec.ts` para `formatDeadline("2026-06-15")` → `"15/06/2026"`, `formatRelativeDeadline` cobrindo "hoje", "amanhã", "ontem", "em 30 dias", "atrasado há 5 dias". Deve FALHAR.
-- [ ] T012 Implementar `src/lib/utils/format-date.ts` com `formatDeadline(iso)` (usa `date-fns/format` + `ptBR`) e `formatRelativeDeadline(iso, ctx)` (usa `date-fns/differenceInCalendarDays` sobre strings ISO comparáveis). Rodar T011 até passar.
+- [x] T007 [P] Escrever testes unitários em `__tests__/unit/lib/domain/timezone.spec.ts`: `todayInAppTimezone(() => UTC X)` retorna ISO em `America/Sao_Paulo`; cobre virada de meia-noite (00:00–02:59 UTC → dia anterior em SP); `currentWeekRangeInAppTimezone` para segunda/quarta/domingo retorna `{ mondayIso, sundayIso }` corretos com `weekStartsOn=1`. Deve FALHAR.
+- [x] T008 Implementar `src/lib/domain/timezone.ts` exportando `APP_TIMEZONE = "America/Sao_Paulo" as const`, `todayInAppTimezone(now?: () => Date): string`, `currentWeekRangeInAppTimezone(now?: () => Date): { mondayIso: string; sundayIso: string }`. Usar `date-fns-tz/toZonedTime` + `date-fns/startOfWeek/endOfWeek` com `weekStartsOn: 1` + `date-fns/format` com `"yyyy-MM-dd"`. Rodar T007 até passar.
+- [x] T009 [P] Escrever testes unitários em `__tests__/unit/lib/domain/chapter-deadline.spec.ts` cobrindo `isOverdue` e `isInFocusWeek` em tabela paramétrica de 6 status × 7 posições de prazo (incluindo `null`, `< hoje`, `= hoje`, `= segunda`, `= domingo`, `= domingo+1`). Deve FALHAR.
+- [x] T010 Implementar `src/lib/domain/chapter-deadline.ts` com `ACTIVE_STATUSES`, `FocusWeekContext`, `isOverdue(chapter, ctx)`, `isInFocusWeek(chapter, ctx)`. Comparações usam strings ISO (não objetos `Date`) para evitar fuso. Rodar T009 até passar.
+- [x] T011 [P] Escrever testes unitários em `__tests__/unit/lib/utils/format-date.spec.ts` para `formatDeadline("2026-06-15")` → `"15/06/2026"`, `formatRelativeDeadline` cobrindo "hoje", "amanhã", "ontem", "em 30 dias", "atrasado há 5 dias". Deve FALHAR.
+- [x] T012 Implementar `src/lib/utils/format-date.ts` com `formatDeadline(iso)` (usa `date-fns/format` + `ptBR`) e `formatRelativeDeadline(iso, ctx)` (usa `date-fns/differenceInCalendarDays` sobre strings ISO comparáveis). Rodar T011 até passar.
 
 ### Validação (Zod schema)
 
-- [ ] T013 [P] Atualizar testes em `__tests__/unit/lib/schemas/chapter.spec.ts` (criar se não existir) cobrindo: `deadline` aceita `"2026-06-15"`, `null`, `undefined`; rejeita `"2026-13-01"`, `"21/06/2026"`, `""`, e datas > hoje+10 anos. Deve FALHAR.
-- [ ] T014 Atualizar `src/lib/schemas/chapter.ts` adicionando `deadlineSchema` (regex + `isCalendarValid` + `isWithinTenYears`) e inserir como `deadline: deadlineSchema.optional()` em `updateChapterSchema`. Mensagens PT-BR conforme `data-model.md §4`. Rodar T013 até passar.
+- [x] T013 [P] Atualizar testes em `__tests__/unit/lib/schemas/chapter.spec.ts` (criar se não existir) cobrindo: `deadline` aceita `"2026-06-15"`, `null`, `undefined`; rejeita `"2026-13-01"`, `"21/06/2026"`, `""`, e datas > hoje+10 anos. Deve FALHAR.
+- [x] T014 Atualizar `src/lib/schemas/chapter.ts` adicionando `deadlineSchema` (regex + `isCalendarValid` + `isWithinTenYears`) e inserir como `deadline: deadlineSchema.optional()` em `updateChapterSchema`. Mensagens PT-BR conforme `data-model.md §4`. Rodar T013 até passar.
 
 ### Domínio do capítulo
 
-- [ ] T015 Atualizar `src/lib/domain/chapter.ts`: adicionar `readonly deadline: string | null` em `Chapter` e estender `PAID_LOCKED_FIELDS` para `["narratorId", "editorId", "editedSeconds", "deadline"] as const`.
+- [x] T015 Atualizar `src/lib/domain/chapter.ts`: adicionar `readonly deadline: string | null` em `Chapter` e estender `PAID_LOCKED_FIELDS` para `["narratorId", "editorId", "editedSeconds", "deadline"] as const`.
 
 ### Repository — port + adapter
 
-- [ ] T016 Atualizar `src/lib/repositories/chapter-repository.ts`: adicionar `deadline?: string | null` em `InsertChapterInput` e `UpdateChapterInput`.
-- [ ] T017 [P] Escrever teste de integration em `__tests__/integration/repositories/drizzle-chapter-deadline.spec.ts`: insert com `deadline`, update setando, update para `null`, findById/listByBookId retornam `deadline`. Deve FALHAR.
-- [ ] T018 Atualizar `src/lib/repositories/drizzle/drizzle-chapter-repository.ts`: adicionar `deadline: chapter.deadline` em `CHAPTER_COLUMNS`, `deadline` no tipo `ChapterRow`, mapeamento em `toDomain`, e propagação em `insertMany`/`update` (`...(input.deadline !== undefined ? { deadline: input.deadline } : {})`). Rodar T017 até passar.
+- [x] T016 Atualizar `src/lib/repositories/chapter-repository.ts`: adicionar `deadline?: string | null` em `InsertChapterInput` e `UpdateChapterInput`.
+- [x] T017 [P] Escrever teste de integration em `__tests__/integration/repositories/drizzle-chapter-deadline.spec.ts`: insert com `deadline`, update setando, update para `null`, findById/listByBookId retornam `deadline`. Deve FALHAR.
+- [x] T018 Atualizar `src/lib/repositories/drizzle/drizzle-chapter-repository.ts`: adicionar `deadline: chapter.deadline` em `CHAPTER_COLUMNS`, `deadline` no tipo `ChapterRow`, mapeamento em `toDomain`, e propagação em `insertMany`/`update` (`...(input.deadline !== undefined ? { deadline: input.deadline } : {})`). Rodar T017 até passar.
 
 ### Catálogo de erros
 
-- [ ] T019 Atualizar `src/lib/api/error-codes/chapter.ts`: substituir mensagem de `CHAPTER_PAID_LOCKED` por `"Este capítulo já está pago — narrador, editor, duração e prazo não podem ser alterados."`. (Erros de validação de `deadline` saem via `ZodError` → mapeamento existente do `withApiErrorHandler`; sem código novo necessário.)
+- [x] T019 Atualizar `src/lib/api/error-codes/chapter.ts`: substituir mensagem de `CHAPTER_PAID_LOCKED` por `"Este capítulo já está pago — narrador, editor, duração e prazo não podem ser alterados."`. (Erros de validação de `deadline` saem via `ZodError` → mapeamento existente do `withApiErrorHandler`; sem código novo necessário.)
 
 ### Service
 
-- [ ] T020 [P] Escrever teste integration em `__tests__/integration/services/chapter-service-deadline.spec.ts`: update aceita `deadline`, lança `ChapterPaidLockedError` quando capítulo `paid` recebe `deadline`, permite alterar `deadline` em qualquer outro status. Deve FALHAR.
-- [ ] T021 Atualizar `src/lib/services/chapter-service.ts`: adicionar `deadline?: string | null` em `UpdateChapterServiceInput`; atualizar a constante local `PAID_LOCKED_FIELDS` para incluir `"deadline"`; propagar `deadline` no `.update({...})` do repo. Rodar T020 até passar.
+- [x] T020 [P] Escrever teste integration em `__tests__/integration/services/chapter-service-deadline.spec.ts`: update aceita `deadline`, lança `ChapterPaidLockedError` quando capítulo `paid` recebe `deadline`, permite alterar `deadline` em qualquer outro status. Deve FALHAR.
+- [x] T021 Atualizar `src/lib/services/chapter-service.ts`: adicionar `deadline?: string | null` em `UpdateChapterServiceInput`; atualizar a constante local `PAID_LOCKED_FIELDS` para incluir `"deadline"`; propagar `deadline` no `.update({...})` do repo. Rodar T020 até passar.
 
 ### API route
 
-- [ ] T022 Atualizar `src/app/api/v1/chapters/[id]/route.ts`: incluir `deadline: chapter.deadline` no objeto `data` retornado pelo handler `handleChapterUpdate`. Validar manualmente com `curl PATCH` que o campo retorna.
+- [x] T022 Atualizar `src/app/api/v1/chapters/[id]/route.ts`: incluir `deadline: chapter.deadline` no objeto `data` retornado pelo handler `handleChapterUpdate`. Validar manualmente com `curl PATCH` que o campo retorna.
 
 ### Regressão da criação inline (FR-032)
 
-- [ ] T060 Escrever teste integration em `__tests__/integration/services/book-service-inline-creation-deadline.spec.ts`: criar livro via `BookService.create({ inline: { chapterCount: 5, ... } })` (ou caminho equivalente do fluxo inline existente) e verificar que **todos** os capítulos retornam `deadline === null`. Garante FR-032: criação inline NUNCA propaga `deadline`. Deve passar imediatamente após Foundational (regressão preventiva); rodar.
+- [x] T060 Escrever teste integration em `__tests__/integration/services/book-service-inline-creation-deadline.spec.ts`: criar livro via `BookService.create({ inline: { chapterCount: 5, ... } })` (ou caminho equivalente do fluxo inline existente) e verificar que **todos** os capítulos retornam `deadline === null`. Garante FR-032: criação inline NUNCA propaga `deadline`. Deve passar imediatamente após Foundational (regressão preventiva); rodar.
 
 **Checkpoint**: Migration aplicada, domínio/repo/service/API conhecem `deadline`, paid-lock funciona, criação inline regressão-protegida. Foundational está pronto.
 

@@ -1,5 +1,14 @@
 import { sql } from "drizzle-orm";
-import { check, index, integer, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import {
+  check,
+  date,
+  index,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 import { book } from "./book";
 import { editor } from "./editor";
 import { narrator } from "./narrator";
@@ -22,6 +31,7 @@ export const chapter = pgTable(
     narratorId: text("narrator_id").references(() => narrator.id, { onDelete: "restrict" }),
     editorId: text("editor_id").references(() => editor.id, { onDelete: "restrict" }),
     editedSeconds: integer("edited_seconds").notNull().default(0),
+    deadline: date("deadline", { mode: "string" }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .defaultNow()
@@ -36,6 +46,9 @@ export const chapter = pgTable(
       .where(sql`${table.narratorId} IS NOT NULL`),
     index("chapter_editor_id_idx").on(table.editorId).where(sql`${table.editorId} IS NOT NULL`),
     index("chapter_book_status_idx").on(table.bookId, table.status),
+    index("chapter_deadline_active_idx")
+      .on(table.deadline)
+      .where(sql`${table.deadline} IS NOT NULL`),
     check("chapter_number_positive", sql`${table.number} >= 1`),
     check(
       "chapter_edited_seconds_range",

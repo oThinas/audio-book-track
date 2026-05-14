@@ -10,11 +10,12 @@ export interface Chapter {
   readonly narratorId: string | null;
   readonly editorId: string | null;
   readonly editedSeconds: number;
+  readonly deadline: string | null;
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }
 
-export const PAID_LOCKED_FIELDS = ["narratorId", "editorId", "editedSeconds"] as const;
+export const PAID_LOCKED_FIELDS = ["narratorId", "editorId", "editedSeconds", "deadline"] as const;
 export type PaidLockedField = (typeof PAID_LOCKED_FIELDS)[number];
 
 const CHAPTER_STATUS_LABELS: Record<ChapterStatus, string> = {
