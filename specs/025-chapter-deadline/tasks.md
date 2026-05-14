@@ -27,9 +27,9 @@ Projeto Next.js single-package: código em `src/`, testes em `__tests__/`, migra
 
 **Purpose**: Dependências externas e primitivos de UI ausentes.
 
-- [ ] T001 Instalar dependências `date-fns@4` e `date-fns-tz@3` via `bun add date-fns date-fns-tz`. Não remover libs existentes. Verificar `package.json` e `bun.lock` atualizados.
-- [ ] T002 [P] Adicionar primitivo shadcn `Calendar` via `bunx --bun shadcn@latest add calendar` (gera `src/components/ui/calendar.tsx` e instala `react-day-picker` transitivamente).
-- [ ] T003 [P] Adicionar primitivo shadcn `Badge` via `bunx --bun shadcn@latest add badge` (gera `src/components/ui/badge.tsx`).
+- [x] T001 Instalar dependências `date-fns@4` e `date-fns-tz@3` via `bun add date-fns date-fns-tz`. Não remover libs existentes. Verificar `package.json` e `bun.lock` atualizados.
+- [x] T002 [P] Adicionar primitivo shadcn `Calendar` via `bunx --bun shadcn@latest add calendar` (gera `src/components/ui/calendar.tsx` e instala `react-day-picker` transitivamente).
+- [x] T003 [P] Adicionar primitivo shadcn `Badge` via `bunx --bun shadcn@latest add badge` (gera `src/components/ui/badge.tsx`).
 
 **Checkpoint**: Dependências de UI e datas disponíveis. Pronto para o Phase 2.
 
