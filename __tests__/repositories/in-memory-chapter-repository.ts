@@ -34,6 +34,7 @@ export class InMemoryChapterRepository implements ChapterRepository {
         narratorId: input.narratorId ?? null,
         editorId: input.editorId ?? null,
         editedSeconds: input.editedSeconds ?? 0,
+        deadline: input.deadline ?? null,
         createdAt: now,
         updatedAt: now,
       };
@@ -54,6 +55,7 @@ export class InMemoryChapterRepository implements ChapterRepository {
       ...(input.narratorId !== undefined ? { narratorId: input.narratorId } : {}),
       ...(input.editorId !== undefined ? { editorId: input.editorId } : {}),
       ...(input.editedSeconds !== undefined ? { editedSeconds: input.editedSeconds } : {}),
+      ...(input.deadline !== undefined ? { deadline: input.deadline } : {}),
       updatedAt: new Date(),
     };
     this.store.set(id, updated);

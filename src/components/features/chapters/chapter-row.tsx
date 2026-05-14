@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { ChapterStatus } from "@/lib/domain/chapter";
+import type { FocusWeekContext } from "@/lib/domain/chapter-deadline";
 import { formatSecondsAsHHMMSS } from "@/lib/utils";
 
+import { ChapterDeadlineCell } from "./chapter-deadline-cell";
 import { ChapterDeleteDialog } from "./chapter-delete-dialog";
 import { ChapterRowEditMode } from "./chapter-row-edit-mode";
 import { useChapterRow } from "./hooks/use-chapter-row";
@@ -21,6 +23,7 @@ export interface ChapterRowEntity {
   readonly narrator: { readonly id: string; readonly name: string } | null;
   readonly editor: { readonly id: string; readonly name: string } | null;
   readonly editedSeconds: number;
+  readonly deadline: string | null;
 }
 
 export interface ChapterRowOption {
@@ -37,6 +40,7 @@ interface ChapterRowProps {
   readonly isLastNonPaid: boolean;
   readonly isSelectionMode: boolean;
   readonly isSelected: boolean;
+  readonly focusContext: FocusWeekContext;
   readonly onSaved: (updated: ChapterRowEntity, bookStatus: ChapterStatus) => void;
   readonly onDeleted: (chapterId: string, bookDeleted: boolean) => void;
   readonly onToggleSelected: (chapterId: string, selected: boolean) => void;
@@ -51,6 +55,7 @@ export function ChapterRow({
   isLastNonPaid,
   isSelectionMode,
   isSelected,
+  focusContext,
   onSaved,
   onDeleted,
   onToggleSelected,
@@ -103,6 +108,13 @@ export function ChapterRow({
         </TableCell>
         <TableCell className="truncate text-muted-foreground">
           {chapter.editor ? chapter.editor.name : "—"}
+        </TableCell>
+        <TableCell>
+          <ChapterDeadlineCell
+            deadline={chapter.deadline}
+            status={chapter.status}
+            focusContext={focusContext}
+          />
         </TableCell>
         <TableCell className="text-right tabular-nums">
           {formatSecondsAsHHMMSS(chapter.editedSeconds)}

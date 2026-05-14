@@ -94,6 +94,7 @@ describe("ChapterGroupRow", () => {
         narrator: { id: "abc-narrator", name: "Ana Silva" },
         editor: null,
         editedSeconds: 1200,
+        deadline: null,
       },
     });
     render(
@@ -125,6 +126,7 @@ describe("ChapterGroupRow", () => {
         narrator: null,
         editor: { id: "ed-1", name: "Carlos" },
         editedSeconds: 3600,
+        deadline: null,
       },
     });
     render(
@@ -158,6 +160,7 @@ describe("ChapterGroupRow", () => {
         narrator: null,
         editor: { id: "ed-2", name: "Diana" },
         editedSeconds: 5040,
+        deadline: null,
       },
     });
     render(
@@ -230,6 +233,7 @@ describe("ChapterGroupRow", () => {
         narrator: { id: "narr-x", name: "Eduarda" },
         editor: null,
         editedSeconds: 1800,
+        deadline: null,
       },
     });
     render(

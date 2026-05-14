@@ -64,6 +64,7 @@ export interface BookChapterDetail {
   readonly narrator: { readonly id: string; readonly name: string } | null;
   readonly editor: { readonly id: string; readonly name: string } | null;
   readonly editedSeconds: number;
+  readonly deadline: string | null;
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }
@@ -143,6 +144,7 @@ export class BookService {
         narrator: chapter.narratorId ? (narratorMap.get(chapter.narratorId) ?? null) : null,
         editor: chapter.editorId ? (editorMap.get(chapter.editorId) ?? null) : null,
         editedSeconds: chapter.editedSeconds,
+        deadline: chapter.deadline,
         createdAt: chapter.createdAt,
         updatedAt: chapter.updatedAt,
       };

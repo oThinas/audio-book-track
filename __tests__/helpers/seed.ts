@@ -86,6 +86,7 @@ export function buildChapterRowData(overrides: Partial<ChapterRowData> = {}): Ch
     narrator: null,
     editor: null,
     editedSeconds: 0,
+    deadline: null,
     ...overrides,
   };
 }

@@ -10,6 +10,7 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import type { ChapterStatus } from "@/lib/domain/chapter";
 import { cn } from "@/lib/utils";
 
+import { ChapterDeadlinePicker } from "./chapter-deadline-picker";
 import { ChapterPaidReversionDialog } from "./chapter-paid-reversion-dialog";
 import type { ChapterRowEntity, ChapterRowOption } from "./chapter-row";
 import { ChapterStatusSelect } from "./chapter-status-select";
@@ -137,6 +138,20 @@ export function ChapterRowEditMode({
                   ))}
                 </SelectContent>
               </Select>
+            )}
+          />
+        </TableCell>
+        <TableCell>
+          <Controller
+            name="deadline"
+            control={control}
+            render={({ field }) => (
+              <ChapterDeadlinePicker
+                id={`chapter-deadline-${chapter.id}`}
+                value={field.value}
+                onChange={field.onChange}
+                disabled={isSubmitting || chapter.status === "paid"}
+              />
             )}
           />
         </TableCell>

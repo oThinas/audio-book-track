@@ -26,6 +26,7 @@ function makeChapter(overrides: Partial<ChapterRowEntity> = {}): ChapterRowEntit
     narrator: null,
     editor: null,
     editedSeconds: 0,
+    deadline: null,
     ...overrides,
   };
 }
@@ -68,6 +69,7 @@ describe("useChapterRowEdit", () => {
       narratorId: "n-1",
       editorId: "e-1",
       editedSeconds: 1200,
+      deadline: null,
     });
   });
 
@@ -94,6 +96,7 @@ describe("useChapterRowEdit", () => {
           narratorId: "n-1",
           editorId: null,
           editedSeconds: 0,
+          deadline: null,
         },
         meta: { bookStatus: "editing" },
       },
@@ -109,6 +112,7 @@ describe("useChapterRowEdit", () => {
         narratorId: "n-1",
         editorId: null,
         editedSeconds: 0,
+        deadline: null,
       });
     });
 
@@ -140,6 +144,7 @@ describe("useChapterRowEdit", () => {
         narratorId: null,
         editorId: null,
         editedSeconds: 0,
+        deadline: null,
       });
     });
 
@@ -158,6 +163,7 @@ describe("useChapterRowEdit", () => {
           narratorId: null,
           editorId: null,
           editedSeconds: 0,
+          deadline: null,
         },
         meta: { bookStatus: "completed" },
       },
@@ -173,6 +179,7 @@ describe("useChapterRowEdit", () => {
         narratorId: null,
         editorId: null,
         editedSeconds: 0,
+        deadline: null,
       });
     });
     await act(async () => {
@@ -200,6 +207,7 @@ describe("useChapterRowEdit", () => {
         narratorId: null,
         editorId: null,
         editedSeconds: 0,
+        deadline: null,
       });
     });
     expect(result.current.reversionPending).not.toBeNull();
@@ -224,6 +232,7 @@ describe("useChapterRowEdit", () => {
         narratorId: "n-1",
         editorId: null,
         editedSeconds: 0,
+        deadline: null,
       });
     });
 

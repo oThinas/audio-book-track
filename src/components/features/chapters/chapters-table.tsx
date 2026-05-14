@@ -14,6 +14,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { ChapterStatus } from "@/lib/domain/chapter";
+import type { FocusWeekContext } from "@/lib/domain/chapter-deadline";
+import { currentWeekRangeInAppTimezone, todayInAppTimezone } from "@/lib/domain/timezone";
 import type { GroupingDimension } from "@/lib/url/grouping-param";
 
 import { ChapterGroupRow } from "./chapter-group-row";
@@ -66,6 +68,11 @@ export function ChaptersTable({
   const someSelected =
     isSelectionMode && chapters.some((c) => c.status !== "paid" && selectedIds.has(c.id));
 
+  const focusContext = useMemo<FocusWeekContext>(() => {
+    const { mondayIso, sundayIso } = currentWeekRangeInAppTimezone();
+    return { todayIso: todayInAppTimezone(), mondayIso, sundayIso };
+  }, []);
+
   const { table } = useChaptersTable({ chapters, grouping, pricePerHourCents });
   const allRows = table.getRowModel().rows;
   const [expandedGroups, setExpandedGroups] = useState<ReadonlySet<string>>(() => new Set());
@@ -91,7 +98,7 @@ export function ChaptersTable({
     });
   }, [allRows, expandedGroups]);
 
-  const columnCount = 7; // Nº, Status, Narrador, Editor, Horas editadas, Ações/Selection
+  const columnCount = 8; // Nº, Status, Narrador, Editor, Prazo, Horas editadas, Ações/Selection
 
   return (
     <ScrollArea
@@ -117,6 +124,7 @@ export function ChaptersTable({
             <TableHead className="w-40">Status</TableHead>
             <TableHead className="w-56">Narrador</TableHead>
             <TableHead className="w-56">Editor</TableHead>
+            <TableHead className="w-32">Prazo</TableHead>
             <TableHead className="w-40 text-right">Horas editadas</TableHead>
             {!isSelectionMode && <TableHead className="w-28 text-right">Ações</TableHead>}
           </TableRow>
@@ -150,6 +158,7 @@ export function ChaptersTable({
                 isLastNonPaid={chapter.status !== "paid" && nonPaidCount === 1}
                 isSelectionMode={isSelectionMode}
                 isSelected={selectedIds.has(chapter.id)}
+                focusContext={focusContext}
                 onSaved={onChapterSaved}
                 onDeleted={onChapterDeleted}
                 onToggleSelected={onToggleSelected}

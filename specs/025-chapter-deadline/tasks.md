@@ -100,14 +100,14 @@ Projeto Next.js single-package: código em `src/`, testes em `__tests__/`, migra
 
 ### Tests for User Story 1
 
-- [ ] T023 [P] [US1] Component test em `__tests__/unit/components/features/chapters/chapter-deadline-picker.spec.tsx` cobrindo: render com `value=null` → texto "Definir prazo"; render com `value="2026-06-15"` → texto "15/06/2026"; clique no botão abre popover; selecionar dia chama `onChange("YYYY-MM-DD")` correto (sem off-by-one); "Limpar" chama `onChange(null)`; `disabled=true` impede abrir popover. Deve FALHAR.
+- [x] T023 [P] [US1] Component test em `__tests__/unit/components/features/chapters/chapter-deadline-picker.spec.tsx` cobrindo: render com `value=null` → texto "Definir prazo"; render com `value="2026-06-15"` → texto "15/06/2026"; clique no botão abre popover; selecionar dia chama `onChange("YYYY-MM-DD")` correto (sem off-by-one); "Limpar" chama `onChange(null)`; `disabled=true` impede abrir popover. Deve FALHAR.
 - [ ] T024 [P] [US1] E2E em `__tests__/e2e/chapter-deadline.spec.ts` (criar) — fixture com 1 livro + 1 capítulo `pending`. Cenário "Definir prazo": entrar no modo edição, abrir picker, escolher data futura, salvar, validar célula. Cenário "Limpar": idem invertido. Cenário "Persistência após reload". Deve FALHAR.
 
 ### Implementation for User Story 1
 
-- [ ] T025 [P] [US1] Criar `src/components/features/chapters/chapter-deadline-picker.tsx` conforme [contracts/ui-deadline-editor.md](./contracts/ui-deadline-editor.md). Composição: `<Popover>` + `<Calendar locale={ptBR} weekStartsOn={1}>` + footer com "Limpar" e "OK". Props controladas (`value`, `onChange`, `disabled`). Helper interno `formatISODate(date: Date): string` constrói `YYYY-MM-DD` a partir de partes locais. Rodar T023 até passar.
-- [ ] T026 [US1] Atualizar `src/components/features/chapters/chapter-row-edit-mode.tsx`: adicionar `deadline` ao form do RHF (com `defaultValue: chapter.deadline ?? null`), inserir `<Controller name="deadline">` envolvendo `<ChapterDeadlinePicker disabled={chapter.status === "paid"} />` dentro de um `<FormItem><FormLabel>Prazo</FormLabel>...</FormItem>`. Garantir que o submit envia `deadline` para o `PATCH` (já suportado server-side por T014/T021/T022).
-- [ ] T027 [US1] Atualizar o hook de mutação da linha (provavelmente `use-chapter-row-edit-mode.ts` ou equivalente em `src/components/features/chapters/hooks/`) para incluir `deadline` na chamada `apiFetch<…>("/api/v1/chapters/:id", { method: "PATCH", body: { deadline, ... } })`. Rodar T024 até passar.
+- [x] T025 [P] [US1] Criar `src/components/features/chapters/chapter-deadline-picker.tsx` conforme [contracts/ui-deadline-editor.md](./contracts/ui-deadline-editor.md). Composição: `<Popover>` + `<Calendar locale={ptBR} weekStartsOn={1}>` + footer com "Limpar" e "OK". Props controladas (`value`, `onChange`, `disabled`). Helper interno `formatISODate(date: Date): string` constrói `YYYY-MM-DD` a partir de partes locais. Rodar T023 até passar.
+- [x] T026 [US1] Atualizar `src/components/features/chapters/chapter-row-edit-mode.tsx`: adicionar `deadline` ao form do RHF (com `defaultValue: chapter.deadline ?? null`), inserir `<Controller name="deadline">` envolvendo `<ChapterDeadlinePicker disabled={chapter.status === "paid"} />` dentro de um `<FormItem><FormLabel>Prazo</FormLabel>...</FormItem>`. Garantir que o submit envia `deadline` para o `PATCH` (já suportado server-side por T014/T021/T022).
+- [x] T027 [US1] Atualizar o hook de mutação da linha (provavelmente `use-chapter-row-edit-mode.ts` ou equivalente em `src/components/features/chapters/hooks/`) para incluir `deadline` na chamada `apiFetch<…>("/api/v1/chapters/:id", { method: "PATCH", body: { deadline, ... } })`. Rodar T024 até passar.
 
 **Checkpoint**: US1 funciona end-to-end. Gestor já consegue definir/alterar/limpar prazo. Faltam apresentação visual e filtros.
 
@@ -121,14 +121,14 @@ Projeto Next.js single-package: código em `src/`, testes em `__tests__/`, migra
 
 ### Tests for User Story 2
 
-- [ ] T028 [P] [US2] Component test em `__tests__/unit/components/features/chapters/chapter-deadline-cell.spec.tsx` cobrindo: `deadline=null` → `—` sem aria-label; `deadline` futuro → data formatada, sem destaque, tooltip "em N dias"; `deadline` passado + status ativo → classe `text-destructive`, ícone presente, `aria-label="Atrasado"`, tooltip "Atrasado há N dias"; `deadline` passado + status `completed` → data sem destaque; `deadline` passado + status `paid` → idem; `deadline` hoje → tooltip "hoje" sem destaque. Deve FALHAR.
+- [x] T028 [P] [US2] Component test em `__tests__/unit/components/features/chapters/chapter-deadline-cell.spec.tsx` cobrindo: `deadline=null` → `—` sem aria-label; `deadline` futuro → data formatada, sem destaque, tooltip "em N dias"; `deadline` passado + status ativo → classe `text-destructive`, ícone presente, `aria-label="Atrasado"`, tooltip "Atrasado há N dias"; `deadline` passado + status `completed` → data sem destaque; `deadline` passado + status `paid` → idem; `deadline` hoje → tooltip "hoje" sem destaque. Deve FALHAR.
 - [ ] T029 [US2] E2E (estender `__tests__/e2e/chapter-deadline.spec.ts`) — cenário "Capítulo atrasado destacado" verificando `text-destructive` ou `aria-label`; cenário "Destaque some ao virar completed". Deve FALHAR.
 
 ### Implementation for User Story 2
 
-- [ ] T030 [P] [US2] Criar `src/components/features/chapters/chapter-deadline-cell.tsx` conforme [contracts/ui-deadline-cell.md](./contracts/ui-deadline-cell.md). Props: `deadline`, `status`, `focusContext`. Renderiza 3 casos (null/upcoming/overdue). Tooltip via shadcn `<Tooltip>`. Ícone `AlertCircle` de `lucide-react`. Rodar T028 até passar.
-- [ ] T031 [US2] Atualizar `src/components/features/chapters/chapters-table.tsx`: adicionar coluna fixa "Prazo" na definição de colunas (sem `header` clicável; respeitar FR-013). Calcular `focusContext` UMA vez por render via `useMemo`. Passar `focusContext` para cada célula via prop.
-- [ ] T032 [US2] Atualizar `src/components/features/chapters/chapter-row.tsx` (modo leitura) para usar `<ChapterDeadlineCell>` na coluna de prazo. Atualizar `src/components/features/chapters/chapter-row-edit-mode.tsx` se houver versão "leitura na mesma célula durante edição" (verificar). Rodar T029 até passar.
+- [x] T030 [P] [US2] Criar `src/components/features/chapters/chapter-deadline-cell.tsx` conforme [contracts/ui-deadline-cell.md](./contracts/ui-deadline-cell.md). Props: `deadline`, `status`, `focusContext`. Renderiza 3 casos (null/upcoming/overdue). Tooltip via shadcn `<Tooltip>`. Ícone `AlertCircle` de `lucide-react`. Rodar T028 até passar.
+- [x] T031 [US2] Atualizar `src/components/features/chapters/chapters-table.tsx`: adicionar coluna fixa "Prazo" na definição de colunas (sem `header` clicável; respeitar FR-013). Calcular `focusContext` UMA vez por render via `useMemo`. Passar `focusContext` para cada célula via prop.
+- [x] T032 [US2] Atualizar `src/components/features/chapters/chapter-row.tsx` (modo leitura) para usar `<ChapterDeadlineCell>` na coluna de prazo. Atualizar `src/components/features/chapters/chapter-row-edit-mode.tsx` se houver versão "leitura na mesma célula durante edição" (verificar). Rodar T029 até passar.
 
 **Checkpoint**: US2 funciona. Capítulos atrasados saltam visualmente. Falta filtro e badge.
 
