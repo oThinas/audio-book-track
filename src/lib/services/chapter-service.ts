@@ -34,6 +34,7 @@ export interface UpdateChapterServiceInput {
   readonly narratorId?: string | null;
   readonly editorId?: string | null;
   readonly editedSeconds?: number;
+  readonly deadline?: string | null;
   readonly confirmReversion?: boolean;
 }
 
@@ -55,7 +56,7 @@ export interface BulkDeleteChaptersResult {
   readonly deletedCount: number;
 }
 
-const PAID_LOCKED_FIELDS = ["narratorId", "editorId", "editedSeconds"] as const;
+const PAID_LOCKED_FIELDS = ["narratorId", "editorId", "editedSeconds", "deadline"] as const;
 
 export class ChapterService {
   constructor(protected readonly deps: ChapterServiceDeps) {}
@@ -83,6 +84,7 @@ export class ChapterService {
           ...(input.narratorId !== undefined ? { narratorId: input.narratorId } : {}),
           ...(input.editorId !== undefined ? { editorId: input.editorId } : {}),
           ...(input.editedSeconds !== undefined ? { editedSeconds: input.editedSeconds } : {}),
+          ...(input.deadline !== undefined ? { deadline: input.deadline } : {}),
         },
         tx,
       );

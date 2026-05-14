@@ -17,6 +17,7 @@ import {
 import type { BookStatus } from "@/lib/domain/book";
 import { formatCentsBRL } from "@/lib/utils";
 
+import { BookFocusWeekBadge } from "./book-focus-week-badge";
 import { useBooksTable } from "./hooks/use-books-table";
 import { StatusBadge } from "./status-badge";
 
@@ -29,6 +30,7 @@ export interface BookSummaryRow {
   readonly totalChapters: number;
   readonly completedChapters: number;
   readonly totalEarningsCents: number;
+  readonly focusThisWeekCount: number;
 }
 
 interface BooksTableProps {
@@ -67,6 +69,13 @@ export function BooksTable({ books }: BooksTableProps) {
             {row.original.completedChapters}/{row.original.totalChapters}
           </span>
         ),
+      },
+      {
+        id: "focusThisWeekCount",
+        accessorFn: (row) => row.focusThisWeekCount,
+        header: "Foco",
+        enableSorting: false,
+        cell: ({ row }) => <BookFocusWeekBadge count={row.original.focusThisWeekCount} />,
       },
       {
         id: "status",

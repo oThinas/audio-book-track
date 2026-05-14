@@ -10,6 +10,7 @@ import type {
   BookRepository,
   BookSummary,
   InsertBookInput,
+  ListSummariesOptions,
   RepositoryTx,
   UpdateBookInput,
 } from "@/lib/repositories/book-repository";
@@ -68,7 +69,7 @@ export class DrizzleBookRepository implements BookRepository {
     return rows.map(toDomain);
   }
 
-  async listSummaries(tx?: RepositoryTx): Promise<BookSummary[]> {
+  async listSummaries(opts: ListSummariesOptions, tx?: RepositoryTx): Promise<BookSummary[]> {
     // JOIN studio without deleted_at filter — historical books must resolve
     // the studio name even when the studio has been soft-deleted.
     const rows = await this.executor(tx)
@@ -85,6 +86,14 @@ export class DrizzleBookRepository implements BookRepository {
         totalChapters: sql<number>`coalesce(count(${chapter.id}), 0)::int`,
         completedChapters: sql<number>`coalesce(count(${chapter.id}) filter (where ${chapter.status} in ('completed', 'paid')), 0)::int`,
         totalEarningsCents: sql<number>`coalesce(sum(round(${chapter.editedSeconds}::numeric * ${book.pricePerHourCents} / 3600))::int, 0)`,
+        focusThisWeekCount: sql<number>`coalesce(count(${chapter.id}) filter (
+          where ${chapter.status} in ('pending', 'editing', 'reviewing', 'retake')
+          and ${chapter.deadline} is not null
+          and (
+            ${chapter.deadline} < ${opts.todayIso}::date
+            or ${chapter.deadline} between ${opts.mondayIso}::date and ${opts.sundayIso}::date
+          )
+        ), 0)::int`,
       })
       .from(book)
       .innerJoin(studio, eq(studio.id, book.studioId))
@@ -102,6 +111,7 @@ export class DrizzleBookRepository implements BookRepository {
       totalChapters: row.totalChapters,
       completedChapters: row.completedChapters,
       totalEarningsCents: row.totalEarningsCents,
+      focusThisWeekCount: row.focusThisWeekCount,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     }));

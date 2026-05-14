@@ -40,6 +40,7 @@ export function useBooksList(initial: readonly BookSummaryRow[]): UseBooksListRe
       totalChapters: created.chapters.length,
       completedChapters: 0,
       totalEarningsCents: 0,
+      focusThisWeekCount: 0,
     };
     setBooks((current) => [optimistic, ...current]);
     setIsCreateDialogOpen(false);

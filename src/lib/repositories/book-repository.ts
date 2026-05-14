@@ -26,13 +26,20 @@ export interface BookSummary {
   readonly totalChapters: number;
   readonly completedChapters: number;
   readonly totalEarningsCents: number;
+  readonly focusThisWeekCount: number;
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }
 
+export interface ListSummariesOptions {
+  readonly todayIso: string;
+  readonly mondayIso: string;
+  readonly sundayIso: string;
+}
+
 export interface BookRepository {
   list(tx?: RepositoryTx): Promise<Book[]>;
-  listSummaries(tx?: RepositoryTx): Promise<BookSummary[]>;
+  listSummaries(opts: ListSummariesOptions, tx?: RepositoryTx): Promise<BookSummary[]>;
   findById(id: string, tx?: RepositoryTx): Promise<Book | null>;
   insert(input: InsertBookInput, tx?: RepositoryTx): Promise<Book>;
   update(id: string, input: UpdateBookInput, tx?: RepositoryTx): Promise<Book>;

@@ -34,6 +34,7 @@ export async function handleChapterUpdate(
         narratorId: chapter.narratorId,
         editorId: chapter.editorId,
         editedSeconds: chapter.editedSeconds,
+        deadline: chapter.deadline,
         createdAt: chapter.createdAt,
         updatedAt: chapter.updatedAt,
       },

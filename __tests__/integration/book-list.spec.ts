@@ -21,7 +21,13 @@ describe("DrizzleBookRepository.listSummaries (SQL aggregation)", () => {
   it("returns an empty array when there are no books", async () => {
     const repo = createRepo();
 
-    expect(await repo.listSummaries()).toEqual([]);
+    expect(
+      await repo.listSummaries({
+        todayIso: "2026-05-14",
+        mondayIso: "2026-05-11",
+        sundayIso: "2026-05-17",
+      }),
+    ).toEqual([]);
   });
 
   it("computes totalChapters, completedChapters and totalEarningsCents per book", async () => {
@@ -55,7 +61,11 @@ describe("DrizzleBookRepository.listSummaries (SQL aggregation)", () => {
     });
 
     const repo = createRepo();
-    const summaries = await repo.listSummaries();
+    const summaries = await repo.listSummaries({
+      todayIso: "2026-05-14",
+      mondayIso: "2026-05-11",
+      sundayIso: "2026-05-17",
+    });
 
     expect(summaries).toHaveLength(1);
     const [summary] = summaries;
@@ -73,7 +83,11 @@ describe("DrizzleBookRepository.listSummaries (SQL aggregation)", () => {
     const { book: createdBook } = await createTestBook(db, { pricePerHourCents: 7500 });
 
     const repo = createRepo();
-    const [summary] = await repo.listSummaries();
+    const [summary] = await repo.listSummaries({
+      todayIso: "2026-05-14",
+      mondayIso: "2026-05-11",
+      sundayIso: "2026-05-17",
+    });
 
     expect(summary.id).toBe(createdBook.id);
     expect(summary.totalChapters).toBe(0);
@@ -100,7 +114,11 @@ describe("DrizzleBookRepository.listSummaries (SQL aggregation)", () => {
 
     await new DrizzleStudioRepository(db).softDelete(studio.id);
 
-    const [summary] = await createRepo().listSummaries();
+    const [summary] = await createRepo().listSummaries({
+      todayIso: "2026-05-14",
+      mondayIso: "2026-05-11",
+      sundayIso: "2026-05-17",
+    });
 
     expect(summary.studio).toEqual({ id: studio.id, name: "Legacy Studio" });
   });
@@ -129,7 +147,11 @@ describe("DrizzleBookRepository.listSummaries (SQL aggregation)", () => {
       })
       .returning();
 
-    const summaries = await createRepo().listSummaries();
+    const summaries = await createRepo().listSummaries({
+      todayIso: "2026-05-14",
+      mondayIso: "2026-05-11",
+      sundayIso: "2026-05-17",
+    });
 
     expect(summaries.map((s) => s.id)).toEqual([newer.id, older.id]);
   });
@@ -150,7 +172,11 @@ describe("DrizzleBookRepository.listSummaries (SQL aggregation)", () => {
       editedSeconds: 3599,
     });
 
-    const [summary] = await createRepo().listSummaries();
+    const [summary] = await createRepo().listSummaries({
+      todayIso: "2026-05-14",
+      mondayIso: "2026-05-11",
+      sundayIso: "2026-05-17",
+    });
     expect(summary.totalEarningsCents).toBe(15_000);
   });
 });

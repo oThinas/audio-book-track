@@ -1,8 +1,13 @@
+import { addYears, differenceInCalendarDays, parseISO } from "date-fns";
 import { z } from "zod";
+
+import { todayInAppTimezone } from "@/lib/domain/timezone";
 
 const EDITED_SECONDS_MIN = 0;
 const EDITED_SECONDS_MAX = 3_600_000;
 const BULK_DELETE_MAX = 999;
+const DEADLINE_MAX_YEARS_AHEAD = 10;
+const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
 const chapterStatusSchema = z.enum([
   "pending",
@@ -12,6 +17,31 @@ const chapterStatusSchema = z.enum([
   "completed",
   "paid",
 ]);
+
+function isCalendarValid(iso: string): boolean {
+  const date = parseISO(iso);
+  if (Number.isNaN(date.getTime())) return false;
+  const [year, month, day] = iso.split("-").map(Number);
+  return (
+    date.getUTCFullYear() === year && date.getUTCMonth() + 1 === month && date.getUTCDate() === day
+  );
+}
+
+function isWithinTenYears(iso: string): boolean {
+  const todayIso = todayInAppTimezone();
+  const maxIsoDate = addYears(parseISO(todayIso), DEADLINE_MAX_YEARS_AHEAD);
+  const deadline = parseISO(iso);
+  return differenceInCalendarDays(deadline, maxIsoDate) <= 0;
+}
+
+const deadlineSchema = z
+  .string()
+  .regex(ISO_DATE_REGEX, "Data limite inválida (use formato AAAA-MM-DD).")
+  .refine(isCalendarValid, { message: "Data limite inválida." })
+  .refine(isWithinTenYears, {
+    message: "Data limite não pode ser superior a 10 anos no futuro.",
+  })
+  .nullable();
 
 export const updateChapterSchema = z
   .object({
@@ -24,6 +54,7 @@ export const updateChapterSchema = z
       .min(EDITED_SECONDS_MIN, "Tempo editado não pode ser negativo.")
       .max(EDITED_SECONDS_MAX, `Tempo editado deve ser no máximo ${EDITED_SECONDS_MAX} segundos.`)
       .optional(),
+    deadline: deadlineSchema.optional(),
     confirmReversion: z.boolean().optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {

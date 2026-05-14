@@ -9,6 +9,7 @@ export interface InsertChapterInput {
   readonly narratorId?: string | null;
   readonly editorId?: string | null;
   readonly editedSeconds?: number;
+  readonly deadline?: string | null;
 }
 
 export interface UpdateChapterInput {
@@ -16,6 +17,7 @@ export interface UpdateChapterInput {
   readonly narratorId?: string | null;
   readonly editorId?: string | null;
   readonly editedSeconds?: number;
+  readonly deadline?: string | null;
 }
 
 export interface ChapterRepository {

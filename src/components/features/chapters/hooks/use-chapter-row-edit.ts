@@ -13,6 +13,7 @@ export interface ChapterEditDraftValues {
   readonly narratorId: string | null;
   readonly editorId: string | null;
   readonly editedSeconds: number;
+  readonly deadline: string | null;
 }
 
 export interface UseChapterRowEditArgs {
@@ -38,6 +39,7 @@ export function buildChapterDraft(chapter: ChapterRowEntity): ChapterEditDraftVa
     narratorId: chapter.narrator?.id ?? null,
     editorId: chapter.editor?.id ?? null,
     editedSeconds: chapter.editedSeconds,
+    deadline: chapter.deadline,
   };
 }
 
@@ -51,6 +53,7 @@ function buildPatch(
   if (values.narratorId !== (current.narrator?.id ?? null)) patch.narratorId = values.narratorId;
   if (values.editorId !== (current.editor?.id ?? null)) patch.editorId = values.editorId;
   if (values.editedSeconds !== current.editedSeconds) patch.editedSeconds = values.editedSeconds;
+  if (values.deadline !== current.deadline) patch.deadline = values.deadline;
 
   if (Object.keys(patch).length === 0) return null;
   return patch;
@@ -74,6 +77,7 @@ export function useChapterRowEdit({
         narratorId: string | null;
         editorId: string | null;
         editedSeconds: number;
+        deadline: string | null;
       };
       meta: { bookStatus: ChapterStatus };
     }>(`/api/v1/chapters/${chapter.id}`, { method: "PATCH", body: patch });
@@ -85,6 +89,7 @@ export function useChapterRowEdit({
       number: data.number,
       status: data.status,
       editedSeconds: data.editedSeconds,
+      deadline: data.deadline,
       narrator: data.narratorId
         ? { id: data.narratorId, name: narratorNameById.get(data.narratorId) ?? "—" }
         : null,
