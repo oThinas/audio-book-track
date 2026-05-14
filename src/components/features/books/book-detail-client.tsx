@@ -2,11 +2,13 @@
 
 import { lazy, Suspense } from "react";
 
+import { ChapterFocusWeekToggle } from "@/components/features/chapters/chapter-focus-week-toggle";
 import { ChapterGroupingControl } from "@/components/features/chapters/chapter-grouping-control";
 import { ChaptersBulkDeleteBar } from "@/components/features/chapters/chapters-bulk-delete-bar";
 import { ChaptersBulkDeleteConfirm } from "@/components/features/chapters/chapters-bulk-delete-confirm";
 import { type ChapterRowData, ChaptersTable } from "@/components/features/chapters/chapters-table";
 import { useChaptersGroupingState } from "@/components/features/chapters/hooks/use-chapters-grouping-state";
+import { useFocusWeekFilter } from "@/components/features/chapters/hooks/use-focus-week-filter";
 import type { BookStatus } from "@/lib/domain/book";
 import type { Studio } from "@/lib/domain/studio";
 
@@ -68,6 +70,7 @@ export function BookDetailClient({ book, narrators, editors, studios }: BookDeta
     handleBulkDeleteConfirm,
   } = useBookDetail(book);
   const { grouping, setGrouping } = useChaptersGroupingState();
+  const { enabled: focusEnabled, toggle: toggleFocus } = useFocusWeekFilter();
 
   return (
     <>
@@ -95,7 +98,8 @@ export function BookDetailClient({ book, narrators, editors, studios }: BookDeta
         onEdit={() => setEditOpen(true)}
       />
       {!isSelectionMode && (
-        <div className="mt-4 flex justify-end">
+        <div className="mt-4 flex items-center justify-end gap-2">
+          <ChapterFocusWeekToggle enabled={focusEnabled} onToggle={toggleFocus} />
           <ChapterGroupingControl grouping={grouping} onGroupingChange={setGrouping} />
         </div>
       )}

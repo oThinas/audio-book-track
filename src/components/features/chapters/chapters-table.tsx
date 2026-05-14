@@ -21,6 +21,7 @@ import type { GroupingDimension } from "@/lib/url/grouping-param";
 import { ChapterGroupRow } from "./chapter-group-row";
 import { ChapterRow, type ChapterRowEntity, type ChapterRowOption } from "./chapter-row";
 import { useChaptersTable } from "./hooks/use-chapters-table";
+import { useFocusWeekFilter } from "./hooks/use-focus-week-filter";
 
 interface ChaptersTableProps {
   readonly chapters: ReadonlyArray<ChapterRowEntity>;
@@ -73,7 +74,13 @@ export function ChaptersTable({
     return { todayIso: todayInAppTimezone(), mondayIso, sundayIso };
   }, []);
 
-  const { table } = useChaptersTable({ chapters, grouping, pricePerHourCents });
+  const { applyFilter, enabled: focusEnabled } = useFocusWeekFilter();
+  const filteredChapters = useMemo(() => applyFilter(chapters), [applyFilter, chapters]);
+  const { table } = useChaptersTable({
+    chapters: filteredChapters,
+    grouping,
+    pricePerHourCents,
+  });
   const allRows = table.getRowModel().rows;
   const [expandedGroups, setExpandedGroups] = useState<ReadonlySet<string>>(() => new Set());
   const toggleGroup = useCallback((rowId: string) => {
@@ -173,6 +180,17 @@ export function ChaptersTable({
                 data-testid="chapters-empty-state"
               >
                 Este livro ainda não possui capítulos.
+              </TableCell>
+            </TableRow>
+          )}
+          {chapters.length > 0 && filteredChapters.length === 0 && focusEnabled && (
+            <TableRow>
+              <TableCell
+                colSpan={columnCount}
+                className="py-12 text-center text-sm text-muted-foreground"
+                data-testid="chapters-focus-empty-state"
+              >
+                Nenhum capítulo no foco desta semana.
               </TableCell>
             </TableRow>
           )}
