@@ -20,7 +20,7 @@ function createService() {
 }
 
 describe("ChapterService — deadline", () => {
-  it("atualiza deadline em capítulo pending", async () => {
+  it("updates the deadline of a pending chapter", async () => {
     const service = createService();
     const { chapter } = await createTestChapter(getTestDb(), { deadline: null });
 
@@ -28,7 +28,7 @@ describe("ChapterService — deadline", () => {
     expect(result.chapter.deadline).toBe("2026-06-15");
   });
 
-  it("limpa deadline (null) em capítulo pending", async () => {
+  it("clears the deadline (null) of a pending chapter", async () => {
     const service = createService();
     const { chapter } = await createTestChapter(getTestDb(), { deadline: "2026-06-15" });
 
@@ -36,7 +36,7 @@ describe("ChapterService — deadline", () => {
     expect(result.chapter.deadline).toBeNull();
   });
 
-  it("rejeita alteração de deadline em capítulo paid", async () => {
+  it("rejects deadline changes on a paid chapter", async () => {
     const service = createService();
     const { book } = await createTestBook(getTestDb(), { status: "paid" });
     const { chapter } = await createTestChapter(getTestDb(), {
@@ -51,7 +51,7 @@ describe("ChapterService — deadline", () => {
     );
   });
 
-  it("permite alterar deadline em todos os outros status", async () => {
+  it("allows deadline updates in every status other than paid", async () => {
     const service = createService();
     const statuses = ["pending", "editing", "reviewing", "retake", "completed"] as const;
     for (const status of statuses) {

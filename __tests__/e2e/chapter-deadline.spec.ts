@@ -6,8 +6,8 @@ test.afterAll(async () => {
   await closeSeedPool();
 });
 
-test.describe("Capítulo: data limite (feature 025)", () => {
-  test("badge 'Foco da semana' aparece em /books quando há capítulo elegível", async ({
+test.describe("Chapter: deadline (feature 025)", () => {
+  test("'Foco da semana' badge appears in /books when a chapter is eligible", async ({
     page,
     appServer,
   }) => {
@@ -17,7 +17,7 @@ test.describe("Capítulo: data limite (feature 025)", () => {
     const book = await seedBook({
       schema: appServer.schemaName,
       studioId: studio.id,
-      title: "Livro com prazo",
+      title: "Book with deadline",
       pricePerHourCents: 8500,
     });
 
@@ -47,14 +47,17 @@ test.describe("Capítulo: data limite (feature 025)", () => {
     ).toBeVisible();
   });
 
-  test("filtro 'Foco da semana' liga via URL e desliga via toggle", async ({ page, appServer }) => {
+  test("'Foco da semana' filter activates via URL and toggles off via the button", async ({
+    page,
+    appServer,
+  }) => {
     await login(page);
 
     const studio = await seedStudio(page, "Studio 025", 85);
     const book = await seedBook({
       schema: appServer.schemaName,
       studioId: studio.id,
-      title: "Livro filtro",
+      title: "Book filter",
       pricePerHourCents: 8500,
     });
 

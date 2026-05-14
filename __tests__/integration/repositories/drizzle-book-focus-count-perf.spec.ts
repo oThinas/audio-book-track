@@ -5,11 +5,11 @@ import { describe, expect, it } from "vitest";
 import { DrizzleBookRepository } from "@/lib/repositories/drizzle/drizzle-book-repository";
 
 /**
- * Benchmark SC-008: listSummaries deve manter latência server-side abaixo de
- * 200ms para até 100 livros × 50 capítulos cada (5000 capítulos sintéticos).
+ * Benchmark SC-008: listSummaries must keep server-side latency below 200ms
+ * for up to 100 books × 50 chapters each (5000 synthetic chapters).
  */
 describe("DrizzleBookRepository.listSummaries — perf (SC-008)", () => {
-  it("processa 100 livros × 50 capítulos em < 200ms", async () => {
+  it("processes 100 books × 50 chapters in under 200ms", async () => {
     const db = getTestDb();
     const repo = new DrizzleBookRepository(db);
 
@@ -61,7 +61,7 @@ describe("DrizzleBookRepository.listSummaries — perf (SC-008)", () => {
 
     expect(summaries.length).toBeGreaterThanOrEqual(NUM_BOOKS);
     console.log(
-      `[perf] listSummaries(${NUM_BOOKS} livros × ${CHAPTERS_PER_BOOK} caps): ${duration.toFixed(1)}ms`,
+      `[perf] listSummaries(${NUM_BOOKS} books × ${CHAPTERS_PER_BOOK} chapters): ${duration.toFixed(1)}ms`,
     );
     expect(duration).toBeLessThan(200);
   }, 60_000);

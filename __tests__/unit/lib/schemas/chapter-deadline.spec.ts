@@ -14,27 +14,27 @@ afterAll(() => {
 });
 
 describe("updateChapterSchema — deadline", () => {
-  it("aceita deadline ausente (undefined)", () => {
+  it("accepts an absent deadline (undefined)", () => {
     const result = updateChapterSchema.safeParse({ status: "pending" });
     expect(result.success).toBe(true);
   });
 
-  it("aceita deadline = null", () => {
+  it("accepts deadline = null", () => {
     const result = updateChapterSchema.safeParse({ deadline: null });
     expect(result.success).toBe(true);
   });
 
-  it("aceita deadline = YYYY-MM-DD válido (futuro)", () => {
+  it("accepts a valid YYYY-MM-DD deadline in the future", () => {
     const result = updateChapterSchema.safeParse({ deadline: "2026-06-15" });
     expect(result.success).toBe(true);
   });
 
-  it("aceita deadline no passado (qualquer)", () => {
+  it("accepts any deadline in the past", () => {
     const result = updateChapterSchema.safeParse({ deadline: "2020-01-01" });
     expect(result.success).toBe(true);
   });
 
-  it("rejeita formato malformado (DD/MM/YYYY)", () => {
+  it("rejects a malformed deadline (DD/MM/YYYY)", () => {
     const result = updateChapterSchema.safeParse({ deadline: "21/06/2026" });
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -43,22 +43,22 @@ describe("updateChapterSchema — deadline", () => {
     }
   });
 
-  it("rejeita data calendária inválida (2026-13-01)", () => {
+  it("rejects an invalid calendar date (2026-13-01)", () => {
     const result = updateChapterSchema.safeParse({ deadline: "2026-13-01" });
     expect(result.success).toBe(false);
   });
 
-  it("rejeita data calendária inválida (2026-02-30)", () => {
+  it("rejects an invalid calendar date (2026-02-30)", () => {
     const result = updateChapterSchema.safeParse({ deadline: "2026-02-30" });
     expect(result.success).toBe(false);
   });
 
-  it("rejeita string vazia", () => {
+  it("rejects an empty string", () => {
     const result = updateChapterSchema.safeParse({ deadline: "" });
     expect(result.success).toBe(false);
   });
 
-  it("rejeita data acima do teto de 10 anos", () => {
+  it("rejects a deadline beyond the 10-year ceiling", () => {
     const result = updateChapterSchema.safeParse({ deadline: "9999-12-31" });
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -67,7 +67,7 @@ describe("updateChapterSchema — deadline", () => {
     }
   });
 
-  it("aceita data exatamente em hoje + 10 anos", () => {
+  it("accepts a deadline exactly at today + 10 years", () => {
     const result = updateChapterSchema.safeParse({ deadline: "2036-05-14" });
     expect(result.success).toBe(true);
   });

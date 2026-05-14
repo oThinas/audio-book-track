@@ -3,15 +3,15 @@ import { describe, expect, it } from "vitest";
 import { parseFocusParam, serializeFocusParam } from "@/lib/url/focus-param";
 
 describe("parseFocusParam", () => {
-  it('retorna "week" quando focus=week', () => {
+  it('returns "week" when focus=week', () => {
     expect(parseFocusParam(new URLSearchParams("?focus=week"))).toBe("week");
   });
 
-  it("retorna null quando param ausente", () => {
+  it("returns null when the param is absent", () => {
     expect(parseFocusParam(new URLSearchParams(""))).toBeNull();
   });
 
-  it("retorna null para valores desconhecidos", () => {
+  it("returns null for unknown values", () => {
     expect(parseFocusParam(new URLSearchParams("?focus=banana"))).toBeNull();
     expect(parseFocusParam(new URLSearchParams("?focus="))).toBeNull();
     expect(parseFocusParam(new URLSearchParams("?focus=Week"))).toBeNull();
@@ -19,11 +19,11 @@ describe("parseFocusParam", () => {
 });
 
 describe("serializeFocusParam", () => {
-  it('serializa "week" como "week"', () => {
+  it('serializes "week" as "week"', () => {
     expect(serializeFocusParam("week")).toBe("week");
   });
 
-  it("serializa null como null (sinaliza remoção do param)", () => {
+  it("serializes null as null (signals removal of the param)", () => {
     expect(serializeFocusParam(null)).toBeNull();
   });
 });

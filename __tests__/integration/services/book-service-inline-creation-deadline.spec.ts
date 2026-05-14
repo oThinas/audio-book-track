@@ -22,13 +22,13 @@ function createService() {
   });
 }
 
-describe("BookService.create — regressão FR-032 (criação inline não coleta deadline)", () => {
-  it("todos os capítulos criados via fluxo inline nascem com deadline = null", async () => {
+describe("BookService.create — FR-032 regression (inline creation must not set deadline)", () => {
+  it("every chapter created via the inline flow is born with deadline = null", async () => {
     const { studio } = await createTestStudio(getTestDb());
     const service = createService();
 
     const { chapters } = await service.create({
-      title: "Livro Inline",
+      title: "Inline Book",
       studioId: studio.id,
       pricePerHourCents: 8500,
       numChapters: 7,

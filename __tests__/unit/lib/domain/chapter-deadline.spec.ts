@@ -4,7 +4,7 @@ import type { Chapter, ChapterStatus } from "@/lib/domain/chapter";
 import { type FocusWeekContext, isInFocusWeek, isOverdue } from "@/lib/domain/chapter-deadline";
 
 const ctx: FocusWeekContext = {
-  todayIso: "2026-05-14", // quinta-feira
+  todayIso: "2026-05-14", // Thursday
   mondayIso: "2026-05-11",
   sundayIso: "2026-05-17",
 };
@@ -41,27 +41,27 @@ const ACTIVE_STATUSES: ReadonlySet<ChapterStatus> = new Set([
 ]);
 
 describe("isOverdue", () => {
-  it("retorna false para capítulo sem prazo, em qualquer status", () => {
+  it("returns false for a chapter without a deadline, regardless of status", () => {
     for (const status of STATUSES) {
       expect(isOverdue(buildChapter({ status, deadline: null }), ctx)).toBe(false);
     }
   });
 
-  it("retorna true apenas quando deadline < hoje E status é ativo", () => {
+  it("returns true only when deadline < today AND status is active", () => {
     for (const status of STATUSES) {
-      const chapter = buildChapter({ status, deadline: "2026-05-13" }); // ontem
+      const chapter = buildChapter({ status, deadline: "2026-05-13" }); // yesterday
       const expected = ACTIVE_STATUSES.has(status);
       expect(isOverdue(chapter, ctx)).toBe(expected);
     }
   });
 
-  it("retorna false quando deadline = hoje (não é passado)", () => {
+  it("returns false when deadline equals today (not in the past)", () => {
     for (const status of STATUSES) {
       expect(isOverdue(buildChapter({ status, deadline: "2026-05-14" }), ctx)).toBe(false);
     }
   });
 
-  it("retorna false quando deadline é no futuro", () => {
+  it("returns false when deadline is in the future", () => {
     for (const status of STATUSES) {
       expect(isOverdue(buildChapter({ status, deadline: "2026-05-20" }), ctx)).toBe(false);
     }
@@ -69,21 +69,21 @@ describe("isOverdue", () => {
 });
 
 describe("isInFocusWeek", () => {
-  it("retorna false quando deadline é null (qualquer status)", () => {
+  it("returns false when deadline is null (any status)", () => {
     for (const status of STATUSES) {
       expect(isInFocusWeek(buildChapter({ status, deadline: null }), ctx)).toBe(false);
     }
   });
 
-  it("retorna true para atrasado em status ativo", () => {
+  it("returns true for overdue chapters in an active status", () => {
     for (const status of STATUSES) {
-      const chapter = buildChapter({ status, deadline: "2026-05-10" }); // antes da semana
+      const chapter = buildChapter({ status, deadline: "2026-05-10" }); // before the week
       const expected = ACTIVE_STATUSES.has(status);
       expect(isInFocusWeek(chapter, ctx)).toBe(expected);
     }
   });
 
-  it("retorna true para prazo na segunda da semana, em status ativo", () => {
+  it("returns true for a deadline on Monday of the current week in an active status", () => {
     for (const status of STATUSES) {
       const chapter = buildChapter({ status, deadline: "2026-05-11" });
       const expected = ACTIVE_STATUSES.has(status);
@@ -91,7 +91,7 @@ describe("isInFocusWeek", () => {
     }
   });
 
-  it("retorna true para prazo no domingo da semana, em status ativo", () => {
+  it("returns true for a deadline on Sunday of the current week in an active status", () => {
     for (const status of STATUSES) {
       const chapter = buildChapter({ status, deadline: "2026-05-17" });
       const expected = ACTIVE_STATUSES.has(status);
@@ -99,13 +99,13 @@ describe("isInFocusWeek", () => {
     }
   });
 
-  it("retorna false para prazo na próxima segunda (fora da semana)", () => {
+  it("returns false for a deadline on the next Monday (outside the week)", () => {
     for (const status of STATUSES) {
       expect(isInFocusWeek(buildChapter({ status, deadline: "2026-05-18" }), ctx)).toBe(false);
     }
   });
 
-  it("retorna false para completed/paid mesmo se na semana ou atrasado", () => {
+  it("returns false for completed/paid even when inside the week or overdue", () => {
     expect(isInFocusWeek(buildChapter({ status: "completed", deadline: "2026-05-14" }), ctx)).toBe(
       false,
     );
@@ -114,7 +114,7 @@ describe("isInFocusWeek", () => {
     );
   });
 
-  it("retorna true para prazo igual a hoje em status ativo", () => {
+  it("returns true for a deadline equal to today in an active status", () => {
     for (const status of STATUSES) {
       const chapter = buildChapter({ status, deadline: "2026-05-14" });
       const expected = ACTIVE_STATUSES.has(status);

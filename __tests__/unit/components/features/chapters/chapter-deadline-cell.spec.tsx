@@ -12,7 +12,7 @@ const ctx: FocusWeekContext = {
 };
 
 describe("ChapterDeadlineCell", () => {
-  it("exibe — quando deadline=null", () => {
+  it("renders the dash placeholder when deadline is null", () => {
     const { container } = render(
       <ChapterDeadlineCell deadline={null} status="pending" focusContext={ctx} />,
     );
@@ -20,30 +20,30 @@ describe("ChapterDeadlineCell", () => {
     expect(screen.queryByText("Atrasado")).toBeNull();
   });
 
-  it("exibe a data formatada quando deadline tem valor (não atrasado)", () => {
+  it("renders the formatted date when deadline is set (not overdue)", () => {
     render(<ChapterDeadlineCell deadline="2026-06-15" status="pending" focusContext={ctx} />);
     expect(screen.getByText("15/06/2026")).toBeTruthy();
     expect(screen.queryByText("Atrasado")).toBeNull();
   });
 
-  it("renderiza com destaque + texto sr-only 'Atrasado' quando passado em status ativo", () => {
+  it('renders with destructive style + sr-only "Atrasado" when overdue in an active status', () => {
     render(<ChapterDeadlineCell deadline="2026-05-09" status="pending" focusContext={ctx} />);
     expect(screen.getByText("Atrasado")).toBeTruthy();
     const overdueSpan = screen.getByText("Atrasado").parentElement as HTMLElement;
     expect(overdueSpan.className).toContain("text-destructive");
   });
 
-  it("não destaca quando passado mas status é completed", () => {
+  it("does not highlight when deadline is past but status is completed", () => {
     render(<ChapterDeadlineCell deadline="2026-05-09" status="completed" focusContext={ctx} />);
     expect(screen.queryByText("Atrasado")).toBeNull();
   });
 
-  it("não destaca quando passado mas status é paid", () => {
+  it("does not highlight when deadline is past but status is paid", () => {
     render(<ChapterDeadlineCell deadline="2026-05-09" status="paid" focusContext={ctx} />);
     expect(screen.queryByText("Atrasado")).toBeNull();
   });
 
-  it("não destaca quando deadline = hoje em status ativo", () => {
+  it("does not highlight when deadline equals today in an active status", () => {
     render(<ChapterDeadlineCell deadline="2026-05-14" status="pending" focusContext={ctx} />);
     expect(screen.queryByText("Atrasado")).toBeNull();
   });

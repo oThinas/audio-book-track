@@ -6,19 +6,19 @@ import { describe, expect, it, vi } from "vitest";
 import { ChapterFocusWeekToggle } from "@/components/features/chapters/chapter-focus-week-toggle";
 
 describe("ChapterFocusWeekToggle", () => {
-  it('exibe "Foco da semana" e aria-pressed=false quando desligado', () => {
+  it('renders the "Foco da semana" label and aria-pressed=false when disabled', () => {
     render(<ChapterFocusWeekToggle enabled={false} onToggle={vi.fn()} />);
     const btn = screen.getByRole("button", { name: /foco da semana/i });
     expect(btn.getAttribute("aria-pressed")).toBe("false");
   });
 
-  it("aria-pressed=true quando ligado", () => {
+  it("aria-pressed=true when enabled", () => {
     render(<ChapterFocusWeekToggle enabled={true} onToggle={vi.fn()} />);
     const btn = screen.getByRole("button", { name: /foco da semana/i });
     expect(btn.getAttribute("aria-pressed")).toBe("true");
   });
 
-  it("dispara onToggle ao clicar", async () => {
+  it("fires onToggle on click", async () => {
     const onToggle = vi.fn();
     const user = userEvent.setup();
     render(<ChapterFocusWeekToggle enabled={false} onToggle={onToggle} />);

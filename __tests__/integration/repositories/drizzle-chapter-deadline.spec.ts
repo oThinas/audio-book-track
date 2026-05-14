@@ -9,7 +9,7 @@ function createRepo() {
 }
 
 describe("DrizzleChapterRepository — deadline", () => {
-  it("persiste deadline em insertMany e retorna no findById", async () => {
+  it("persists deadline via insertMany and returns it on findById", async () => {
     const repo = createRepo();
     const { book } = await createTestBook(getTestDb());
 
@@ -22,7 +22,7 @@ describe("DrizzleChapterRepository — deadline", () => {
     expect(fetched?.deadline).toBe("2026-06-15");
   });
 
-  it("aceita deadline = null em insertMany (default)", async () => {
+  it("accepts deadline = null on insertMany (default)", async () => {
     const repo = createRepo();
     const { book } = await createTestBook(getTestDb());
 
@@ -30,7 +30,7 @@ describe("DrizzleChapterRepository — deadline", () => {
     expect(inserted.deadline).toBeNull();
   });
 
-  it("atualiza deadline via update (set)", async () => {
+  it("updates deadline via update (set)", async () => {
     const repo = createRepo();
     const { chapter } = await createTestChapter(getTestDb(), { deadline: null });
 
@@ -38,7 +38,7 @@ describe("DrizzleChapterRepository — deadline", () => {
     expect(updated.deadline).toBe("2026-06-20");
   });
 
-  it("limpa deadline via update (null)", async () => {
+  it("clears deadline via update (null)", async () => {
     const repo = createRepo();
     const { chapter } = await createTestChapter(getTestDb(), { deadline: "2026-06-20" });
 
@@ -46,7 +46,7 @@ describe("DrizzleChapterRepository — deadline", () => {
     expect(updated.deadline).toBeNull();
   });
 
-  it("listByBookId retorna deadline em todos os capítulos", async () => {
+  it("listByBookId returns deadline for every chapter", async () => {
     const repo = createRepo();
     const { book } = await createTestBook(getTestDb());
 
