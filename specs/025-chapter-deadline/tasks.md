@@ -101,7 +101,7 @@ Projeto Next.js single-package: código em `src/`, testes em `__tests__/`, migra
 ### Tests for User Story 1
 
 - [x] T023 [P] [US1] Component test em `__tests__/unit/components/features/chapters/chapter-deadline-picker.spec.tsx` cobrindo: render com `value=null` → texto "Definir prazo"; render com `value="2026-06-15"` → texto "15/06/2026"; clique no botão abre popover; selecionar dia chama `onChange("YYYY-MM-DD")` correto (sem off-by-one); "Limpar" chama `onChange(null)`; `disabled=true` impede abrir popover. Deve FALHAR.
-- [ ] T024 [P] [US1] E2E em `__tests__/e2e/chapter-deadline.spec.ts` (criar) — fixture com 1 livro + 1 capítulo `pending`. Cenário "Definir prazo": entrar no modo edição, abrir picker, escolher data futura, salvar, validar célula. Cenário "Limpar": idem invertido. Cenário "Persistência após reload". Deve FALHAR.
+- [x] T024 [P] [US1] E2E em `__tests__/e2e/chapter-deadline.spec.ts` (criar) — fixture com 1 livro + 1 capítulo `pending`. Cenário "Definir prazo": entrar no modo edição, abrir picker, escolher data futura, salvar, validar célula. Cenário "Limpar": idem invertido. Cenário "Persistência após reload". Deve FALHAR.
 
 ### Implementation for User Story 1
 
@@ -122,7 +122,7 @@ Projeto Next.js single-package: código em `src/`, testes em `__tests__/`, migra
 ### Tests for User Story 2
 
 - [x] T028 [P] [US2] Component test em `__tests__/unit/components/features/chapters/chapter-deadline-cell.spec.tsx` cobrindo: `deadline=null` → `—` sem aria-label; `deadline` futuro → data formatada, sem destaque, tooltip "em N dias"; `deadline` passado + status ativo → classe `text-destructive`, ícone presente, `aria-label="Atrasado"`, tooltip "Atrasado há N dias"; `deadline` passado + status `completed` → data sem destaque; `deadline` passado + status `paid` → idem; `deadline` hoje → tooltip "hoje" sem destaque. Deve FALHAR.
-- [ ] T029 [US2] E2E (estender `__tests__/e2e/chapter-deadline.spec.ts`) — cenário "Capítulo atrasado destacado" verificando `text-destructive` ou `aria-label`; cenário "Destaque some ao virar completed". Deve FALHAR.
+- [x] T029 [US2] E2E (estender `__tests__/e2e/chapter-deadline.spec.ts`) — cenário "Capítulo atrasado destacado" verificando `text-destructive` ou `aria-label`; cenário "Destaque some ao virar completed". Deve FALHAR.
 
 ### Implementation for User Story 2
 
@@ -168,7 +168,7 @@ Projeto Next.js single-package: código em `src/`, testes em `__tests__/`, migra
 
 - [x] T041 [US4] Integration test em `__tests__/integration/repositories/drizzle-book-focus-count.spec.ts`: fixture com 1 livro e 9 capítulos cobrindo combinações (atrasado pending ✅, segunda editing ✅, sábado reviewing ✅, domingo retake ✅, sexta completed ❌, quarta paid ❌, segunda+7 pending ❌, null pending ❌, hoje editing ✅) → `focusThisWeekCount === 5`. Inputs `today`/`monday`/`sunday` injetados explicitamente. Deve FALHAR.
 - [x] T042 [P] [US4] Component test em `__tests__/unit/components/features/books/book-focus-week-badge.spec.tsx`: `count=0` → renderiza `null`; `count=1` → badge com texto exato "Foco da semana · 1", ícone com `aria-hidden`; `count=50` → "Foco da semana · 50". Deve FALHAR.
-- [ ] T043 [US4] E2E (estender `__tests__/e2e/chapter-deadline.spec.ts`): cenário "Badge aparece com count correto após definir prazo na semana"; cenário "Badge some quando capítulo move para paid". Deve FALHAR.
+- [x] T043 [US4] E2E (estender `__tests__/e2e/chapter-deadline.spec.ts`): cenário "Badge aparece com count correto após definir prazo na semana"; cenário "Badge some quando capítulo move para paid". Deve FALHAR.
 
 ### Implementation for User Story 4
 
@@ -187,18 +187,18 @@ Projeto Next.js single-package: código em `src/`, testes em `__tests__/`, migra
 
 **Purpose**: Verificação final, dark mode, acessibilidade, e quality gate antes do PR.
 
-- [ ] T050 [P] Validar dark mode em todos os artefatos visuais novos (`ChapterDeadlineCell`, `ChapterDeadlinePicker`, `ChapterFocusWeekToggle`, `BookFocusWeekBadge`). Testar manualmente alternando tema. Confirmar tokens (`text-destructive`, `text-muted-foreground`, `bg-secondary`) — zero cores hardcoded.
-- [ ] T051 [P] Auditoria de acessibilidade: rodar `bunx playwright test --grep "axe"` se houver suíte axe; caso contrário, verificar manualmente `aria-pressed` no toggle, `aria-label="Atrasado"` na célula, navegação por teclado no calendário.
-- [ ] T052 [P] Verificar coverage mínimo dos novos arquivos (`chapter-deadline.ts`, `timezone.ts`, `format-date.ts`, `focus-param.ts`, `use-focus-week-filter.ts`) ≥ 80% via `bun run test:unit --coverage` (ou flag equivalente do Vitest).
-- [ ] T061 [P] Auditoria de labels em português brasileiro (FR-035): rodar a aplicação em dev e percorrer os 6 cenários do quickstart, conferindo que **nenhum** texto exibido ao usuário em telas afetadas está em inglês. Verificação explícita: "Prazo", "Definir prazo", "Limpar", "Foco da semana", "Atrasado", "em N dias", "atrasado há N dias", "hoje", "amanhã", "ontem". Documentar achados.
-- [ ] T062 Performance benchmark de `BookRepository.listSummaries` (FR-031, SC-008): criar fixture sintético com **100 livros × 50 capítulos cada** (5000 capítulos com prazos e status variados) em `__tests__/integration/repositories/drizzle-book-focus-count-perf.spec.ts`. Medir tempo de execução de `listSummaries({ todayIso, mondayIso, sundayIso })` usando `performance.now()`. Asserção: `duration < 200ms`. Marcar teste com tag `.skip` ou `.slow` para não rodar no CI principal se necessário, mas DEVE ser executável via `bun vitest run __tests__/integration/repositories/drizzle-book-focus-count-perf.spec.ts`.
-- [ ] T053 Atualizar `CLAUDE.md` na seção "Active Technologies" adicionando entrada da 025 com `date-fns` + `date-fns-tz` + `react-day-picker` (via shadcn `Calendar`). Validar que `Current plan:` já aponta para esta feature (foi atualizado no `/speckit-plan`).
-- [ ] T054 Executar `bun run lint` — zero erros, zero warnings. Corrigir antes de prosseguir.
-- [ ] T055 Executar `bun run test:unit` — todos verdes.
-- [ ] T056 Executar `bun run test:integration` — todos verdes.
-- [ ] T057 Executar `bun run test:e2e` — todos verdes.
-- [ ] T058 Executar `bun run build` — produção compila sem erro.
-- [ ] T059 Validar walkthrough manual completo conforme [quickstart.md](./quickstart.md) (todos os 6 cenários).
+- [x] T050 [P] Validar dark mode em todos os artefatos visuais novos (`ChapterDeadlineCell`, `ChapterDeadlinePicker`, `ChapterFocusWeekToggle`, `BookFocusWeekBadge`). Testar manualmente alternando tema. Confirmar tokens (`text-destructive`, `text-muted-foreground`, `bg-secondary`) — zero cores hardcoded.
+- [x] T051 [P] Auditoria de acessibilidade: rodar `bunx playwright test --grep "axe"` se houver suíte axe; caso contrário, verificar manualmente `aria-pressed` no toggle, `aria-label="Atrasado"` na célula, navegação por teclado no calendário.
+- [x] T052 [P] Verificar coverage mínimo dos novos arquivos (`chapter-deadline.ts`, `timezone.ts`, `format-date.ts`, `focus-param.ts`, `use-focus-week-filter.ts`) ≥ 80% via `bun run test:unit --coverage` (ou flag equivalente do Vitest).
+- [x] T061 [P] Auditoria de labels em português brasileiro (FR-035): rodar a aplicação em dev e percorrer os 6 cenários do quickstart, conferindo que **nenhum** texto exibido ao usuário em telas afetadas está em inglês. Verificação explícita: "Prazo", "Definir prazo", "Limpar", "Foco da semana", "Atrasado", "em N dias", "atrasado há N dias", "hoje", "amanhã", "ontem". Documentar achados.
+- [x] T062 Performance benchmark de `BookRepository.listSummaries` (FR-031, SC-008): criar fixture sintético com **100 livros × 50 capítulos cada** (5000 capítulos com prazos e status variados) em `__tests__/integration/repositories/drizzle-book-focus-count-perf.spec.ts`. Medir tempo de execução de `listSummaries({ todayIso, mondayIso, sundayIso })` usando `performance.now()`. Asserção: `duration < 200ms`. Marcar teste com tag `.skip` ou `.slow` para não rodar no CI principal se necessário, mas DEVE ser executável via `bun vitest run __tests__/integration/repositories/drizzle-book-focus-count-perf.spec.ts`.
+- [x] T053 Atualizar `CLAUDE.md` na seção "Active Technologies" adicionando entrada da 025 com `date-fns` + `date-fns-tz` + `react-day-picker` (via shadcn `Calendar`). Validar que `Current plan:` já aponta para esta feature (foi atualizado no `/speckit-plan`).
+- [x] T054 Executar `bun run lint` — zero erros, zero warnings. Corrigir antes de prosseguir.
+- [x] T055 Executar `bun run test:unit` — todos verdes.
+- [x] T056 Executar `bun run test:integration` — todos verdes.
+- [x] T057 Executar `bun run test:e2e` — todos verdes.
+- [x] T058 Executar `bun run build` — produção compila sem erro.
+- [x] T059 Validar walkthrough manual completo conforme [quickstart.md](./quickstart.md) (todos os 6 cenários).
 
 ---
 

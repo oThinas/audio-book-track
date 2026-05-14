@@ -326,6 +326,7 @@ Qualquer mudança no modelo financeiro (preço, horas, responsáveis) requer **r
 
 
 ## Recent Changes
+- 025-chapter-deadline: Added `chapter.deadline` (date nullable + índice parcial). `PAID_LOCKED_FIELDS` estendido para incluir prazo. Helpers puros `lib/domain/timezone.ts` (APP_TIMEZONE=America/Sao_Paulo) e `lib/domain/chapter-deadline.ts` (`isOverdue`/`isInFocusWeek`). `BookSummary.focusThisWeekCount` calculado server-side em single query. Coluna "Prazo" na tabela de capítulos e coluna "Foco" na tabela de livros. Toggle "Foco da semana" com URL state (`?focus=week`), coexistindo com o agrupamento da feature 024. Novas libs: `date-fns` 4.1, `date-fns-tz` 3.2, `react-day-picker` (via shadcn Calendar).
 - 023-global-error-handler: Added `src/lib/api/error-codes.ts` (catálogo compartilhado server+client), `src/lib/api/with-error-handler.ts` (wrapper de rota substituindo `try/catch instanceof`), `src/lib/api/api-fetch.ts` (wrapper de cliente que centraliza toast/redirect/field-errors). Mensagens Zod migradas para PT-BR nos schemas. `X-Request-Id` em toda resposta `/api/v1/**`. Sem mudança de schema PostgreSQL.
 - 021-presentation-only-components: Added TypeScript 5.9.3 sobre Bun 1.2 (runtime + package manager + test runner) + Next.js 16.2.1 (App Router + Turbopack), React 19.2.4, React Hook Form 7.72.1 + `@hookform/resolvers` 5.2.2, Zod 4.3.6, `@tanstack/react-table` 8.21.3, shadcn/ui 4.1.2, Tailwind CSS 4.2, `sonner` 2.0.7, `lucide-react`
 - 020-books-chapters-crud: Added TypeScript 5.9.3 sobre Bun 1.2 (runtime + package manager + test runner) + Next.js 16.2.1 (App Router + Turbopack), React 19.2.4, Drizzle ORM 0.45.2 + `drizzle-kit` 0.31.10, Zod 4.3.6, better-auth 1.5.6, React Hook Form 7.72.1 + `@hookform/resolvers` 5.2.2, `@tanstack/react-table` 8.21.3, shadcn/ui 4.1.2, Tailwind CSS 4.2, `sonner` 2.0.7 (toasts), `lucide-react` (ícones)
@@ -333,6 +334,7 @@ Qualquer mudança no modelo financeiro (preço, horas, responsáveis) requer **r
 
 ## Active Technologies
 - TypeScript 5.9.3 sobre Bun 1.2 (runtime + package manager + test runner) + Next.js 16.2.1 (App Router + Turbopack), React 19.2.4, React Hook Form 7.72.1 + `@hookform/resolvers` 5.2.2, Zod 4.3.6, `@tanstack/react-table` 8.21.3, shadcn/ui 4.1.2, Tailwind CSS 4.2, `sonner` 2.0.7, `lucide-react` (021-presentation-only-components)
+- `date-fns` 4.1 + `date-fns-tz` 3.2 (cálculo de semana civil em fuso fixo America/Sao_Paulo) + `react-day-picker` (via shadcn Calendar) — `chapter.deadline` (PostgreSQL `date` nullable + índice parcial) (025-chapter-deadline)
 - N/A (refatoração não toca camada de dados — hooks consomem `/api/v1/**` existentes) (021-presentation-only-components, 023-global-error-handler)
 
 <!-- SPECKIT START -->

@@ -103,6 +103,7 @@ export function useBookDetail(book: BookDetailData): UseBookDetailReturn {
         narrator: c.narrator,
         editor: c.editor,
         editedSeconds: c.editedSeconds,
+        deadline: c.deadline,
       })),
     }));
     router.refresh();

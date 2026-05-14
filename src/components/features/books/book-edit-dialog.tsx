@@ -61,6 +61,7 @@ export interface UpdatedBookDetail {
     readonly narrator: { readonly id: string; readonly name: string } | null;
     readonly editor: { readonly id: string; readonly name: string } | null;
     readonly editedSeconds: number;
+    readonly deadline: string | null;
   }>;
 }
 

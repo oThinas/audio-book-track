@@ -71,14 +71,15 @@ export interface SeedChapterOptions {
   readonly editedSeconds?: number;
   readonly narratorId?: string | null;
   readonly editorId?: string | null;
+  readonly deadline?: string | null;
 }
 
 export async function seedChapter(options: SeedChapterOptions): Promise<{ id: string }> {
   const pool = getSeedPool();
   const { rows } = await pool.query<{ id: string }>(
     `INSERT INTO "${options.schema}"."chapter"
-       (id, book_id, number, status, narrator_id, editor_id, edited_seconds, created_at, updated_at)
-     VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, now(), now())
+       (id, book_id, number, status, narrator_id, editor_id, edited_seconds, deadline, created_at, updated_at)
+     VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, now(), now())
      RETURNING id`,
     [
       options.bookId,
@@ -87,6 +88,7 @@ export async function seedChapter(options: SeedChapterOptions): Promise<{ id: st
       options.narratorId ?? null,
       options.editorId ?? null,
       options.editedSeconds ?? 0,
+      options.deadline ?? null,
     ],
   );
   return { id: rows[0].id };
