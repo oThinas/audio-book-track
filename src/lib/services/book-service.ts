@@ -1,6 +1,7 @@
 import type { Book, BookStatus } from "@/lib/domain/book";
 import type { Chapter, ChapterStatus } from "@/lib/domain/chapter";
 import { computeEarningsCents } from "@/lib/domain/earnings";
+import { currentWeekRangeInAppTimezone, todayInAppTimezone } from "@/lib/domain/timezone";
 import {
   BookCannotReduceChaptersError,
   BookInlineStudioInvalidError,
@@ -90,7 +91,9 @@ export class BookService {
   constructor(protected readonly deps: BookServiceDeps) {}
 
   async list(): Promise<BookSummary[]> {
-    return this.deps.bookRepo.listSummaries();
+    const todayIso = todayInAppTimezone();
+    const { mondayIso, sundayIso } = currentWeekRangeInAppTimezone();
+    return this.deps.bookRepo.listSummaries({ todayIso, mondayIso, sundayIso });
   }
 
   async findById(bookId: string): Promise<BookDetail | null> {
