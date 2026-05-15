@@ -30,6 +30,7 @@ export interface ChapterServiceDeps {
 }
 
 export interface UpdateChapterServiceInput {
+  readonly title?: string;
   readonly status?: ChapterStatus;
   readonly narratorId?: string | null;
   readonly editorId?: string | null;
@@ -56,7 +57,13 @@ export interface BulkDeleteChaptersResult {
   readonly deletedCount: number;
 }
 
-const PAID_LOCKED_FIELDS = ["narratorId", "editorId", "editedSeconds", "deadline"] as const;
+const PAID_LOCKED_FIELDS = [
+  "title",
+  "narratorId",
+  "editorId",
+  "editedSeconds",
+  "deadline",
+] as const;
 
 export class ChapterService {
   constructor(protected readonly deps: ChapterServiceDeps) {}
@@ -80,6 +87,7 @@ export class ChapterService {
       const updated = await this.deps.chapterRepo.update(
         chapterId,
         {
+          ...(input.title !== undefined ? { title: input.title } : {}),
           ...(input.status !== undefined ? { status: input.status } : {}),
           ...(input.narratorId !== undefined ? { narratorId: input.narratorId } : {}),
           ...(input.editorId !== undefined ? { editorId: input.editorId } : {}),

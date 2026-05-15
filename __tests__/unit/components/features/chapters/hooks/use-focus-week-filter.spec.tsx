@@ -25,7 +25,8 @@ function chap(
   overrides: Partial<ChapterRowEntity> & Pick<ChapterRowEntity, "id">,
 ): ChapterRowEntity {
   return {
-    number: 1,
+    title: "Capítulo 1",
+    position: 0,
     status: "pending",
     narrator: null,
     editor: null,

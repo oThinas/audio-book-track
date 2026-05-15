@@ -89,7 +89,8 @@ describe("ChapterGroupRow", () => {
       subRowsCount: 3,
       firstLeaf: {
         id: "c1",
-        number: 1,
+        title: "Capítulo 1",
+        position: 0,
         status: "completed",
         narrator: { id: "abc-narrator", name: "Ana Silva" },
         editor: null,
@@ -121,7 +122,8 @@ describe("ChapterGroupRow", () => {
       subRowsCount: 1,
       firstLeaf: {
         id: "c1",
-        number: 1,
+        title: "Capítulo 1",
+        position: 0,
         status: "completed",
         narrator: null,
         editor: { id: "ed-1", name: "Carlos" },
@@ -155,7 +157,8 @@ describe("ChapterGroupRow", () => {
       subRowsCount: 1,
       firstLeaf: {
         id: "c1",
-        number: 1,
+        title: "Capítulo 1",
+        position: 0,
         status: "completed",
         narrator: null,
         editor: { id: "ed-2", name: "Diana" },
@@ -228,7 +231,8 @@ describe("ChapterGroupRow", () => {
       },
       firstLeaf: {
         id: "c1",
-        number: 1,
+        title: "Capítulo 1",
+        position: 0,
         status: "completed",
         narrator: { id: "narr-x", name: "Eduarda" },
         editor: null,

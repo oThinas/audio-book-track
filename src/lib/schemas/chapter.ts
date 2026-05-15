@@ -58,6 +58,7 @@ const deadlineSchema = z
 
 export const updateChapterSchema = z
   .object({
+    title: chapterTitleSchema.optional(),
     status: chapterStatusSchema.optional(),
     narratorId: z.uuid("Narrador inválido.").nullable().optional(),
     editorId: z.uuid("Editor inválido.").nullable().optional(),

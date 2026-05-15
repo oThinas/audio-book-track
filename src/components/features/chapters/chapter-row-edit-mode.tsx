@@ -4,6 +4,7 @@ import { Check, Loader2, X } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { SecondsInput } from "@/components/ui/seconds-input";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { TableCell, TableRow } from "@/components/ui/table";
@@ -64,7 +65,42 @@ export function ChapterRowEditMode({
       <TableRow data-testid={`chapter-row-${chapter.id}`} data-mode="edit">
         <TableCell className="font-medium">
           <form id={formId} onSubmit={handleSubmit(onSubmit)} className="contents" noValidate />
-          {chapter.title}
+          <Controller
+            name="title"
+            control={control}
+            rules={{
+              validate: (value) => {
+                const trimmed = (value ?? "").trim();
+                if (trimmed.length === 0) return "Título é obrigatório.";
+                if (trimmed.length > 100) return "Título deve ter no máximo 100 caracteres.";
+                if (/[\n\r]/.test(value)) return "Título não pode ter quebras de linha.";
+                return true;
+              },
+            }}
+            render={({ field, fieldState }) => (
+              <div className="flex flex-col gap-1">
+                <Input
+                  form={formId}
+                  data-testid={`chapter-title-${chapter.id}`}
+                  aria-label={`Título do ${chapter.title}`}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  disabled={isSubmitting || chapter.status === "paid"}
+                  maxLength={100}
+                />
+                {fieldState.error?.message && (
+                  <span
+                    role="alert"
+                    className="text-xs text-destructive"
+                    data-testid={`chapter-title-error-${chapter.id}`}
+                  >
+                    {fieldState.error.message}
+                  </span>
+                )}
+              </div>
+            )}
+          />
         </TableCell>
         <TableCell>
           <Controller
