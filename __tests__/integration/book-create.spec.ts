@@ -117,7 +117,12 @@ describe("POST /api/v1/books (handleBooksCreate)", () => {
         studioId: string;
         pricePerHourCents: number;
         status: string;
-        chapters: Array<{ number: number; status: string; editedSeconds: number }>;
+        chapters: Array<{
+          title: string;
+          position: number;
+          status: string;
+          editedSeconds: number;
+        }>;
       };
     };
 
@@ -129,7 +134,19 @@ describe("POST /api/v1/books (handleBooksCreate)", () => {
     expect(body.data.pricePerHourCents).toBe(7500);
     expect(body.data.status).toBe("pending");
     expect(body.data.chapters).toHaveLength(10);
-    expect(body.data.chapters.map((c) => c.number)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    expect(body.data.chapters.map((c) => c.title)).toEqual([
+      "Capítulo 1",
+      "Capítulo 2",
+      "Capítulo 3",
+      "Capítulo 4",
+      "Capítulo 5",
+      "Capítulo 6",
+      "Capítulo 7",
+      "Capítulo 8",
+      "Capítulo 9",
+      "Capítulo 10",
+    ]);
+    expect(body.data.chapters.map((c) => c.position)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
     expect(body.data.chapters.every((c) => c.status === "pending")).toBe(true);
     expect(body.data.chapters.every((c) => c.editedSeconds === 0)).toBe(true);
 

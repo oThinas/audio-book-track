@@ -64,7 +64,7 @@ export function ChapterRowEditMode({
       <TableRow data-testid={`chapter-row-${chapter.id}`} data-mode="edit">
         <TableCell className="font-medium">
           <form id={formId} onSubmit={handleSubmit(onSubmit)} className="contents" noValidate />
-          {chapter.number}
+          {chapter.title}
         </TableCell>
         <TableCell>
           <Controller
@@ -163,7 +163,7 @@ export function ChapterRowEditMode({
               <SecondsInput
                 form={formId}
                 data-testid={`chapter-hours-${chapter.id}`}
-                aria-label={`Horas editadas do capítulo ${chapter.number}`}
+                aria-label={`Horas editadas do ${chapter.title}`}
                 value={field.value}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
@@ -180,7 +180,7 @@ export function ChapterRowEditMode({
               type="button"
               variant="ghost"
               size="icon"
-              aria-label={`Cancelar edição do capítulo ${chapter.number}`}
+              aria-label={`Cancelar edição do ${chapter.title}`}
               data-testid={`chapter-cancel-${chapter.id}`}
               onClick={onCancel}
               disabled={isSubmitting}
@@ -192,7 +192,7 @@ export function ChapterRowEditMode({
               form={formId}
               variant="ghost"
               size="icon"
-              aria-label={`Confirmar edição do capítulo ${chapter.number}`}
+              aria-label={`Confirmar edição do ${chapter.title}`}
               data-testid={`chapter-confirm-${chapter.id}`}
               disabled={isSubmitting}
               className="text-primary"
@@ -208,7 +208,7 @@ export function ChapterRowEditMode({
       </TableRow>
       <ChapterPaidReversionDialog
         open={reversionPending !== null}
-        chapterNumber={chapter.number}
+        chapterTitle={chapter.title}
         onCancel={cancelReversion}
         onConfirm={confirmReversion}
       />

@@ -53,3 +53,15 @@ export class BookCannotReduceChaptersError extends DomainError {
     this.name = "BookCannotReduceChaptersError";
   }
 }
+
+export class BookChaptersVersionConflictError extends DomainError {
+  readonly code = "BOOK_CHAPTERS_VERSION_CONFLICT";
+  constructor(
+    readonly bookId: string,
+    readonly expectedVersion: number,
+    readonly currentVersion: number,
+  ) {
+    super("Book chapters version conflict");
+    this.name = "BookChaptersVersionConflictError";
+  }
+}

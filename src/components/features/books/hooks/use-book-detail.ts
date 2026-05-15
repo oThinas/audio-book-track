@@ -98,7 +98,8 @@ export function useBookDetail(book: BookDetailData): UseBookDetailReturn {
       status: detail.status,
       chapters: detail.chapters.map((c) => ({
         id: c.id,
-        number: c.number,
+        title: c.title,
+        position: c.position,
         status: c.status,
         narrator: c.narrator,
         editor: c.editor,

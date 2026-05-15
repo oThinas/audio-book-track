@@ -72,7 +72,8 @@ export function useChapterRowEdit({
     const result = await apiFetch<{
       data: {
         id: string;
-        number: number;
+        title: string;
+        position: number;
         status: ChapterStatus;
         narratorId: string | null;
         editorId: string | null;
@@ -86,7 +87,8 @@ export function useChapterRowEdit({
     const { data, meta } = result.data;
     const updated: ChapterRowEntity = {
       id: data.id,
-      number: data.number,
+      title: data.title,
+      position: data.position,
       status: data.status,
       editedSeconds: data.editedSeconds,
       deadline: data.deadline,

@@ -1,6 +1,7 @@
 import type { Chapter } from "@/lib/domain/chapter";
-import { ChapterNotFoundError, ChapterNumberAlreadyInUseError } from "@/lib/errors/chapter-errors";
+import { ChapterNotFoundError } from "@/lib/errors/chapter-errors";
 import type {
+  ChapterReorderPair,
   ChapterRepository,
   InsertChapterInput,
   UpdateChapterInput,
@@ -12,7 +13,7 @@ export class InMemoryChapterRepository implements ChapterRepository {
   async listByBookId(bookId: string): Promise<Chapter[]> {
     return Array.from(this.store.values())
       .filter((c) => c.bookId === bookId)
-      .sort((a, b) => a.number - b.number);
+      .sort((a, b) => a.position - b.position);
   }
 
   async findById(id: string): Promise<Chapter | null> {
@@ -23,13 +24,11 @@ export class InMemoryChapterRepository implements ChapterRepository {
     const now = new Date();
     const created: Chapter[] = [];
     for (const input of inputs) {
-      if (this.findByBookAndNumber(input.bookId, input.number)) {
-        throw new ChapterNumberAlreadyInUseError(input.bookId, input.number);
-      }
       const chapter: Chapter = {
         id: crypto.randomUUID(),
         bookId: input.bookId,
-        number: input.number,
+        title: input.title,
+        position: input.position,
         status: input.status ?? "pending",
         narratorId: input.narratorId ?? null,
         editorId: input.editorId ?? null,
@@ -51,6 +50,8 @@ export class InMemoryChapterRepository implements ChapterRepository {
     }
     const updated: Chapter = {
       ...existing,
+      ...(input.title !== undefined ? { title: input.title } : {}),
+      ...(input.position !== undefined ? { position: input.position } : {}),
       ...(input.status !== undefined ? { status: input.status } : {}),
       ...(input.narratorId !== undefined ? { narratorId: input.narratorId } : {}),
       ...(input.editorId !== undefined ? { editorId: input.editorId } : {}),
@@ -87,22 +88,12 @@ export class InMemoryChapterRepository implements ChapterRepository {
     return count;
   }
 
-  async maxNumberByBookId(bookId: string): Promise<number> {
-    let max = 0;
-    for (const current of this.store.values()) {
-      if (current.bookId === bookId && current.number > max) {
-        max = current.number;
+  async reorder(bookId: string, pairs: ReadonlyArray<ChapterReorderPair>): Promise<void> {
+    for (const pair of pairs) {
+      const existing = this.store.get(pair.id);
+      if (existing && existing.bookId === bookId) {
+        this.store.set(pair.id, { ...existing, position: pair.position });
       }
     }
-    return max;
-  }
-
-  private findByBookAndNumber(bookId: string, number: number): Chapter | null {
-    for (const current of this.store.values()) {
-      if (current.bookId === bookId && current.number === number) {
-        return current;
-      }
-    }
-    return null;
   }
 }

@@ -1,6 +1,7 @@
 import type { Book, BookStatus } from "@/lib/domain/book";
 import type { Chapter, ChapterStatus } from "@/lib/domain/chapter";
 import { computeEarningsCents } from "@/lib/domain/earnings";
+import { nextChapterTitle } from "@/lib/domain/next-chapter-title";
 import { currentWeekRangeInAppTimezone, todayInAppTimezone } from "@/lib/domain/timezone";
 import {
   BookCannotReduceChaptersError,
@@ -17,7 +18,7 @@ import type { NarratorRepository } from "@/lib/repositories/narrator-repository"
 import type { StudioRepository } from "@/lib/repositories/studio-repository";
 import type { UnitOfWork } from "@/lib/repositories/unit-of-work";
 
-import { recomputeBookStatus } from "./book-status-recompute";
+import { recomputeBookStatusAndBumpVersion } from "./book-status-recompute";
 
 export interface BookServiceDeps {
   readonly bookRepo: BookRepository;
@@ -60,7 +61,8 @@ export interface UpdateBookResult {
 
 export interface BookChapterDetail {
   readonly id: string;
-  readonly number: number;
+  readonly title: string;
+  readonly position: number;
   readonly status: ChapterStatus;
   readonly narrator: { readonly id: string; readonly name: string } | null;
   readonly editor: { readonly id: string; readonly name: string } | null;
@@ -75,6 +77,7 @@ export interface BookDetail {
   readonly title: string;
   readonly studio: { readonly id: string; readonly name: string };
   readonly pricePerHourCents: number;
+  readonly chaptersVersion: number;
   readonly pdfUrl: string | null;
   readonly status: BookStatus;
   readonly totalChapters: number;
@@ -142,7 +145,8 @@ export class BookService {
       }
       return {
         id: chapter.id,
-        number: chapter.number,
+        title: chapter.title,
+        position: chapter.position,
         status: chapter.status,
         narrator: chapter.narratorId ? (narratorMap.get(chapter.narratorId) ?? null) : null,
         editor: chapter.editorId ? (editorMap.get(chapter.editorId) ?? null) : null,
@@ -158,6 +162,7 @@ export class BookService {
       title: book.title,
       studio: { id: studio.id, name: studio.name },
       pricePerHourCents: book.pricePerHourCents,
+      chaptersVersion: book.chaptersVersion,
       pdfUrl: book.pdfUrl,
       status: book.status,
       totalChapters: chapters.length,
@@ -209,13 +214,14 @@ export class BookService {
       const chapters = await this.deps.chapterRepo.insertMany(
         Array.from({ length: input.numChapters }, (_, index) => ({
           bookId: inserted.id,
-          number: index + 1,
+          title: `Capítulo ${index + 1}`,
+          position: index,
           status: "pending" as const,
         })),
         tx,
       );
 
-      const withStatus = await recomputeBookStatus(
+      const withStatus = await recomputeBookStatusAndBumpVersion(
         inserted.id,
         { bookRepo: this.deps.bookRepo, chapterRepo: this.deps.chapterRepo },
         tx,
@@ -286,20 +292,30 @@ export class BookService {
       let chaptersAdded = 0;
       if (input.numChapters !== undefined && input.numChapters > chapters.length) {
         const delta = input.numChapters - chapters.length;
-        const maxNumber = await this.deps.chapterRepo.maxNumberByBookId(bookId, tx);
-        await this.deps.chapterRepo.insertMany(
-          Array.from({ length: delta }, (_, index) => ({
+        const existingTitles = chapters.map((c) => c.title);
+        const additions: Array<{
+          readonly bookId: string;
+          readonly title: string;
+          readonly position: number;
+          readonly status: "pending";
+        }> = [];
+        let positionCursor = chapters.length;
+        for (let i = 0; i < delta; i += 1) {
+          const title = nextChapterTitle([...existingTitles, ...additions.map((a) => a.title)]);
+          additions.push({
             bookId,
-            number: maxNumber + 1 + index,
-            status: "pending" as const,
-          })),
-          tx,
-        );
+            title,
+            position: positionCursor,
+            status: "pending",
+          });
+          positionCursor += 1;
+        }
+        await this.deps.chapterRepo.insertMany(additions, tx);
         chaptersAdded = delta;
       }
 
       if (chaptersAdded > 0) {
-        const refreshed = await recomputeBookStatus(
+        const refreshed = await recomputeBookStatusAndBumpVersion(
           bookId,
           { bookRepo: this.deps.bookRepo, chapterRepo: this.deps.chapterRepo },
           tx,

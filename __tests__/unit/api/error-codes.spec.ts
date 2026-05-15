@@ -72,4 +72,36 @@ describe("error-codes catalog", () => {
     expect(zeros).toHaveLength(1);
     expect(zeros[0][0]).toBe("NETWORK_ERROR");
   });
+
+  describe("feature 026 — chapter titles, reordering, extras", () => {
+    it("CHAPTER_TITLE_INVALID está presente com status 422", () => {
+      expect(errorCodes.CHAPTER_TITLE_INVALID).toBeDefined();
+      expect(errorCodes.CHAPTER_TITLE_INVALID.status).toBe(422);
+      expect(errorCodes.CHAPTER_TITLE_INVALID.message).toMatch(/título/i);
+    });
+
+    it("CHAPTER_POSITION_TARGET_INVALID está presente com status 422", () => {
+      expect(errorCodes.CHAPTER_POSITION_TARGET_INVALID).toBeDefined();
+      expect(errorCodes.CHAPTER_POSITION_TARGET_INVALID.status).toBe(422);
+      expect(errorCodes.CHAPTER_POSITION_TARGET_INVALID.message).toMatch(/posição/i);
+    });
+
+    it("CHAPTERS_ORDER_MISMATCH está presente com status 422", () => {
+      expect(errorCodes.CHAPTERS_ORDER_MISMATCH).toBeDefined();
+      expect(errorCodes.CHAPTERS_ORDER_MISMATCH.status).toBe(422);
+    });
+
+    it("BOOK_CHAPTERS_VERSION_CONFLICT está presente com status 409", () => {
+      expect(errorCodes.BOOK_CHAPTERS_VERSION_CONFLICT).toBeDefined();
+      expect(errorCodes.BOOK_CHAPTERS_VERSION_CONFLICT.status).toBe(409);
+    });
+
+    it("CHAPTER_NUMBER_ALREADY_IN_USE foi removido (não há mais número)", () => {
+      expect((errorCodes as Record<string, unknown>).CHAPTER_NUMBER_ALREADY_IN_USE).toBeUndefined();
+    });
+
+    it("CHAPTER_PAID_LOCKED menciona título na mensagem (paid-lock estendido)", () => {
+      expect(errorCodes.CHAPTER_PAID_LOCKED.message).toMatch(/título/i);
+    });
+  });
 });

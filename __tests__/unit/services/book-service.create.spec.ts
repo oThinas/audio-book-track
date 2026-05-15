@@ -44,7 +44,7 @@ describe("BookService.create", () => {
     });
   });
 
-  it("creates a book with N chapters numbered 1..N, all pending", async () => {
+  it("creates a book with N chapters titled 'Capítulo 1..N' on positions 0..N-1, all pending", async () => {
     const studio = await makeStudio(studioRepo);
 
     const result = await service.create({
@@ -59,7 +59,14 @@ describe("BookService.create", () => {
     expect(result.book.pricePerHourCents).toBe(7500);
     expect(result.book.status).toBe("pending");
     expect(result.chapters).toHaveLength(5);
-    expect(result.chapters.map((c) => c.number)).toEqual([1, 2, 3, 4, 5]);
+    expect(result.chapters.map((c) => c.title)).toEqual([
+      "Capítulo 1",
+      "Capítulo 2",
+      "Capítulo 3",
+      "Capítulo 4",
+      "Capítulo 5",
+    ]);
+    expect(result.chapters.map((c) => c.position)).toEqual([0, 1, 2, 3, 4]);
     expect(result.chapters.every((c) => c.status === "pending")).toBe(true);
     expect(result.chapters.every((c) => c.bookId === result.book.id)).toBe(true);
   });

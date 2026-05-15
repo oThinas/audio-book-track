@@ -29,7 +29,8 @@ export async function handleChapterUpdate(
       data: {
         id: chapter.id,
         bookId: chapter.bookId,
-        number: chapter.number,
+        title: chapter.title,
+        position: chapter.position,
         status: chapter.status,
         narratorId: chapter.narratorId,
         editorId: chapter.editorId,

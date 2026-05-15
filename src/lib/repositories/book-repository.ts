@@ -45,4 +45,5 @@ export interface BookRepository {
   update(id: string, input: UpdateBookInput, tx?: RepositoryTx): Promise<Book>;
   updateStatus(id: string, status: BookStatus, tx?: RepositoryTx): Promise<Book>;
   delete(id: string, tx?: RepositoryTx): Promise<void>;
+  bumpChaptersVersion(id: string, tx?: RepositoryTx): Promise<number>;
 }

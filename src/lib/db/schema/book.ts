@@ -13,6 +13,7 @@ export const book = pgTable(
       .notNull()
       .references(() => studio.id, { onDelete: "restrict" }),
     pricePerHourCents: integer("price_per_hour_cents").notNull(),
+    chaptersVersion: integer("chapters_version").notNull().default(0),
     pdfUrl: text("pdf_url"),
     status: text("status", {
       enum: ["pending", "editing", "reviewing", "retake", "completed", "paid"],

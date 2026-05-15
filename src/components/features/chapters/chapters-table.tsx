@@ -127,7 +127,7 @@ export function ChaptersTable({
                 />
               </TableHead>
             )}
-            <TableHead className="w-16">Nº</TableHead>
+            <TableHead className="w-[40ch]">Título</TableHead>
             <TableHead className="w-40">Status</TableHead>
             <TableHead className="w-56">Narrador</TableHead>
             <TableHead className="w-56">Editor</TableHead>

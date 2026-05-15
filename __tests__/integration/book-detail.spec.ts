@@ -125,7 +125,8 @@ describe("GET /api/v1/books/:id (handleBookDetail)", () => {
         totalEarningsCents: number;
         chapters: Array<{
           id: string;
-          number: number;
+          title: string;
+          position: number;
           status: string;
           narrator: { id: string; name: string } | null;
           editor: { id: string; name: string } | null;
@@ -144,16 +145,19 @@ describe("GET /api/v1/books/:id (handleBookDetail)", () => {
     expect(body.data.chapters).toHaveLength(3);
 
     const [c1, c2, c3] = body.data.chapters;
-    expect(c1.number).toBe(1);
+    expect(c1.title).toBe("Capítulo 1");
+    expect(c1.position).toBe(0);
     expect(c1.narrator).toEqual({ id: narrator.id, name: "Ana Silva" });
     expect(c1.editor).toEqual({ id: editor.id, name: "Bruno Gomes" });
     expect(c1.editedSeconds).toBe(3600);
 
-    expect(c2.number).toBe(2);
+    expect(c2.title).toBe("Capítulo 2");
+    expect(c2.position).toBe(1);
     expect(c2.narrator).toEqual({ id: narrator.id, name: "Ana Silva" });
     expect(c2.editor).toBeNull();
 
-    expect(c3.number).toBe(3);
+    expect(c3.title).toBe("Capítulo 3");
+    expect(c3.position).toBe(2);
     expect(c3.narrator).toBeNull();
     expect(c3.editor).toBeNull();
   });

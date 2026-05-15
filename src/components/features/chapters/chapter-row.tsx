@@ -18,7 +18,8 @@ import { useDeleteChapter } from "./hooks/use-delete-chapter";
 
 export interface ChapterRowEntity {
   readonly id: string;
-  readonly number: number;
+  readonly title: string;
+  readonly position: number;
   readonly status: ChapterStatus;
   readonly narrator: { readonly id: string; readonly name: string } | null;
   readonly editor: { readonly id: string; readonly name: string } | null;
@@ -94,12 +95,14 @@ export function ChapterRow({
               checked={isSelected}
               disabled={isPaid}
               onCheckedChange={(value) => onToggleSelected(chapter.id, value === true)}
-              aria-label={`Selecionar capítulo ${chapter.number}`}
+              aria-label={`Selecionar ${chapter.title}`}
               data-testid={`chapter-select-${chapter.id}`}
             />
           </TableCell>
         )}
-        <TableCell className="font-medium">{chapter.number}</TableCell>
+        <TableCell className="max-w-[40ch] truncate font-medium" title={chapter.title}>
+          {chapter.title}
+        </TableCell>
         <TableCell>
           <StatusBadge status={chapter.status} />
         </TableCell>
@@ -126,7 +129,7 @@ export function ChapterRow({
                 type="button"
                 variant="ghost"
                 size="icon"
-                aria-label={`Editar capítulo ${chapter.number}`}
+                aria-label={`Editar ${chapter.title}`}
                 data-testid={`chapter-edit-${chapter.id}`}
                 onClick={enterEditMode}
               >
@@ -136,7 +139,7 @@ export function ChapterRow({
                 type="button"
                 variant="ghost"
                 size="icon"
-                aria-label={`Excluir capítulo ${chapter.number}`}
+                aria-label={`Excluir ${chapter.title}`}
                 data-testid={`chapter-delete-${chapter.id}`}
                 onClick={openDelete}
                 disabled={isPaid || deleting}
@@ -154,7 +157,7 @@ export function ChapterRow({
       </TableRow>
       <ChapterDeleteDialog
         open={deleteOpen}
-        chapterNumber={chapter.number}
+        chapterTitle={chapter.title}
         isLastNonPaid={isLastNonPaid}
         onCancel={cancelDelete}
         onConfirm={handleDelete}

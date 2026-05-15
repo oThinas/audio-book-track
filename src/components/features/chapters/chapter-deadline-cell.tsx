@@ -22,7 +22,8 @@ export function ChapterDeadlineCell({ deadline, status, focusContext }: ChapterD
     {
       id: "",
       bookId: "",
-      number: 0,
+      title: "",
+      position: 0,
       status,
       narratorId: null,
       editorId: null,

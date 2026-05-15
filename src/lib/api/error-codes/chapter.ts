@@ -5,14 +5,22 @@ export const chapterCodes = {
     status: 404,
     message: "Capítulo não encontrado.",
   },
-  CHAPTER_NUMBER_ALREADY_IN_USE: {
-    status: 409,
-    message: "Já existe um capítulo com esse número neste livro.",
+  CHAPTER_TITLE_INVALID: {
+    status: 422,
+    message: "Título do capítulo é obrigatório, com até 100 caracteres e sem quebras de linha.",
+  },
+  CHAPTER_POSITION_TARGET_INVALID: {
+    status: 422,
+    message: "Posição de inserção inválida.",
+  },
+  CHAPTERS_ORDER_MISMATCH: {
+    status: 422,
+    message: "A lista enviada não corresponde aos capítulos atuais do livro.",
   },
   CHAPTER_PAID_LOCKED: {
     status: 409,
     message:
-      "Este capítulo já está pago — narrador, editor, duração e prazo não podem ser alterados.",
+      "Este capítulo já está pago — título, narrador, editor, duração e prazo não podem ser alterados.",
   },
   CHAPTER_INVALID_TRANSITION: {
     status: 422,

@@ -25,4 +25,9 @@ export const bookCodes = {
     status: 422,
     message: "Não é possível reduzir o número de capítulos abaixo do total atual.",
   },
+  BOOK_CHAPTERS_VERSION_CONFLICT: {
+    status: 409,
+    message:
+      "Outro usuário alterou os capítulos deste livro. Recarregue a página para ver o estado mais recente.",
+  },
 } satisfies Readonly<Record<string, ErrorCatalogEntry>>;

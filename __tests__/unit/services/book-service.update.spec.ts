@@ -58,7 +58,7 @@ describe("BookService.update", () => {
     expect(refreshed?.title).toBe("Novo título");
   });
 
-  it("appends new chapters with sequential numbers when numChapters increases", async () => {
+  it("appends new chapters titled 'Capítulo {nextN}' when numChapters increases", async () => {
     const { book } = await seedInMemoryBook({
       studioRepo,
       bookRepo,
@@ -71,18 +71,24 @@ describe("BookService.update", () => {
     expect(result.chaptersAdded).toBe(3);
     const chapters = await chapterRepo.listByBookId(book.id);
     expect(chapters).toHaveLength(5);
-    expect(chapters.map((c) => c.number)).toEqual([1, 2, 3, 4, 5]);
+    expect(chapters.map((c) => c.title)).toEqual([
+      "Capítulo 1",
+      "Capítulo 2",
+      "Capítulo 3",
+      "Capítulo 4",
+      "Capítulo 5",
+    ]);
     expect(chapters.slice(2).every((c) => c.status === "pending")).toBe(true);
   });
 
-  it("numbers new chapters after MAX(number)+1 even if existing chapters are not contiguous", async () => {
+  it("nomeia novos capítulos via nextChapterTitle mesmo com gaps nos títulos numerados", async () => {
     const { book } = await seedInMemoryBook({
       studioRepo,
       bookRepo,
       chapterRepo,
       statuses: ["pending", "pending", "pending"],
     });
-    // Simulate a gap: delete chapter #2 so MAX(number) = 3 but count = 2.
+    // Apaga o capítulo do meio — restam "Capítulo 1" e "Capítulo 3" (max=3).
     const all = await chapterRepo.listByBookId(book.id);
     await chapterRepo.delete(all[1].id);
     expect(await chapterRepo.countByBookId(book.id)).toBe(2);
@@ -91,7 +97,8 @@ describe("BookService.update", () => {
 
     expect(result.chaptersAdded).toBe(2);
     const chapters = await chapterRepo.listByBookId(book.id);
-    expect(chapters.map((c) => c.number).sort((a, b) => a - b)).toEqual([1, 3, 4, 5]);
+    const titles = chapters.map((c) => c.title).sort();
+    expect(titles).toEqual(["Capítulo 1", "Capítulo 3", "Capítulo 4", "Capítulo 5"]);
   });
 
   it("throws BookCannotReduceChaptersError when numChapters < current total", async () => {

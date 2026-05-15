@@ -56,7 +56,8 @@ export interface UpdatedBookDetail {
   readonly status: import("@/lib/domain/book").BookStatus;
   readonly chapters: ReadonlyArray<{
     readonly id: string;
-    readonly number: number;
+    readonly title: string;
+    readonly position: number;
     readonly status: import("@/lib/domain/chapter").ChapterStatus;
     readonly narrator: { readonly id: string; readonly name: string } | null;
     readonly editor: { readonly id: string; readonly name: string } | null;

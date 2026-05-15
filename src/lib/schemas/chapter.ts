@@ -18,6 +18,19 @@ const chapterStatusSchema = z.enum([
   "paid",
 ]);
 
+const CHAPTER_TITLE_MAX = 100;
+
+export const chapterTitleSchema = z
+  .string({ error: "Título é obrigatório." })
+  .refine((s) => !/[\n\r]/.test(s), {
+    message: "Título não pode ter quebras de linha.",
+  })
+  .transform((s) => s.trim())
+  .refine((s) => s.length > 0, { message: "Título é obrigatório." })
+  .refine((s) => s.length <= CHAPTER_TITLE_MAX, {
+    message: `Título deve ter no máximo ${CHAPTER_TITLE_MAX} caracteres.`,
+  });
+
 function isCalendarValid(iso: string): boolean {
   const date = parseISO(iso);
   if (Number.isNaN(date.getTime())) return false;

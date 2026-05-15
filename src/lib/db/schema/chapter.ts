@@ -1,14 +1,5 @@
 import { sql } from "drizzle-orm";
-import {
-  check,
-  date,
-  index,
-  integer,
-  pgTable,
-  text,
-  timestamp,
-  uniqueIndex,
-} from "drizzle-orm/pg-core";
+import { check, date, index, integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { book } from "./book";
 import { editor } from "./editor";
 import { narrator } from "./narrator";
@@ -22,7 +13,8 @@ export const chapter = pgTable(
     bookId: text("book_id")
       .notNull()
       .references(() => book.id, { onDelete: "cascade" }),
-    number: integer("number").notNull(),
+    title: text("title").notNull(),
+    position: integer("position").notNull(),
     status: text("status", {
       enum: ["pending", "editing", "reviewing", "retake", "completed", "paid"],
     })
@@ -39,8 +31,8 @@ export const chapter = pgTable(
       .notNull(),
   },
   (table) => [
-    uniqueIndex("chapter_book_number_unique").on(table.bookId, table.number),
     index("chapter_book_id_idx").on(table.bookId),
+    index("chapter_book_position_idx").on(table.bookId, table.position),
     index("chapter_narrator_id_idx")
       .on(table.narratorId)
       .where(sql`${table.narratorId} IS NOT NULL`),
@@ -49,7 +41,9 @@ export const chapter = pgTable(
     index("chapter_deadline_active_idx")
       .on(table.deadline)
       .where(sql`${table.deadline} IS NOT NULL`),
-    check("chapter_number_positive", sql`${table.number} >= 1`),
+    check("chapter_title_length", sql`length(${table.title}) <= 100`),
+    check("chapter_title_no_newline", sql`${table.title} !~ E'[\\n\\r]'`),
+    check("chapter_position_nonnegative", sql`${table.position} >= 0`),
     check(
       "chapter_edited_seconds_range",
       sql`${table.editedSeconds} >= 0 AND ${table.editedSeconds} <= 3600000`,

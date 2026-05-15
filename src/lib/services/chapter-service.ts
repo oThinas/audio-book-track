@@ -19,7 +19,7 @@ import type { EditorRepository } from "@/lib/repositories/editor-repository";
 import type { NarratorRepository } from "@/lib/repositories/narrator-repository";
 import type { UnitOfWork } from "@/lib/repositories/unit-of-work";
 
-import { recomputeBookStatus } from "./book-status-recompute";
+import { recomputeBookStatusAndBumpVersion } from "./book-status-recompute";
 
 export interface ChapterServiceDeps {
   readonly bookRepo: BookRepository;
@@ -89,7 +89,7 @@ export class ChapterService {
         tx,
       );
 
-      const book = await recomputeBookStatus(
+      const book = await recomputeBookStatusAndBumpVersion(
         updated.bookId,
         { bookRepo: this.deps.bookRepo, chapterRepo: this.deps.chapterRepo },
         tx,
@@ -122,7 +122,7 @@ export class ChapterService {
         return { bookId: current.bookId, bookDeleted: true, bookStatus: null };
       }
 
-      const book = await recomputeBookStatus(
+      const book = await recomputeBookStatusAndBumpVersion(
         current.bookId,
         { bookRepo: this.deps.bookRepo, chapterRepo: this.deps.chapterRepo },
         tx,
@@ -168,7 +168,7 @@ export class ChapterService {
         return { bookId, bookDeleted: true, bookStatus: null, deletedCount };
       }
 
-      const refreshed = await recomputeBookStatus(
+      const refreshed = await recomputeBookStatusAndBumpVersion(
         bookId,
         { bookRepo: this.deps.bookRepo, chapterRepo: this.deps.chapterRepo },
         tx,

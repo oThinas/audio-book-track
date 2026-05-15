@@ -102,15 +102,15 @@ describe("PATCH /api/v1/books/:id (handleBookUpdate)", () => {
       .where(eq(chapterTable.bookId, book.id));
     expect(n).toBe(5);
 
-    const numbers = (
+    const titles = (
       await db
-        .select({ number: chapterTable.number })
+        .select({ title: chapterTable.title })
         .from(chapterTable)
         .where(eq(chapterTable.bookId, book.id))
     )
-      .map((r) => r.number)
-      .sort((a, b) => a - b);
-    expect(numbers).toEqual([1, 2, 3, 4, 5]);
+      .map((r) => r.title)
+      .sort();
+    expect(titles).toEqual(["Capítulo 1", "Capítulo 2", "Capítulo 3", "Capítulo 4", "Capítulo 5"]);
   });
 
   it("returns 422 CANNOT_REDUCE_CHAPTERS when numChapters < current total", async () => {

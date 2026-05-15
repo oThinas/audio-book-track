@@ -8,14 +8,27 @@ export class ChapterNotFoundError extends DomainError {
   }
 }
 
-export class ChapterNumberAlreadyInUseError extends DomainError {
-  readonly code = "CHAPTER_NUMBER_ALREADY_IN_USE";
-  constructor(
-    readonly bookId: string,
-    readonly number: number,
-  ) {
-    super("Chapter number already in use");
-    this.name = "ChapterNumberAlreadyInUseError";
+export class ChapterTitleInvalidError extends DomainError {
+  readonly code = "CHAPTER_TITLE_INVALID";
+  constructor(readonly reason: "empty" | "too_long" | "has_newline") {
+    super("Chapter title invalid");
+    this.name = "ChapterTitleInvalidError";
+  }
+}
+
+export class ChapterPositionTargetInvalidError extends DomainError {
+  readonly code = "CHAPTER_POSITION_TARGET_INVALID";
+  constructor(readonly chapterId: string | null) {
+    super("Chapter position target invalid");
+    this.name = "ChapterPositionTargetInvalidError";
+  }
+}
+
+export class ChaptersOrderMismatchError extends DomainError {
+  readonly code = "CHAPTERS_ORDER_MISMATCH";
+  constructor(readonly bookId: string) {
+    super("Chapters order mismatch");
+    this.name = "ChaptersOrderMismatchError";
   }
 }
 
