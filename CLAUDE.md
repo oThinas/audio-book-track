@@ -338,5 +338,5 @@ Qualquer mudança no modelo financeiro (preço, horas, responsáveis) requer **r
 - N/A (refatoração não toca camada de dados — hooks consomem `/api/v1/**` existentes) (021-presentation-only-components, 023-global-error-handler)
 
 <!-- SPECKIT START -->
-Current plan: [specs/025-chapter-deadline/plan.md](specs/025-chapter-deadline/plan.md)
+Current plan: [specs/026-chapter-titles-reordering/plan.md](specs/026-chapter-titles-reordering/plan.md)
 <!-- SPECKIT END -->
