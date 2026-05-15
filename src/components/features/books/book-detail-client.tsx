@@ -25,6 +25,7 @@ export interface BookDetailData {
   readonly title: string;
   readonly studio: { readonly id: string; readonly name: string };
   readonly pricePerHourCents: number;
+  readonly chaptersVersion: number;
   readonly pdfUrl: string | null;
   readonly status: BookStatus;
   readonly totalChapters: number;
@@ -104,6 +105,8 @@ export function BookDetailClient({ book, narrators, editors, studios }: BookDeta
         </div>
       )}
       <ChaptersTable
+        bookId={book.id}
+        chaptersVersion={book.chaptersVersion}
         chapters={state.chapters}
         narrators={narrators}
         editors={editors}

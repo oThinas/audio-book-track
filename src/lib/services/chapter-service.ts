@@ -1,7 +1,8 @@
 import type { BookStatus } from "@/lib/domain/book";
 import type { Chapter, ChapterStatus } from "@/lib/domain/chapter";
 import { isValidTransition } from "@/lib/domain/chapter-state-machine";
-import { BookNotFoundError } from "@/lib/errors/book-errors";
+import { densifyPositions } from "@/lib/domain/normalize-positions";
+import { BookChaptersVersionConflictError, BookNotFoundError } from "@/lib/errors/book-errors";
 import {
   ChapterEditorOrSecondsRequiredError,
   ChapterInvalidTransitionError,
@@ -10,6 +11,7 @@ import {
   ChapterPaidLockedError,
   ChapterReversionConfirmationRequiredError,
   ChaptersNotInBookError,
+  ChaptersOrderMismatchError,
 } from "@/lib/errors/chapter-errors";
 import { EditorReferenceInvalidError } from "@/lib/errors/editor-errors";
 import { NarratorReferenceInvalidError } from "@/lib/errors/narrator-errors";
@@ -55,6 +57,10 @@ export interface BulkDeleteChaptersResult {
   readonly bookDeleted: boolean;
   readonly bookStatus: BookStatus | null;
   readonly deletedCount: number;
+}
+
+export interface ReorderChaptersResult {
+  readonly chaptersVersion: number;
 }
 
 const PAID_LOCKED_FIELDS = [
@@ -182,6 +188,58 @@ export class ChapterService {
         tx,
       );
       return { bookId, bookDeleted: false, bookStatus: refreshed.status, deletedCount };
+    };
+
+    if (this.deps.uow) {
+      return this.deps.uow.transaction(run);
+    }
+    return run();
+  }
+
+  async reorder(
+    bookId: string,
+    orderedIds: ReadonlyArray<string>,
+    expectedVersion: number,
+  ): Promise<ReorderChaptersResult> {
+    const book = await this.deps.bookRepo.findById(bookId);
+    if (!book) {
+      throw new BookNotFoundError(bookId);
+    }
+
+    const run = async (tx?: RepositoryTx): Promise<ReorderChaptersResult> => {
+      const currentBook = await this.deps.bookRepo.findById(bookId, tx);
+      if (!currentBook) {
+        throw new BookNotFoundError(bookId);
+      }
+      if (currentBook.chaptersVersion !== expectedVersion) {
+        throw new BookChaptersVersionConflictError(
+          bookId,
+          expectedVersion,
+          currentBook.chaptersVersion,
+        );
+      }
+
+      const chapters = await this.deps.chapterRepo.listByBookId(bookId, tx);
+      const currentIds = new Set(chapters.map((c) => c.id));
+      const orderedSet = new Set(orderedIds);
+      if (currentIds.size !== orderedSet.size) {
+        throw new ChaptersOrderMismatchError(bookId);
+      }
+      for (const id of orderedIds) {
+        if (!currentIds.has(id)) {
+          throw new ChaptersOrderMismatchError(bookId);
+        }
+      }
+
+      const pairs = densifyPositions(orderedIds.map((id) => ({ id })));
+      await this.deps.chapterRepo.reorder(bookId, pairs, tx);
+
+      const refreshed = await recomputeBookStatusAndBumpVersion(
+        bookId,
+        { bookRepo: this.deps.bookRepo, chapterRepo: this.deps.chapterRepo },
+        tx,
+      );
+      return { chaptersVersion: refreshed.chaptersVersion };
     };
 
     if (this.deps.uow) {

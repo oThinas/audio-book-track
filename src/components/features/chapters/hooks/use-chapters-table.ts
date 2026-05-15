@@ -88,9 +88,9 @@ export function useChaptersTable({
 
     return [
       {
-        id: "number",
-        accessorKey: "number",
-        header: "Nº",
+        id: "title",
+        accessorKey: "title",
+        header: "Título",
         enableGrouping: false,
         sortingFn: "basic",
       },

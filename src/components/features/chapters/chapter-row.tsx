@@ -1,6 +1,8 @@
 "use client";
 
-import { Loader2, Pencil, Trash2 } from "lucide-react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { ArrowDown, ArrowUp, GripVertical, Loader2, Pencil, Trash2 } from "lucide-react";
 
 import { StatusBadge } from "@/components/features/books/status-badge";
 import { Button } from "@/components/ui/button";
@@ -41,10 +43,14 @@ interface ChapterRowProps {
   readonly isLastNonPaid: boolean;
   readonly isSelectionMode: boolean;
   readonly isSelected: boolean;
+  readonly isFirst: boolean;
+  readonly isLast: boolean;
+  readonly canReorder: boolean;
   readonly focusContext: FocusWeekContext;
   readonly onSaved: (updated: ChapterRowEntity, bookStatus: ChapterStatus) => void;
   readonly onDeleted: (chapterId: string, bookDeleted: boolean) => void;
   readonly onToggleSelected: (chapterId: string, selected: boolean) => void;
+  readonly onMoveBy: (chapterId: string, delta: number) => void;
 }
 
 export function ChapterRow({
@@ -56,11 +62,23 @@ export function ChapterRow({
   isLastNonPaid,
   isSelectionMode,
   isSelected,
+  isFirst,
+  isLast,
+  canReorder,
   focusContext,
   onSaved,
   onDeleted,
   onToggleSelected,
+  onMoveBy,
 }: ChapterRowProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: chapter.id,
+  });
+  const dragStyle = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : undefined,
+  } as React.CSSProperties;
   const { mode, enterEditMode, exitEditMode } = useChapterRow({ isSelectionMode });
   const { deleteOpen, deleting, openDelete, cancelDelete, handleDelete } = useDeleteChapter({
     chapterId: chapter.id,
@@ -88,7 +106,12 @@ export function ChapterRow({
 
   return (
     <>
-      <TableRow data-testid={`chapter-row-${chapter.id}`} data-mode="view">
+      <TableRow
+        ref={setNodeRef}
+        style={dragStyle}
+        data-testid={`chapter-row-${chapter.id}`}
+        data-mode="view"
+      >
         {isSelectionMode && (
           <TableCell>
             <Checkbox
@@ -98,6 +121,20 @@ export function ChapterRow({
               aria-label={`Selecionar ${chapter.title}`}
               data-testid={`chapter-select-${chapter.id}`}
             />
+          </TableCell>
+        )}
+        {!isSelectionMode && canReorder && (
+          <TableCell className="w-8 p-0">
+            <button
+              type="button"
+              {...attributes}
+              {...listeners}
+              aria-label={`Reordenar ${chapter.title}`}
+              data-testid={`chapter-drag-${chapter.id}`}
+              className="flex h-9 w-8 cursor-grab items-center justify-center text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:cursor-grabbing"
+            >
+              <GripVertical aria-hidden="true" className="size-4" />
+            </button>
           </TableCell>
         )}
         <TableCell className="max-w-[40ch] truncate font-medium" title={chapter.title}>
@@ -125,6 +162,32 @@ export function ChapterRow({
         {!isSelectionMode && (
           <TableCell className="text-right">
             <div className="inline-flex items-center gap-1">
+              {canReorder && (
+                <>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`Mover ${chapter.title} para cima`}
+                    data-testid={`chapter-move-up-${chapter.id}`}
+                    onClick={() => onMoveBy(chapter.id, -1)}
+                    disabled={isFirst}
+                  >
+                    <ArrowUp aria-hidden="true" className="size-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`Mover ${chapter.title} para baixo`}
+                    data-testid={`chapter-move-down-${chapter.id}`}
+                    onClick={() => onMoveBy(chapter.id, 1)}
+                    disabled={isLast}
+                  >
+                    <ArrowDown aria-hidden="true" className="size-4" />
+                  </Button>
+                </>
+              )}
               <Button
                 type="button"
                 variant="ghost"
