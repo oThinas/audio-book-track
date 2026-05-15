@@ -27,9 +27,9 @@ Single-project web app (Next.js App Router): `src/`, `__tests__/`, `drizzle/migr
 
 **Purpose**: instalar dependências novas e preparar terreno.
 
-- [ ] T001 Adicionar `@dnd-kit/core` ^6.x, `@dnd-kit/sortable` ^8.x, `@dnd-kit/utilities` ^3.x ao `package.json` via `bun add @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities` e atualizar `bun.lockb`.
-- [ ] T002 [P] Verificar via Context7 MCP a API atual de `@dnd-kit/sortable` (sensores keyboard + `verticalListSortingStrategy`) e registrar trechos canônicos como referência em `specs/026-chapter-titles-reordering/research.md` no item R-006 (apenas se a API diferir do documentado).
-- [ ] T003 [P] Consultar `design.pen` via `mcp__pencil__open_document` + `mcp__pencil__get_screenshot` para drag handle, botões ↑/↓ e dialog "+ Adicionar capítulo"; salvar referência visual interna (não persistir no repo).
+- [X] T001 Adicionar `@dnd-kit/core` ^6.x, `@dnd-kit/sortable` ^8.x, `@dnd-kit/utilities` ^3.x ao `package.json` via `bun add @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities` e atualizar `bun.lockb`.
+- [X] T002 [P] Verificar via Context7 MCP a API atual de `@dnd-kit/sortable` (sensores keyboard + `verticalListSortingStrategy`) e registrar trechos canônicos como referência em `specs/026-chapter-titles-reordering/research.md` no item R-006 (apenas se a API diferir do documentado).
+- [X] T003 [P] Consultar `design.pen` via `mcp__pencil__open_document` + `mcp__pencil__get_screenshot` para drag handle, botões ↑/↓ e dialog "+ Adicionar capítulo"; salvar referência visual interna (não persistir no repo).
 
 ---
 
