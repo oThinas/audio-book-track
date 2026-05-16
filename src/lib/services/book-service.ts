@@ -1,6 +1,7 @@
 import type { Book, BookStatus } from "@/lib/domain/book";
 import type { Chapter, ChapterStatus } from "@/lib/domain/chapter";
 import { CHAPTER_TEMPLATES, type ChapterTemplateKey } from "@/lib/domain/chapter-templates";
+import { findDuplicateChapterTitle } from "@/lib/domain/chapter-title";
 import { computeEarningsCents } from "@/lib/domain/earnings";
 import { nextChapterTitle } from "@/lib/domain/next-chapter-title";
 import { densifyPositions } from "@/lib/domain/normalize-positions";
@@ -11,6 +12,7 @@ import {
   BookPaidPriceLockedError,
   BookPaidStudioLockedError,
 } from "@/lib/errors/book-errors";
+import { ChapterTitleAlreadyInUseError } from "@/lib/errors/chapter-errors";
 import { StudioReferenceInvalidError } from "@/lib/errors/studio-errors";
 import type { BookRepository, BookSummary } from "@/lib/repositories/book-repository";
 import type { ChapterRepository } from "@/lib/repositories/chapter-repository";
@@ -224,6 +226,10 @@ export class BookService {
       );
 
       const chaptersToInsert = buildChaptersForCreate(inserted.id, input.chapters);
+      const duplicate = findDuplicateChapterTitle(chaptersToInsert.map((c) => c.title));
+      if (duplicate !== null) {
+        throw new ChapterTitleAlreadyInUseError(inserted.id, duplicate);
+      }
       const chapters = await this.deps.chapterRepo.insertMany(chaptersToInsert, tx);
 
       const withStatus = await recomputeBookStatusAndBumpVersion(

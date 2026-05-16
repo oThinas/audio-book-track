@@ -3,6 +3,7 @@ import { createTestStudio } from "@tests/helpers/factories";
 import { SavepointUnitOfWork } from "@tests/helpers/test-unit-of-work";
 import { describe, expect, it } from "vitest";
 
+import { ChapterTitleAlreadyInUseError } from "@/lib/errors/chapter-errors";
 import { DrizzleBookRepository } from "@/lib/repositories/drizzle/drizzle-book-repository";
 import { DrizzleChapterRepository } from "@/lib/repositories/drizzle/drizzle-chapter-repository";
 import { DrizzleEditorRepository } from "@/lib/repositories/drizzle/drizzle-editor-repository";
@@ -115,5 +116,42 @@ describe("BookService.create — chapters input (numbered + extras)", () => {
 
     const chapters = await new DrizzleChapterRepository(db).listByBookId(result.book.id);
     expect(chapters.map((c) => c.title)).toEqual(["Capítulo 1", "Nota do tradutor"]);
+  });
+
+  it("rejeita dois extras com o mesmo título (ChapterTitleAlreadyInUseError)", async () => {
+    const db = getTestDb();
+    const { studio } = await createTestStudio(db);
+
+    await expect(
+      makeService().create({
+        title: "Livro com duplicata",
+        studioId: studio.id,
+        pricePerHourCents: 7500,
+        chapters: {
+          numbered: 0,
+          extras: [
+            { kind: "template", template: "prologue", position: "start" },
+            { kind: "template", template: "prologue", position: "end" },
+          ],
+        },
+      }),
+    ).rejects.toBeInstanceOf(ChapterTitleAlreadyInUseError);
+  });
+
+  it("rejeita extra custom colidindo com um capítulo numerado", async () => {
+    const db = getTestDb();
+    const { studio } = await createTestStudio(db);
+
+    await expect(
+      makeService().create({
+        title: "Livro com colisão custom × numerado",
+        studioId: studio.id,
+        pricePerHourCents: 7500,
+        chapters: {
+          numbered: 2,
+          extras: [{ kind: "custom", title: "Capítulo 2", position: "end" }],
+        },
+      }),
+    ).rejects.toBeInstanceOf(ChapterTitleAlreadyInUseError);
   });
 });

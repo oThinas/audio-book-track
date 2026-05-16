@@ -85,3 +85,14 @@ export class ChaptersNotInBookError extends DomainError {
     this.name = "ChaptersNotInBookError";
   }
 }
+
+export class ChapterTitleAlreadyInUseError extends DomainError {
+  readonly code = "CHAPTER_TITLE_ALREADY_IN_USE";
+  constructor(
+    readonly bookId: string,
+    readonly title: string,
+  ) {
+    super("Chapter title already in use in this book");
+    this.name = "ChapterTitleAlreadyInUseError";
+  }
+}

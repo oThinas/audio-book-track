@@ -23,3 +23,28 @@ export function validateChapterTitle(raw: string): ChapterTitleValidationResult 
   }
   return { ok: true, value: trimmed };
 }
+
+/**
+ * Lowercased + trimmed form used to compare chapter titles for uniqueness
+ * inside a book. Matches the convention used for `book.title` (where the
+ * DB UNIQUE index is on `lower(title)`).
+ */
+export function chapterTitleKey(raw: string): string {
+  return normalizeChapterTitle(raw).toLowerCase();
+}
+
+/**
+ * Returns the first title in `titles` that collides (case-insensitively,
+ * after trim) with another entry. Returns `null` when all titles are unique.
+ * Stable: yields the first colliding occurrence so error messages can quote
+ * a user-visible string.
+ */
+export function findDuplicateChapterTitle(titles: ReadonlyArray<string>): string | null {
+  const seen = new Set<string>();
+  for (const t of titles) {
+    const key = chapterTitleKey(t);
+    if (seen.has(key)) return t;
+    seen.add(key);
+  }
+  return null;
+}

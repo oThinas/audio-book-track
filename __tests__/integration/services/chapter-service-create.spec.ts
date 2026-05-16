@@ -3,7 +3,10 @@ import { createTestBook, createTestChapter } from "@tests/helpers/factories";
 import { describe, expect, it } from "vitest";
 
 import { BookChaptersVersionConflictError } from "@/lib/errors/book-errors";
-import { ChapterPositionTargetInvalidError } from "@/lib/errors/chapter-errors";
+import {
+  ChapterPositionTargetInvalidError,
+  ChapterTitleAlreadyInUseError,
+} from "@/lib/errors/chapter-errors";
 import { DrizzleBookRepository } from "@/lib/repositories/drizzle/drizzle-book-repository";
 import { DrizzleChapterRepository } from "@/lib/repositories/drizzle/drizzle-chapter-repository";
 import { DrizzleEditorRepository } from "@/lib/repositories/drizzle/drizzle-editor-repository";
@@ -105,5 +108,35 @@ describe("ChapterService.create", () => {
         expectedVersion: 999,
       }),
     ).rejects.toBeInstanceOf(BookChaptersVersionConflictError);
+  });
+
+  it("rejeita título idêntico a um capítulo existente (ChapterTitleAlreadyInUseError)", async () => {
+    const db = getTestDb();
+    const { book } = await createTestBook(db);
+    await createTestChapter(db, { bookId: book.id, title: "Prólogo", position: 0 });
+
+    const v = (await new DrizzleBookRepository(db).findById(book.id))?.chaptersVersion ?? 0;
+    await expect(
+      makeService().create(book.id, {
+        title: "Prólogo",
+        position: "end",
+        expectedVersion: v,
+      }),
+    ).rejects.toBeInstanceOf(ChapterTitleAlreadyInUseError);
+  });
+
+  it("rejeita título case-insensitive (PRÓLOGO ↔ prólogo)", async () => {
+    const db = getTestDb();
+    const { book } = await createTestBook(db);
+    await createTestChapter(db, { bookId: book.id, title: "Prólogo", position: 0 });
+
+    const v = (await new DrizzleBookRepository(db).findById(book.id))?.chaptersVersion ?? 0;
+    await expect(
+      makeService().create(book.id, {
+        title: "  prólogo  ",
+        position: "end",
+        expectedVersion: v,
+      }),
+    ).rejects.toBeInstanceOf(ChapterTitleAlreadyInUseError);
   });
 });

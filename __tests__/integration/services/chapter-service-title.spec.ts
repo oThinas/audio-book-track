@@ -7,7 +7,7 @@ import {
 } from "@tests/helpers/factories";
 import { describe, expect, it } from "vitest";
 
-import { ChapterPaidLockedError } from "@/lib/errors/chapter-errors";
+import { ChapterPaidLockedError, ChapterTitleAlreadyInUseError } from "@/lib/errors/chapter-errors";
 import { DrizzleBookRepository } from "@/lib/repositories/drizzle/drizzle-book-repository";
 import { DrizzleChapterRepository } from "@/lib/repositories/drizzle/drizzle-chapter-repository";
 import { DrizzleEditorRepository } from "@/lib/repositories/drizzle/drizzle-editor-repository";
@@ -79,5 +79,51 @@ describe("ChapterService.update — title (feature 026)", () => {
     const result = await makeService().update(chapter.id, { narratorId: narrator.id });
     expect(result.chapter.title).toBe("Capítulo 1");
     expect(result.chapter.narratorId).toBe(narrator.id);
+  });
+
+  it("rejeita edição que colida com título de outro capítulo do mesmo livro", async () => {
+    const db = getTestDb();
+    const { book } = await createTestBook(db);
+    await createTestChapter(db, { bookId: book.id, title: "Prólogo", position: 0 });
+    const { chapter } = await createTestChapter(db, {
+      bookId: book.id,
+      title: "Capítulo 1",
+      position: 1,
+      status: "pending",
+    });
+
+    await expect(makeService().update(chapter.id, { title: "Prólogo" })).rejects.toBeInstanceOf(
+      ChapterTitleAlreadyInUseError,
+    );
+  });
+
+  it("rejeita edição com colisão case-insensitive (PRÓLOGO ↔ prólogo)", async () => {
+    const db = getTestDb();
+    const { book } = await createTestBook(db);
+    await createTestChapter(db, { bookId: book.id, title: "Prólogo", position: 0 });
+    const { chapter } = await createTestChapter(db, {
+      bookId: book.id,
+      title: "Capítulo 1",
+      position: 1,
+      status: "pending",
+    });
+
+    await expect(makeService().update(chapter.id, { title: "  prólogo  " })).rejects.toBeInstanceOf(
+      ChapterTitleAlreadyInUseError,
+    );
+  });
+
+  it("permite manter o mesmo título (não conta como colisão consigo mesmo)", async () => {
+    const db = getTestDb();
+    const { book } = await createTestBook(db);
+    const { chapter } = await createTestChapter(db, {
+      bookId: book.id,
+      title: "Capítulo 1",
+      position: 0,
+      status: "pending",
+    });
+
+    const result = await makeService().update(chapter.id, { title: "Capítulo 1" });
+    expect(result.chapter.title).toBe("Capítulo 1");
   });
 });

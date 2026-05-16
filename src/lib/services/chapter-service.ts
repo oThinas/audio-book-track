@@ -1,6 +1,7 @@
 import type { BookStatus } from "@/lib/domain/book";
 import type { Chapter, ChapterStatus } from "@/lib/domain/chapter";
 import { isValidTransition } from "@/lib/domain/chapter-state-machine";
+import { chapterTitleKey } from "@/lib/domain/chapter-title";
 import { densifyPositions } from "@/lib/domain/normalize-positions";
 import { BookChaptersVersionConflictError, BookNotFoundError } from "@/lib/errors/book-errors";
 import {
@@ -13,6 +14,7 @@ import {
   ChapterReversionConfirmationRequiredError,
   ChaptersNotInBookError,
   ChaptersOrderMismatchError,
+  ChapterTitleAlreadyInUseError,
 } from "@/lib/errors/chapter-errors";
 import { EditorReferenceInvalidError } from "@/lib/errors/editor-errors";
 import { NarratorReferenceInvalidError } from "@/lib/errors/narrator-errors";
@@ -103,6 +105,18 @@ export class ChapterService {
     }
 
     await this.assertReferences(input);
+
+    if (input.title !== undefined) {
+      const trimmed = input.title.trim();
+      const siblings = await this.deps.chapterRepo.listByBookId(current.bookId);
+      const targetKey = chapterTitleKey(trimmed);
+      const collision = siblings.find(
+        (c) => c.id !== chapterId && chapterTitleKey(c.title) === targetKey,
+      );
+      if (collision) {
+        throw new ChapterTitleAlreadyInUseError(current.bookId, trimmed);
+      }
+    }
 
     const run = async (tx?: RepositoryTx): Promise<UpdateChapterResult> => {
       const updated = await this.deps.chapterRepo.update(
@@ -231,6 +245,12 @@ export class ChapterService {
       }
 
       const chapters = await this.deps.chapterRepo.listByBookId(bookId, tx);
+
+      const trimmedTitle = input.title.trim();
+      const targetKey = chapterTitleKey(trimmedTitle);
+      if (chapters.some((c) => chapterTitleKey(c.title) === targetKey)) {
+        throw new ChapterTitleAlreadyInUseError(bookId, trimmedTitle);
+      }
 
       let targetIndex: number;
       if (input.position === "start") {

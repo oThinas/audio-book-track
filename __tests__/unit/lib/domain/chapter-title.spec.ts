@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   CHAPTER_TITLE_MAX,
+  chapterTitleKey,
+  findDuplicateChapterTitle,
   normalizeChapterTitle,
   validateChapterTitle,
 } from "@/lib/domain/chapter-title";
@@ -64,5 +66,34 @@ describe("validateChapterTitle", () => {
       ok: true,
       value: "Bonjour — Première étape",
     });
+  });
+});
+
+describe("chapterTitleKey", () => {
+  it("normaliza para lowercase + trim para comparação de unicidade", () => {
+    expect(chapterTitleKey("  PRÓLOGO  ")).toBe("prólogo");
+    expect(chapterTitleKey("Prólogo")).toBe(chapterTitleKey("prólogo"));
+  });
+
+  it("preserva acentos (Prólogo ≠ Prologo)", () => {
+    expect(chapterTitleKey("Prólogo")).not.toBe(chapterTitleKey("Prologo"));
+  });
+});
+
+describe("findDuplicateChapterTitle", () => {
+  it("retorna null para lista sem duplicatas", () => {
+    expect(findDuplicateChapterTitle(["Prólogo", "Capítulo 1", "Epílogo"])).toBeNull();
+  });
+
+  it("retorna a primeira ocorrência colidente (case/trim insensitive)", () => {
+    expect(findDuplicateChapterTitle(["Prólogo", "Capítulo 1", "  prólogo  "])).toBe("  prólogo  ");
+  });
+
+  it("retorna null para lista vazia", () => {
+    expect(findDuplicateChapterTitle([])).toBeNull();
+  });
+
+  it("detecta colisão exata", () => {
+    expect(findDuplicateChapterTitle(["A", "B", "A"])).toBe("A");
   });
 });

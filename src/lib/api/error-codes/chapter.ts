@@ -42,4 +42,8 @@ export const chapterCodes = {
     status: 422,
     message: "Um ou mais capítulos não pertencem a este livro.",
   },
+  CHAPTER_TITLE_ALREADY_IN_USE: {
+    status: 409,
+    message: "Já existe um capítulo com este título neste livro.",
+  },
 } satisfies Readonly<Record<string, ErrorCatalogEntry>>;
