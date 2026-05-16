@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { apiFetch } from "@/lib/api/api-fetch";
 
@@ -43,6 +43,20 @@ export function useChaptersReorder<T extends ChapterRowEntity>({
   const [orderedChapters, setOrderedChapters] = useState<ReadonlyArray<T>>(chapters);
   const [chaptersVersion, setChaptersVersion] = useState<number>(initialChaptersVersion);
   const [isSaving, setIsSaving] = useState(false);
+  const isSavingRef = useRef(isSaving);
+  isSavingRef.current = isSaving;
+
+  // Sync with the parent-provided chapters when a non-reorder mutation
+  // (create/delete/bulk-delete) changes the set. We skip syncing while a
+  // reorder is in-flight to preserve the optimistic update.
+  useEffect(() => {
+    if (isSavingRef.current) return;
+    setOrderedChapters(chapters);
+  }, [chapters]);
+
+  useEffect(() => {
+    setChaptersVersion(initialChaptersVersion);
+  }, [initialChaptersVersion]);
 
   const apply = useCallback(
     async (newOrderedIds: ReadonlyArray<string>): Promise<void> => {

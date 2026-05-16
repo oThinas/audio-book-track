@@ -42,7 +42,7 @@ test.describe("Chapter single-delete", () => {
     await page.getByTestId(`chapter-delete-${c1}`).click();
     const dialog = page.getByTestId("chapter-delete-dialog");
     await expect(dialog).toBeVisible();
-    await expect(dialog).toContainText("Excluir capítulo 1");
+    await expect(dialog).toContainText("Excluir Capítulo 1");
 
     const [response] = await Promise.all([
       page.waitForResponse(

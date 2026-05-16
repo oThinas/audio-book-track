@@ -20,7 +20,3 @@ export async function recomputeBookStatusAndBumpVersion(
   const refreshed = await deps.bookRepo.findById(bookId, tx);
   return refreshed ?? updated;
 }
-
-// @deprecated — usar recomputeBookStatusAndBumpVersion. Mantido temporariamente
-// para callers em refator. Removido na Phase 6.
-export const recomputeBookStatus = recomputeBookStatusAndBumpVersion;

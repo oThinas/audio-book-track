@@ -41,7 +41,7 @@ test.describe("Books create", () => {
     const priceInput = dialog.getByLabel(/^valor\/hora$/i);
     await expect(priceInput).toHaveValue(/R\$\s*75,00/);
 
-    const chaptersInput = dialog.getByLabel(/^capítulos$/i);
+    const chaptersInput = dialog.getByLabel(/^capítulos numerados$/i);
     await chaptersInput.fill("5");
 
     const [postResponse] = await Promise.all([
@@ -89,7 +89,7 @@ test.describe("Books create", () => {
         title: "Dom Casmurro",
         studioId: studio.id,
         pricePerHourCents: 7500,
-        numChapters: 1,
+        chapters: { numbered: 1, extras: [] },
       },
     });
     expect(seedResponse.status()).toBe(201);

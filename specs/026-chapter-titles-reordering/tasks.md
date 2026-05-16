@@ -148,7 +148,7 @@ Single-project web app (Next.js App Router): `src/`, `__tests__/`, `drizzle/migr
 - [X] T058 [US2] Atualizar `src/components/features/chapters/chapters-table.tsx`: envolver as linhas em `<DndContext>` + `<SortableContext items={chapterIds} strategy={verticalListSortingStrategy}>`; passar `orderedChapters` do hook; tratar `onDragEnd` chamando `apply(newOrder)`. Manter `<DragOverlay>` para clone visual.
 - [X] T059 [US2] Atualizar `src/components/features/chapters/chapter-row.tsx`: usar `useSortable({ id: chapter.id })`; adicionar drag handle (`<GripVertical />` de `lucide-react`) à esquerda; adicionar botões `<Button size="icon" variant="ghost">` para ↑ e ↓ chamando `useChaptersReorder().moveBy(chapter.id, ±1)`. Atributos `aria-label` PT-BR. Estados disabled nas extremidades.
 - [X] T060 [P] [US2] Atualizar `src/components/features/chapters/hooks/use-chapters-table.ts`: integrar `useChaptersReorder` ao fluxo; expor `orderedChapters` para render; preservar lógica existente de agrupamento (feature 024) operando sobre `orderedChapters`.
-- [ ] T061 [P] [US2] Escrever E2E em `__tests__/e2e/chapter-reorder.spec.ts`: cenário 3 (drag), cenário 4 (teclado: tab → space → setas → space), cenário 5 (botões em mobile via touch), cenário 6 (reorder com capítulo `paid` — invariantes preservadas após reload); cenário de conflito 409 forçando `expectedVersion` antigo via `request.fetch`.
+- [X] T061 [P] [US2] Escrever E2E em `__tests__/e2e/chapter-reorder.spec.ts`: cenário 3 (drag), cenário 4 (teclado: tab → space → setas → space), cenário 5 (botões em mobile via touch), cenário 6 (reorder com capítulo `paid` — invariantes preservadas após reload); cenário de conflito 409 forçando `expectedVersion` antigo via `request.fetch`.
 
 **Checkpoint US2**: operador reordena capítulos por mouse, teclado e botões, em qualquer status. Conflito concorrente detectado. Dados financeiros intocados.
 
@@ -188,7 +188,7 @@ Single-project web app (Next.js App Router): `src/`, `__tests__/`, `drizzle/migr
 - [X] T079 [US3] Atualizar `src/components/features/books/hooks/use-create-book-form.ts`: substituir campo `numChapters` por `chapters: { numbered, extras }`; schema Zod alinhado com `createBookSchema`; default `numbered=0, extras=[]` (form-level requirement de pelo menos um capítulo).
 - [X] T080 [US3] Atualizar `src/components/features/books/book-edit-dialog.tsx`: **remover** o bloco `<Field>` do `<ChapterCountInput name="numChapters">` e o `<p data-testid="book-edit-chapters-reduce-hint">` (linhas atuais ~282-316). Verificar que `<ChapterCountInput>` continua importado **somente** pelo create-dialog.
 - [X] T081 [US3] Atualizar `src/components/features/books/hooks/use-edit-book-form.ts`: remover campo `numChapters` do schema, do default e do payload de submit. Atualizar testes existentes para refletir.
-- [ ] T082 [P] [US3] Escrever E2E em `__tests__/e2e/chapter-add-and-extras.spec.ts`: (a) cenário 2 do quickstart (adicionar Prólogo via dialog na página de detalhe); (b) cenário 9 (criar livro novo com 5 numerados + Prólogo + Apresentação + Epílogo, verificar ordem `[Apresentação, Prólogo, Capítulo 1..5, Epílogo]`); (c) confirmar que diálogo de edição **não** tem mais campo "Capítulos"; (d) cenário 10 (próximo Capítulo N).
+- [X] T082 [P] [US3] Escrever E2E em `__tests__/e2e/chapter-add-and-extras.spec.ts`: (a) cenário 2 do quickstart (adicionar Prólogo via dialog na página de detalhe); (b) cenário 9 (criar livro novo com 5 numerados + Prólogo + Apresentação + Epílogo, verificar ordem `[Apresentação, Prólogo, Capítulo 1..5, Epílogo]`); (c) confirmar que diálogo de edição **não** tem mais campo "Capítulos"; (d) cenário 10 (próximo Capítulo N).
 
 **Checkpoint US3**: criação atômica de livros com extras funciona; botão "+ Adicionar capítulo" na página de detalhe substitui o caminho implícito; diálogo de edição enxuto. Todas as três stories entregues.
 
@@ -198,16 +198,16 @@ Single-project web app (Next.js App Router): `src/`, `__tests__/`, `drizzle/migr
 
 **Purpose**: limpeza pós-stories, cobertura final, documentação e verificação.
 
-- [ ] T083 [P] Remover alias deprecated `recomputeBookStatus` introduzido em T028; atualizar todos os imports para `recomputeBookStatusAndBumpVersion`.
-- [ ] T084 [P] Atualizar `CLAUDE.md` na seção "Recent Changes" (topo) com entrada `026-chapter-titles-reordering: ...` listando: nova modelagem `title`/`position`, remoção de `number`, `book.chapters_version`, novo botão "+ Adicionar capítulo", remoção do `numChapters` no edit, dependências novas `@dnd-kit/*`. Atualizar seção "Active Technologies" com a entrada das novas deps.
-- [ ] T085 [P] Atualizar `docs/error-handling.md` se documentar códigos de capítulo (verificar e estender).
-- [ ] T086 Rodar `bun run lint` — zero erros e zero warnings.
-- [ ] T087 Rodar `bun run test:unit` — todos verdes; cobertura ≥ 80% geral, 100% nos helpers puros (`chapter-title`, `next-chapter-title`, `normalize-positions`).
-- [ ] T088 Rodar `bun run test:integration` — todos verdes; cobertura repositório/service ≥ 85%.
-- [ ] T089 Rodar `bun run test:e2e` — todos verdes; suíte completa schema-per-worker.
-- [ ] T090 Rodar `bun run build` — produção compila sem erros nem warnings.
-- [ ] T091 Executar manualmente os 10 cenários de `quickstart.md` em ambiente local; documentar quaisquer divergências como issue separado.
-- [ ] T092 [P] Self-review checklist (CLAUDE.md §"Self-Review antes de qualquer entrega") aplicada à PR: marcar cada item I–XVI, anexar à descrição da PR.
+- [X] T083 [P] Remover alias deprecated `recomputeBookStatus` introduzido em T028; atualizar todos os imports para `recomputeBookStatusAndBumpVersion`.
+- [X] T084 [P] Atualizar `CLAUDE.md` na seção "Recent Changes" (topo) com entrada `026-chapter-titles-reordering: ...` listando: nova modelagem `title`/`position`, remoção de `number`, `book.chapters_version`, novo botão "+ Adicionar capítulo", remoção do `numChapters` no edit, dependências novas `@dnd-kit/*`. Atualizar seção "Active Technologies" com a entrada das novas deps.
+- [X] T085 [P] Atualizar `docs/error-handling.md` se documentar códigos de capítulo (verificar e estender).
+- [X] T086 Rodar `bun run lint` — zero erros e zero warnings.
+- [X] T087 Rodar `bun run test:unit` — todos verdes; cobertura ≥ 80% geral, 100% nos helpers puros (`chapter-title`, `next-chapter-title`, `normalize-positions`).
+- [X] T088 Rodar `bun run test:integration` — todos verdes; cobertura repositório/service ≥ 85%.
+- [X] T089 Rodar `bun run test:e2e` — todos verdes; suíte completa schema-per-worker.
+- [X] T090 Rodar `bun run build` — produção compila sem erros nem warnings.
+- [X] T091 Executar manualmente os 10 cenários de `quickstart.md` em ambiente local; documentar quaisquer divergências como issue separado.
+- [X] T092 [P] Self-review checklist (CLAUDE.md §"Self-Review antes de qualquer entrega") aplicada à PR: marcar cada item I–XVI, anexar à descrição da PR.
 
 **Checkpoint final**: feature pronta para PR contra `main`. `/finish-task` invocável.
 
