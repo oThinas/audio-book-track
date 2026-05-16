@@ -29,6 +29,13 @@ interface ChapterRowEditModeProps {
   readonly editors: ReadonlyArray<ChapterRowOption>;
   readonly narratorNameById: ReadonlyMap<string, string>;
   readonly editorNameById: ReadonlyMap<string, string>;
+  /**
+   * When true, the view-mode row has an extra leading cell for the drag handle.
+   * Edit mode must render an empty placeholder cell to keep `table-fixed`
+   * columns aligned — without it cells shift one column to the left and the
+   * title input ends up in the 32px drag column.
+   */
+  readonly canReorder: boolean;
   readonly onCancel: () => void;
   readonly onSaved: (updated: ChapterRowEntity, bookStatus: ChapterStatus) => void;
 }
@@ -39,6 +46,7 @@ export function ChapterRowEditMode({
   editors,
   narratorNameById,
   editorNameById,
+  canReorder,
   onCancel,
   onSaved,
 }: ChapterRowEditModeProps) {
@@ -46,8 +54,9 @@ export function ChapterRowEditMode({
   const form = useForm<ChapterEditDraftValues>({ defaultValues: buildChapterDraft(chapter) });
   const {
     control,
+    register,
     handleSubmit,
-    formState: { isSubmitting },
+    formState: { isSubmitting, errors },
   } = form;
 
   const { nullValue, reversionPending, cancelReversion, confirmReversion, onSubmit } =
@@ -63,44 +72,36 @@ export function ChapterRowEditMode({
   return (
     <>
       <TableRow data-testid={`chapter-row-${chapter.id}`} data-mode="edit">
+        {canReorder && <TableCell className="w-8 p-0" aria-hidden="true" />}
         <TableCell className="font-medium">
           <form id={formId} onSubmit={handleSubmit(onSubmit)} className="contents" noValidate />
-          <Controller
-            name="title"
-            control={control}
-            rules={{
-              validate: (value) => {
-                const trimmed = (value ?? "").trim();
-                if (trimmed.length === 0) return "Título é obrigatório.";
-                if (trimmed.length > 100) return "Título deve ter no máximo 100 caracteres.";
-                if (/[\n\r]/.test(value)) return "Título não pode ter quebras de linha.";
-                return true;
-              },
-            }}
-            render={({ field, fieldState }) => (
-              <div className="flex flex-col gap-1">
-                <Input
-                  form={formId}
-                  data-testid={`chapter-title-${chapter.id}`}
-                  aria-label={`Título do ${chapter.title}`}
-                  value={field.value}
-                  onChange={field.onChange}
-                  onBlur={field.onBlur}
-                  disabled={isSubmitting || chapter.status === "paid"}
-                  maxLength={100}
-                />
-                {fieldState.error?.message && (
-                  <span
-                    role="alert"
-                    className="text-xs text-destructive"
-                    data-testid={`chapter-title-error-${chapter.id}`}
-                  >
-                    {fieldState.error.message}
-                  </span>
-                )}
-              </div>
+          <div className="flex flex-col gap-1">
+            <Input
+              form={formId}
+              data-testid={`chapter-title-${chapter.id}`}
+              aria-label={`Título do ${chapter.title}`}
+              disabled={isSubmitting || chapter.status === "paid"}
+              maxLength={100}
+              {...register("title", {
+                validate: (value) => {
+                  const trimmed = (value ?? "").trim();
+                  if (trimmed.length === 0) return "Título é obrigatório.";
+                  if (trimmed.length > 100) return "Título deve ter no máximo 100 caracteres.";
+                  if (/[\n\r]/.test(value)) return "Título não pode ter quebras de linha.";
+                  return true;
+                },
+              })}
+            />
+            {errors.title?.message && (
+              <span
+                role="alert"
+                className="text-xs text-destructive"
+                data-testid={`chapter-title-error-${chapter.id}`}
+              >
+                {errors.title.message}
+              </span>
             )}
-          />
+          </div>
         </TableCell>
         <TableCell>
           <Controller

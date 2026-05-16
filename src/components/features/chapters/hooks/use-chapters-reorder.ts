@@ -9,7 +9,8 @@ import type { ChapterRowEntity } from "../chapter-row";
 export interface UseChaptersReorderArgs<T extends ChapterRowEntity> {
   readonly bookId: string;
   readonly chapters: ReadonlyArray<T>;
-  readonly initialChaptersVersion: number;
+  readonly chaptersVersion: number;
+  readonly onVersionChange?: (newVersion: number) => void;
   readonly onConflict?: () => void;
 }
 
@@ -37,11 +38,11 @@ function reorderArray<T extends { id: string }>(
 export function useChaptersReorder<T extends ChapterRowEntity>({
   bookId,
   chapters,
-  initialChaptersVersion,
+  chaptersVersion,
+  onVersionChange,
   onConflict,
 }: UseChaptersReorderArgs<T>): UseChaptersReorderReturn<T> {
   const [orderedChapters, setOrderedChapters] = useState<ReadonlyArray<T>>(chapters);
-  const [chaptersVersion, setChaptersVersion] = useState<number>(initialChaptersVersion);
   const [isSaving, setIsSaving] = useState(false);
   const isSavingRef = useRef(isSaving);
   isSavingRef.current = isSaving;
@@ -53,10 +54,6 @@ export function useChaptersReorder<T extends ChapterRowEntity>({
     if (isSavingRef.current) return;
     setOrderedChapters(chapters);
   }, [chapters]);
-
-  useEffect(() => {
-    setChaptersVersion(initialChaptersVersion);
-  }, [initialChaptersVersion]);
 
   const apply = useCallback(
     async (newOrderedIds: ReadonlyArray<string>): Promise<void> => {
@@ -87,9 +84,9 @@ export function useChaptersReorder<T extends ChapterRowEntity>({
         return;
       }
 
-      setChaptersVersion(result.data.data.chaptersVersion);
+      onVersionChange?.(result.data.data.chaptersVersion);
     },
-    [bookId, chaptersVersion, onConflict, orderedChapters],
+    [bookId, chaptersVersion, onConflict, onVersionChange, orderedChapters],
   );
 
   const moveBy = useCallback(

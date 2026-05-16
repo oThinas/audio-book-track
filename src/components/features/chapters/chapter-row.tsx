@@ -93,6 +93,7 @@ export function ChapterRow({
         editors={editors}
         narratorNameById={narratorNameById}
         editorNameById={editorNameById}
+        canReorder={canReorder}
         onCancel={exitEditMode}
         onSaved={(updated, bookStatus) => {
           exitEditMode();
@@ -137,7 +138,7 @@ export function ChapterRow({
             </button>
           </TableCell>
         )}
-        <TableCell className="max-w-[40ch] truncate font-medium" title={chapter.title}>
+        <TableCell className="max-w-[56ch] truncate font-medium" title={chapter.title}>
           {chapter.title}
         </TableCell>
         <TableCell>
@@ -163,7 +164,7 @@ export function ChapterRow({
           <TableCell className="text-right">
             <div className="inline-flex items-center gap-1">
               {canReorder && (
-                <>
+                <span className="inline-flex items-center gap-1 md:hidden">
                   <Button
                     type="button"
                     variant="ghost"
@@ -186,7 +187,7 @@ export function ChapterRow({
                   >
                     <ArrowDown aria-hidden="true" className="size-4" />
                   </Button>
-                </>
+                </span>
               )}
               <Button
                 type="button"

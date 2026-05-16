@@ -1,7 +1,5 @@
 "use client";
 
-import { AlertCircle } from "lucide-react";
-
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { ChapterStatus } from "@/lib/domain/chapter";
 import { type FocusWeekContext, isOverdue } from "@/lib/domain/chapter-deadline";
@@ -51,12 +49,6 @@ export function ChapterDeadlineCell({ deadline, status, focusContext }: ChapterD
             }
           >
             {formatDeadline(deadline)}
-            {overdue ? (
-              <>
-                <AlertCircle aria-hidden="true" className="size-3.5" />
-                <span className="sr-only">Atrasado</span>
-              </>
-            ) : null}
           </span>
         }
       />

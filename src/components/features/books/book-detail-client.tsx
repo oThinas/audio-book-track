@@ -52,6 +52,7 @@ interface BookDetailClientProps {
 export function BookDetailClient({ book, narrators, editors, studios }: BookDetailClientProps) {
   const {
     state,
+    chaptersVersion,
     nonPaidChapters,
     paidCount,
     willDeleteBook,
@@ -75,6 +76,7 @@ export function BookDetailClient({ book, narrators, editors, studios }: BookDeta
     addChapterOpen,
     setAddChapterOpen,
     handleChapterCreated,
+    handleChaptersVersionBump,
     handleChaptersConflict,
   } = useBookDetail(book);
   const { grouping, setGrouping } = useChaptersGroupingState();
@@ -107,6 +109,8 @@ export function BookDetailClient({ book, narrators, editors, studios }: BookDeta
       />
       {!isSelectionMode && (
         <div className="mt-4 flex items-center justify-end gap-2">
+          <ChapterFocusWeekToggle enabled={focusEnabled} onToggle={toggleFocus} />
+          <ChapterGroupingControl grouping={grouping} onGroupingChange={setGrouping} />
           <Button
             type="button"
             variant="default"
@@ -117,13 +121,11 @@ export function BookDetailClient({ book, narrators, editors, studios }: BookDeta
             <Plus aria-hidden="true" className="size-4" />
             Adicionar capítulo
           </Button>
-          <ChapterFocusWeekToggle enabled={focusEnabled} onToggle={toggleFocus} />
-          <ChapterGroupingControl grouping={grouping} onGroupingChange={setGrouping} />
         </div>
       )}
       <ChaptersTable
         bookId={book.id}
-        chaptersVersion={book.chaptersVersion}
+        chaptersVersion={chaptersVersion}
         chapters={state.chapters}
         narrators={narrators}
         editors={editors}
@@ -135,6 +137,8 @@ export function BookDetailClient({ book, narrators, editors, studios }: BookDeta
         onChapterDeleted={handleChapterDeleted}
         onToggleSelected={handleToggleSelected}
         onToggleSelectAll={handleToggleSelectAll}
+        onChaptersVersionChange={handleChaptersVersionBump}
+        onReorderConflict={handleChaptersConflict}
       />
       <ChaptersBulkDeleteConfirm
         open={confirmOpen}
@@ -169,7 +173,7 @@ export function BookDetailClient({ book, narrators, editors, studios }: BookDeta
           open={addChapterOpen}
           onOpenChange={setAddChapterOpen}
           bookId={book.id}
-          chaptersVersion={book.chaptersVersion}
+          chaptersVersion={chaptersVersion}
           existingChapters={state.chapters.map((c) => ({ id: c.id, title: c.title }))}
           onCreated={handleChapterCreated}
           onConflict={handleChaptersConflict}

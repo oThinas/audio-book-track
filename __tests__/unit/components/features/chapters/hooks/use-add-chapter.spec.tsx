@@ -100,12 +100,12 @@ describe("useAddChapter", () => {
     });
   });
 
-  it("envia position={after} quando positionMode='after'", async () => {
+  it("envia position='start' quando positionMode='start'", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce({
       ok: true,
       data: {
         data: {
-          chapter: { id: "c-new", title: "X", position: 1, status: "pending" },
+          chapter: { id: "c-new", title: "X", position: 0, status: "pending" },
           bookStatus: "pending",
           chaptersVersion: 1,
         },
@@ -117,8 +117,7 @@ describe("useAddChapter", () => {
     act(() => {
       result.current.form.setValue("kind", "custom");
       result.current.form.setValue("title", "X");
-      result.current.form.setValue("positionMode", "after");
-      result.current.form.setValue("afterChapterId", "ch-abc");
+      result.current.form.setValue("positionMode", "start");
     });
 
     await act(async () => {
@@ -128,7 +127,7 @@ describe("useAddChapter", () => {
     expect(apiFetch).toHaveBeenCalledWith(
       "/api/v1/books/book-1/chapters",
       expect.objectContaining({
-        body: { title: "X", position: { after: "ch-abc" }, expectedVersion: 0 },
+        body: { title: "X", position: "start", expectedVersion: 0 },
       }),
     );
   });

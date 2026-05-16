@@ -52,6 +52,7 @@ interface ChaptersTableProps {
   readonly onChapterDeleted: (chapterId: string, bookDeleted: boolean) => void;
   readonly onToggleSelected: (chapterId: string, selected: boolean) => void;
   readonly onToggleSelectAll: (selected: boolean) => void;
+  readonly onChaptersVersionChange?: (newVersion: number) => void;
   readonly onReorderConflict?: () => void;
 }
 
@@ -75,12 +76,14 @@ export function ChaptersTable({
   onChapterDeleted,
   onToggleSelected,
   onToggleSelectAll,
+  onChaptersVersionChange,
   onReorderConflict,
 }: ChaptersTableProps) {
   const reorder = useChaptersReorder({
     bookId,
     chapters,
-    initialChaptersVersion: chaptersVersion,
+    chaptersVersion,
+    onVersionChange: onChaptersVersionChange,
     onConflict: onReorderConflict,
   });
   const sensors = useSensors(
@@ -186,11 +189,11 @@ export function ChaptersTable({
                   </TableHead>
                 )}
                 {!isSelectionMode && canReorder && <TableHead className="w-8" aria-hidden="true" />}
-                <TableHead className="w-[40ch]">Título</TableHead>
+                <TableHead className="w-[56ch]">Título</TableHead>
                 <TableHead className="w-40">Status</TableHead>
                 <TableHead className="w-56">Narrador</TableHead>
                 <TableHead className="w-56">Editor</TableHead>
-                <TableHead className="w-32">Prazo</TableHead>
+                <TableHead className="w-44">Prazo</TableHead>
                 <TableHead className="w-40 text-right">Horas editadas</TableHead>
                 {!isSelectionMode && <TableHead className="w-28 text-right">Ações</TableHead>}
               </TableRow>

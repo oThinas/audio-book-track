@@ -1,6 +1,7 @@
 "use client";
 
-import { Controller } from "react-hook-form";
+import { Loader2 } from "lucide-react";
+import { Controller, useWatch } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -14,16 +15,16 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import type { BookStatus } from "@/lib/domain/book";
 
 import { useAddChapter } from "./hooks/use-add-chapter";
+
+const TEMPLATE_LABELS: Record<"prologue" | "presentation" | "epilogue", string> = {
+  prologue: "Prólogo",
+  presentation: "Apresentação",
+  epilogue: "Epílogo",
+};
 
 export interface ExistingChapter {
   readonly id: string;
@@ -71,6 +72,7 @@ export function AddChapterDialog({
     register,
     formState: { isSubmitting, errors },
   } = form;
+  const kind = useWatch({ control, name: "kind" });
 
   return (
     <Dialog
@@ -83,7 +85,8 @@ export function AddChapterDialog({
         <DialogHeader>
           <DialogTitle>Adicionar capítulo</DialogTitle>
           <DialogDescription>
-            Escolha o tipo, ajuste o título sugerido e a posição no livro.
+            Escolha o tipo, o título e em qual extremidade do livro inserir. Para posicionar no
+            meio, adicione e depois reordene.
           </DialogDescription>
         </DialogHeader>
 
@@ -116,7 +119,7 @@ export function AddChapterDialog({
             />
           </div>
 
-          {form.watch("kind") === "template" && (
+          {kind === "template" && (
             <div className="flex flex-col gap-2">
               <Label>Template</Label>
               <Controller
@@ -124,8 +127,8 @@ export function AddChapterDialog({
                 control={control}
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger data-testid="add-chapter-template">
-                      <SelectValue />
+                    <SelectTrigger data-testid="add-chapter-template" className="w-full">
+                      <span className="truncate">{TEMPLATE_LABELS[field.value]}</span>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="prologue">Prólogo</SelectItem>
@@ -138,25 +141,27 @@ export function AddChapterDialog({
             </div>
           )}
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="add-chapter-title">Título</Label>
-            <Input
-              id="add-chapter-title"
-              data-testid="add-chapter-title"
-              maxLength={100}
-              {...register("title")}
-              disabled={isSubmitting}
-            />
-            {errors.title?.message && (
-              <span
-                role="alert"
-                className="text-xs text-destructive"
-                data-testid="add-chapter-title-error"
-              >
-                {errors.title.message}
-              </span>
-            )}
-          </div>
+          {kind !== "template" && (
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="add-chapter-title">Título</Label>
+              <Input
+                id="add-chapter-title"
+                data-testid="add-chapter-title"
+                maxLength={100}
+                {...register("title")}
+                disabled={isSubmitting}
+              />
+              {errors.title?.message && (
+                <span
+                  role="alert"
+                  className="text-xs text-destructive"
+                  data-testid="add-chapter-title-error"
+                >
+                  {errors.title.message}
+                </span>
+              )}
+            </div>
+          )}
 
           <div className="flex flex-col gap-2">
             <Label>Posição</Label>
@@ -177,52 +182,19 @@ export function AddChapterDialog({
                     <RadioGroupItem value="end" data-testid="add-chapter-position-end" />
                     No fim
                   </Label>
-                  <Label className="flex items-center gap-2">
-                    <RadioGroupItem value="after" data-testid="add-chapter-position-after" />
-                    Depois de…
-                  </Label>
                 </RadioGroup>
               )}
             />
-            {form.watch("positionMode") === "after" && (
-              <Controller
-                name="afterChapterId"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    value={field.value ?? undefined}
-                    onValueChange={(value) => field.onChange(value)}
-                  >
-                    <SelectTrigger data-testid="add-chapter-after">
-                      <SelectValue placeholder="Selecionar capítulo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {existingChapters.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>
-                          {c.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-            )}
-            {errors.afterChapterId?.message && (
-              <span
-                role="alert"
-                className="text-xs text-destructive"
-                data-testid="add-chapter-after-error"
-              >
-                {errors.afterChapterId.message}
-              </span>
-            )}
+            <span className="text-xs text-muted-foreground">
+              Para inserir entre capítulos, adicione no início ou no fim e use reordenar.
+            </span>
           </div>
         </form>
 
-        <DialogFooter>
+        <DialogFooter className="mt-6">
           <Button
             type="button"
-            variant="ghost"
+            variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isSubmitting}
           >
@@ -234,7 +206,8 @@ export function AddChapterDialog({
             disabled={isSubmitting}
             data-testid="add-chapter-submit"
           >
-            Adicionar
+            {isSubmitting && <Loader2 aria-hidden="true" className="animate-spin" />}
+            Confirmar
           </Button>
         </DialogFooter>
       </DialogContent>

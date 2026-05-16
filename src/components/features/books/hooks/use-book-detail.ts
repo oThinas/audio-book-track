@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ChapterRowData } from "@/components/features/chapters/chapters-table";
 import { apiFetch } from "@/lib/api/api-fetch";
 import type { BookStatus } from "@/lib/domain/book";
@@ -21,6 +21,7 @@ interface DetailState {
 
 export interface UseBookDetailReturn {
   readonly state: DetailState;
+  readonly chaptersVersion: number;
   readonly nonPaidChapters: ReadonlyArray<ChapterRowData>;
   readonly paidCount: number;
   readonly willDeleteBook: boolean;
@@ -48,7 +49,11 @@ export interface UseBookDetailReturn {
   readonly handleBulkDeleteConfirm: () => Promise<void>;
   readonly addChapterOpen: boolean;
   readonly setAddChapterOpen: (next: boolean) => void;
-  readonly handleChapterCreated: () => void;
+  readonly handleChapterCreated: (result: {
+    readonly chaptersVersion: number;
+    readonly bookStatus: BookStatus;
+  }) => void;
+  readonly handleChaptersVersionBump: (newVersion: number) => void;
   readonly handleChaptersConflict: () => void;
 }
 
@@ -76,6 +81,26 @@ export function useBookDetail(book: BookDetailData): UseBookDetailReturn {
     chapters: book.chapters,
     pdfUrl: book.pdfUrl,
   });
+  const [chaptersVersion, setChaptersVersion] = useState<number>(book.chaptersVersion);
+
+  // Re-sync local state whenever the server-rendered `book` prop changes
+  // (e.g. after `router.refresh()` following create/edit). Without this the
+  // useState initial value would freeze the first render's chapters and the
+  // user would have to reload the page to see new chapters.
+  useEffect(() => {
+    setState({
+      status: book.status,
+      chapters: book.chapters,
+      pdfUrl: book.pdfUrl,
+    });
+  }, [book.status, book.chapters, book.pdfUrl]);
+
+  // Sync the lifted chaptersVersion when the server-rendered token changes.
+  // This catches up edit/delete/bulk-delete (which bump on the server but
+  // don't return the new token) once their `router.refresh()` completes.
+  useEffect(() => {
+    setChaptersVersion(book.chaptersVersion);
+  }, [book.chaptersVersion]);
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(new Set());
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -95,6 +120,9 @@ export function useBookDetail(book: BookDetailData): UseBookDetailReturn {
       status: bookStatus,
       chapters: prev.chapters.map((chapter) => (chapter.id === updated.id ? updated : chapter)),
     }));
+    // Edit bumps `book.chapters_version` on the server but the PATCH response
+    // doesn't return it. Refetch so the sync effect picks up the new token.
+    router.refresh();
   }
 
   function applyBookUpdate(detail: UpdatedBookDetail) {
@@ -128,6 +156,9 @@ export function useBookDetail(book: BookDetailData): UseBookDetailReturn {
         chapters: remaining,
       };
     });
+    // Delete bumps `book.chapters_version` on the server. The 204 response
+    // can't carry it, so refresh and let the sync effect catch up.
+    router.refresh();
   }
 
   function handlePdfUrlChange(next: string | null) {
@@ -135,8 +166,16 @@ export function useBookDetail(book: BookDetailData): UseBookDetailReturn {
     router.refresh();
   }
 
-  function handleChapterCreated() {
+  function handleChapterCreated(result: {
+    readonly chaptersVersion: number;
+    readonly bookStatus: BookStatus;
+  }) {
+    setChaptersVersion(result.chaptersVersion);
     router.refresh();
+  }
+
+  function handleChaptersVersionBump(newVersion: number) {
+    setChaptersVersion(newVersion);
   }
 
   function handleChaptersConflict() {
@@ -189,6 +228,9 @@ export function useBookDetail(book: BookDetailData): UseBookDetailReturn {
       });
       setConfirmOpen(false);
       exitSelectionMode();
+      // Bulk-delete bumps `book.chapters_version` on the server. Refresh so
+      // the sync effect picks up the new token for the next mutation.
+      router.refresh();
     } finally {
       setBulkDeleting(false);
     }
@@ -196,6 +238,7 @@ export function useBookDetail(book: BookDetailData): UseBookDetailReturn {
 
   return {
     state,
+    chaptersVersion,
     nonPaidChapters,
     paidCount,
     willDeleteBook,
@@ -220,6 +263,7 @@ export function useBookDetail(book: BookDetailData): UseBookDetailReturn {
     addChapterOpen,
     setAddChapterOpen,
     handleChapterCreated,
+    handleChaptersVersionBump,
     handleChaptersConflict,
   };
 }

@@ -12,7 +12,7 @@ import {
 } from "@tanstack/react-table";
 import { useMemo } from "react";
 
-import { countByStatus, sumChapterEarningsCents } from "@/lib/domain/chapter-aggregation";
+import { sumChapterEarningsCents } from "@/lib/domain/chapter-aggregation";
 import { type GroupingDimension, UNASSIGNED_GROUP_KEY } from "@/lib/url/grouping-param";
 
 import type { ChapterRowEntity } from "../chapter-row";
@@ -51,6 +51,22 @@ export function useChaptersTable({
 }: UseChaptersTableArgs): UseChaptersTableReturn {
   const groupingArray = useMemo<GroupingState>(() => [...grouping], [grouping]);
 
+  // When grouping by narrator or editor, push the chapters with no assignment
+  // to the end so the "Sem atribuição" bucket renders last. TanStack groups
+  // rows in their input order (we don't run a sorted row model), so we have
+  // to massage the data before handing it to the table. Stable sort preserves
+  // the user's ordering within each group.
+  const orderedChapters = useMemo<ReadonlyArray<ChapterRowEntity>>(() => {
+    const dim = groupingArray[0];
+    if (dim !== "narrator" && dim !== "editor") return chapters;
+    return [...chapters].sort((a, b) => {
+      const aHas = (dim === "narrator" ? a.narrator : a.editor) !== null;
+      const bHas = (dim === "narrator" ? b.narrator : b.editor) !== null;
+      if (aHas === bHas) return 0;
+      return aHas ? -1 : 1;
+    });
+  }, [chapters, groupingArray]);
+
   const columns = useMemo<ColumnDef<ChapterRowEntity>[]>(() => {
     const groupAwareSecondsSort = (rowA: Row<ChapterRowEntity>, rowB: Row<ChapterRowEntity>) => {
       // Push UNASSIGNED bucket to the end of its level (FR-006) — only for grouped rows
@@ -76,14 +92,6 @@ export function useChaptersTable({
     ): number => {
       const leafChapters = leafRows.map((leaf) => leaf.original);
       return sumChapterEarningsCents(leafChapters, { pricePerHourCents });
-    };
-
-    const countByStatusAggregation = (
-      _columnId: string,
-      leafRows: ReadonlyArray<Row<ChapterRowEntity>>,
-    ) => {
-      const leafChapters = leafRows.map((leaf) => leaf.original);
-      return countByStatus(leafChapters);
     };
 
     return [
@@ -131,20 +139,11 @@ export function useChaptersTable({
         enableSorting: false,
         aggregationFn: sumEarningsAggregation,
       },
-      {
-        id: "statusBreakdown",
-        accessorFn: (row) => row.status,
-        header: "Status breakdown",
-        enableGrouping: false,
-        enableSorting: false,
-        // biome-ignore lint/suspicious/noExplicitAny: TanStack v8 typing
-        aggregationFn: countByStatusAggregation as any,
-      },
     ];
   }, [pricePerHourCents]);
 
   const table = useReactTable({
-    data: chapters as ChapterRowEntity[],
+    data: orderedChapters as ChapterRowEntity[],
     columns,
     state: {
       grouping: groupingArray,

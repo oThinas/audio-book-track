@@ -8,7 +8,7 @@ import type { BookStatus } from "@/lib/domain/book";
 import type { ChapterStatus } from "@/lib/domain/chapter";
 import { nextChapterTitle } from "@/lib/domain/next-chapter-title";
 
-export type AddChapterPosition = "start" | "end" | { readonly after: string };
+export type AddChapterPosition = "start" | "end";
 
 export type AddChapterKind = "numbered" | "template" | "custom";
 
@@ -16,8 +16,7 @@ export interface AddChapterFormValues {
   readonly kind: AddChapterKind;
   readonly template: "prologue" | "epilogue" | "presentation";
   readonly title: string;
-  readonly positionMode: "start" | "end" | "after";
-  readonly afterChapterId: string | null;
+  readonly positionMode: AddChapterPosition;
 }
 
 export interface UseAddChapterArgs {
@@ -71,10 +70,9 @@ export function useAddChapter({
       template: "prologue",
       title: defaultTitle,
       positionMode: "end",
-      afterChapterId: null,
     },
   });
-  const { setValue, watch, handleSubmit, reset, getValues } = form;
+  const { setValue, watch, handleSubmit, reset, getValues, clearErrors } = form;
   const kind = watch("kind");
   const template = watch("template");
   const lastSyncedKindRef = useRef<{ kind: AddChapterKind; template: string } | null>(null);
@@ -104,6 +102,7 @@ export function useAddChapter({
   }, [kind, template, titlesKey, setValue, getValues]);
 
   async function onSubmit(values: AddChapterFormValues) {
+    clearErrors();
     const trimmed = values.title.trim();
     if (trimmed.length === 0) {
       form.setError("title", { type: "manual", message: "Título é obrigatório." });
@@ -124,21 +123,7 @@ export function useAddChapter({
       return;
     }
 
-    let position: AddChapterPosition;
-    if (values.positionMode === "start") {
-      position = "start";
-    } else if (values.positionMode === "end") {
-      position = "end";
-    } else {
-      if (!values.afterChapterId) {
-        form.setError("afterChapterId", {
-          type: "manual",
-          message: "Escolha o capítulo de referência.",
-        });
-        return;
-      }
-      position = { after: values.afterChapterId };
-    }
+    const position: AddChapterPosition = values.positionMode;
 
     const result = await apiFetch<CreateResponse>(`/api/v1/books/${bookId}/chapters`, {
       method: "POST",

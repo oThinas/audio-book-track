@@ -29,7 +29,7 @@ describe("useChaptersReorder", () => {
     vi.clearAllMocks();
   });
 
-  it("aplica nova ordem otimisticamente antes da resposta do servidor", async () => {
+  it("aplica nova ordem otimisticamente e propaga novo token via onVersionChange", async () => {
     let resolveFetch: ((value: unknown) => void) | undefined;
     vi.mocked(apiFetch).mockReturnValueOnce(
       new Promise((resolve) => {
@@ -37,12 +37,14 @@ describe("useChaptersReorder", () => {
       }) as ReturnType<typeof apiFetch>,
     );
 
+    const onVersionChange = vi.fn();
     const chapters = [makeChapter("a", "A", 0), makeChapter("b", "B", 1), makeChapter("c", "C", 2)];
     const { result } = renderHook(() =>
       useChaptersReorder({
         bookId: "book-1",
         chapters,
-        initialChaptersVersion: 0,
+        chaptersVersion: 0,
+        onVersionChange,
       }),
     );
 
@@ -63,7 +65,7 @@ describe("useChaptersReorder", () => {
       await Promise.resolve();
     });
 
-    expect(result.current.chaptersVersion).toBe(1);
+    expect(onVersionChange).toHaveBeenCalledWith(1);
   });
 
   it("reverte ordem quando apiFetch falha", async () => {
@@ -79,7 +81,7 @@ describe("useChaptersReorder", () => {
       useChaptersReorder({
         bookId: "book-1",
         chapters,
-        initialChaptersVersion: 0,
+        chaptersVersion: 0,
         onConflict,
       }),
     );
@@ -101,7 +103,7 @@ describe("useChaptersReorder", () => {
 
     const chapters = [makeChapter("a", "A", 0), makeChapter("b", "B", 1), makeChapter("c", "C", 2)];
     const { result } = renderHook(() =>
-      useChaptersReorder({ bookId: "book-1", chapters, initialChaptersVersion: 0 }),
+      useChaptersReorder({ bookId: "book-1", chapters, chaptersVersion: 0 }),
     );
 
     await act(async () => {
@@ -116,7 +118,7 @@ describe("useChaptersReorder", () => {
   it("moveBy é no-op nas extremidades", async () => {
     const chapters = [makeChapter("a", "A", 0), makeChapter("b", "B", 1)];
     const { result } = renderHook(() =>
-      useChaptersReorder({ bookId: "book-1", chapters, initialChaptersVersion: 0 }),
+      useChaptersReorder({ bookId: "book-1", chapters, chaptersVersion: 0 }),
     );
 
     await act(async () => {
