@@ -9,6 +9,7 @@ import {
   ChapterNarratorRequiredError,
   ChapterNotFoundError,
   ChapterPaidLockedError,
+  ChapterPositionTargetInvalidError,
   ChapterReversionConfirmationRequiredError,
   ChaptersNotInBookError,
   ChaptersOrderMismatchError,
@@ -60,6 +61,20 @@ export interface BulkDeleteChaptersResult {
 }
 
 export interface ReorderChaptersResult {
+  readonly chaptersVersion: number;
+}
+
+export type CreateChapterPositionTarget = "start" | "end" | { readonly after: string };
+
+export interface CreateChapterServiceInput {
+  readonly title: string;
+  readonly position: CreateChapterPositionTarget;
+  readonly expectedVersion: number;
+}
+
+export interface CreateChapterResult {
+  readonly chapter: Chapter;
+  readonly bookStatus: BookStatus;
   readonly chaptersVersion: number;
 }
 
@@ -188,6 +203,78 @@ export class ChapterService {
         tx,
       );
       return { bookId, bookDeleted: false, bookStatus: refreshed.status, deletedCount };
+    };
+
+    if (this.deps.uow) {
+      return this.deps.uow.transaction(run);
+    }
+    return run();
+  }
+
+  async create(bookId: string, input: CreateChapterServiceInput): Promise<CreateChapterResult> {
+    const book = await this.deps.bookRepo.findById(bookId);
+    if (!book) {
+      throw new BookNotFoundError(bookId);
+    }
+
+    const run = async (tx?: RepositoryTx): Promise<CreateChapterResult> => {
+      const currentBook = await this.deps.bookRepo.findById(bookId, tx);
+      if (!currentBook) {
+        throw new BookNotFoundError(bookId);
+      }
+      if (currentBook.chaptersVersion !== input.expectedVersion) {
+        throw new BookChaptersVersionConflictError(
+          bookId,
+          input.expectedVersion,
+          currentBook.chaptersVersion,
+        );
+      }
+
+      const chapters = await this.deps.chapterRepo.listByBookId(bookId, tx);
+
+      let targetIndex: number;
+      if (input.position === "start") {
+        targetIndex = 0;
+      } else if (input.position === "end") {
+        targetIndex = chapters.length;
+      } else {
+        const afterId = input.position.after;
+        const idx = chapters.findIndex((c) => c.id === afterId);
+        if (idx < 0) {
+          throw new ChapterPositionTargetInvalidError(afterId);
+        }
+        targetIndex = idx + 1;
+      }
+
+      const newChapters = [...chapters];
+      const [inserted] = await this.deps.chapterRepo.insertMany(
+        [
+          {
+            bookId,
+            title: input.title,
+            position: targetIndex,
+            status: "pending",
+          },
+        ],
+        tx,
+      );
+      newChapters.splice(targetIndex, 0, inserted);
+
+      const pairs = densifyPositions(newChapters.map((c) => ({ id: c.id })));
+      await this.deps.chapterRepo.reorder(bookId, pairs, tx);
+
+      const refreshed = await recomputeBookStatusAndBumpVersion(
+        bookId,
+        { bookRepo: this.deps.bookRepo, chapterRepo: this.deps.chapterRepo },
+        tx,
+      );
+
+      const reloaded = await this.deps.chapterRepo.findById(inserted.id, tx);
+      return {
+        chapter: reloaded ?? inserted,
+        bookStatus: refreshed.status,
+        chaptersVersion: refreshed.chaptersVersion,
+      };
     };
 
     if (this.deps.uow) {

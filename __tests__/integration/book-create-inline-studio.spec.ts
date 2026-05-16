@@ -91,7 +91,7 @@ describe("Inline studio + book creation flow", () => {
         studioId: studioBody.data.id,
         inlineStudioId: studioBody.data.id,
         pricePerHourCents: 7500,
-        numChapters: 3,
+        chapters: { numbered: 3, extras: [] },
       }),
       ROUTE_CTX,
     );
@@ -123,7 +123,7 @@ describe("Inline studio + book creation flow", () => {
         studioId: created.id,
         inlineStudioId: created.id,
         pricePerHourCents: 7500,
-        numChapters: 1,
+        chapters: { numbered: 1, extras: [] },
       }),
       ROUTE_CTX,
     );

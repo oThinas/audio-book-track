@@ -46,6 +46,10 @@ export interface UseBookDetailReturn {
   readonly handleToggleSelected: (chapterId: string, selected: boolean) => void;
   readonly handleToggleSelectAll: (selected: boolean) => void;
   readonly handleBulkDeleteConfirm: () => Promise<void>;
+  readonly addChapterOpen: boolean;
+  readonly setAddChapterOpen: (next: boolean) => void;
+  readonly handleChapterCreated: () => void;
+  readonly handleChaptersConflict: () => void;
 }
 
 function recomputeAggregates(
@@ -77,6 +81,7 @@ export function useBookDetail(book: BookDetailData): UseBookDetailReturn {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [addChapterOpen, setAddChapterOpen] = useState(false);
 
   const nonPaidChapters = state.chapters.filter((c) => c.status !== "paid");
   const paidCount = state.chapters.length - nonPaidChapters.length;
@@ -127,6 +132,14 @@ export function useBookDetail(book: BookDetailData): UseBookDetailReturn {
 
   function handlePdfUrlChange(next: string | null) {
     setState((prev) => ({ ...prev, pdfUrl: next }));
+    router.refresh();
+  }
+
+  function handleChapterCreated() {
+    router.refresh();
+  }
+
+  function handleChaptersConflict() {
     router.refresh();
   }
 
@@ -204,5 +217,9 @@ export function useBookDetail(book: BookDetailData): UseBookDetailReturn {
     handleToggleSelected,
     handleToggleSelectAll,
     handleBulkDeleteConfirm,
+    addChapterOpen,
+    setAddChapterOpen,
+    handleChapterCreated,
+    handleChaptersConflict,
   };
 }

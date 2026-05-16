@@ -31,13 +31,11 @@ import type { Studio } from "@/lib/domain/studio";
 import { type UpdateBookInput, updateBookSchema } from "@/lib/schemas/book";
 import { cn, formatCentsBRL } from "@/lib/utils";
 
-import { ChapterCountInput } from "./chapter-count-input";
 import { useEditBookForm } from "./hooks/use-edit-book-form";
 import { StudioInlineCreator } from "./studio-inline-creator";
 
 const PRICE_PER_HOUR_MIN_CENTS = 1;
 const PRICE_PER_HOUR_MAX_CENTS = 999_999;
-const NUM_CHAPTERS_MAX = 999;
 
 export interface BookEditValues {
   readonly id: string;
@@ -91,7 +89,6 @@ export function BookEditDialog({
       title: book.title,
       studioId: book.studioId,
       pricePerHourCents: book.pricePerHourCents,
-      numChapters: book.currentChapters,
     },
   });
   const {
@@ -108,8 +105,6 @@ export function BookEditDialog({
     setStudioPickerOpen,
     showInlineCreator,
     setShowInlineCreator,
-    reduceHint,
-    setReduceHint,
     handleInlineStudioCreated,
     handleOpenChange,
     onSubmit,
@@ -244,78 +239,40 @@ export function BookEditDialog({
               <FieldError>{errors.studioId?.message}</FieldError>
             </Field>
 
-            <div className="grid grid-cols-[auto_1fr] gap-4">
-              <Field data-invalid={errors.pricePerHourCents ? true : undefined}>
-                <FieldLabel htmlFor="book-edit-price">Valor/hora</FieldLabel>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger
-                      render={
-                        <Controller
-                          name="pricePerHourCents"
-                          control={control}
-                          render={({ field }) => (
-                            <MoneyInput
-                              id="book-edit-price"
-                              value={field.value ?? 0}
-                              onChange={field.onChange}
-                              onBlur={field.onBlur}
-                              min={PRICE_PER_HOUR_MIN_CENTS}
-                              max={PRICE_PER_HOUR_MAX_CENTS}
-                              disabled={isSubmitting || priceDisabled}
-                              aria-invalid={errors.pricePerHourCents ? true : undefined}
-                              data-testid="book-edit-price-input"
-                            />
-                          )}
-                        />
-                      }
-                    />
-                    {priceDisabled && (
-                      <TooltipContent>
-                        Valor/hora bloqueado: o livro tem capítulo pago.
-                      </TooltipContent>
-                    )}
-                  </Tooltip>
-                </TooltipProvider>
-                <FieldError>{errors.pricePerHourCents?.message}</FieldError>
-              </Field>
-
-              <Field data-invalid={errors.numChapters ? true : undefined}>
-                <FieldLabel htmlFor="book-edit-chapters">Capítulos</FieldLabel>
-                <Controller
-                  name="numChapters"
-                  control={control}
-                  render={({ field }) => (
-                    <ChapterCountInput
-                      id="book-edit-chapters"
-                      value={field.value ?? book.currentChapters}
-                      onChange={(next) => {
-                        if (next < book.currentChapters) {
-                          setReduceHint(true);
-                          field.onChange(book.currentChapters);
-                          return;
-                        }
-                        setReduceHint(false);
-                        field.onChange(next);
-                      }}
-                      min={book.currentChapters}
-                      max={NUM_CHAPTERS_MAX}
-                      disabled={isSubmitting}
-                      aria-invalid={errors.numChapters ? true : undefined}
-                    />
+            <Field data-invalid={errors.pricePerHourCents ? true : undefined}>
+              <FieldLabel htmlFor="book-edit-price">Valor/hora</FieldLabel>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Controller
+                        name="pricePerHourCents"
+                        control={control}
+                        render={({ field }) => (
+                          <MoneyInput
+                            id="book-edit-price"
+                            value={field.value ?? 0}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            min={PRICE_PER_HOUR_MIN_CENTS}
+                            max={PRICE_PER_HOUR_MAX_CENTS}
+                            disabled={isSubmitting || priceDisabled}
+                            aria-invalid={errors.pricePerHourCents ? true : undefined}
+                            data-testid="book-edit-price-input"
+                          />
+                        )}
+                      />
+                    }
+                  />
+                  {priceDisabled && (
+                    <TooltipContent>
+                      Valor/hora bloqueado: o livro tem capítulo pago.
+                    </TooltipContent>
                   )}
-                />
-                {reduceHint && (
-                  <p
-                    className="mt-1 text-xs text-muted-foreground"
-                    data-testid="book-edit-chapters-reduce-hint"
-                  >
-                    Para reduzir, use &quot;Excluir capítulos&quot;.
-                  </p>
-                )}
-                <FieldError>{errors.numChapters?.message}</FieldError>
-              </Field>
-            </div>
+                </Tooltip>
+              </TooltipProvider>
+              <FieldError>{errors.pricePerHourCents?.message}</FieldError>
+            </Field>
           </FieldGroup>
 
           <DialogFooter className="mt-6">

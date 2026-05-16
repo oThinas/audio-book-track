@@ -3,11 +3,11 @@ import { createTestBook, createTestChapter, createTestStudio } from "@tests/help
 import { jsonRequest } from "@tests/helpers/http";
 import { wrapForTest } from "@tests/helpers/route-context";
 import { SavepointUnitOfWork } from "@tests/helpers/test-unit-of-work";
-import { count, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 
 import { type BookByIdRouteDeps, handleBookUpdate } from "@/app/api/v1/books/[id]/route";
-import { book as bookTable, chapter as chapterTable } from "@/lib/db/schema";
+import { book as bookTable } from "@/lib/db/schema";
 import { DrizzleBookRepository } from "@/lib/repositories/drizzle/drizzle-book-repository";
 import { DrizzleChapterRepository } from "@/lib/repositories/drizzle/drizzle-chapter-repository";
 import { DrizzleEditorRepository } from "@/lib/repositories/drizzle/drizzle-editor-repository";
@@ -84,49 +84,17 @@ describe("PATCH /api/v1/books/:id (handleBookUpdate)", () => {
     expect(refreshed.title).toBe("Novo");
   });
 
-  it("appends Y-X chapters atomically when numChapters increases", async () => {
+  it("rejeita campo legado numChapters no PATCH (validation 422)", async () => {
     const db = getTestDb();
     const { book } = await createTestBook(db);
-    await createTestChapter(db, { bookId: book.id, number: 1, status: "pending" });
-    await createTestChapter(db, { bookId: book.id, number: 2, status: "pending" });
+    await createTestChapter(db, { bookId: book.id, title: "Capítulo 1", position: 0 });
 
     const PATCH = buildPatch(session);
     const response = await PATCH(jsonRequest(URL, { numChapters: 5 }, { method: "PATCH" }), {
       params: Promise.resolve({ id: book.id }),
     });
-    expect(response.status).toBe(200);
-
-    const [{ n }] = await db
-      .select({ n: count(chapterTable.id) })
-      .from(chapterTable)
-      .where(eq(chapterTable.bookId, book.id));
-    expect(n).toBe(5);
-
-    const titles = (
-      await db
-        .select({ title: chapterTable.title })
-        .from(chapterTable)
-        .where(eq(chapterTable.bookId, book.id))
-    )
-      .map((r) => r.title)
-      .sort();
-    expect(titles).toEqual(["Capítulo 1", "Capítulo 2", "Capítulo 3", "Capítulo 4", "Capítulo 5"]);
-  });
-
-  it("returns 422 CANNOT_REDUCE_CHAPTERS when numChapters < current total", async () => {
-    const db = getTestDb();
-    const { book } = await createTestBook(db);
-    await createTestChapter(db, { bookId: book.id, number: 1, status: "pending" });
-    await createTestChapter(db, { bookId: book.id, number: 2, status: "pending" });
-    await createTestChapter(db, { bookId: book.id, number: 3, status: "pending" });
-
-    const PATCH = buildPatch(session);
-    const response = await PATCH(jsonRequest(URL, { numChapters: 2 }, { method: "PATCH" }), {
-      params: Promise.resolve({ id: book.id }),
-    });
+    // Schema sem numChapters → "Pelo menos um campo deve ser informado" (validation 422).
     expect(response.status).toBe(422);
-    const body = await response.json();
-    expect(body.error.code).toBe("BOOK_CANNOT_REDUCE_CHAPTERS");
   });
 
   it("returns 409 BOOK_PAID_PRICE_LOCKED when changing pricePerHourCents with a paid chapter", async () => {

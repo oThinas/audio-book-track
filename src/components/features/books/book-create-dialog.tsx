@@ -30,7 +30,8 @@ import type { Studio } from "@/lib/domain/studio";
 import { type CreateBookInput, createBookSchema } from "@/lib/schemas/book";
 import { cn, formatCentsBRL } from "@/lib/utils";
 
-import { CHAPTER_COUNT_MAX, CHAPTER_COUNT_MIN, ChapterCountInput } from "./chapter-count-input";
+import { type BookExtraInputValue, BookExtrasInput } from "./book-extras-input";
+import { CHAPTER_COUNT_MAX, ChapterCountInput } from "./chapter-count-input";
 import { useCreateBookForm } from "./hooks/use-create-book-form";
 import { StudioInlineCreator } from "./studio-inline-creator";
 
@@ -42,7 +43,11 @@ export interface CreatedBook {
   readonly title: string;
   readonly studio: { readonly id: string; readonly name: string };
   readonly pricePerHourCents: number;
-  readonly chapters: ReadonlyArray<{ readonly id: string; readonly number: number }>;
+  readonly chapters: ReadonlyArray<{
+    readonly id: string;
+    readonly title: string;
+    readonly position: number;
+  }>;
 }
 
 interface BookCreateDialogProps {
@@ -65,7 +70,7 @@ export function BookCreateDialog({
       title: "",
       studioId: "",
       pricePerHourCents: 0,
-      numChapters: 1,
+      chapters: { numbered: 1, extras: [] },
     },
   });
   const {
@@ -219,26 +224,42 @@ export function BookCreateDialog({
                 <FieldError>{errors.pricePerHourCents?.message}</FieldError>
               </Field>
 
-              <Field data-invalid={errors.numChapters ? true : undefined}>
-                <FieldLabel htmlFor="book-chapters">Capítulos</FieldLabel>
+              <Field data-invalid={errors.chapters?.numbered ? true : undefined}>
+                <FieldLabel htmlFor="book-chapters">Capítulos numerados</FieldLabel>
                 <Controller
-                  name="numChapters"
+                  name="chapters.numbered"
                   control={control}
                   render={({ field }) => (
                     <ChapterCountInput
                       id="book-chapters"
-                      value={field.value ?? CHAPTER_COUNT_MIN}
+                      value={field.value ?? 0}
                       onChange={field.onChange}
-                      min={CHAPTER_COUNT_MIN}
+                      min={0}
                       max={CHAPTER_COUNT_MAX}
                       disabled={isSubmitting}
-                      aria-invalid={errors.numChapters ? true : undefined}
+                      aria-invalid={errors.chapters?.numbered ? true : undefined}
                     />
                   )}
                 />
-                <FieldError>{errors.numChapters?.message}</FieldError>
+                <FieldError>{errors.chapters?.numbered?.message}</FieldError>
               </Field>
             </div>
+
+            <Field>
+              <FieldLabel>Capítulos extras</FieldLabel>
+              <Controller
+                name="chapters.extras"
+                control={control}
+                render={({ field }) => (
+                  <BookExtrasInput
+                    value={(field.value ?? []) as ReadonlyArray<BookExtraInputValue>}
+                    onChange={(next) => field.onChange(next)}
+                    disabled={isSubmitting}
+                  />
+                )}
+              />
+              {errors.chapters?.message && <FieldError>{errors.chapters.message}</FieldError>}
+            </Field>
           </FieldGroup>
 
           <DialogFooter className="mt-6">

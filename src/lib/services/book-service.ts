@@ -1,10 +1,11 @@
 import type { Book, BookStatus } from "@/lib/domain/book";
 import type { Chapter, ChapterStatus } from "@/lib/domain/chapter";
+import { CHAPTER_TEMPLATES, type ChapterTemplateKey } from "@/lib/domain/chapter-templates";
 import { computeEarningsCents } from "@/lib/domain/earnings";
 import { nextChapterTitle } from "@/lib/domain/next-chapter-title";
+import { densifyPositions } from "@/lib/domain/normalize-positions";
 import { currentWeekRangeInAppTimezone, todayInAppTimezone } from "@/lib/domain/timezone";
 import {
-  BookCannotReduceChaptersError,
   BookInlineStudioInvalidError,
   BookNotFoundError,
   BookPaidPriceLockedError,
@@ -29,11 +30,24 @@ export interface BookServiceDeps {
   readonly uow: UnitOfWork;
 }
 
+export type CreateBookExtra =
+  | {
+      readonly kind: "template";
+      readonly template: ChapterTemplateKey;
+      readonly position: "start" | "end";
+    }
+  | { readonly kind: "custom"; readonly title: string; readonly position: "start" | "end" };
+
+export interface CreateBookChaptersInput {
+  readonly numbered: number;
+  readonly extras: ReadonlyArray<CreateBookExtra>;
+}
+
 export interface CreateBookServiceInput {
   readonly title: string;
   readonly studioId: string;
   readonly pricePerHourCents: number;
-  readonly numChapters: number;
+  readonly chapters: CreateBookChaptersInput;
   readonly inlineStudioId?: string;
 }
 
@@ -48,7 +62,6 @@ export interface UpdateBookServiceInput {
   readonly title?: string;
   readonly studioId?: string;
   readonly pricePerHourCents?: number;
-  readonly numChapters?: number;
   readonly inlineStudioId?: string;
   // null → remove a URL persistida; undefined → preserva; string → atualiza.
   readonly pdfUrl?: string | null;
@@ -56,7 +69,6 @@ export interface UpdateBookServiceInput {
 
 export interface UpdateBookResult {
   readonly book: Book;
-  readonly chaptersAdded: number;
 }
 
 export interface BookChapterDetail {
@@ -211,15 +223,8 @@ export class BookService {
         tx,
       );
 
-      const chapters = await this.deps.chapterRepo.insertMany(
-        Array.from({ length: input.numChapters }, (_, index) => ({
-          bookId: inserted.id,
-          title: `Capítulo ${index + 1}`,
-          position: index,
-          status: "pending" as const,
-        })),
-        tx,
-      );
+      const chaptersToInsert = buildChaptersForCreate(inserted.id, input.chapters);
+      const chapters = await this.deps.chapterRepo.insertMany(chaptersToInsert, tx);
 
       const withStatus = await recomputeBookStatusAndBumpVersion(
         inserted.id,
@@ -265,13 +270,9 @@ export class BookService {
       }
     }
 
-    if (input.numChapters !== undefined && input.numChapters < chapters.length) {
-      throw new BookCannotReduceChaptersError(chapters.length, input.numChapters);
-    }
-
-    // The repo accepts only persistent book fields. `numChapters` and
-    // `inlineStudioId` are service-level concepts handled separately.
-    const { numChapters: _ignoredCount, inlineStudioId: _ignoredInline, ...repoPatch } = input;
+    // The repo accepts only persistent book fields. `inlineStudioId` is a
+    // service-level concept handled separately.
+    const { inlineStudioId: _ignoredInline, ...repoPatch } = input;
     const patchEntries = Object.entries(repoPatch).filter(([, value]) => value !== undefined);
     const propagatedRateCents = input.pricePerHourCents ?? current.pricePerHourCents;
 
@@ -289,41 +290,52 @@ export class BookService {
         book = await this.deps.bookRepo.update(bookId, Object.fromEntries(patchEntries), tx);
       }
 
-      let chaptersAdded = 0;
-      if (input.numChapters !== undefined && input.numChapters > chapters.length) {
-        const delta = input.numChapters - chapters.length;
-        const existingTitles = chapters.map((c) => c.title);
-        const additions: Array<{
-          readonly bookId: string;
-          readonly title: string;
-          readonly position: number;
-          readonly status: "pending";
-        }> = [];
-        let positionCursor = chapters.length;
-        for (let i = 0; i < delta; i += 1) {
-          const title = nextChapterTitle([...existingTitles, ...additions.map((a) => a.title)]);
-          additions.push({
-            bookId,
-            title,
-            position: positionCursor,
-            status: "pending",
-          });
-          positionCursor += 1;
-        }
-        await this.deps.chapterRepo.insertMany(additions, tx);
-        chaptersAdded = delta;
-      }
-
-      if (chaptersAdded > 0) {
-        const refreshed = await recomputeBookStatusAndBumpVersion(
-          bookId,
-          { bookRepo: this.deps.bookRepo, chapterRepo: this.deps.chapterRepo },
-          tx,
-        );
-        return { book: refreshed, chaptersAdded };
-      }
-
-      return { book, chaptersAdded };
+      return { book };
     });
   }
+}
+
+interface ChapterInsertPlan {
+  readonly bookId: string;
+  readonly title: string;
+  readonly position: number;
+  readonly status: "pending";
+}
+
+function buildChaptersForCreate(
+  bookId: string,
+  input: CreateBookChaptersInput,
+): ChapterInsertPlan[] {
+  const numberedTitles: string[] = [];
+  for (let i = 0; i < input.numbered; i += 1) {
+    numberedTitles.push(nextChapterTitle(numberedTitles));
+  }
+  const startExtras = input.extras.filter((e) => e.position === "start");
+  const endExtras = input.extras.filter((e) => e.position === "end");
+
+  function extraToTitle(extra: CreateBookExtra): string {
+    return extra.kind === "template"
+      ? CHAPTER_TEMPLATES[extra.template as ChapterTemplateKey].defaultTitle
+      : extra.title;
+  }
+
+  // Cada extra "start" empilha no início; o último declarado fica em position 0.
+  const orderedTitles: string[] = [];
+  for (const e of startExtras) {
+    orderedTitles.unshift(extraToTitle(e));
+  }
+  for (const t of numberedTitles) {
+    orderedTitles.push(t);
+  }
+  for (const e of endExtras) {
+    orderedTitles.push(extraToTitle(e));
+  }
+
+  const pairs = densifyPositions(orderedTitles.map((title, idx) => ({ id: String(idx), title })));
+  return orderedTitles.map((title, idx) => ({
+    bookId,
+    title,
+    position: pairs[idx].position,
+    status: "pending" as const,
+  }));
 }

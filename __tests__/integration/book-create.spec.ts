@@ -57,7 +57,7 @@ describe("POST /api/v1/books (handleBooksCreate)", () => {
         title: "x",
         studioId: crypto.randomUUID(),
         pricePerHourCents: 7500,
-        numChapters: 1,
+        chapters: { numbered: 1, extras: [] },
       }),
       ROUTE_CTX,
     );
@@ -67,7 +67,12 @@ describe("POST /api/v1/books (handleBooksCreate)", () => {
   it("returns 422 VALIDATION_ERROR for invalid payload", async () => {
     const POST = buildPost({ user: { id: userId } });
     const response = await POST(
-      makeRequest({ title: "", studioId: "not-a-uuid", pricePerHourCents: 0, numChapters: 0 }),
+      makeRequest({
+        title: "",
+        studioId: "not-a-uuid",
+        pricePerHourCents: 0,
+        chapters: { numbered: 0, extras: [] },
+      }),
       ROUTE_CTX,
     );
     const body = await response.json();
@@ -83,7 +88,7 @@ describe("POST /api/v1/books (handleBooksCreate)", () => {
         title: "Dom Casmurro",
         studioId: crypto.randomUUID(),
         pricePerHourCents: 7500,
-        numChapters: 1,
+        chapters: { numbered: 1, extras: [] },
       }),
       ROUTE_CTX,
     );
@@ -106,7 +111,7 @@ describe("POST /api/v1/books (handleBooksCreate)", () => {
         title: "Dom Casmurro",
         studioId: studio.id,
         pricePerHourCents: 7500,
-        numChapters: 10,
+        chapters: { numbered: 10, extras: [] },
       }),
       ROUTE_CTX,
     );
@@ -171,7 +176,7 @@ describe("POST /api/v1/books (handleBooksCreate)", () => {
         title: "Dom Casmurro",
         studioId: studio.id,
         pricePerHourCents: 7500,
-        numChapters: 1,
+        chapters: { numbered: 1, extras: [] },
       }),
       ROUTE_CTX,
     );
@@ -181,7 +186,7 @@ describe("POST /api/v1/books (handleBooksCreate)", () => {
         title: "dom casmurro",
         studioId: studio.id,
         pricePerHourCents: 6000,
-        numChapters: 1,
+        chapters: { numbered: 1, extras: [] },
       }),
       ROUTE_CTX,
     );
@@ -205,7 +210,7 @@ describe("POST /api/v1/books (handleBooksCreate)", () => {
         title: "Atomic",
         studioId: studio.id,
         pricePerHourCents: 7500,
-        numChapters: 5,
+        chapters: { numbered: 5, extras: [] },
       }),
       ROUTE_CTX,
     );
@@ -218,7 +223,7 @@ describe("POST /api/v1/books (handleBooksCreate)", () => {
         title: "Atomic",
         studioId: studio.id,
         pricePerHourCents: 7500,
-        numChapters: 10,
+        chapters: { numbered: 10, extras: [] },
       }),
       ROUTE_CTX,
     );

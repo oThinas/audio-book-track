@@ -31,7 +31,7 @@ describe("BookService.create — FR-032 regression (inline creation must not set
       title: "Inline Book",
       studioId: studio.id,
       pricePerHourCents: 8500,
-      numChapters: 7,
+      chapters: { numbered: 7, extras: [] },
     });
 
     expect(chapters).toHaveLength(7);

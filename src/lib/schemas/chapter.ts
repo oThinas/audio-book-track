@@ -82,6 +82,23 @@ export const bulkDeleteChaptersSchema = z.object({
     .max(BULK_DELETE_MAX, `Máximo de ${BULK_DELETE_MAX} capítulos por requisição.`),
 });
 
+const positionTargetSchema = z.union([
+  z.literal("start"),
+  z.literal("end"),
+  z.object({ after: z.uuid("Capítulo de referência inválido.") }),
+]);
+
+export const createChapterSchema = z.object({
+  title: chapterTitleSchema,
+  position: positionTargetSchema,
+  expectedVersion: z
+    .number({ error: "Versão de capítulos é obrigatória." })
+    .int("Versão deve ser um inteiro.")
+    .nonnegative("Versão não pode ser negativa."),
+});
+
+export type CreateChapterInput = z.infer<typeof createChapterSchema>;
+
 export const reorderChaptersSchema = z.object({
   orderedIds: z
     .array(z.uuid("Capítulo inválido."))
