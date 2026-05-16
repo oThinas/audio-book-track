@@ -89,7 +89,8 @@ describe("ChapterGroupRow", () => {
       subRowsCount: 3,
       firstLeaf: {
         id: "c1",
-        number: 1,
+        title: "Capítulo 1",
+        position: 0,
         status: "completed",
         narrator: { id: "abc-narrator", name: "Ana Silva" },
         editor: null,
@@ -121,7 +122,8 @@ describe("ChapterGroupRow", () => {
       subRowsCount: 1,
       firstLeaf: {
         id: "c1",
-        number: 1,
+        title: "Capítulo 1",
+        position: 0,
         status: "completed",
         narrator: null,
         editor: { id: "ed-1", name: "Carlos" },
@@ -155,7 +157,8 @@ describe("ChapterGroupRow", () => {
       subRowsCount: 1,
       firstLeaf: {
         id: "c1",
-        number: 1,
+        title: "Capítulo 1",
+        position: 0,
         status: "completed",
         narrator: null,
         editor: { id: "ed-2", name: "Diana" },
@@ -178,57 +181,17 @@ describe("ChapterGroupRow", () => {
     expect(screen.getByTestId("chapter-group-seconds-ed-2").textContent).toBe("1h 24min");
   });
 
-  it("collapses breakdown to count when grouping by status (FR-015)", () => {
-    const row = buildRow({
-      groupingDimension: "status",
-      groupKey: "completed",
-      editedSeconds: 7200,
-      earningsCents: 1000,
-      subRowsCount: 3,
-      statusBreakdown: {
-        pending: 0,
-        editing: 0,
-        reviewing: 0,
-        retake: 0,
-        completed: 3,
-        paid: 0,
-      },
-    });
-    render(
-      wrap(
-        <ChapterGroupRow
-          row={row}
-          groupingDimension="status"
-          columnCount={7}
-          selectionMode={false}
-          isExpanded={false}
-          onToggle={() => {}}
-        />,
-      ),
-    );
-    expect(screen.getByTestId("chapter-group-breakdown-completed").textContent).toContain(
-      "3 capítulos",
-    );
-  });
-
-  it("lists status breakdown when grouping by narrator/editor", () => {
+  it("shows the chapter count when grouping by narrator/editor", () => {
     const row = buildRow({
       groupingDimension: "narrator",
       groupKey: "narr-x",
       editedSeconds: 7200,
       earningsCents: 1000,
       subRowsCount: 4,
-      statusBreakdown: {
-        pending: 0,
-        editing: 0,
-        reviewing: 1,
-        retake: 0,
-        completed: 3,
-        paid: 0,
-      },
       firstLeaf: {
         id: "c1",
-        number: 1,
+        title: "Capítulo 1",
+        position: 0,
         status: "completed",
         narrator: { id: "narr-x", name: "Eduarda" },
         editor: null,
@@ -248,8 +211,6 @@ describe("ChapterGroupRow", () => {
         />,
       ),
     );
-    const breakdown = screen.getByTestId("chapter-group-breakdown-narr-x");
-    expect(breakdown.textContent).toContain("em revisão");
-    expect(breakdown.textContent).toContain("concluído");
+    expect(screen.getByTestId("chapter-group-count-narr-x").textContent).toContain("4 capítulos");
   });
 });

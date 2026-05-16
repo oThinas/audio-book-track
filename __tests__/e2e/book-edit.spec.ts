@@ -61,63 +61,6 @@ test.describe("Book edit", () => {
     await expect(page.getByRole("cell", { name: /novo título/i })).toBeVisible();
   });
 
-  test("appends chapters when numChapters increases (visible in chapters table)", async ({
-    page,
-    appServer,
-  }) => {
-    const studio = await seedStudio(page, "Sonora Add", 75);
-    const { id: bookId } = await seedBook({
-      schema: appServer.schemaName,
-      title: "Aumentar capítulos",
-      studioId: studio.id,
-      pricePerHourCents: 7500,
-    });
-    await seedChapter({ schema: appServer.schemaName, bookId, number: 1, status: "pending" });
-    await seedChapter({ schema: appServer.schemaName, bookId, number: 2, status: "pending" });
-
-    await page.goto(`/books/${bookId}`);
-    await page.getByTestId("book-detail-edit-button").click();
-    const dialog = page.getByTestId("book-edit-dialog");
-
-    // Use the +/- chapter input: increment to 4.
-    const incrementBtn = dialog.getByRole("button", { name: /aumentar quantidade/i });
-    await incrementBtn.click();
-    await incrementBtn.click();
-
-    await Promise.all([
-      page.waitForResponse(
-        (res) =>
-          res.url().endsWith(`/api/v1/books/${bookId}`) && res.request().method() === "PATCH",
-      ),
-      dialog.getByTestId("book-edit-submit").click(),
-    ]);
-    await expect(dialog).toBeHidden();
-
-    await expect(page.getByTestId("chapters-scroll-area").getByRole("row")).toHaveCount(5); // header + 4
-  });
-
-  test("shows the reduce hint when user tries to lower the chapter count", async ({
-    page,
-    appServer,
-  }) => {
-    const studio = await seedStudio(page, "Sonora Reduce", 75);
-    const { id: bookId } = await seedBook({
-      schema: appServer.schemaName,
-      title: "Reduzir bloqueado",
-      studioId: studio.id,
-      pricePerHourCents: 7500,
-    });
-    await seedChapter({ schema: appServer.schemaName, bookId, number: 1, status: "pending" });
-    await seedChapter({ schema: appServer.schemaName, bookId, number: 2, status: "pending" });
-
-    await page.goto(`/books/${bookId}`);
-    await page.getByTestId("book-detail-edit-button").click();
-    const dialog = page.getByTestId("book-edit-dialog");
-
-    const decrementBtn = dialog.getByRole("button", { name: /diminuir quantidade/i });
-    await expect(decrementBtn).toBeDisabled();
-  });
-
   test("disables price/studio with paid chapter and rejects price change via API", async ({
     page,
     appServer,

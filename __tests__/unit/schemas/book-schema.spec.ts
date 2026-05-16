@@ -7,7 +7,7 @@ function makeValidCreateInput() {
     title: "Dom Casmurro",
     studioId: crypto.randomUUID(),
     pricePerHourCents: 7500,
-    numChapters: 10,
+    chapters: { numbered: 10, extras: [] as never[] },
   };
 }
 
@@ -142,43 +142,43 @@ describe("createBookSchema", () => {
     });
   });
 
-  describe("numChapters", () => {
-    it("accepts minimum value (1)", () => {
+  describe("chapters", () => {
+    it("accepts numbered=1 sem extras", () => {
       const result = createBookSchema.safeParse({
         ...makeValidCreateInput(),
-        numChapters: 1,
+        chapters: { numbered: 1, extras: [] },
       });
       expect(result.success).toBe(true);
     });
 
-    it("accepts maximum value (999)", () => {
+    it("accepts numbered=999 (limite)", () => {
       const result = createBookSchema.safeParse({
         ...makeValidCreateInput(),
-        numChapters: 999,
+        chapters: { numbered: 999, extras: [] },
       });
       expect(result.success).toBe(true);
     });
 
-    it("rejects zero", () => {
+    it("rejects numbered=0 e extras vazias (livro precisa de pelo menos 1 capítulo)", () => {
       const result = createBookSchema.safeParse({
         ...makeValidCreateInput(),
-        numChapters: 0,
+        chapters: { numbered: 0, extras: [] },
       });
       expect(result.success).toBe(false);
     });
 
-    it("rejects value above 999", () => {
+    it("rejects numbered acima de 999", () => {
       const result = createBookSchema.safeParse({
         ...makeValidCreateInput(),
-        numChapters: 1000,
+        chapters: { numbered: 1000, extras: [] },
       });
       expect(result.success).toBe(false);
     });
 
-    it("rejects non-integer value", () => {
+    it("rejects numbered não-inteiro", () => {
       const result = createBookSchema.safeParse({
         ...makeValidCreateInput(),
-        numChapters: 10.5,
+        chapters: { numbered: 10.5, extras: [] },
       });
       expect(result.success).toBe(false);
     });
@@ -228,9 +228,9 @@ describe("updateBookSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("accepts partial update with only numChapters", () => {
+  it("rejects partial update with numChapters (campo legado removido)", () => {
     const result = updateBookSchema.safeParse({ numChapters: 12 });
-    expect(result.success).toBe(true);
+    expect(result.success).toBe(false);
   });
 
   it("accepts partial update with only studioId", () => {
@@ -243,11 +243,9 @@ describe("updateBookSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("applies the same range checks as createBookSchema", () => {
+  it("applies the same range checks as createBookSchema (pricePerHourCents)", () => {
     expect(updateBookSchema.safeParse({ pricePerHourCents: 0 }).success).toBe(false);
     expect(updateBookSchema.safeParse({ pricePerHourCents: 1_000_000 }).success).toBe(false);
-    expect(updateBookSchema.safeParse({ numChapters: 0 }).success).toBe(false);
-    expect(updateBookSchema.safeParse({ numChapters: 1000 }).success).toBe(false);
   });
 
   it("trims title on update", () => {

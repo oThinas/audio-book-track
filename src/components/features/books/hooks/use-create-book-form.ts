@@ -105,7 +105,11 @@ export function useCreateBookForm({
         readonly title: string;
         readonly studioId: string;
         readonly pricePerHourCents: number;
-        readonly chapters: ReadonlyArray<{ readonly id: string; readonly number: number }>;
+        readonly chapters: ReadonlyArray<{
+          readonly id: string;
+          readonly title: string;
+          readonly position: number;
+        }>;
       };
     }>("/api/v1/books", { method: "POST", body: payload });
 

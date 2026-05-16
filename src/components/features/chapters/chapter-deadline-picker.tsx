@@ -39,7 +39,7 @@ export function ChapterDeadlinePicker({
             variant="outline"
             disabled={disabled}
             className={cn(
-              "w-[180px] justify-start text-left font-normal",
+              "w-full justify-start text-left font-normal",
               !value && "text-muted-foreground",
             )}
           >

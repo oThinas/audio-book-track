@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { errorCodes } from "@/lib/api/error-codes";
 import {
   BookCannotReduceChaptersError,
+  BookChaptersVersionConflictError,
   BookInlineStudioInvalidError,
   BookNotFoundError,
   BookPaidPriceLockedError,
@@ -14,10 +15,12 @@ import {
   ChapterInvalidTransitionError,
   ChapterNarratorRequiredError,
   ChapterNotFoundError,
-  ChapterNumberAlreadyInUseError,
   ChapterPaidLockedError,
+  ChapterPositionTargetInvalidError,
   ChapterReversionConfirmationRequiredError,
   ChaptersNotInBookError,
+  ChaptersOrderMismatchError,
+  ChapterTitleInvalidError,
 } from "@/lib/errors/chapter-errors";
 import { DomainError } from "@/lib/errors/domain-error";
 import {
@@ -58,7 +61,10 @@ describe("domain Error classes — static messages (FR-018)", () => {
       new BookPaidStudioLockedError("11111111-1111-4111-8111-111111111111"),
       new BookCannotReduceChaptersError(10, 3),
       new ChapterNotFoundError("11111111-1111-4111-8111-111111111111"),
-      new ChapterNumberAlreadyInUseError("11111111-1111-4111-8111-111111111111", 7),
+      new ChapterTitleInvalidError("empty"),
+      new ChapterPositionTargetInvalidError("11111111-1111-4111-8111-111111111111"),
+      new ChaptersOrderMismatchError("11111111-1111-4111-8111-111111111111"),
+      new BookChaptersVersionConflictError("11111111-1111-4111-8111-111111111111", 1, 2),
       new ChapterPaidLockedError("11111111-1111-4111-8111-111111111111"),
       new ChapterInvalidTransitionError("pending", "paid"),
       new ChapterNarratorRequiredError(),
@@ -137,7 +143,10 @@ describe("DomainError contract", () => {
     new BookPaidStudioLockedError("book-id"),
     new BookCannotReduceChaptersError(10, 3),
     new ChapterNotFoundError("id"),
-    new ChapterNumberAlreadyInUseError("book-id", 7),
+    new ChapterTitleInvalidError("too_long"),
+    new ChapterPositionTargetInvalidError(null),
+    new ChaptersOrderMismatchError("book-id"),
+    new BookChaptersVersionConflictError("book-id", 0, 1),
     new ChapterPaidLockedError("id"),
     new ChapterInvalidTransitionError("pending", "paid"),
     new ChapterNarratorRequiredError(),

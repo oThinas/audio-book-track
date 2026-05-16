@@ -14,7 +14,7 @@ describe("DrizzleChapterRepository — deadline", () => {
     const { book } = await createTestBook(getTestDb());
 
     const [inserted] = await repo.insertMany([
-      { bookId: book.id, number: 1, deadline: "2026-06-15" },
+      { bookId: book.id, title: "Capítulo 1", position: 0, deadline: "2026-06-15" },
     ]);
 
     expect(inserted.deadline).toBe("2026-06-15");
@@ -26,7 +26,9 @@ describe("DrizzleChapterRepository — deadline", () => {
     const repo = createRepo();
     const { book } = await createTestBook(getTestDb());
 
-    const [inserted] = await repo.insertMany([{ bookId: book.id, number: 1 }]);
+    const [inserted] = await repo.insertMany([
+      { bookId: book.id, title: "Capítulo 1", position: 0 },
+    ]);
     expect(inserted.deadline).toBeNull();
   });
 
@@ -51,9 +53,9 @@ describe("DrizzleChapterRepository — deadline", () => {
     const { book } = await createTestBook(getTestDb());
 
     await repo.insertMany([
-      { bookId: book.id, number: 1, deadline: "2026-06-15" },
-      { bookId: book.id, number: 2, deadline: null },
-      { bookId: book.id, number: 3, deadline: "2026-07-01" },
+      { bookId: book.id, title: "Capítulo 1", position: 0, deadline: "2026-06-15" },
+      { bookId: book.id, title: "Capítulo 2", position: 1, deadline: null },
+      { bookId: book.id, title: "Capítulo 3", position: 2, deadline: "2026-07-01" },
     ]);
 
     const chapters = await repo.listByBookId(book.id);

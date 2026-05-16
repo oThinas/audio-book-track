@@ -1,10 +1,14 @@
 import { z } from "zod";
 
+import { CHAPTER_TEMPLATE_KEYS, type ChapterTemplateKey } from "@/lib/domain/chapter-templates";
+
+import { chapterTitleSchema } from "./chapter";
+
 const TITLE_MAX = 255;
 const PRICE_MIN_CENTS = 1;
 const PRICE_MAX_CENTS = 999_999;
-const NUM_CHAPTERS_MIN = 1;
 const NUM_CHAPTERS_MAX = 999;
+const EXTRAS_MAX = 20;
 
 const titleSchema = z
   .string({ error: "Título é obrigatório." })
@@ -18,11 +22,34 @@ const pricePerHourCentsSchema = z
   .min(PRICE_MIN_CENTS, "Valor/hora mínimo é R$ 0,01.")
   .max(PRICE_MAX_CENTS, "Valor/hora máximo é R$ 9.999,99.");
 
-const numChaptersSchema = z
-  .number({ error: "Número de capítulos é obrigatório." })
-  .int("Número de capítulos deve ser inteiro.")
-  .min(NUM_CHAPTERS_MIN, "Deve haver pelo menos 1 capítulo.")
-  .max(NUM_CHAPTERS_MAX, `Máximo de ${NUM_CHAPTERS_MAX} capítulos.`);
+const extraChapterPositionSchema = z.union([z.literal("start"), z.literal("end")]);
+
+const templateEnumSchema = z.enum(
+  CHAPTER_TEMPLATE_KEYS as unknown as [ChapterTemplateKey, ...ChapterTemplateKey[]],
+  "Template inválido.",
+);
+
+export const extraChapterSchema = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("template"),
+    template: templateEnumSchema,
+    position: extraChapterPositionSchema,
+  }),
+  z.object({
+    kind: z.literal("custom"),
+    title: chapterTitleSchema,
+    position: extraChapterPositionSchema,
+  }),
+]);
+
+const chaptersInputSchema = z.object({
+  numbered: z
+    .number({ error: "Número de capítulos é obrigatório." })
+    .int("Número de capítulos deve ser inteiro.")
+    .min(0, "Número de capítulos não pode ser negativo.")
+    .max(NUM_CHAPTERS_MAX, `Máximo de ${NUM_CHAPTERS_MAX} capítulos.`),
+  extras: z.array(extraChapterSchema).max(EXTRAS_MAX, `Máximo de ${EXTRAS_MAX} capítulos extras.`),
+});
 
 const PDF_URL_MAX = 2048;
 // Mirrors the `book_pdf_url_format` CHECK constraint (length ≤ 2048 + ^https?://)
@@ -36,16 +63,20 @@ const studioIdRefSchema = z.uuid("Estúdio inválido.");
 const inlineStudioIdRefSchema = z.uuid("Estúdio inválido.");
 
 export const createBookSchema = z
-  .object({
+  .strictObject({
     title: titleSchema,
     studioId: studioIdRefSchema,
     pricePerHourCents: pricePerHourCentsSchema,
-    numChapters: numChaptersSchema,
+    chapters: chaptersInputSchema,
     inlineStudioId: inlineStudioIdRefSchema.optional(),
   })
   .refine((data) => data.inlineStudioId === undefined || data.inlineStudioId === data.studioId, {
     message: "Estúdio inline deve ser o mesmo do livro.",
     path: ["inlineStudioId"],
+  })
+  .refine((data) => data.chapters.numbered > 0 || data.chapters.extras.length > 0, {
+    message: "Livro deve ter pelo menos um capítulo (numerado ou extra).",
+    path: ["chapters"],
   });
 
 export const updateBookSchema = z
@@ -53,7 +84,6 @@ export const updateBookSchema = z
     title: titleSchema.optional(),
     studioId: studioIdRefSchema.optional(),
     pricePerHourCents: pricePerHourCentsSchema.optional(),
-    numChapters: numChaptersSchema.optional(),
     inlineStudioId: inlineStudioIdRefSchema.optional(),
     // `null` → remove the URL. `undefined` → no change. Valid string → set.
     pdfUrl: pdfUrlSchema.nullable().optional(),
@@ -74,6 +104,9 @@ export const updateBookSchema = z
       message: "Pelo menos um campo deve ser informado.",
     },
   );
+
+export type CreateBookChaptersInput = z.infer<typeof chaptersInputSchema>;
+export type ExtraChapterInput = z.infer<typeof extraChapterSchema>;
 
 export const bookIdParamsSchema = z.object({
   id: z.uuid("Identificador inválido."),

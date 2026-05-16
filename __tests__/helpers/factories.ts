@@ -204,6 +204,9 @@ export async function createTestBook(
 
 interface CreateTestChapterOptions {
   readonly bookId?: string;
+  readonly title?: string;
+  readonly position?: number;
+  /** @deprecated Use `position` (0-based) e/ou `title`. Mantido para compat temporária. */
   readonly number?: number;
   readonly status?: BookStatus;
   readonly narratorId?: string | null;
@@ -221,12 +224,18 @@ export async function createTestChapter(
   overrides: CreateTestChapterOptions = {},
 ): Promise<CreateTestChapterResult> {
   const bookId = overrides.bookId ?? (await createTestBook(db)).book.id;
+  const legacyNumber = overrides.number;
+  const position = overrides.position ?? (legacyNumber !== undefined ? legacyNumber - 1 : 0);
+  const title =
+    overrides.title ??
+    (legacyNumber !== undefined ? `Capítulo ${legacyNumber}` : `Capítulo ${position + 1}`);
 
   const [createdChapter] = await db
     .insert(chapter)
     .values({
       bookId,
-      number: overrides.number ?? 1,
+      title,
+      position,
       status: overrides.status ?? "pending",
       narratorId: overrides.narratorId ?? null,
       editorId: overrides.editorId ?? null,

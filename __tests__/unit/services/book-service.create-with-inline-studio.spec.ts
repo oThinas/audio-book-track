@@ -43,7 +43,7 @@ describe("BookService.create with inlineStudioId", () => {
       title: "Dom Casmurro",
       studioId: inlineStudio.id,
       pricePerHourCents: 7500,
-      numChapters: 2,
+      chapters: { numbered: 2, extras: [] },
       inlineStudioId: inlineStudio.id,
     });
 
@@ -69,7 +69,7 @@ describe("BookService.create with inlineStudioId", () => {
         title: "Conflito",
         studioId: otherStudio.id,
         pricePerHourCents: 7500,
-        numChapters: 1,
+        chapters: { numbered: 1, extras: [] },
         inlineStudioId: inlineStudio.id,
       }),
     ).rejects.toBeInstanceOf(BookInlineStudioInvalidError);
@@ -86,7 +86,7 @@ describe("BookService.create with inlineStudioId", () => {
         title: "Anti-abuso",
         studioId: studio.id,
         pricePerHourCents: 7500,
-        numChapters: 1,
+        chapters: { numbered: 1, extras: [] },
         inlineStudioId: studio.id,
       }),
     ).rejects.toBeInstanceOf(BookInlineStudioInvalidError);
@@ -105,7 +105,7 @@ describe("BookService.create with inlineStudioId", () => {
         title: "Estúdio sumido",
         studioId: studio.id,
         pricePerHourCents: 7500,
-        numChapters: 1,
+        chapters: { numbered: 1, extras: [] },
         inlineStudioId: studio.id,
       }),
     ).rejects.toBeInstanceOf(BookInlineStudioInvalidError);
@@ -121,7 +121,7 @@ describe("BookService.create with inlineStudioId", () => {
       title: "Sem propagação",
       studioId: studio.id,
       pricePerHourCents: 9000,
-      numChapters: 1,
+      chapters: { numbered: 1, extras: [] },
     });
 
     expect(book.pricePerHourCents).toBe(9000);

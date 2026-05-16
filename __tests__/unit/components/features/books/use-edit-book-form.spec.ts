@@ -47,7 +47,6 @@ function renderEditBookHook(overrides: Partial<BookEditValues> = {}) {
           title: book.title,
           studioId: book.studioId,
           pricePerHourCents: book.pricePerHourCents,
-          numChapters: book.currentChapters,
         },
       });
       const result = useEditBookForm({ book, studios, form, onUpdated, onOpenChange });
@@ -78,7 +77,6 @@ describe("useEditBookForm", () => {
         title: "Old Title",
         studioId: "s-A",
         pricePerHourCents: 5000,
-        numChapters: 3,
       });
     });
 
@@ -95,7 +93,6 @@ describe("useEditBookForm", () => {
         title: "New Title",
         studioId: "s-A",
         pricePerHourCents: 5000,
-        numChapters: 3,
       });
     });
 
@@ -105,28 +102,6 @@ describe("useEditBookForm", () => {
     );
     expect(onUpdated).toHaveBeenCalled();
     expect(onOpenChange).toHaveBeenCalledWith(false);
-  });
-
-  it("on BOOK_CANNOT_REDUCE_CHAPTERS api-error, sets numChapters error", async () => {
-    vi.mocked(apiFetch).mockResolvedValueOnce({
-      ok: false,
-      kind: "api-error",
-      code: "BOOK_CANNOT_REDUCE_CHAPTERS",
-    });
-
-    const { result } = renderEditBookHook();
-    await act(async () => {
-      await result.current.onSubmit({
-        title: "Old Title",
-        studioId: "s-A",
-        pricePerHourCents: 5000,
-        numChapters: 5,
-      });
-    });
-
-    expect(result.current.form.getFieldState("numChapters").error?.message).toBe(
-      "Para reduzir a quantidade, use 'Excluir capítulos'.",
-    );
   });
 
   it("on BOOK_PAID_PRICE_LOCKED api-error, sets pricePerHourCents error", async () => {
@@ -142,7 +117,6 @@ describe("useEditBookForm", () => {
         title: "Old Title",
         studioId: "s-A",
         pricePerHourCents: 9999,
-        numChapters: 3,
       });
     });
 
@@ -164,7 +138,6 @@ describe("useEditBookForm", () => {
         title: "Old Title",
         studioId: "s-B",
         pricePerHourCents: 5000,
-        numChapters: 3,
       });
     });
 
@@ -186,7 +159,6 @@ describe("useEditBookForm", () => {
         title: "Dup",
         studioId: "s-A",
         pricePerHourCents: 5000,
-        numChapters: 3,
       });
     });
 
@@ -203,11 +175,5 @@ describe("useEditBookForm", () => {
     act(() => result.current.handleOpenChange(false));
 
     expect(toast.warning).toHaveBeenCalled();
-  });
-
-  it("setReduceHint toggles reduceHint", () => {
-    const { result } = renderEditBookHook();
-    act(() => result.current.setReduceHint(true));
-    expect(result.current.reduceHint).toBe(true);
   });
 });

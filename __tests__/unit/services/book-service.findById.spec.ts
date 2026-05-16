@@ -48,7 +48,8 @@ describe("BookService.findById", () => {
     await chapterRepo.insertMany([
       {
         bookId: book.id,
-        number: 1,
+        title: "Capítulo 1",
+        position: 0,
         status: "completed",
         editedSeconds: 3600,
         narratorId: narrator.id,
@@ -56,12 +57,13 @@ describe("BookService.findById", () => {
       },
       {
         bookId: book.id,
-        number: 2,
+        title: "Capítulo 2",
+        position: 1,
         status: "paid",
         editedSeconds: 7200,
         narratorId: narrator.id,
       },
-      { bookId: book.id, number: 3, status: "pending" },
+      { bookId: book.id, title: "Capítulo 3", position: 2, status: "pending" },
     ]);
 
     const detail = await service.findById(book.id);
@@ -79,7 +81,8 @@ describe("BookService.findById", () => {
     expect(detail.chapters).toHaveLength(3);
 
     const [chapter1, chapter2, chapter3] = detail.chapters;
-    expect(chapter1.number).toBe(1);
+    expect(chapter1.title).toBe("Capítulo 1");
+    expect(chapter1.position).toBe(0);
     expect(chapter1.narrator).toEqual({ id: narrator.id, name: "Ana Silva" });
     expect(chapter1.editor).toEqual({ id: editor.id, name: "Bruno Gomes" });
     expect(chapter1.editedSeconds).toBe(3600);
@@ -91,7 +94,7 @@ describe("BookService.findById", () => {
     expect(chapter3.editor).toBeNull();
   });
 
-  it("orders chapters by number ASC", async () => {
+  it("orders chapters by position ASC", async () => {
     const studio = await studioRepo.create({ name: "S", defaultHourlyRateCents: 7500 });
     const book = await bookRepo.insert({
       title: "B",
@@ -99,14 +102,19 @@ describe("BookService.findById", () => {
       pricePerHourCents: 7500,
     });
     await chapterRepo.insertMany([
-      { bookId: book.id, number: 3, status: "pending" },
-      { bookId: book.id, number: 1, status: "pending" },
-      { bookId: book.id, number: 2, status: "pending" },
+      { bookId: book.id, title: "Capítulo 3", position: 2, status: "pending" },
+      { bookId: book.id, title: "Capítulo 1", position: 0, status: "pending" },
+      { bookId: book.id, title: "Capítulo 2", position: 1, status: "pending" },
     ]);
 
     const detail = await service.findById(book.id);
 
-    expect(detail?.chapters.map((c) => c.number)).toEqual([1, 2, 3]);
+    expect(detail?.chapters.map((c) => c.position)).toEqual([0, 1, 2]);
+    expect(detail?.chapters.map((c) => c.title)).toEqual([
+      "Capítulo 1",
+      "Capítulo 2",
+      "Capítulo 3",
+    ]);
   });
 
   it("returns totals = 0 and empty chapters when the book has no chapters", async () => {
@@ -135,7 +143,7 @@ describe("BookService.findById", () => {
       pricePerHourCents: 7500,
     });
     await chapterRepo.insertMany([
-      { bookId: book.id, number: 1, status: "paid", editedSeconds: 3600 },
+      { bookId: book.id, title: "Capítulo 1", position: 0, status: "paid", editedSeconds: 3600 },
     ]);
     await studioRepo.softDelete(studio.id);
 

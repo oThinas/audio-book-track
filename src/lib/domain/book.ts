@@ -14,6 +14,7 @@ export interface Book {
   readonly title: string;
   readonly studioId: string;
   readonly pricePerHourCents: number;
+  readonly chaptersVersion: number;
   readonly pdfUrl: string | null;
   readonly status: BookStatus;
   readonly createdAt: Date;

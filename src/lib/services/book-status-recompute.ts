@@ -8,12 +8,15 @@ export interface RecomputeBookStatusDeps {
   readonly chapterRepo: ChapterRepository;
 }
 
-export async function recomputeBookStatus(
+export async function recomputeBookStatusAndBumpVersion(
   bookId: string,
   deps: RecomputeBookStatusDeps,
   tx?: RepositoryTx,
 ): Promise<Book> {
   const chapters = await deps.chapterRepo.listByBookId(bookId, tx);
   const nextStatus = computeBookStatus(chapters);
-  return deps.bookRepo.updateStatus(bookId, nextStatus, tx);
+  const updated = await deps.bookRepo.updateStatus(bookId, nextStatus, tx);
+  await deps.bookRepo.bumpChaptersVersion(bookId, tx);
+  const refreshed = await deps.bookRepo.findById(bookId, tx);
+  return refreshed ?? updated;
 }

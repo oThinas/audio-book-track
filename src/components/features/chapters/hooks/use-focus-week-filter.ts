@@ -52,7 +52,8 @@ export function useFocusWeekFilter(): UseFocusWeekFilterReturn {
           {
             id: c.id,
             bookId: "",
-            number: c.number,
+            title: c.title,
+            position: c.position,
             status: c.status,
             narratorId: c.narrator?.id ?? null,
             editorId: c.editor?.id ?? null,

@@ -22,6 +22,7 @@ const BOOK_COLUMNS = {
   title: book.title,
   studioId: book.studioId,
   pricePerHourCents: book.pricePerHourCents,
+  chaptersVersion: book.chaptersVersion,
   pdfUrl: book.pdfUrl,
   status: book.status,
   createdAt: book.createdAt,
@@ -35,6 +36,7 @@ type BookRow = {
   title: string;
   studioId: string;
   pricePerHourCents: number;
+  chaptersVersion: number;
   pdfUrl: string | null;
   status: BookStatus;
   createdAt: Date;
@@ -47,6 +49,7 @@ function toDomain(row: BookRow): Book {
     title: row.title,
     studioId: row.studioId,
     pricePerHourCents: row.pricePerHourCents,
+    chaptersVersion: row.chaptersVersion,
     pdfUrl: row.pdfUrl,
     status: row.status,
     createdAt: row.createdAt,
@@ -198,5 +201,18 @@ export class DrizzleBookRepository implements BookRepository {
     if (deleted.length === 0) {
       throw new BookNotFoundError(id);
     }
+  }
+
+  async bumpChaptersVersion(id: string, tx?: RepositoryTx): Promise<number> {
+    const [row] = await this.executor(tx)
+      .update(book)
+      .set({ chaptersVersion: sql`${book.chaptersVersion} + 1` })
+      .where(eq(book.id, id))
+      .returning({ chaptersVersion: book.chaptersVersion });
+
+    if (!row) {
+      throw new BookNotFoundError(id);
+    }
+    return row.chaptersVersion;
   }
 }

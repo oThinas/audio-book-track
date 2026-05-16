@@ -4,6 +4,7 @@ import { Check, Loader2, X } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { SecondsInput } from "@/components/ui/seconds-input";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { TableCell, TableRow } from "@/components/ui/table";
@@ -28,6 +29,13 @@ interface ChapterRowEditModeProps {
   readonly editors: ReadonlyArray<ChapterRowOption>;
   readonly narratorNameById: ReadonlyMap<string, string>;
   readonly editorNameById: ReadonlyMap<string, string>;
+  /**
+   * When true, the view-mode row has an extra leading cell for the drag handle.
+   * Edit mode must render an empty placeholder cell to keep `table-fixed`
+   * columns aligned — without it cells shift one column to the left and the
+   * title input ends up in the 32px drag column.
+   */
+  readonly canReorder: boolean;
   readonly onCancel: () => void;
   readonly onSaved: (updated: ChapterRowEntity, bookStatus: ChapterStatus) => void;
 }
@@ -38,6 +46,7 @@ export function ChapterRowEditMode({
   editors,
   narratorNameById,
   editorNameById,
+  canReorder,
   onCancel,
   onSaved,
 }: ChapterRowEditModeProps) {
@@ -45,8 +54,9 @@ export function ChapterRowEditMode({
   const form = useForm<ChapterEditDraftValues>({ defaultValues: buildChapterDraft(chapter) });
   const {
     control,
+    register,
     handleSubmit,
-    formState: { isSubmitting },
+    formState: { isSubmitting, errors },
   } = form;
 
   const { nullValue, reversionPending, cancelReversion, confirmReversion, onSubmit } =
@@ -62,9 +72,36 @@ export function ChapterRowEditMode({
   return (
     <>
       <TableRow data-testid={`chapter-row-${chapter.id}`} data-mode="edit">
+        {canReorder && <TableCell className="w-8 p-0" aria-hidden="true" />}
         <TableCell className="font-medium">
           <form id={formId} onSubmit={handleSubmit(onSubmit)} className="contents" noValidate />
-          {chapter.number}
+          <div className="flex flex-col gap-1">
+            <Input
+              form={formId}
+              data-testid={`chapter-title-${chapter.id}`}
+              aria-label={`Título do ${chapter.title}`}
+              disabled={isSubmitting || chapter.status === "paid"}
+              maxLength={100}
+              {...register("title", {
+                validate: (value) => {
+                  const trimmed = (value ?? "").trim();
+                  if (trimmed.length === 0) return "Título é obrigatório.";
+                  if (trimmed.length > 100) return "Título deve ter no máximo 100 caracteres.";
+                  if (/[\n\r]/.test(value)) return "Título não pode ter quebras de linha.";
+                  return true;
+                },
+              })}
+            />
+            {errors.title?.message && (
+              <span
+                role="alert"
+                className="text-xs text-destructive"
+                data-testid={`chapter-title-error-${chapter.id}`}
+              >
+                {errors.title.message}
+              </span>
+            )}
+          </div>
         </TableCell>
         <TableCell>
           <Controller
@@ -163,7 +200,7 @@ export function ChapterRowEditMode({
               <SecondsInput
                 form={formId}
                 data-testid={`chapter-hours-${chapter.id}`}
-                aria-label={`Horas editadas do capítulo ${chapter.number}`}
+                aria-label={`Horas editadas do ${chapter.title}`}
                 value={field.value}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
@@ -180,7 +217,7 @@ export function ChapterRowEditMode({
               type="button"
               variant="ghost"
               size="icon"
-              aria-label={`Cancelar edição do capítulo ${chapter.number}`}
+              aria-label={`Cancelar edição do ${chapter.title}`}
               data-testid={`chapter-cancel-${chapter.id}`}
               onClick={onCancel}
               disabled={isSubmitting}
@@ -192,7 +229,7 @@ export function ChapterRowEditMode({
               form={formId}
               variant="ghost"
               size="icon"
-              aria-label={`Confirmar edição do capítulo ${chapter.number}`}
+              aria-label={`Confirmar edição do ${chapter.title}`}
               data-testid={`chapter-confirm-${chapter.id}`}
               disabled={isSubmitting}
               className="text-primary"
@@ -208,7 +245,7 @@ export function ChapterRowEditMode({
       </TableRow>
       <ChapterPaidReversionDialog
         open={reversionPending !== null}
-        chapterNumber={chapter.number}
+        chapterTitle={chapter.title}
         onCancel={cancelReversion}
         onConfirm={confirmReversion}
       />

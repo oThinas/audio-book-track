@@ -3,9 +3,9 @@ import { InMemoryChapterRepository } from "@tests/repositories/in-memory-chapter
 import { beforeEach, describe, expect, it } from "vitest";
 
 import type { Book } from "@/lib/domain/book";
-import { recomputeBookStatus } from "@/lib/services/book-status-recompute";
+import { recomputeBookStatusAndBumpVersion } from "@/lib/services/book-status-recompute";
 
-describe("recomputeBookStatus", () => {
+describe("recomputeBookStatusAndBumpVersion", () => {
   let bookRepo: InMemoryBookRepository;
   let chapterRepo: InMemoryChapterRepository;
   let book: Book;
@@ -21,9 +21,9 @@ describe("recomputeBookStatus", () => {
   });
 
   it("throws when the book has no chapters", async () => {
-    await expect(recomputeBookStatus(book.id, { bookRepo, chapterRepo })).rejects.toThrow(
-      /without chapters/,
-    );
+    await expect(
+      recomputeBookStatusAndBumpVersion(book.id, { bookRepo, chapterRepo }),
+    ).rejects.toThrow(/without chapters/);
   });
 
   it("sets status to paid when every chapter is paid", async () => {
@@ -32,7 +32,7 @@ describe("recomputeBookStatus", () => {
       { bookId: book.id, number: 2, status: "paid" },
     ]);
 
-    const updated = await recomputeBookStatus(book.id, { bookRepo, chapterRepo });
+    const updated = await recomputeBookStatusAndBumpVersion(book.id, { bookRepo, chapterRepo });
 
     expect(updated.status).toBe("paid");
     const reloaded = await bookRepo.findById(book.id);
@@ -45,7 +45,7 @@ describe("recomputeBookStatus", () => {
       { bookId: book.id, number: 2, status: "paid" },
     ]);
 
-    const updated = await recomputeBookStatus(book.id, { bookRepo, chapterRepo });
+    const updated = await recomputeBookStatusAndBumpVersion(book.id, { bookRepo, chapterRepo });
 
     expect(updated.status).toBe("completed");
   });
@@ -56,7 +56,7 @@ describe("recomputeBookStatus", () => {
       { bookId: book.id, number: 2, status: "reviewing" },
     ]);
 
-    const updated = await recomputeBookStatus(book.id, { bookRepo, chapterRepo });
+    const updated = await recomputeBookStatusAndBumpVersion(book.id, { bookRepo, chapterRepo });
 
     expect(updated.status).toBe("reviewing");
   });
@@ -67,7 +67,7 @@ describe("recomputeBookStatus", () => {
       { bookId: book.id, number: 2, status: "editing" },
     ]);
 
-    const updated = await recomputeBookStatus(book.id, { bookRepo, chapterRepo });
+    const updated = await recomputeBookStatusAndBumpVersion(book.id, { bookRepo, chapterRepo });
 
     expect(updated.status).toBe("editing");
   });
@@ -78,7 +78,7 @@ describe("recomputeBookStatus", () => {
       { bookId: book.id, number: 2, status: "pending" },
     ]);
 
-    const updated = await recomputeBookStatus(book.id, { bookRepo, chapterRepo });
+    const updated = await recomputeBookStatusAndBumpVersion(book.id, { bookRepo, chapterRepo });
 
     expect(updated.status).toBe("pending");
   });
@@ -89,7 +89,7 @@ describe("recomputeBookStatus", () => {
       { bookId: book.id, number: 1, status: "pending" },
       { bookId: book.id, number: 2, status: "paid" },
     ]);
-    await recomputeBookStatus(book.id, { bookRepo, chapterRepo });
+    await recomputeBookStatusAndBumpVersion(book.id, { bookRepo, chapterRepo });
     const beforeDelete = await bookRepo.findById(book.id);
     expect(beforeDelete?.status).toBe("pending");
 
@@ -97,14 +97,14 @@ describe("recomputeBookStatus", () => {
     await chapterRepo.delete(chapters[0].id);
 
     // After: [paid] → paid
-    const updated = await recomputeBookStatus(book.id, { bookRepo, chapterRepo });
+    const updated = await recomputeBookStatusAndBumpVersion(book.id, { bookRepo, chapterRepo });
     expect(updated.status).toBe("paid");
   });
 
   it("US5.14 — after adding a pending chapter to a book with one paid, result is pending", async () => {
     // Before: [paid] → paid
     await chapterRepo.insertMany([{ bookId: book.id, number: 1, status: "paid" }]);
-    await recomputeBookStatus(book.id, { bookRepo, chapterRepo });
+    await recomputeBookStatusAndBumpVersion(book.id, { bookRepo, chapterRepo });
     const beforeAdd = await bookRepo.findById(book.id);
     expect(beforeAdd?.status).toBe("paid");
 
@@ -112,7 +112,7 @@ describe("recomputeBookStatus", () => {
     await chapterRepo.insertMany([{ bookId: book.id, number: 2, status: "pending" }]);
 
     // After: [paid, pending] → pending
-    const updated = await recomputeBookStatus(book.id, { bookRepo, chapterRepo });
+    const updated = await recomputeBookStatusAndBumpVersion(book.id, { bookRepo, chapterRepo });
     expect(updated.status).toBe("pending");
   });
 });

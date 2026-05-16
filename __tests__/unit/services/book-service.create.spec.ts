@@ -44,14 +44,14 @@ describe("BookService.create", () => {
     });
   });
 
-  it("creates a book with N chapters numbered 1..N, all pending", async () => {
+  it("creates a book with N chapters titled 'Capítulo 1..N' on positions 0..N-1, all pending", async () => {
     const studio = await makeStudio(studioRepo);
 
     const result = await service.create({
       title: "Dom Casmurro",
       studioId: studio.id,
       pricePerHourCents: 7500,
-      numChapters: 5,
+      chapters: { numbered: 5, extras: [] },
     });
 
     expect(result.book.title).toBe("Dom Casmurro");
@@ -59,7 +59,14 @@ describe("BookService.create", () => {
     expect(result.book.pricePerHourCents).toBe(7500);
     expect(result.book.status).toBe("pending");
     expect(result.chapters).toHaveLength(5);
-    expect(result.chapters.map((c) => c.number)).toEqual([1, 2, 3, 4, 5]);
+    expect(result.chapters.map((c) => c.title)).toEqual([
+      "Capítulo 1",
+      "Capítulo 2",
+      "Capítulo 3",
+      "Capítulo 4",
+      "Capítulo 5",
+    ]);
+    expect(result.chapters.map((c) => c.position)).toEqual([0, 1, 2, 3, 4]);
     expect(result.chapters.every((c) => c.status === "pending")).toBe(true);
     expect(result.chapters.every((c) => c.bookId === result.book.id)).toBe(true);
   });
@@ -71,7 +78,7 @@ describe("BookService.create", () => {
       title: "Memórias Póstumas",
       studioId: studio.id,
       pricePerHourCents: 6000,
-      numChapters: 3,
+      chapters: { numbered: 3, extras: [] },
     });
 
     const persisted = await bookRepo.findById(book.id);
@@ -84,7 +91,7 @@ describe("BookService.create", () => {
       title: "Dom Casmurro",
       studioId: studio.id,
       pricePerHourCents: 7500,
-      numChapters: 1,
+      chapters: { numbered: 1, extras: [] },
     });
 
     await expect(
@@ -92,7 +99,7 @@ describe("BookService.create", () => {
         title: "dom casmurro",
         studioId: studio.id,
         pricePerHourCents: 6000,
-        numChapters: 1,
+        chapters: { numbered: 1, extras: [] },
       }),
     ).rejects.toBeInstanceOf(BookTitleAlreadyInUseError);
   });
@@ -105,14 +112,14 @@ describe("BookService.create", () => {
       title: "Dom Casmurro",
       studioId: sonora.id,
       pricePerHourCents: 7500,
-      numChapters: 1,
+      chapters: { numbered: 1, extras: [] },
     });
 
     const second = await service.create({
       title: "Dom Casmurro",
       studioId: outro.id,
       pricePerHourCents: 6000,
-      numChapters: 1,
+      chapters: { numbered: 1, extras: [] },
     });
 
     expect(second.book.studioId).toBe(outro.id);
@@ -124,7 +131,7 @@ describe("BookService.create", () => {
         title: "Dom Casmurro",
         studioId: crypto.randomUUID(),
         pricePerHourCents: 7500,
-        numChapters: 1,
+        chapters: { numbered: 1, extras: [] },
       }),
     ).rejects.toBeInstanceOf(StudioReferenceInvalidError);
   });
@@ -138,7 +145,7 @@ describe("BookService.create", () => {
         title: "Dom Casmurro",
         studioId: studio.id,
         pricePerHourCents: 7500,
-        numChapters: 1,
+        chapters: { numbered: 1, extras: [] },
       }),
     ).rejects.toBeInstanceOf(StudioReferenceInvalidError);
   });
@@ -166,7 +173,7 @@ describe("BookService.create", () => {
         title: "Falha Atômica",
         studioId: studio.id,
         pricePerHourCents: 7500,
-        numChapters: 3,
+        chapters: { numbered: 3, extras: [] },
       }),
     ).rejects.toThrow("simulated chapter insert failure");
 
@@ -178,7 +185,7 @@ describe("BookService.create", () => {
       title: "Sucesso Posterior",
       studioId: studio.id,
       pricePerHourCents: 7500,
-      numChapters: 2,
+      chapters: { numbered: 2, extras: [] },
     });
     expect(result.chapters).toHaveLength(2);
   });

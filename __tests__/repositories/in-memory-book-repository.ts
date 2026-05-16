@@ -62,6 +62,7 @@ export class InMemoryBookRepository implements BookRepository {
           totalChapters: chapters.length,
           completedChapters: chapters.filter((c) => COMPLETED_STATUSES.includes(c.status)).length,
           totalEarningsCents,
+          focusThisWeekCount: 0,
           createdAt: book.createdAt,
           updatedAt: book.updatedAt,
         };
@@ -85,6 +86,7 @@ export class InMemoryBookRepository implements BookRepository {
       title: input.title,
       studioId: input.studioId,
       pricePerHourCents: input.pricePerHourCents,
+      chaptersVersion: 0,
       pdfUrl: input.pdfUrl ?? null,
       status: "pending",
       createdAt: now,
@@ -141,6 +143,20 @@ export class InMemoryBookRepository implements BookRepository {
       throw new BookNotFoundError(id);
     }
     this.store.delete(id);
+  }
+
+  async bumpChaptersVersion(id: string): Promise<number> {
+    const existing = this.store.get(id);
+    if (!existing) {
+      throw new BookNotFoundError(id);
+    }
+    const updated: Book = {
+      ...existing,
+      chaptersVersion: existing.chaptersVersion + 1,
+      updatedAt: new Date(),
+    };
+    this.store.set(id, updated);
+    return updated.chaptersVersion;
   }
 
   private findByTitleAndStudio(title: string, studioId: string): Book | null {

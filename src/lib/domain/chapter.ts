@@ -5,7 +5,8 @@ export type ChapterStatus = BookStatus;
 export interface Chapter {
   readonly id: string;
   readonly bookId: string;
-  readonly number: number;
+  readonly title: string;
+  readonly position: number;
   readonly status: ChapterStatus;
   readonly narratorId: string | null;
   readonly editorId: string | null;
@@ -15,7 +16,13 @@ export interface Chapter {
   readonly updatedAt: Date;
 }
 
-export const PAID_LOCKED_FIELDS = ["narratorId", "editorId", "editedSeconds", "deadline"] as const;
+export const PAID_LOCKED_FIELDS = [
+  "narratorId",
+  "editorId",
+  "editedSeconds",
+  "deadline",
+  "title",
+] as const;
 export type PaidLockedField = (typeof PAID_LOCKED_FIELDS)[number];
 
 const CHAPTER_STATUS_LABELS: Record<ChapterStatus, string> = {

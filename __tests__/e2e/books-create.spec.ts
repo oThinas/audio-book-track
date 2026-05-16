@@ -32,6 +32,7 @@ test.describe("Books create", () => {
     const dialog = page.getByTestId("book-create-dialog");
     await expect(dialog).toBeVisible();
 
+    // Step 1: basic info.
     await dialog.getByLabel(/^título$/i).fill("Dom Casmurro");
 
     await dialog.getByTestId("book-studio-trigger").click();
@@ -41,7 +42,11 @@ test.describe("Books create", () => {
     const priceInput = dialog.getByLabel(/^valor\/hora$/i);
     await expect(priceInput).toHaveValue(/R\$\s*75,00/);
 
-    const chaptersInput = dialog.getByLabel(/^capítulos$/i);
+    // Advance to step 2.
+    await dialog.getByTestId("book-create-next").click();
+    await expect(dialog).toHaveAttribute("data-step", "2");
+
+    const chaptersInput = dialog.getByLabel(/^capítulos numerados$/i);
     await chaptersInput.fill("5");
 
     const [postResponse] = await Promise.all([
@@ -59,29 +64,30 @@ test.describe("Books create", () => {
     await expect(page.getByRole("cell", { name: "0/5" })).toBeVisible();
   });
 
-  test("submit is disabled until all required fields are valid", async ({ page }) => {
+  test("advance to step 2 is disabled until step 1 fields are filled", async ({ page }) => {
     await seedStudio(page, "Sonora", 75);
     await page.goto("/books");
 
     await page.getByTestId("books-new-button").click();
     const dialog = page.getByTestId("book-create-dialog");
-    const submit = dialog.getByTestId("book-create-submit");
+    const next = dialog.getByTestId("book-create-next");
 
-    await expect(submit).toBeDisabled();
+    await expect(next).toBeDisabled();
 
     await dialog.getByLabel(/^título$/i).fill("Um Livro");
-    await expect(submit).toBeDisabled();
+    await expect(next).toBeDisabled();
 
     // Selecting the studio auto-fills Valor/hora with the studio's default
-    // rate, which also satisfies the remaining required field and enables
-    // submit (numChapters defaults to 1, which is valid).
+    // rate, which satisfies the remaining required step-1 field.
     await dialog.getByTestId("book-studio-trigger").click();
     await page.getByRole("option", { name: /sonora/i }).click();
 
-    await expect(submit).toBeEnabled();
+    await expect(next).toBeEnabled();
   });
 
-  test("shows inline error when title collides in the same studio (409)", async ({ page }) => {
+  test("shows inline error and snaps back to step 1 when title collides (409)", async ({
+    page,
+  }) => {
     const studio = await seedStudio(page, "Sonora", 75);
 
     const seedResponse = await page.request.post("/api/v1/books", {
@@ -89,7 +95,7 @@ test.describe("Books create", () => {
         title: "Dom Casmurro",
         studioId: studio.id,
         pricePerHourCents: 7500,
-        numChapters: 1,
+        chapters: { numbered: 1, extras: [] },
       },
     });
     expect(seedResponse.status()).toBe(201);
@@ -103,9 +109,15 @@ test.describe("Books create", () => {
     await page.getByRole("option", { name: /sonora/i }).click();
     // Price auto-fills from the studio's default rate; no manual entry needed.
 
+    await dialog.getByTestId("book-create-next").click();
+    await expect(dialog).toHaveAttribute("data-step", "2");
+
     await dialog.getByTestId("book-create-submit").click();
 
+    // After the 409, the dialog auto-navigates back to step 1 to surface the
+    // field error on `title`.
     await expect(dialog).toBeVisible();
+    await expect(dialog).toHaveAttribute("data-step", "1");
     await expect(dialog.getByText(/já existe um livro com este título/i)).toBeVisible();
   });
 

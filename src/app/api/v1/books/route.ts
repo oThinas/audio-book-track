@@ -40,9 +40,11 @@ export async function handleBooksCreate(
         status: book.status,
         createdAt: book.createdAt,
         updatedAt: book.updatedAt,
+        chaptersVersion: book.chaptersVersion,
         chapters: chapters.map((c) => ({
           id: c.id,
-          number: c.number,
+          title: c.title,
+          position: c.position,
           status: c.status,
           narratorId: c.narratorId,
           editorId: c.editorId,

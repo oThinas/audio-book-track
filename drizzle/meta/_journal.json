@@ -57,6 +57,13 @@
       "when": 1778739086947,
       "tag": "0007_chapter_deadline",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1778826701239,
+      "tag": "0008_true_lifeguard",
+      "breakpoints": true
     }
   ]
 }

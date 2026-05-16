@@ -42,7 +42,8 @@ export async function seedInMemoryBook(
   const chapters = await opts.chapterRepo.insertMany(
     opts.statuses.map((status, idx) => ({
       bookId: book.id,
-      number: idx + 1,
+      title: `Capítulo ${idx + 1}`,
+      position: idx,
       status,
       editedSeconds: status === "completed" || status === "paid" ? 3600 : 0,
     })),

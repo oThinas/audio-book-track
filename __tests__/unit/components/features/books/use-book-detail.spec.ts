@@ -17,6 +17,7 @@ const BASE_BOOK: BookDetailData = {
   title: "Test",
   studio: { id: "s-1", name: "Studio" },
   pricePerHourCents: 8000,
+  chaptersVersion: 0,
   pdfUrl: null,
   status: "pending",
   totalChapters: 0,

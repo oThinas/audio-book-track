@@ -1,7 +1,9 @@
 "use client";
 
+import { Plus } from "lucide-react";
 import { lazy, Suspense } from "react";
 
+import { AddChapterDialog } from "@/components/features/chapters/add-chapter-dialog";
 import { ChapterFocusWeekToggle } from "@/components/features/chapters/chapter-focus-week-toggle";
 import { ChapterGroupingControl } from "@/components/features/chapters/chapter-grouping-control";
 import { ChaptersBulkDeleteBar } from "@/components/features/chapters/chapters-bulk-delete-bar";
@@ -9,6 +11,7 @@ import { ChaptersBulkDeleteConfirm } from "@/components/features/chapters/chapte
 import { type ChapterRowData, ChaptersTable } from "@/components/features/chapters/chapters-table";
 import { useChaptersGroupingState } from "@/components/features/chapters/hooks/use-chapters-grouping-state";
 import { useFocusWeekFilter } from "@/components/features/chapters/hooks/use-focus-week-filter";
+import { Button } from "@/components/ui/button";
 import type { BookStatus } from "@/lib/domain/book";
 import type { Studio } from "@/lib/domain/studio";
 
@@ -25,6 +28,7 @@ export interface BookDetailData {
   readonly title: string;
   readonly studio: { readonly id: string; readonly name: string };
   readonly pricePerHourCents: number;
+  readonly chaptersVersion: number;
   readonly pdfUrl: string | null;
   readonly status: BookStatus;
   readonly totalChapters: number;
@@ -48,6 +52,7 @@ interface BookDetailClientProps {
 export function BookDetailClient({ book, narrators, editors, studios }: BookDetailClientProps) {
   const {
     state,
+    chaptersVersion,
     nonPaidChapters,
     paidCount,
     willDeleteBook,
@@ -68,6 +73,11 @@ export function BookDetailClient({ book, narrators, editors, studios }: BookDeta
     handleToggleSelected,
     handleToggleSelectAll,
     handleBulkDeleteConfirm,
+    addChapterOpen,
+    setAddChapterOpen,
+    handleChapterCreated,
+    handleChaptersVersionBump,
+    handleChaptersConflict,
   } = useBookDetail(book);
   const { grouping, setGrouping } = useChaptersGroupingState();
   const { enabled: focusEnabled, toggle: toggleFocus } = useFocusWeekFilter();
@@ -101,9 +111,21 @@ export function BookDetailClient({ book, narrators, editors, studios }: BookDeta
         <div className="mt-4 flex items-center justify-end gap-2">
           <ChapterFocusWeekToggle enabled={focusEnabled} onToggle={toggleFocus} />
           <ChapterGroupingControl grouping={grouping} onGroupingChange={setGrouping} />
+          <Button
+            type="button"
+            variant="default"
+            size="sm"
+            data-testid="add-chapter-open"
+            onClick={() => setAddChapterOpen(true)}
+          >
+            <Plus aria-hidden="true" className="size-4" />
+            Adicionar capítulo
+          </Button>
         </div>
       )}
       <ChaptersTable
+        bookId={book.id}
+        chaptersVersion={chaptersVersion}
         chapters={state.chapters}
         narrators={narrators}
         editors={editors}
@@ -115,6 +137,8 @@ export function BookDetailClient({ book, narrators, editors, studios }: BookDeta
         onChapterDeleted={handleChapterDeleted}
         onToggleSelected={handleToggleSelected}
         onToggleSelectAll={handleToggleSelectAll}
+        onChaptersVersionChange={handleChaptersVersionBump}
+        onReorderConflict={handleChaptersConflict}
       />
       <ChaptersBulkDeleteConfirm
         open={confirmOpen}
@@ -143,6 +167,17 @@ export function BookDetailClient({ book, narrators, editors, studios }: BookDeta
             onUpdated={applyBookUpdate}
           />
         </Suspense>
+      )}
+      {addChapterOpen && (
+        <AddChapterDialog
+          open={addChapterOpen}
+          onOpenChange={setAddChapterOpen}
+          bookId={book.id}
+          chaptersVersion={chaptersVersion}
+          existingChapters={state.chapters.map((c) => ({ id: c.id, title: c.title }))}
+          onCreated={handleChapterCreated}
+          onConflict={handleChaptersConflict}
+        />
       )}
     </>
   );

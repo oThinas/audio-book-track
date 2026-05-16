@@ -9,6 +9,7 @@ import { usePaidReversion } from "./use-paid-reversion";
 const NULL_VALUE = "__none__";
 
 export interface ChapterEditDraftValues {
+  readonly title: string;
   readonly status: ChapterStatus;
   readonly narratorId: string | null;
   readonly editorId: string | null;
@@ -35,6 +36,7 @@ export interface UseChapterRowEditReturn {
 
 export function buildChapterDraft(chapter: ChapterRowEntity): ChapterEditDraftValues {
   return {
+    title: chapter.title,
     status: chapter.status,
     narratorId: chapter.narrator?.id ?? null,
     editorId: chapter.editor?.id ?? null,
@@ -49,6 +51,8 @@ function buildPatch(
 ): Record<string, unknown> | null {
   const patch: Record<string, unknown> = {};
 
+  const trimmedTitle = values.title.trim();
+  if (trimmedTitle !== current.title) patch.title = trimmedTitle;
   if (values.status !== current.status) patch.status = values.status;
   if (values.narratorId !== (current.narrator?.id ?? null)) patch.narratorId = values.narratorId;
   if (values.editorId !== (current.editor?.id ?? null)) patch.editorId = values.editorId;
@@ -72,7 +76,8 @@ export function useChapterRowEdit({
     const result = await apiFetch<{
       data: {
         id: string;
-        number: number;
+        title: string;
+        position: number;
         status: ChapterStatus;
         narratorId: string | null;
         editorId: string | null;
@@ -86,7 +91,8 @@ export function useChapterRowEdit({
     const { data, meta } = result.data;
     const updated: ChapterRowEntity = {
       id: data.id,
-      number: data.number,
+      title: data.title,
+      position: data.position,
       status: data.status,
       editedSeconds: data.editedSeconds,
       deadline: data.deadline,

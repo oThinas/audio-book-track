@@ -13,7 +13,7 @@ import {
 
 interface ChapterDeleteDialogProps {
   readonly open: boolean;
-  readonly chapterNumber: number;
+  readonly chapterTitle: string;
   readonly isLastNonPaid: boolean;
   readonly onConfirm: () => void;
   readonly onCancel: () => void;
@@ -21,7 +21,7 @@ interface ChapterDeleteDialogProps {
 
 export function ChapterDeleteDialog({
   open,
-  chapterNumber,
+  chapterTitle,
   isLastNonPaid,
   onConfirm,
   onCancel,
@@ -35,7 +35,7 @@ export function ChapterDeleteDialog({
     >
       <AlertDialogContent data-testid="chapter-delete-dialog">
         <AlertDialogHeader>
-          <AlertDialogTitle>Excluir capítulo {chapterNumber}?</AlertDialogTitle>
+          <AlertDialogTitle>Excluir {chapterTitle}?</AlertDialogTitle>
           <AlertDialogDescription>
             {isLastNonPaid
               ? "Este é o último capítulo do livro. Confirmar excluirá o livro junto com o capítulo. Esta ação não pode ser desfeita."

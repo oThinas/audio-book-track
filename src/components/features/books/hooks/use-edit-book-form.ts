@@ -23,8 +23,6 @@ export interface UseEditBookFormReturn {
   readonly setStudioPickerOpen: (open: boolean) => void;
   readonly showInlineCreator: boolean;
   readonly setShowInlineCreator: (show: boolean) => void;
-  readonly reduceHint: boolean;
-  readonly setReduceHint: (next: boolean) => void;
   readonly handleInlineStudioCreated: (studio: Studio) => void;
   readonly handleOpenChange: (next: boolean) => void;
   readonly onSubmit: (values: UpdateBookInput) => Promise<void>;
@@ -38,7 +36,6 @@ export function useEditBookForm({
   onOpenChange,
 }: UseEditBookFormArgs): UseEditBookFormReturn {
   const [studioPickerOpen, setStudioPickerOpen] = useState(false);
-  const [reduceHint, setReduceHint] = useState(false);
   const [showInlineCreator, setShowInlineCreator] = useState(false);
   const [inlineStudios, setInlineStudios] = useState<readonly Studio[]>([]);
   const [inlineStudioId, setInlineStudioId] = useState<string | null>(null);
@@ -69,7 +66,6 @@ export function useEditBookForm({
     setShowInlineCreator(false);
     setInlineStudios([]);
     setInlineStudioId(null);
-    setReduceHint(false);
   }
 
   function handleOpenChange(next: boolean) {
@@ -106,9 +102,6 @@ export function useEditBookForm({
     ) {
       patch.pricePerHourCents = values.pricePerHourCents;
     }
-    if (values.numChapters !== undefined && values.numChapters !== book.currentChapters) {
-      patch.numChapters = values.numChapters;
-    }
     if (inlineStudioId && values.studioId === inlineStudioId && patch.studioId === inlineStudioId) {
       patch.inlineStudioId = inlineStudioId;
     }
@@ -141,11 +134,6 @@ export function useEditBookForm({
 
     if (result.kind === "api-error") {
       switch (result.code) {
-        case "BOOK_CANNOT_REDUCE_CHAPTERS":
-          form.setError("numChapters", {
-            message: "Para reduzir a quantidade, use 'Excluir capítulos'.",
-          });
-          return;
         case "STUDIO_REFERENCE_INVALID":
         case "STUDIO_NOT_FOUND":
           form.setError("studioId", { message: "Estúdio não encontrado ou arquivado." });
@@ -183,8 +171,6 @@ export function useEditBookForm({
     setStudioPickerOpen,
     showInlineCreator,
     setShowInlineCreator,
-    reduceHint,
-    setReduceHint,
     handleInlineStudioCreated,
     handleOpenChange,
     onSubmit,

@@ -18,6 +18,19 @@ const chapterStatusSchema = z.enum([
   "paid",
 ]);
 
+const CHAPTER_TITLE_MAX = 100;
+
+export const chapterTitleSchema = z
+  .string({ error: "Título é obrigatório." })
+  .refine((s) => !/[\n\r]/.test(s), {
+    message: "Título não pode ter quebras de linha.",
+  })
+  .transform((s) => s.trim())
+  .refine((s) => s.length > 0, { message: "Título é obrigatório." })
+  .refine((s) => s.length <= CHAPTER_TITLE_MAX, {
+    message: `Título deve ter no máximo ${CHAPTER_TITLE_MAX} caracteres.`,
+  });
+
 function isCalendarValid(iso: string): boolean {
   const date = parseISO(iso);
   if (Number.isNaN(date.getTime())) return false;
@@ -45,6 +58,7 @@ const deadlineSchema = z
 
 export const updateChapterSchema = z
   .object({
+    title: chapterTitleSchema.optional(),
     status: chapterStatusSchema.optional(),
     narratorId: z.uuid("Narrador inválido.").nullable().optional(),
     editorId: z.uuid("Editor inválido.").nullable().optional(),
@@ -67,6 +81,38 @@ export const bulkDeleteChaptersSchema = z.object({
     .min(1, "Ao menos 1 capítulo deve ser informado.")
     .max(BULK_DELETE_MAX, `Máximo de ${BULK_DELETE_MAX} capítulos por requisição.`),
 });
+
+const positionTargetSchema = z.union([
+  z.literal("start"),
+  z.literal("end"),
+  z.object({ after: z.uuid("Capítulo de referência inválido.") }),
+]);
+
+export const createChapterSchema = z.object({
+  title: chapterTitleSchema,
+  position: positionTargetSchema,
+  expectedVersion: z
+    .number({ error: "Versão de capítulos é obrigatória." })
+    .int("Versão deve ser um inteiro.")
+    .nonnegative("Versão não pode ser negativa."),
+});
+
+export type CreateChapterInput = z.infer<typeof createChapterSchema>;
+
+export const reorderChaptersSchema = z.object({
+  orderedIds: z
+    .array(z.uuid("Capítulo inválido."))
+    .min(1, "Lista de capítulos não pode estar vazia.")
+    .refine((arr) => new Set(arr).size === arr.length, {
+      message: "Lista de capítulos não pode conter duplicatas.",
+    }),
+  expectedVersion: z
+    .number({ error: "Versão de capítulos é obrigatória." })
+    .int("Versão deve ser um inteiro.")
+    .nonnegative("Versão não pode ser negativa."),
+});
+
+export type ReorderChaptersInput = z.infer<typeof reorderChaptersSchema>;
 
 export const chapterIdParamsSchema = z.object({
   id: z.uuid("Identificador inválido."),

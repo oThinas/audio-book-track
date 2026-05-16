@@ -8,7 +8,6 @@ import { InMemoryStudioRepository } from "@tests/repositories/in-memory-studio-r
 import { beforeEach, describe, expect, it } from "vitest";
 
 import {
-  BookCannotReduceChaptersError,
   BookInlineStudioInvalidError,
   BookNotFoundError,
   BookPaidPriceLockedError,
@@ -56,69 +55,6 @@ describe("BookService.update", () => {
     expect(result.book.title).toBe("Novo título");
     const refreshed = await bookRepo.findById(book.id);
     expect(refreshed?.title).toBe("Novo título");
-  });
-
-  it("appends new chapters with sequential numbers when numChapters increases", async () => {
-    const { book } = await seedInMemoryBook({
-      studioRepo,
-      bookRepo,
-      chapterRepo,
-      statuses: ["pending", "pending"],
-    });
-
-    const result = await service.update(book.id, { numChapters: 5 });
-
-    expect(result.chaptersAdded).toBe(3);
-    const chapters = await chapterRepo.listByBookId(book.id);
-    expect(chapters).toHaveLength(5);
-    expect(chapters.map((c) => c.number)).toEqual([1, 2, 3, 4, 5]);
-    expect(chapters.slice(2).every((c) => c.status === "pending")).toBe(true);
-  });
-
-  it("numbers new chapters after MAX(number)+1 even if existing chapters are not contiguous", async () => {
-    const { book } = await seedInMemoryBook({
-      studioRepo,
-      bookRepo,
-      chapterRepo,
-      statuses: ["pending", "pending", "pending"],
-    });
-    // Simulate a gap: delete chapter #2 so MAX(number) = 3 but count = 2.
-    const all = await chapterRepo.listByBookId(book.id);
-    await chapterRepo.delete(all[1].id);
-    expect(await chapterRepo.countByBookId(book.id)).toBe(2);
-
-    const result = await service.update(book.id, { numChapters: 4 });
-
-    expect(result.chaptersAdded).toBe(2);
-    const chapters = await chapterRepo.listByBookId(book.id);
-    expect(chapters.map((c) => c.number).sort((a, b) => a - b)).toEqual([1, 3, 4, 5]);
-  });
-
-  it("throws BookCannotReduceChaptersError when numChapters < current total", async () => {
-    const { book } = await seedInMemoryBook({
-      studioRepo,
-      bookRepo,
-      chapterRepo,
-      statuses: ["pending", "pending", "pending"],
-    });
-
-    await expect(service.update(book.id, { numChapters: 2 })).rejects.toBeInstanceOf(
-      BookCannotReduceChaptersError,
-    );
-  });
-
-  it("is idempotent when numChapters equals current total", async () => {
-    const { book } = await seedInMemoryBook({
-      studioRepo,
-      bookRepo,
-      chapterRepo,
-      statuses: ["pending", "pending"],
-    });
-
-    const result = await service.update(book.id, { numChapters: 2 });
-
-    expect(result.chaptersAdded).toBe(0);
-    expect(await chapterRepo.countByBookId(book.id)).toBe(2);
   });
 
   it("throws BookPaidPriceLockedError when changing pricePerHourCents with a paid chapter", async () => {
@@ -279,20 +215,5 @@ describe("BookService.update", () => {
     await expect(
       service.update(book.id, { studioId: tampered.id, inlineStudioId: tampered.id }),
     ).rejects.toBeInstanceOf(BookInlineStudioInvalidError);
-  });
-
-  it("recomputes book.status after appending new pending chapters to a completed book", async () => {
-    const { book } = await seedInMemoryBook({
-      studioRepo,
-      bookRepo,
-      chapterRepo,
-      statuses: ["completed", "completed"],
-    });
-    expect((await bookRepo.findById(book.id))?.status).toBe("completed");
-
-    await service.update(book.id, { numChapters: 4 });
-
-    const refreshed = await bookRepo.findById(book.id);
-    expect(refreshed?.status).toBe("pending");
   });
 });

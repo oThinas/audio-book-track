@@ -21,7 +21,8 @@ const EDITOR_NAMES = new Map([["e-1", "Editor A"]]);
 function makeChapter(overrides: Partial<ChapterRowEntity> = {}): ChapterRowEntity {
   return {
     id: "c-1",
-    number: 1,
+    title: "Capítulo 1",
+    position: 0,
     status: "pending",
     narrator: null,
     editor: null,
@@ -65,12 +66,75 @@ describe("useChapterRowEdit", () => {
       status: "editing",
     });
     expect(buildChapterDraft(chapter)).toEqual({
+      title: "Capítulo 1",
       status: "editing",
       narratorId: "n-1",
       editorId: "e-1",
       editedSeconds: 1200,
       deadline: null,
     });
+  });
+
+  it("onSubmit envia title quando alterado", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: true,
+      data: {
+        data: {
+          id: "c-1",
+          title: "Abertura",
+          position: 0,
+          status: "pending",
+          narratorId: null,
+          editorId: null,
+          editedSeconds: 0,
+          deadline: null,
+        },
+        meta: { bookStatus: "pending" },
+      },
+      headers: new Headers(),
+    });
+
+    const chapter = makeChapter({ title: "Capítulo 1" });
+    const { result, onSaved } = renderEditHook(chapter);
+
+    await act(async () => {
+      await result.current.onSubmit({
+        title: "Abertura",
+        status: chapter.status,
+        narratorId: null,
+        editorId: null,
+        editedSeconds: 0,
+        deadline: null,
+      });
+    });
+
+    expect(apiFetch).toHaveBeenCalledWith(
+      "/api/v1/chapters/c-1",
+      expect.objectContaining({
+        method: "PATCH",
+        body: { title: "Abertura" },
+      }),
+    );
+    expect(onSaved).toHaveBeenCalledWith(expect.objectContaining({ title: "Abertura" }), "pending");
+  });
+
+  it("onSubmit aplica trim em title antes de comparar com o atual", async () => {
+    const chapter = makeChapter({ title: "Capítulo 1" });
+    const { result, onCancel } = renderEditHook(chapter);
+
+    await act(async () => {
+      await result.current.onSubmit({
+        title: "  Capítulo 1  ",
+        status: chapter.status,
+        narratorId: null,
+        editorId: null,
+        editedSeconds: 0,
+        deadline: null,
+      });
+    });
+
+    expect(apiFetch).not.toHaveBeenCalled();
+    expect(onCancel).toHaveBeenCalled();
   });
 
   it("onSubmit with no diff calls onCancel and skips fetch", async () => {
@@ -91,7 +155,8 @@ describe("useChapterRowEdit", () => {
       data: {
         data: {
           id: "c-1",
-          number: 1,
+          title: "Capítulo 1",
+          position: 0,
           status: "editing",
           narratorId: "n-1",
           editorId: null,
@@ -108,6 +173,7 @@ describe("useChapterRowEdit", () => {
 
     await act(async () => {
       await result.current.onSubmit({
+        title: "Capítulo 1",
         status: "editing",
         narratorId: "n-1",
         editorId: null,
@@ -140,6 +206,7 @@ describe("useChapterRowEdit", () => {
 
     await act(async () => {
       await result.current.onSubmit({
+        title: "Capítulo 1",
         status: "completed",
         narratorId: null,
         editorId: null,
@@ -158,7 +225,8 @@ describe("useChapterRowEdit", () => {
       data: {
         data: {
           id: "c-1",
-          number: 1,
+          title: "Capítulo 1",
+          position: 0,
           status: "completed",
           narratorId: null,
           editorId: null,
@@ -175,6 +243,7 @@ describe("useChapterRowEdit", () => {
 
     await act(async () => {
       await result.current.onSubmit({
+        title: "Capítulo 1",
         status: "completed",
         narratorId: null,
         editorId: null,
@@ -203,6 +272,7 @@ describe("useChapterRowEdit", () => {
 
     await act(async () => {
       await result.current.onSubmit({
+        title: "Capítulo 1",
         status: "completed",
         narratorId: null,
         editorId: null,
@@ -228,6 +298,7 @@ describe("useChapterRowEdit", () => {
     const { result, onSaved } = renderEditHook(chapter);
     await act(async () => {
       await result.current.onSubmit({
+        title: "Capítulo 1",
         status: "editing",
         narratorId: "n-1",
         editorId: null,

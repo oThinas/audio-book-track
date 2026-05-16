@@ -1,13 +1,13 @@
-import { asc, eq, inArray, max, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
-import { getUniqueConstraintName } from "@/lib/db/postgres-errors";
 import type * as schema from "@/lib/db/schema";
 import { chapter } from "@/lib/db/schema";
 import type { Chapter, ChapterStatus } from "@/lib/domain/chapter";
-import { ChapterNotFoundError, ChapterNumberAlreadyInUseError } from "@/lib/errors/chapter-errors";
+import { ChapterNotFoundError } from "@/lib/errors/chapter-errors";
 import type { RepositoryTx } from "@/lib/repositories/book-repository";
 import type {
+  ChapterReorderPair,
   ChapterRepository,
   InsertChapterInput,
   UpdateChapterInput,
@@ -18,7 +18,8 @@ type Executor = NodePgDatabase<typeof schema>;
 const CHAPTER_COLUMNS = {
   id: chapter.id,
   bookId: chapter.bookId,
-  number: chapter.number,
+  title: chapter.title,
+  position: chapter.position,
   status: chapter.status,
   narratorId: chapter.narratorId,
   editorId: chapter.editorId,
@@ -28,12 +29,11 @@ const CHAPTER_COLUMNS = {
   updatedAt: chapter.updatedAt,
 } as const;
 
-const CHAPTER_NUMBER_CONSTRAINT = "chapter_book_number_unique";
-
 type ChapterRow = {
   id: string;
   bookId: string;
-  number: number;
+  title: string;
+  position: number;
   status: ChapterStatus;
   narratorId: string | null;
   editorId: string | null;
@@ -47,7 +47,8 @@ function toDomain(row: ChapterRow): Chapter {
   return {
     id: row.id,
     bookId: row.bookId,
-    number: row.number,
+    title: row.title,
+    position: row.position,
     status: row.status,
     narratorId: row.narratorId,
     editorId: row.editorId,
@@ -70,7 +71,7 @@ export class DrizzleChapterRepository implements ChapterRepository {
       .select(CHAPTER_COLUMNS)
       .from(chapter)
       .where(eq(chapter.bookId, bookId))
-      .orderBy(asc(chapter.number));
+      .orderBy(asc(chapter.position));
     return rows.map(toDomain);
   }
 
@@ -91,35 +92,30 @@ export class DrizzleChapterRepository implements ChapterRepository {
       return [];
     }
 
-    try {
-      const rows = await this.executor(tx)
-        .insert(chapter)
-        .values(
-          inputs.map((input) => ({
-            bookId: input.bookId,
-            number: input.number,
-            ...(input.status !== undefined ? { status: input.status } : {}),
-            ...(input.narratorId !== undefined ? { narratorId: input.narratorId } : {}),
-            ...(input.editorId !== undefined ? { editorId: input.editorId } : {}),
-            ...(input.editedSeconds !== undefined ? { editedSeconds: input.editedSeconds } : {}),
-            ...(input.deadline !== undefined ? { deadline: input.deadline } : {}),
-          })),
-        )
-        .returning(CHAPTER_COLUMNS);
-      return rows.map(toDomain);
-    } catch (error) {
-      if (getUniqueConstraintName(error) === CHAPTER_NUMBER_CONSTRAINT) {
-        const first = inputs[0];
-        throw new ChapterNumberAlreadyInUseError(first.bookId, first.number);
-      }
-      throw error;
-    }
+    const rows = await this.executor(tx)
+      .insert(chapter)
+      .values(
+        inputs.map((input) => ({
+          bookId: input.bookId,
+          title: input.title,
+          position: input.position,
+          ...(input.status !== undefined ? { status: input.status } : {}),
+          ...(input.narratorId !== undefined ? { narratorId: input.narratorId } : {}),
+          ...(input.editorId !== undefined ? { editorId: input.editorId } : {}),
+          ...(input.editedSeconds !== undefined ? { editedSeconds: input.editedSeconds } : {}),
+          ...(input.deadline !== undefined ? { deadline: input.deadline } : {}),
+        })),
+      )
+      .returning(CHAPTER_COLUMNS);
+    return rows.map(toDomain);
   }
 
   async update(id: string, input: UpdateChapterInput, tx?: RepositoryTx): Promise<Chapter> {
     const [row] = await this.executor(tx)
       .update(chapter)
       .set({
+        ...(input.title !== undefined ? { title: input.title } : {}),
+        ...(input.position !== undefined ? { position: input.position } : {}),
         ...(input.status !== undefined ? { status: input.status } : {}),
         ...(input.narratorId !== undefined ? { narratorId: input.narratorId } : {}),
         ...(input.editorId !== undefined ? { editorId: input.editorId } : {}),
@@ -165,11 +161,20 @@ export class DrizzleChapterRepository implements ChapterRepository {
     return rows[0]?.count ?? 0;
   }
 
-  async maxNumberByBookId(bookId: string, tx?: RepositoryTx): Promise<number> {
-    const rows = await this.executor(tx)
-      .select({ max: max(chapter.number) })
-      .from(chapter)
-      .where(eq(chapter.bookId, bookId));
-    return rows[0]?.max ?? 0;
+  async reorder(
+    bookId: string,
+    pairs: ReadonlyArray<ChapterReorderPair>,
+    tx?: RepositoryTx,
+  ): Promise<void> {
+    if (pairs.length === 0) {
+      return;
+    }
+    const exec = this.executor(tx);
+    for (const pair of pairs) {
+      await exec
+        .update(chapter)
+        .set({ position: pair.position })
+        .where(and(eq(chapter.id, pair.id), eq(chapter.bookId, bookId)));
+    }
   }
 }

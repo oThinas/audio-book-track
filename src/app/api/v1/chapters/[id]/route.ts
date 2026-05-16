@@ -23,13 +23,15 @@ export async function handleChapterUpdate(
   const params = chapterIdParamsSchema.parse({ id });
   const body: unknown = await request.json();
   const parsed = updateChapterSchema.parse(body);
-  const { chapter, bookStatus } = await routeDeps.createService().update(params.id, parsed);
+  const service = routeDeps.createService();
+  const { chapter, bookStatus } = await service.update(params.id, parsed);
   return NextResponse.json(
     {
       data: {
         id: chapter.id,
         bookId: chapter.bookId,
-        number: chapter.number,
+        title: chapter.title,
+        position: chapter.position,
         status: chapter.status,
         narratorId: chapter.narratorId,
         editorId: chapter.editorId,

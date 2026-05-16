@@ -66,7 +66,10 @@ export type SeedChapterStatus =
 export interface SeedChapterOptions {
   readonly schema: string;
   readonly bookId: string;
-  readonly number: number;
+  /** @deprecated Use `title` e/ou `position`. Mapeado para `title: "Capítulo {N}"` + `position: N-1`. */
+  readonly number?: number;
+  readonly title?: string;
+  readonly position?: number;
   readonly status?: SeedChapterStatus;
   readonly editedSeconds?: number;
   readonly narratorId?: string | null;
@@ -76,14 +79,20 @@ export interface SeedChapterOptions {
 
 export async function seedChapter(options: SeedChapterOptions): Promise<{ id: string }> {
   const pool = getSeedPool();
+  const legacyNumber = options.number;
+  const position = options.position ?? (legacyNumber !== undefined ? legacyNumber - 1 : 0);
+  const title =
+    options.title ??
+    (legacyNumber !== undefined ? `Capítulo ${legacyNumber}` : `Capítulo ${position + 1}`);
   const { rows } = await pool.query<{ id: string }>(
     `INSERT INTO "${options.schema}"."chapter"
-       (id, book_id, number, status, narrator_id, editor_id, edited_seconds, deadline, created_at, updated_at)
-     VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, now(), now())
+       (id, book_id, title, position, status, narrator_id, editor_id, edited_seconds, deadline, created_at, updated_at)
+     VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, now(), now())
      RETURNING id`,
     [
       options.bookId,
-      options.number,
+      title,
+      position,
       options.status ?? "pending",
       options.narratorId ?? null,
       options.editorId ?? null,

@@ -57,7 +57,7 @@ describe("POST /api/v1/books (handleBooksCreate)", () => {
         title: "x",
         studioId: crypto.randomUUID(),
         pricePerHourCents: 7500,
-        numChapters: 1,
+        chapters: { numbered: 1, extras: [] },
       }),
       ROUTE_CTX,
     );
@@ -67,7 +67,12 @@ describe("POST /api/v1/books (handleBooksCreate)", () => {
   it("returns 422 VALIDATION_ERROR for invalid payload", async () => {
     const POST = buildPost({ user: { id: userId } });
     const response = await POST(
-      makeRequest({ title: "", studioId: "not-a-uuid", pricePerHourCents: 0, numChapters: 0 }),
+      makeRequest({
+        title: "",
+        studioId: "not-a-uuid",
+        pricePerHourCents: 0,
+        chapters: { numbered: 0, extras: [] },
+      }),
       ROUTE_CTX,
     );
     const body = await response.json();
@@ -83,7 +88,7 @@ describe("POST /api/v1/books (handleBooksCreate)", () => {
         title: "Dom Casmurro",
         studioId: crypto.randomUUID(),
         pricePerHourCents: 7500,
-        numChapters: 1,
+        chapters: { numbered: 1, extras: [] },
       }),
       ROUTE_CTX,
     );
@@ -106,7 +111,7 @@ describe("POST /api/v1/books (handleBooksCreate)", () => {
         title: "Dom Casmurro",
         studioId: studio.id,
         pricePerHourCents: 7500,
-        numChapters: 10,
+        chapters: { numbered: 10, extras: [] },
       }),
       ROUTE_CTX,
     );
@@ -117,7 +122,12 @@ describe("POST /api/v1/books (handleBooksCreate)", () => {
         studioId: string;
         pricePerHourCents: number;
         status: string;
-        chapters: Array<{ number: number; status: string; editedSeconds: number }>;
+        chapters: Array<{
+          title: string;
+          position: number;
+          status: string;
+          editedSeconds: number;
+        }>;
       };
     };
 
@@ -129,7 +139,19 @@ describe("POST /api/v1/books (handleBooksCreate)", () => {
     expect(body.data.pricePerHourCents).toBe(7500);
     expect(body.data.status).toBe("pending");
     expect(body.data.chapters).toHaveLength(10);
-    expect(body.data.chapters.map((c) => c.number)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    expect(body.data.chapters.map((c) => c.title)).toEqual([
+      "Capítulo 1",
+      "Capítulo 2",
+      "Capítulo 3",
+      "Capítulo 4",
+      "Capítulo 5",
+      "Capítulo 6",
+      "Capítulo 7",
+      "Capítulo 8",
+      "Capítulo 9",
+      "Capítulo 10",
+    ]);
+    expect(body.data.chapters.map((c) => c.position)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
     expect(body.data.chapters.every((c) => c.status === "pending")).toBe(true);
     expect(body.data.chapters.every((c) => c.editedSeconds === 0)).toBe(true);
 
@@ -154,7 +176,7 @@ describe("POST /api/v1/books (handleBooksCreate)", () => {
         title: "Dom Casmurro",
         studioId: studio.id,
         pricePerHourCents: 7500,
-        numChapters: 1,
+        chapters: { numbered: 1, extras: [] },
       }),
       ROUTE_CTX,
     );
@@ -164,7 +186,7 @@ describe("POST /api/v1/books (handleBooksCreate)", () => {
         title: "dom casmurro",
         studioId: studio.id,
         pricePerHourCents: 6000,
-        numChapters: 1,
+        chapters: { numbered: 1, extras: [] },
       }),
       ROUTE_CTX,
     );
@@ -188,7 +210,7 @@ describe("POST /api/v1/books (handleBooksCreate)", () => {
         title: "Atomic",
         studioId: studio.id,
         pricePerHourCents: 7500,
-        numChapters: 5,
+        chapters: { numbered: 5, extras: [] },
       }),
       ROUTE_CTX,
     );
@@ -201,7 +223,7 @@ describe("POST /api/v1/books (handleBooksCreate)", () => {
         title: "Atomic",
         studioId: studio.id,
         pricePerHourCents: 7500,
-        numChapters: 10,
+        chapters: { numbered: 10, extras: [] },
       }),
       ROUTE_CTX,
     );
