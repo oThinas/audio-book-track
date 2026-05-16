@@ -1,8 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronsUpDown, Loader2, Plus } from "lucide-react";
-import { Controller, useForm } from "react-hook-form";
+import { ArrowLeft, ChevronsUpDown, Loader2, Plus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Controller, useForm, useWatch } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -77,7 +78,7 @@ export function BookCreateDialog({
     register,
     control,
     handleSubmit,
-    formState: { errors, isSubmitting, isValid },
+    formState: { errors, isSubmitting },
   } = form;
 
   const {
@@ -92,117 +93,163 @@ export function BookCreateDialog({
     onSubmit,
   } = useCreateBookForm({ studios, form, onCreated, onOpenChange });
 
+  const [step, setStep] = useState<1 | 2>(1);
+
+  // When the dialog closes, snap back to step 1 so the next open starts fresh.
+  useEffect(() => {
+    if (!open) setStep(1);
+  }, [open]);
+
+  // If the API attaches an error to a step-1 field after submit (e.g.
+  // TITLE_ALREADY_IN_USE), bring the user back to step 1 so they can see it.
+  useEffect(() => {
+    if (step !== 2) return;
+    if (errors.title || errors.studioId || errors.pricePerHourCents) {
+      setStep(1);
+    }
+  }, [step, errors.title, errors.studioId, errors.pricePerHourCents]);
+
+  const watchedTitle = useWatch({ control, name: "title" });
+  const watchedStudio = useWatch({ control, name: "studioId" });
+  const watchedPrice = useWatch({ control, name: "pricePerHourCents" });
+  const step1Filled =
+    Boolean(watchedTitle?.trim()) && Boolean(watchedStudio) && (watchedPrice ?? 0) > 0;
+  const step1HasErrors = Boolean(errors.title || errors.studioId || errors.pricePerHourCents);
+  const canAdvance = step1Filled && !step1HasErrors;
+
+  function goToStep2() {
+    if (!canAdvance) return;
+    // Defer the state change to the next tick. If we change step inside the
+    // click handler, React re-renders during the click event sequence and
+    // the type="submit" Confirmar button slides into the same DOM position as
+    // the type="button" Próximo button — Chrome then dispatches the click
+    // to the new (submit) button, accidentally submitting the form.
+    setTimeout(() => setStep(2), 0);
+  }
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent data-testid="book-create-dialog">
+      <DialogContent
+        data-testid="book-create-dialog"
+        data-step={step}
+        className={cn(
+          "transition-[max-width] duration-200 ease-out",
+          step === 1 ? "sm:max-w-md" : "sm:max-w-2xl",
+        )}
+      >
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <DialogHeader>
             <DialogTitle>Novo Livro</DialogTitle>
             <DialogDescription>
-              Cadastre um novo livro com sua quantidade inicial de capítulos.
+              {step === 1
+                ? "Etapa 1 de 2 — informações do livro."
+                : "Etapa 2 de 2 — capítulos iniciais."}
             </DialogDescription>
           </DialogHeader>
 
-          <FieldGroup className="mt-4">
-            <Field data-invalid={errors.title ? true : undefined}>
-              <FieldLabel htmlFor="book-title">Título</FieldLabel>
-              <Input
-                id="book-title"
-                placeholder="Dom Casmurro"
-                autoComplete="off"
-                aria-invalid={errors.title ? true : undefined}
-                disabled={isSubmitting}
-                {...register("title")}
-              />
-              <FieldError>{errors.title?.message}</FieldError>
-            </Field>
+          {step === 1 && (
+            <FieldGroup className="mt-4">
+              <Field data-invalid={errors.title ? true : undefined}>
+                <FieldLabel htmlFor="book-title">Título</FieldLabel>
+                <Input
+                  id="book-title"
+                  placeholder="Dom Casmurro"
+                  autoComplete="off"
+                  aria-invalid={errors.title ? true : undefined}
+                  disabled={isSubmitting}
+                  {...register("title")}
+                />
+                <FieldError>{errors.title?.message}</FieldError>
+              </Field>
 
-            <Field data-invalid={errors.studioId ? true : undefined}>
-              <FieldLabel htmlFor="book-studio">Estúdio</FieldLabel>
-              <Controller
-                name="studioId"
-                control={control}
-                render={({ field }) => (
-                  <Popover open={studioPickerOpen} onOpenChange={setStudioPickerOpen}>
-                    <PopoverTrigger
-                      render={
-                        <Button
-                          id="book-studio"
-                          type="button"
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={studioPickerOpen}
-                          aria-invalid={errors.studioId ? true : undefined}
-                          disabled={isSubmitting}
-                          data-testid="book-studio-trigger"
-                          className={cn(
-                            "w-full justify-between font-normal",
-                            !selectedStudio && "text-muted-foreground",
-                          )}
-                        >
-                          {selectedStudio ? selectedStudio.name : "Selecione um estúdio"}
-                          <ChevronsUpDown
-                            aria-hidden="true"
-                            className="ml-2 size-4 shrink-0 opacity-50"
+              <Field data-invalid={errors.studioId ? true : undefined}>
+                <FieldLabel htmlFor="book-studio">Estúdio</FieldLabel>
+                <Controller
+                  name="studioId"
+                  control={control}
+                  render={({ field }) => (
+                    <Popover open={studioPickerOpen} onOpenChange={setStudioPickerOpen}>
+                      <PopoverTrigger
+                        render={
+                          <Button
+                            id="book-studio"
+                            type="button"
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={studioPickerOpen}
+                            aria-invalid={errors.studioId ? true : undefined}
+                            disabled={isSubmitting}
+                            data-testid="book-studio-trigger"
+                            className={cn(
+                              "w-full justify-between font-normal",
+                              !selectedStudio && "text-muted-foreground",
+                            )}
+                          >
+                            {selectedStudio ? selectedStudio.name : "Selecione um estúdio"}
+                            <ChevronsUpDown
+                              aria-hidden="true"
+                              className="ml-2 size-4 shrink-0 opacity-50"
+                            />
+                          </Button>
+                        }
+                      />
+                      <PopoverContent
+                        className="w-[--radix-popover-trigger-width] p-0"
+                        align="start"
+                      >
+                        {showInlineCreator ? (
+                          <StudioInlineCreator
+                            onCreated={handleInlineStudioCreated}
+                            onCancel={() => setShowInlineCreator(false)}
                           />
-                        </Button>
-                      }
-                    />
-                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                      {showInlineCreator ? (
-                        <StudioInlineCreator
-                          onCreated={handleInlineStudioCreated}
-                          onCancel={() => setShowInlineCreator(false)}
-                        />
-                      ) : (
-                        <Command>
-                          <CommandInput placeholder="Buscar estúdio..." />
-                          <CommandList>
-                            <CommandEmpty>Nenhum estúdio encontrado.</CommandEmpty>
-                            <CommandGroup>
-                              {studioOptions.map((studio) => (
+                        ) : (
+                          <Command>
+                            <CommandInput placeholder="Buscar estúdio..." />
+                            <CommandList>
+                              <CommandEmpty>Nenhum estúdio encontrado.</CommandEmpty>
+                              <CommandGroup>
+                                {studioOptions.map((studio) => (
+                                  <CommandItem
+                                    key={studio.id}
+                                    value={studio.name}
+                                    onSelect={() => {
+                                      field.onChange(studio.id);
+                                      setStudioPickerOpen(false);
+                                    }}
+                                    data-checked={field.value === studio.id ? true : undefined}
+                                    data-testid={`book-studio-item-${studio.id}`}
+                                  >
+                                    <div className="flex flex-col">
+                                      <span>{studio.name}</span>
+                                      <span className="text-xs text-muted-foreground">
+                                        {formatCentsBRL(studio.defaultHourlyRateCents)}/h
+                                      </span>
+                                    </div>
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                              <CommandSeparator />
+                              <CommandGroup>
                                 <CommandItem
-                                  key={studio.id}
-                                  value={studio.name}
-                                  onSelect={() => {
-                                    field.onChange(studio.id);
-                                    setStudioPickerOpen(false);
-                                  }}
-                                  data-checked={field.value === studio.id ? true : undefined}
-                                  data-testid={`book-studio-item-${studio.id}`}
+                                  value="__inline_create_studio__"
+                                  onSelect={() => setShowInlineCreator(true)}
+                                  data-testid="book-studio-inline-create"
+                                  className="text-primary"
                                 >
-                                  <div className="flex flex-col">
-                                    <span>{studio.name}</span>
-                                    <span className="text-xs text-muted-foreground">
-                                      {formatCentsBRL(studio.defaultHourlyRateCents)}/h
-                                    </span>
-                                  </div>
+                                  <Plus aria-hidden="true" className="mr-2 size-4" />
+                                  Novo Estúdio
                                 </CommandItem>
-                              ))}
-                            </CommandGroup>
-                            <CommandSeparator />
-                            <CommandGroup>
-                              <CommandItem
-                                value="__inline_create_studio__"
-                                onSelect={() => setShowInlineCreator(true)}
-                                data-testid="book-studio-inline-create"
-                                className="text-primary"
-                              >
-                                <Plus aria-hidden="true" className="mr-2 size-4" />
-                                Novo Estúdio
-                              </CommandItem>
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      )}
-                    </PopoverContent>
-                  </Popover>
-                )}
-              />
-              <FieldError>{errors.studioId?.message}</FieldError>
-            </Field>
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        )}
+                      </PopoverContent>
+                    </Popover>
+                  )}
+                />
+                <FieldError>{errors.studioId?.message}</FieldError>
+              </Field>
 
-            <div className="grid grid-cols-[auto_1fr] gap-4">
               <Field data-invalid={errors.pricePerHourCents ? true : undefined}>
                 <FieldLabel htmlFor="book-price">Valor/hora</FieldLabel>
                 <Controller
@@ -223,7 +270,11 @@ export function BookCreateDialog({
                 />
                 <FieldError>{errors.pricePerHourCents?.message}</FieldError>
               </Field>
+            </FieldGroup>
+          )}
 
+          {step === 2 && (
+            <FieldGroup className="mt-4">
               <Field data-invalid={errors.chapters?.numbered ? true : undefined}>
                 <FieldLabel htmlFor="book-chapters">Capítulos numerados</FieldLabel>
                 <Controller
@@ -243,42 +294,63 @@ export function BookCreateDialog({
                 />
                 <FieldError>{errors.chapters?.numbered?.message}</FieldError>
               </Field>
-            </div>
 
-            <Field>
-              <FieldLabel>Capítulos extras</FieldLabel>
-              <Controller
-                name="chapters.extras"
-                control={control}
-                render={({ field }) => (
-                  <BookExtrasInput
-                    value={(field.value ?? []) as ReadonlyArray<BookExtraInputValue>}
-                    onChange={(next) => field.onChange(next)}
-                    disabled={isSubmitting}
-                  />
-                )}
-              />
-              {errors.chapters?.message && <FieldError>{errors.chapters.message}</FieldError>}
-            </Field>
-          </FieldGroup>
+              <Field>
+                <FieldLabel>Capítulos extras</FieldLabel>
+                <Controller
+                  name="chapters.extras"
+                  control={control}
+                  render={({ field }) => (
+                    <BookExtrasInput
+                      value={(field.value ?? []) as ReadonlyArray<BookExtraInputValue>}
+                      onChange={(next) => field.onChange(next)}
+                      disabled={isSubmitting}
+                    />
+                  )}
+                />
+                {errors.chapters?.message && <FieldError>{errors.chapters.message}</FieldError>}
+              </Field>
+            </FieldGroup>
+          )}
 
           <DialogFooter className="mt-6">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => handleOpenChange(false)}
-              disabled={isSubmitting}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              disabled={isSubmitting || !isValid}
-              data-testid="book-create-submit"
-            >
-              {isSubmitting && <Loader2 aria-hidden="true" className="animate-spin" />}
-              Confirmar
-            </Button>
+            {step === 1 ? (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleOpenChange(false)}
+                  disabled={isSubmitting}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="button"
+                  onClick={goToStep2}
+                  disabled={!canAdvance}
+                  data-testid="book-create-next"
+                >
+                  Próximo
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setStep(1)}
+                  disabled={isSubmitting}
+                  data-testid="book-create-back"
+                >
+                  <ArrowLeft aria-hidden="true" className="size-4" />
+                  Voltar
+                </Button>
+                <Button type="submit" disabled={isSubmitting} data-testid="book-create-submit">
+                  {isSubmitting && <Loader2 aria-hidden="true" className="animate-spin" />}
+                  Confirmar
+                </Button>
+              </>
+            )}
           </DialogFooter>
         </form>
       </DialogContent>

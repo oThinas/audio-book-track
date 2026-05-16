@@ -46,7 +46,10 @@ test.describe("Books — inline studio creation", () => {
     await priceInput.pressSequentially("10000");
     await expect(priceInput).toHaveValue(/R\$\s*100,00/);
 
-    // Confirm the book creation.
+    // Advance to step 2 and confirm the book creation.
+    await dialog.getByTestId("book-create-next").click();
+    await expect(dialog).toHaveAttribute("data-step", "2");
+
     const [bookResponse] = await Promise.all([
       page.waitForResponse(
         (res) => res.url().endsWith("/api/v1/books") && res.request().method() === "POST",
