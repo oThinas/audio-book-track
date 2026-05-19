@@ -1,77 +1,39 @@
-import {
-  PageContainer,
-  PageDescription,
-  PageHeader,
-  PageTitle,
-} from "@/components/layout/page-container";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { headers } from "next/headers";
 
-export default function DashboardPage() {
-  return (
-    <PageContainer>
-      <PageHeader>
-        <PageTitle>Dashboard</PageTitle>
-        <PageDescription>Visão geral da produção</PageDescription>
-      </PageHeader>
+import { DashboardPageContent } from "@/components/features/dashboard/dashboard-page-content";
+import { auth } from "@/lib/auth/server";
+import { parsePeriodSearchParams } from "@/lib/domain/dashboard-period";
+import { DEFAULT_DASHBOARD_WIDGETS } from "@/lib/domain/dashboard-widget";
+import { todayInAppTimezone } from "@/lib/domain/timezone";
+import { createUserPreferenceService } from "@/lib/factories/user-preference";
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Livros em Andamento
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">—</p>
-          </CardContent>
-        </Card>
+interface DashboardPageProps {
+  readonly searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Capítulos Concluídos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">—</p>
-          </CardContent>
-        </Card>
+function toUrlSearchParams(raw: Record<string, string | string[] | undefined>): URLSearchParams {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(raw)) {
+    if (value === undefined) continue;
+    if (Array.isArray(value)) {
+      const first = value[0];
+      if (first !== undefined) params.set(key, first);
+    } else {
+      params.set(key, value);
+    }
+  }
+  return params;
+}
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Pagamentos Pendentes
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">—</p>
-          </CardContent>
-        </Card>
-      </div>
+export default async function DashboardPage({ searchParams }: DashboardPageProps) {
+  const sp = await searchParams;
+  const period = parsePeriodSearchParams(toUrlSearchParams(sp), todayInAppTimezone());
 
-      <div className="mt-8 grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Atividade Recente
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">Nenhuma atividade registrada</p>
-          </CardContent>
-        </Card>
+  const session = await auth.api.getSession({ headers: await headers() });
+  const userId = session?.user.id;
+  const enabledWidgets = userId
+    ? (await createUserPreferenceService().getOrDefault(userId)).dashboardWidgets
+    : DEFAULT_DASHBOARD_WIDGETS;
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Progresso Mensal
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">Gráfico disponível em breve</p>
-          </CardContent>
-        </Card>
-      </div>
-    </PageContainer>
-  );
+  return <DashboardPageContent period={period} enabledWidgets={[...enabledWidgets]} />;
 }
