@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 
-import { Button } from "@/components/ui/button";
+import { useAutoSavePreference } from "@/components/features/settings/hooks/use-auto-save-preference";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { apiFetch } from "@/lib/api/api-fetch";
 import {
   DASHBOARD_WIDGET_META,
   DASHBOARD_WIDGETS,
@@ -28,35 +27,15 @@ export function DashboardWidgetsSection({ initialWidgets }: DashboardWidgetsSect
   const [selected, setSelected] = useState<ReadonlySet<DashboardWidgetKey>>(
     () => new Set(initialWidgets),
   );
-  const [persisted, setPersisted] = useState<ReadonlySet<DashboardWidgetKey>>(
-    () => new Set(initialWidgets),
-  );
-  const [pending, startTransition] = useTransition();
-
-  const isDirty = !setsEqual(selected, persisted);
+  const { save } = useAutoSavePreference();
 
   function toggle(key: DashboardWidgetKey, checked: boolean): void {
     setSelected((current) => {
       const next = new Set(current);
       if (checked) next.add(key);
       else next.delete(key);
+      save({ dashboardWidgets: Array.from(next) });
       return next;
-    });
-  }
-
-  function onSave(): void {
-    const payload = Array.from(selected);
-    startTransition(async () => {
-      const result = await apiFetch<{ data: { dashboardWidgets: DashboardWidgetKey[] } }>(
-        "/api/v1/user-preferences",
-        {
-          method: "PATCH",
-          body: { dashboardWidgets: payload },
-        },
-      );
-      if (result.ok) {
-        setPersisted(new Set(result.data.data.dashboardWidgets));
-      }
     });
   }
 
@@ -92,12 +71,6 @@ export function DashboardWidgetsSection({ initialWidgets }: DashboardWidgetsSect
             </ul>
           </div>
         ))}
-
-        <div className="flex justify-end">
-          <Button onClick={onSave} disabled={!isDirty || pending}>
-            {pending ? "Salvando…" : "Salvar"}
-          </Button>
-        </div>
       </CardContent>
     </Card>
   );
@@ -114,12 +87,4 @@ function groupBySection() {
     result[meta.section].push(meta);
   }
   return result;
-}
-
-function setsEqual<T>(a: ReadonlySet<T>, b: ReadonlySet<T>): boolean {
-  if (a.size !== b.size) return false;
-  for (const value of a) {
-    if (!b.has(value)) return false;
-  }
-  return true;
 }
