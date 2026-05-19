@@ -105,6 +105,26 @@ describe("DashboardService.getFinancial", () => {
     expect(repo.calls.revenueBuckets).toBe(0);
   });
 
+  it("ticketMedioCents = receitaPeriodoCents / chaptersPagosCount, rounded", async () => {
+    const repo = new InMemoryDashboardRepository({
+      receitaPeriodoCents: 1500,
+      chaptersPagosCount: 5,
+    });
+    const service = new DashboardService(repo);
+    const snapshot = await service.getFinancial(PERIOD, ["ticket-medio"]);
+    expect(snapshot.ticketMedioCents).toBe(300);
+  });
+
+  it("ticketMedioCents = 0 when chaptersPagosCount is 0 (no division by zero)", async () => {
+    const repo = new InMemoryDashboardRepository({
+      receitaPeriodoCents: 9999,
+      chaptersPagosCount: 0,
+    });
+    const service = new DashboardService(repo);
+    const snapshot = await service.getFinancial(PERIOD, ["ticket-medio"]);
+    expect(snapshot.ticketMedioCents).toBe(0);
+  });
+
   it("computes all widgets when enabledWidgets is undefined", async () => {
     const repo = new InMemoryDashboardRepository({
       aReceberAgoraCents: 1000,
