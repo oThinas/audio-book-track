@@ -77,6 +77,34 @@ describe("DashboardService.getFinancial", () => {
     expect(repo.calls.overdueSummary).toBe(1);
   });
 
+  it("getRetrospective densifies buckets with zero for missing entries", async () => {
+    const repo = new InMemoryDashboardRepository({
+      revenueBuckets: [{ startIso: "2026-05-10", cents: 7500 }],
+    });
+    const service = new DashboardService(repo);
+
+    const snapshot = await service.getRetrospective(PERIOD, ["grafico-receita"]);
+    expect(snapshot.granularity).toBe("day");
+    expect(snapshot.buckets.length).toBeGreaterThan(0);
+    const populated = snapshot.buckets.find((b) => b.startIso === "2026-05-10");
+    expect(populated?.cents).toBe(7500);
+    const zeroed = snapshot.buckets.find((b) => b.startIso === "2026-05-01");
+    expect(zeroed?.cents).toBe(0);
+    expect(snapshot.computedWidgets).toEqual(["grafico-receita"]);
+  });
+
+  it("getRetrospective returns empty buckets when widget is disabled", async () => {
+    const repo = new InMemoryDashboardRepository({
+      revenueBuckets: [{ startIso: "2026-05-10", cents: 7500 }],
+    });
+    const service = new DashboardService(repo);
+
+    const snapshot = await service.getRetrospective(PERIOD, []);
+    expect(snapshot.buckets).toEqual([]);
+    expect(snapshot.computedWidgets).toEqual([]);
+    expect(repo.calls.revenueBuckets).toBe(0);
+  });
+
   it("computes all widgets when enabledWidgets is undefined", async () => {
     const repo = new InMemoryDashboardRepository({
       aReceberAgoraCents: 1000,

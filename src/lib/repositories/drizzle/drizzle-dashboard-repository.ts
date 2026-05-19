@@ -198,17 +198,21 @@ export class DrizzleDashboardRepository implements DashboardRepository {
   }
 
   async getRevenueBuckets(range: DateRangeIso, granularity: Granularity): Promise<BucketAmount[]> {
-    const truncUnit =
-      granularity === "day" ? sql`'day'` : granularity === "week" ? sql`'week'` : sql`'month'`;
+    // Inline literal SQL fragments to keep date_trunc invocations textually
+    // identical between SELECT/GROUP BY/ORDER BY (PostgreSQL does not equate
+    // parameter placeholders inside grouping clauses).
+    const truncUnitLiteral =
+      granularity === "day" ? "'day'" : granularity === "week" ? "'week'" : "'month'";
+    const tz = APP_TIMEZONE;
     const rows = await this.db.execute<{ start_iso: string; cents: string }>(sql`
-      SELECT to_char(date_trunc(${truncUnit}, ${chapter.paidAt} AT TIME ZONE ${APP_TIMEZONE}), 'YYYY-MM-DD') AS start_iso,
+      SELECT to_char(date_trunc(${sql.raw(truncUnitLiteral)}, ${chapter.paidAt} AT TIME ZONE ${sql.raw(`'${tz}'`)}), 'YYYY-MM-DD') AS start_iso,
              COALESCE(SUM(ROUND(${chapter.editedSeconds} * ${book.pricePerHourCents} / 3600.0)), 0)::bigint AS cents
       FROM ${chapter}
       JOIN ${book} ON ${book.id} = ${chapter.bookId}
       WHERE ${chapter.status} = 'paid'
-        AND (${chapter.paidAt} AT TIME ZONE ${APP_TIMEZONE})::date BETWEEN ${range.fromIso}::date AND ${range.toIso}::date
-      GROUP BY date_trunc(${truncUnit}, ${chapter.paidAt} AT TIME ZONE ${APP_TIMEZONE})
-      ORDER BY date_trunc(${truncUnit}, ${chapter.paidAt} AT TIME ZONE ${APP_TIMEZONE}) ASC
+        AND (${chapter.paidAt} AT TIME ZONE ${sql.raw(`'${tz}'`)})::date BETWEEN ${range.fromIso}::date AND ${range.toIso}::date
+      GROUP BY date_trunc(${sql.raw(truncUnitLiteral)}, ${chapter.paidAt} AT TIME ZONE ${sql.raw(`'${tz}'`)})
+      ORDER BY date_trunc(${sql.raw(truncUnitLiteral)}, ${chapter.paidAt} AT TIME ZONE ${sql.raw(`'${tz}'`)}) ASC
     `);
     return rows.rows.map((row) => ({
       startIso: row.start_iso,

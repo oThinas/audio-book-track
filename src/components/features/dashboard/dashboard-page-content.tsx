@@ -17,6 +17,7 @@ import type { DashboardWidgetKey } from "@/lib/domain/dashboard-widget";
 import { FinancialSection } from "./financial-section";
 import { OperationalSection } from "./operational-section";
 import { PeriodFilter } from "./period-filter";
+import { RetrospectiveSection } from "./retrospective-section";
 import { SectionSkeleton } from "./section-skeleton";
 
 interface DashboardPageContentProps {
@@ -48,6 +49,9 @@ export function DashboardPageContent({
         </Suspense>
         <Suspense fallback={<SectionSkeleton lines={2} />}>
           <OperationalSection enabledWidgets={enabledWidgets} />
+        </Suspense>
+        <Suspense fallback={<SectionSkeleton lines={6} />}>
+          <RetrospectiveSection period={period} enabledWidgets={enabledWidgets} />
         </Suspense>
       </div>
     </PageContainer>
