@@ -49,6 +49,34 @@ describe("DashboardService.getFinancial", () => {
     expect(snapshot.computedWidgets).toContain("receita-periodo");
   });
 
+  it("computes funnel and overdue when both widgets enabled", async () => {
+    const repo = new InMemoryDashboardRepository({
+      funnel: { pending: 3, editing: 2 },
+      overdue: { overdueCount: 4, firstOverdueBookId: "book-1" },
+    });
+    const service = new DashboardService(repo);
+
+    const snapshot = await service.getOperational(["funil-status", "atrasados"]);
+    expect(snapshot.funnel.pending).toBe(3);
+    expect(snapshot.funnel.editing).toBe(2);
+    expect(snapshot.overdueCount).toBe(4);
+    expect(snapshot.firstOverdueBookId).toBe("book-1");
+    expect(snapshot.computedWidgets).toEqual(["funil-status", "atrasados"]);
+  });
+
+  it("skips funnel query when only 'atrasados' is enabled", async () => {
+    const repo = new InMemoryDashboardRepository({
+      overdue: { overdueCount: 1, firstOverdueBookId: "book-2" },
+    });
+    const service = new DashboardService(repo);
+
+    const snapshot = await service.getOperational(["atrasados"]);
+    expect(snapshot.overdueCount).toBe(1);
+    expect(snapshot.funnel.pending).toBe(0);
+    expect(repo.calls.statusFunnel).toBe(0);
+    expect(repo.calls.overdueSummary).toBe(1);
+  });
+
   it("computes all widgets when enabledWidgets is undefined", async () => {
     const repo = new InMemoryDashboardRepository({
       aReceberAgoraCents: 1000,

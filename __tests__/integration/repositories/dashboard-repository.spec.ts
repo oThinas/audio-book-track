@@ -145,3 +145,72 @@ describe("DrizzleDashboardRepository.getReceitaPeriodoCents", () => {
     expect(count).toBe(2);
   });
 });
+
+describe("DrizzleDashboardRepository.getStatusFunnel", () => {
+  it("returns count per status with zeros for empty buckets", async () => {
+    const repo = createRepo();
+    const db = getTestDb();
+    const { book } = await createTestBook(db);
+
+    await createTestChapter(db, { bookId: book.id, position: 0, status: "pending" });
+    await createTestChapter(db, { bookId: book.id, position: 1, status: "pending" });
+    await createTestChapter(db, { bookId: book.id, position: 2, status: "editing" });
+    await createTestChapter(db, {
+      bookId: book.id,
+      position: 3,
+      status: "completed",
+      editedSeconds: 3600,
+    });
+
+    const funnel = await repo.getStatusFunnel();
+    expect(funnel.pending).toBe(2);
+    expect(funnel.editing).toBe(1);
+    expect(funnel.reviewing).toBe(0);
+    expect(funnel.retake).toBe(0);
+    expect(funnel.completed).toBe(1);
+    expect(funnel.paid).toBe(0);
+  });
+});
+
+describe("DrizzleDashboardRepository.getOverdueSummary", () => {
+  it("returns count and bookId of oldest overdue (with title tiebreaker)", async () => {
+    const repo = createRepo();
+    const db = getTestDb();
+
+    const { book: bookA } = await createTestBook(db, { title: "Aaaa" });
+    const { book: bookB } = await createTestBook(db, { title: "Bbbb" });
+
+    // bookA: 2 overdue (one with older deadline)
+    await createTestChapter(db, {
+      bookId: bookA.id,
+      position: 0,
+      status: "editing",
+      deadline: "2026-05-10",
+    });
+    await createTestChapter(db, {
+      bookId: bookA.id,
+      position: 1,
+      status: "editing",
+      deadline: "2026-05-12",
+    });
+    // bookB: 1 overdue, same oldest deadline as bookA
+    await createTestChapter(db, {
+      bookId: bookB.id,
+      position: 0,
+      status: "editing",
+      deadline: "2026-05-10",
+    });
+
+    const result = await repo.getOverdueSummary("2026-05-19");
+    expect(result.overdueCount).toBe(3);
+    // Tie on deadline 2026-05-10 → title ASC → "Aaaa" wins
+    expect(result.firstOverdueBookId).toBe(bookA.id);
+  });
+
+  it("returns null bookId when there are no overdue chapters", async () => {
+    const repo = createRepo();
+    const result = await repo.getOverdueSummary("2026-05-19");
+    expect(result.overdueCount).toBe(0);
+    expect(result.firstOverdueBookId).toBeNull();
+  });
+});
