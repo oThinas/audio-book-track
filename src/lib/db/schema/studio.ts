@@ -25,5 +25,6 @@ export const studio = pgTable(
       "studio_default_hourly_rate_cents_range",
       sql`${table.defaultHourlyRateCents} >= 1 AND ${table.defaultHourlyRateCents} <= 999999`,
     ),
+    check("studio_name_length", sql`length(${table.name}) >= 2 AND length(${table.name}) <= 100`),
   ],
 );

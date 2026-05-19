@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { index, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { check, index, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 
 export const narrator = pgTable(
   "narrator",
@@ -20,5 +20,6 @@ export const narrator = pgTable(
       .on(sql`lower(${table.name})`)
       .where(sql`${table.deletedAt} IS NULL`),
     index("narrator_deleted_at_idx").on(table.deletedAt).where(sql`${table.deletedAt} IS NOT NULL`),
+    check("narrator_name_length", sql`length(${table.name}) >= 2 AND length(${table.name}) <= 100`),
   ],
 );

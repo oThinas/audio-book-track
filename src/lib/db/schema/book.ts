@@ -38,5 +38,6 @@ export const book = pgTable(
       "book_pdf_url_format",
       sql`${table.pdfUrl} IS NULL OR (length(${table.pdfUrl}) <= 2048 AND ${table.pdfUrl} ~* '^https?://')`,
     ),
+    check("book_title_length", sql`length(${table.title}) >= 1 AND length(${table.title}) <= 255`),
   ],
 );
