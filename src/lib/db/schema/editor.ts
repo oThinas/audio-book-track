@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { index, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { check, index, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 
 export const editor = pgTable(
   "editor",
@@ -22,5 +22,10 @@ export const editor = pgTable(
       .where(sql`${table.deletedAt} IS NULL`),
     uniqueIndex("editor_email_unique").on(table.email),
     index("editor_deleted_at_idx").on(table.deletedAt).where(sql`${table.deletedAt} IS NOT NULL`),
+    check("editor_name_length", sql`length(${table.name}) >= 2 AND length(${table.name}) <= 100`),
+    check(
+      "editor_email_length",
+      sql`length(${table.email}) >= 1 AND length(${table.email}) <= 255`,
+    ),
   ],
 );
