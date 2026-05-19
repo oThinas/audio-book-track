@@ -1,6 +1,6 @@
 "use client";
 
-import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import {
   type ChartConfig,
@@ -30,7 +30,13 @@ export default function RevenueChart({ buckets }: RevenueChartProps) {
 
   return (
     <ChartContainer config={CHART_CONFIG} className="h-[260px] w-full">
-      <LineChart data={data} margin={{ left: 12, right: 12, top: 12 }}>
+      <AreaChart data={data} margin={{ left: 12, right: 12, top: 12 }}>
+        <defs>
+          <linearGradient id="revenue-area-fill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor="var(--color-cents)" stopOpacity={0.45} />
+            <stop offset="95%" stopColor="var(--color-cents)" stopOpacity={0.05} />
+          </linearGradient>
+        </defs>
         <CartesianGrid vertical={false} strokeDasharray="3 3" />
         <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} minTickGap={32} />
         <YAxis
@@ -48,15 +54,15 @@ export default function RevenueChart({ buckets }: RevenueChartProps) {
             />
           }
         />
-        <Line
+        <Area
           dataKey="cents"
           type="monotone"
           stroke="var(--color-cents)"
           strokeWidth={2}
-          dot={false}
+          fill="url(#revenue-area-fill)"
           activeDot={{ r: 4 }}
         />
-      </LineChart>
+      </AreaChart>
     </ChartContainer>
   );
 }

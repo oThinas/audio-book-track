@@ -1,16 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
 
 import { Badge } from "@/components/ui/badge";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  type ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { RankingEntry } from "@/lib/repositories/dashboard-repository";
 import { formatCentsBRL } from "@/lib/utils/format-currency";
@@ -30,19 +29,30 @@ const TAB_LABEL: Record<RankingTabKey, string> = {
   editor: "Editores",
 };
 
-const ENTITY_HEADER: Record<RankingTabKey, string> = {
-  estudio: "Estúdio",
-  narrador: "Narrador",
-  editor: "Editor",
+const CHART_CONFIG: ChartConfig = {
+  totalCents: {
+    label: "Receita",
+    color: "var(--chart-1)",
+  },
 };
 
-function RankingTable({
-  entries,
-  entityLabel,
-}: {
-  entries: ReadonlyArray<RankingEntry>;
-  entityLabel: string;
-}) {
+// Highest-ranked entry gets the most saturated shade (--chart-1) and the
+// ramp fades toward --chart-6 as ranking decreases. Cap at 6 — beyond that,
+// reuse the lightest shade (10 items max anyway).
+const RANK_COLORS = [
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+  "var(--chart-6)",
+] as const;
+
+function colorForRank(index: number): string {
+  return RANK_COLORS[Math.min(index, RANK_COLORS.length - 1)] as string;
+}
+
+function RankingChart({ entries }: { entries: ReadonlyArray<RankingEntry> }) {
   if (entries.length === 0) {
     return (
       <p className="py-6 text-center text-sm text-muted-foreground">
@@ -51,36 +61,68 @@ function RankingTable({
     );
   }
 
+  const data = entries.map((entry, index) => ({
+    entityId: entry.entityId,
+    name: entry.archived ? `${entry.name} (arquivado)` : entry.name,
+    totalCents: entry.totalCents,
+    chaptersPaidCount: entry.chaptersPaidCount,
+    fill: colorForRank(index),
+  }));
+
+  // Height scales with row count so each bar gets a comfortable slot
+  // (32px per row + chrome).
+  const height = Math.max(180, data.length * 38 + 24);
+
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>{entityLabel}</TableHead>
-          <TableHead className="text-right">Capítulos pagos</TableHead>
-          <TableHead className="text-right">Receita</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {entries.map((entry) => (
-          <TableRow key={entry.entityId}>
-            <TableCell>
-              <div className="flex items-center gap-2">
-                <span>{entry.name}</span>
-                {entry.archived && (
-                  <Badge variant="outline" className="text-xs">
-                    Arquivado
-                  </Badge>
-                )}
-              </div>
-            </TableCell>
-            <TableCell className="text-right tabular-nums">{entry.chaptersPaidCount}</TableCell>
-            <TableCell className="text-right tabular-nums">
-              {formatCentsBRL(entry.totalCents)}
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <div className="flex flex-col gap-4">
+      <ChartContainer config={CHART_CONFIG} className="w-full" style={{ height: `${height}px` }}>
+        <BarChart data={data} layout="vertical" margin={{ left: 12, right: 12, top: 4 }}>
+          <CartesianGrid horizontal={false} strokeDasharray="3 3" />
+          <XAxis
+            type="number"
+            tickFormatter={(value: number) => formatCentsBRL(value)}
+            tickLine={false}
+            axisLine={false}
+            tickMargin={6}
+          />
+          <YAxis
+            type="category"
+            dataKey="name"
+            tickLine={false}
+            axisLine={false}
+            width={160}
+            tickMargin={6}
+          />
+          <ChartTooltip
+            cursor={{ fill: "var(--muted)", fillOpacity: 0.35 }}
+            content={
+              <ChartTooltipContent
+                formatter={(value, _name, item) => {
+                  const total = formatCentsBRL(Number(value));
+                  const count = item.payload.chaptersPaidCount;
+                  return `${total} · ${count} capítulo(s)`;
+                }}
+                labelKey="name"
+              />
+            }
+          />
+          <Bar dataKey="totalCents" radius={[0, 4, 4, 0]}>
+            {data.map((entry) => (
+              <Cell key={entry.entityId} fill={entry.fill} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ChartContainer>
+
+      {entries.some((entry) => entry.archived) && (
+        <p className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Badge variant="outline" className="text-[10px]">
+            Arquivado
+          </Badge>
+          Entidades soft-deleted ainda aparecem no ranking histórico.
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -100,13 +142,13 @@ export function FinancialRankingTabs({
         <TabsTrigger value="editor">{TAB_LABEL.editor}</TabsTrigger>
       </TabsList>
       <TabsContent value="estudio">
-        <RankingTable entries={studio} entityLabel={ENTITY_HEADER.estudio} />
+        <RankingChart entries={studio} />
       </TabsContent>
       <TabsContent value="narrador">
-        <RankingTable entries={narrator} entityLabel={ENTITY_HEADER.narrador} />
+        <RankingChart entries={narrator} />
       </TabsContent>
       <TabsContent value="editor">
-        <RankingTable entries={editor} entityLabel={ENTITY_HEADER.editor} />
+        <RankingChart entries={editor} />
       </TabsContent>
     </Tabs>
   );
