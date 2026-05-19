@@ -19,6 +19,7 @@ import { OperationalSection } from "./operational-section";
 import { PeriodFilter } from "./period-filter";
 import { RetrospectiveSection } from "./retrospective-section";
 import { SectionSkeleton } from "./section-skeleton";
+import { WidgetsEmptyState } from "./widgets-empty-state";
 
 interface DashboardPageContentProps {
   readonly period: DateRangeIso;
@@ -44,15 +45,21 @@ export function DashboardPageContent({
       </PageHeader>
 
       <div className="flex flex-col gap-8">
-        <Suspense fallback={<SectionSkeleton lines={3} />}>
-          <FinancialSection period={period} enabledWidgets={enabledWidgets} />
-        </Suspense>
-        <Suspense fallback={<SectionSkeleton lines={2} />}>
-          <OperationalSection enabledWidgets={enabledWidgets} />
-        </Suspense>
-        <Suspense fallback={<SectionSkeleton lines={6} />}>
-          <RetrospectiveSection period={period} enabledWidgets={enabledWidgets} />
-        </Suspense>
+        {enabledWidgets.length === 0 ? (
+          <WidgetsEmptyState />
+        ) : (
+          <>
+            <Suspense fallback={<SectionSkeleton lines={3} />}>
+              <FinancialSection period={period} enabledWidgets={enabledWidgets} />
+            </Suspense>
+            <Suspense fallback={<SectionSkeleton lines={2} />}>
+              <OperationalSection enabledWidgets={enabledWidgets} />
+            </Suspense>
+            <Suspense fallback={<SectionSkeleton lines={6} />}>
+              <RetrospectiveSection period={period} enabledWidgets={enabledWidgets} />
+            </Suspense>
+          </>
+        )}
       </div>
     </PageContainer>
   );

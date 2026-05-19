@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import { DashboardWidgetsSection } from "@/components/features/settings/dashboard-widgets-section";
 import { FavoritePageSelector } from "@/components/features/settings/favorite-page-selector";
 import { FontSizeSelector } from "@/components/features/settings/font-size-selector";
 import { PrimaryColorSelector } from "@/components/features/settings/primary-color-selector";
@@ -89,6 +90,10 @@ export default async function SettingsPage() {
           </div>
         </CardContent>
       </Card>
+
+      <div className="mt-6">
+        <DashboardWidgetsSection initialWidgets={preferences.dashboardWidgets} />
+      </div>
     </PageContainer>
   );
 }
