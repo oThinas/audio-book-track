@@ -6,7 +6,6 @@ import { CalendarIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
 
-import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -64,15 +63,12 @@ export function PeriodFilter({ todayIso }: PeriodFilterProps) {
       </Tabs>
 
       <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant={isCustom ? "secondary" : "outline"}
-            size="sm"
-            aria-label="Selecionar período customizado"
-          >
-            <CalendarIcon className="size-4" aria-hidden="true" />
-            <span className="ml-2">{customLabel}</span>
-          </Button>
+        <PopoverTrigger
+          className="inline-flex h-8 items-center gap-2 rounded-md border border-input bg-background px-3 text-sm font-medium text-foreground hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:bg-accent"
+          aria-label="Selecionar período customizado"
+        >
+          <CalendarIcon className="size-4" aria-hidden="true" />
+          <span>{customLabel}</span>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="end">
           <Calendar

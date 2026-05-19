@@ -59,6 +59,8 @@ export function useFocusWeekFilter(): UseFocusWeekFilterReturn {
             editorId: c.editor?.id ?? null,
             editedSeconds: c.editedSeconds,
             deadline: c.deadline,
+            completedAt: null,
+            paidAt: null,
             createdAt: new Date(),
             updatedAt: new Date(),
           },

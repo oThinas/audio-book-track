@@ -26,6 +26,6 @@ test.describe("Dashboard — US1 — A receber agora", () => {
     await page.goto("/dashboard");
 
     await expect(page.getByText("A receber agora")).toBeVisible();
-    await expect(page.getByText(/R\$\s+\d/)).toBeVisible();
+    await expect(page.getByText("R$ 75,00")).toBeVisible();
   });
 });

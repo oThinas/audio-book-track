@@ -29,9 +29,12 @@ export function OverdueCard({ count, firstOverdueBookId }: OverdueCardProps) {
       <CardContent className="flex items-baseline justify-between gap-4">
         <p className="text-3xl font-semibold tracking-tight text-foreground">{count}</p>
         {hasOverdue && firstOverdueBookId !== null ? (
-          <Button asChild size="sm" variant="secondary">
-            <Link href={`/books/${firstOverdueBookId}?focus=week`}>Ver lista</Link>
-          </Button>
+          <Link
+            href={`/books/${firstOverdueBookId}?focus=week`}
+            className="inline-flex h-8 items-center justify-center rounded-md bg-secondary px-3 text-xs font-medium text-secondary-foreground transition-colors hover:bg-secondary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            Ver lista
+          </Link>
         ) : (
           <Button size="sm" variant="secondary" disabled>
             Ver lista

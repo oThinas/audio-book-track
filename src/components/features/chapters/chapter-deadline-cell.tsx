@@ -27,6 +27,8 @@ export function ChapterDeadlineCell({ deadline, status, focusContext }: ChapterD
       editorId: null,
       editedSeconds: 0,
       deadline,
+      completedAt: null,
+      paidAt: null,
       createdAt: new Date(),
       updatedAt: new Date(),
     },

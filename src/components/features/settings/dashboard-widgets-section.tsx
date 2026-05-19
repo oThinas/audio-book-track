@@ -54,7 +54,7 @@ export function DashboardWidgetsSection({ initialWidgets }: DashboardWidgetsSect
           body: { dashboardWidgets: payload },
         },
       );
-      if (result.kind === "ok") {
+      if (result.ok) {
         setPersisted(new Set(result.data.data.dashboardWidgets));
       }
     });
