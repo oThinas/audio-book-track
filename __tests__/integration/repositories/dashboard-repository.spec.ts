@@ -215,6 +215,48 @@ describe("DrizzleDashboardRepository.getOverdueSummary", () => {
   });
 });
 
+describe("DrizzleDashboardRepository.getRankingByStudio", () => {
+  it("returns top studios by paid revenue with chapter count", async () => {
+    const repo = createRepo();
+    const db = getTestDb();
+
+    const { book } = await createTestBook(db, { pricePerHourCents: 7500 });
+    const { chapter: c1 } = await createTestChapter(db, {
+      bookId: book.id,
+      position: 0,
+      status: "paid",
+      editedSeconds: 3600,
+    });
+    const { chapter: c2 } = await createTestChapter(db, {
+      bookId: book.id,
+      position: 1,
+      status: "paid",
+      editedSeconds: 1800,
+    });
+
+    const { chapter } = await import("@/lib/db/schema");
+    const { eq } = await import("drizzle-orm");
+    await db
+      .update(chapter)
+      .set({ paidAt: new Date("2026-05-10T12:00:00Z") })
+      .where(eq(chapter.id, c1.id));
+    await db
+      .update(chapter)
+      .set({ paidAt: new Date("2026-05-15T12:00:00Z") })
+      .where(eq(chapter.id, c2.id));
+
+    const ranking = await repo.getRankingByStudio(
+      { fromIso: "2026-05-01", toIso: "2026-05-31", preset: "this-month" },
+      10,
+    );
+    expect(ranking.length).toBeGreaterThanOrEqual(1);
+    const entry = ranking[0];
+    expect(entry.totalCents).toBe(11250);
+    expect(entry.chaptersPaidCount).toBe(2);
+    expect(entry.archived).toBe(false);
+  });
+});
+
 describe("DrizzleDashboardRepository.getRevenueBuckets", () => {
   it("groups paid earnings by day in PT-BR timezone", async () => {
     const repo = createRepo();
