@@ -57,3 +57,91 @@ describe("DrizzleDashboardRepository.getAReceberAgoraCents", () => {
     expect(await repo.getAReceberAgoraCents()).toBe(0);
   });
 });
+
+describe("DrizzleDashboardRepository.getReceitaPeriodoCents", () => {
+  it("sums earnings of chapters paid within the period", async () => {
+    const repo = createRepo();
+    const db = getTestDb();
+    const { book } = await createTestBook(db, { pricePerHourCents: 7500 });
+
+    // 2 paid in period (mid-May 2026), summing 1h + 30min @ 75/h = 11250 cents
+    const { chapter: c1 } = await createTestChapter(db, {
+      bookId: book.id,
+      position: 0,
+      status: "paid",
+      editedSeconds: 3600,
+    });
+    const { chapter: c2 } = await createTestChapter(db, {
+      bookId: book.id,
+      position: 1,
+      status: "paid",
+      editedSeconds: 1800,
+    });
+    // 1 paid outside period
+    const { chapter: c3 } = await createTestChapter(db, {
+      bookId: book.id,
+      position: 2,
+      status: "paid",
+      editedSeconds: 7200,
+    });
+    // Force paid_at in period for c1/c2, outside for c3.
+    const { chapter } = await import("@/lib/db/schema");
+    const { eq } = await import("drizzle-orm");
+    await db
+      .update(chapter)
+      .set({ paidAt: new Date("2026-05-10T12:00:00Z") })
+      .where(eq(chapter.id, c1.id));
+    await db
+      .update(chapter)
+      .set({ paidAt: new Date("2026-05-15T12:00:00Z") })
+      .where(eq(chapter.id, c2.id));
+    await db
+      .update(chapter)
+      .set({ paidAt: new Date("2026-04-15T12:00:00Z") })
+      .where(eq(chapter.id, c3.id));
+
+    const total = await repo.getReceitaPeriodoCents({
+      fromIso: "2026-05-01",
+      toIso: "2026-05-31",
+      preset: "this-month",
+    });
+    expect(total).toBe(11250);
+  });
+
+  it("counts paid chapters within the period", async () => {
+    const repo = createRepo();
+    const db = getTestDb();
+    const { book } = await createTestBook(db);
+
+    const { chapter: c1 } = await createTestChapter(db, {
+      bookId: book.id,
+      position: 0,
+      status: "paid",
+      editedSeconds: 3600,
+    });
+    const { chapter: c2 } = await createTestChapter(db, {
+      bookId: book.id,
+      position: 1,
+      status: "paid",
+      editedSeconds: 3600,
+    });
+
+    const { chapter } = await import("@/lib/db/schema");
+    const { eq } = await import("drizzle-orm");
+    await db
+      .update(chapter)
+      .set({ paidAt: new Date("2026-05-10T12:00:00Z") })
+      .where(eq(chapter.id, c1.id));
+    await db
+      .update(chapter)
+      .set({ paidAt: new Date("2026-05-20T12:00:00Z") })
+      .where(eq(chapter.id, c2.id));
+
+    const count = await repo.getChaptersPagosCount({
+      fromIso: "2026-05-01",
+      toIso: "2026-05-31",
+      preset: "this-month",
+    });
+    expect(count).toBe(2);
+  });
+});

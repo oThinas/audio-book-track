@@ -22,6 +22,12 @@ export async function FinancialSection({ period, enabledWidgets }: FinancialSect
       value: formatCentsBRL(snapshot.aReceberAgoraCents),
       hint: "Capítulos concluídos ainda não pagos.",
     },
+    {
+      key: "receita-periodo" as const,
+      label: "Receita realizada no período",
+      value: formatCentsBRL(snapshot.receitaPeriodoCents),
+      hint: `${snapshot.chaptersPagosCount} capítulo(s) pago(s) no período.`,
+    },
   ];
 
   const visible = cards.filter((card) => enabled.has(card.key));

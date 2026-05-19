@@ -15,19 +15,30 @@ import type { DateRangeIso } from "@/lib/domain/dashboard-period";
 import type { DashboardWidgetKey } from "@/lib/domain/dashboard-widget";
 
 import { FinancialSection } from "./financial-section";
+import { PeriodFilter } from "./period-filter";
 import { SectionSkeleton } from "./section-skeleton";
 
 interface DashboardPageContentProps {
   readonly period: DateRangeIso;
   readonly enabledWidgets: ReadonlyArray<DashboardWidgetKey>;
+  readonly todayIso: string;
 }
 
-export function DashboardPageContent({ period, enabledWidgets }: DashboardPageContentProps) {
+export function DashboardPageContent({
+  period,
+  enabledWidgets,
+  todayIso,
+}: DashboardPageContentProps) {
   return (
     <PageContainer>
       <PageHeader>
-        <PageTitle>Dashboard</PageTitle>
-        <PageDescription>Visão geral da operação</PageDescription>
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <PageTitle>Dashboard</PageTitle>
+            <PageDescription>Visão geral da operação</PageDescription>
+          </div>
+          <PeriodFilter todayIso={todayIso} />
+        </div>
       </PageHeader>
 
       <div className="flex flex-col gap-6">

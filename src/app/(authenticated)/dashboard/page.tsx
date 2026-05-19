@@ -27,7 +27,8 @@ function toUrlSearchParams(raw: Record<string, string | string[] | undefined>): 
 
 export default async function DashboardPage({ searchParams }: DashboardPageProps) {
   const sp = await searchParams;
-  const period = parsePeriodSearchParams(toUrlSearchParams(sp), todayInAppTimezone());
+  const todayIso = todayInAppTimezone();
+  const period = parsePeriodSearchParams(toUrlSearchParams(sp), todayIso);
 
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session?.user.id;
@@ -35,5 +36,11 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     ? (await createUserPreferenceService().getOrDefault(userId)).dashboardWidgets
     : DEFAULT_DASHBOARD_WIDGETS;
 
-  return <DashboardPageContent period={period} enabledWidgets={[...enabledWidgets]} />;
+  return (
+    <DashboardPageContent
+      period={period}
+      enabledWidgets={[...enabledWidgets]}
+      todayIso={todayIso}
+    />
+  );
 }
