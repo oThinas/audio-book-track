@@ -14,11 +14,13 @@ import {
 import type { DateRangeIso } from "@/lib/domain/dashboard-period";
 import type { DashboardWidgetKey } from "@/lib/domain/dashboard-widget";
 
-import { FinancialSection } from "./financial-section";
-import { OperationalSection } from "./operational-section";
+import { FinancialKpisSection } from "./financial-kpis-section";
+import { FinancialRankingsSection } from "./financial-rankings-section";
+import { OverdueSection } from "./overdue-section";
 import { PeriodFilter } from "./period-filter";
 import { RetrospectiveSection } from "./retrospective-section";
 import { SectionSkeleton } from "./section-skeleton";
+import { StatusFunnelSection } from "./status-funnel-section";
 import { WidgetsEmptyState } from "./widgets-empty-state";
 
 interface DashboardPageContentProps {
@@ -49,12 +51,25 @@ export function DashboardPageContent({
           <WidgetsEmptyState />
         ) : (
           <>
+            {/* Linha 1: KPIs */}
             <Suspense fallback={<SectionSkeleton lines={3} />}>
-              <FinancialSection period={period} enabledWidgets={enabledWidgets} />
+              <FinancialKpisSection period={period} enabledWidgets={enabledWidgets} />
             </Suspense>
-            <Suspense fallback={<SectionSkeleton lines={2} />}>
-              <OperationalSection enabledWidgets={enabledWidgets} />
-            </Suspense>
+
+            {/* Linha 2: Rankings + Funil de status + Atrasados */}
+            <div className="grid items-stretch gap-4 lg:grid-cols-3">
+              <Suspense fallback={<SectionSkeleton lines={6} />}>
+                <FinancialRankingsSection period={period} enabledWidgets={enabledWidgets} />
+              </Suspense>
+              <Suspense fallback={<SectionSkeleton lines={4} />}>
+                <StatusFunnelSection enabledWidgets={enabledWidgets} />
+              </Suspense>
+              <Suspense fallback={<SectionSkeleton lines={2} />}>
+                <OverdueSection enabledWidgets={enabledWidgets} />
+              </Suspense>
+            </div>
+
+            {/* Linha 3: Receita ao longo do período */}
             <Suspense fallback={<SectionSkeleton lines={6} />}>
               <RetrospectiveSection period={period} enabledWidgets={enabledWidgets} />
             </Suspense>

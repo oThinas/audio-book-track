@@ -15,7 +15,7 @@ export function OverdueCard({ count, firstOverdueBookId }: OverdueCardProps) {
   return (
     <Card
       className={cn(
-        "flex flex-col justify-between",
+        "flex h-full flex-col justify-between",
         hasOverdue && "border-destructive/40 bg-destructive/10",
       )}
     >

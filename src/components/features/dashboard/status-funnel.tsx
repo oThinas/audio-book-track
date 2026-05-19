@@ -21,8 +21,7 @@ const STATUS_ORDER: ReadonlyArray<ChapterStatus> = [
 ];
 
 // Lifecycle reads as a ramp: pending = lightest (furthest from "done"),
-// paid = full primary saturation (terminal state). Reverse order from STATUS_ORDER
-// so completed/paid are the most-saturated chips.
+// paid = full primary saturation (terminal state).
 const STATUS_COLOR: Record<ChapterStatus, string> = {
   pending: "var(--chart-6)",
   editing: "var(--chart-5)",
@@ -53,65 +52,55 @@ export function StatusFunnel({ funnel }: StatusFunnelProps) {
   const total = data.reduce((acc, entry) => acc + entry.count, 0);
 
   if (total === 0) {
-    return (
-      <section aria-label="Funil de status" className="space-y-3">
-        <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-          Funil de status
-        </h2>
-        <p className="text-sm text-muted-foreground">Sem capítulos cadastrados.</p>
-      </section>
-    );
+    return <p className="text-sm text-muted-foreground">Sem capítulos cadastrados.</p>;
   }
 
   return (
-    <section aria-label="Funil de status" className="space-y-3">
-      <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-        Funil de status
-      </h2>
-      <div className="grid items-center gap-6 md:grid-cols-[minmax(0,260px)_1fr]">
-        <ChartContainer config={CHART_CONFIG} className="aspect-square w-full max-w-[260px]">
-          <PieChart>
-            <ChartTooltip
-              content={
-                <ChartTooltipContent
-                  formatter={(value, _name, item) => {
-                    const count = Number(value);
-                    const percent = Math.round((count / total) * 100);
-                    return `${item.payload.label}: ${count} (${percent}%)`;
-                  }}
-                  hideLabel
-                />
-              }
-            />
-            <Pie
-              data={data}
-              dataKey="count"
-              nameKey="status"
-              innerRadius="55%"
-              outerRadius="90%"
-              strokeWidth={2}
-              stroke="var(--background)"
-            >
-              {data.map((entry) => (
-                <Cell key={entry.status} fill={STATUS_COLOR[entry.status]} />
-              ))}
-            </Pie>
-          </PieChart>
-        </ChartContainer>
-        <ul className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-          {STATUS_ORDER.map((status) => (
-            <li key={status} className="flex items-center gap-2">
-              <span
-                aria-hidden="true"
-                className="size-2.5 rounded-full"
-                style={{ backgroundColor: STATUS_COLOR[status] }}
+    <div className="flex flex-col items-center gap-4">
+      <ChartContainer config={CHART_CONFIG} className="aspect-square w-full max-w-[220px]">
+        <PieChart>
+          <ChartTooltip
+            content={
+              <ChartTooltipContent
+                formatter={(value, _name, item) => {
+                  const count = Number(value);
+                  const percent = Math.round((count / total) * 100);
+                  return `${item.payload.label}: ${count} (${percent}%)`;
+                }}
+                hideLabel
               />
-              <span className="text-muted-foreground">{chapterStatusLabel(status)}</span>
-              <span className="ml-auto font-semibold text-foreground">{funnel[status]}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </section>
+            }
+          />
+          <Pie
+            data={data}
+            dataKey="count"
+            nameKey="status"
+            innerRadius="55%"
+            outerRadius="90%"
+            strokeWidth={2}
+            stroke="var(--background)"
+          >
+            {data.map((entry) => (
+              <Cell key={entry.status} fill={STATUS_COLOR[entry.status]} />
+            ))}
+          </Pie>
+        </PieChart>
+      </ChartContainer>
+      <ul className="grid w-full grid-cols-1 gap-y-1.5 text-sm sm:grid-cols-2">
+        {STATUS_ORDER.map((status) => (
+          <li key={status} className="flex items-center gap-2">
+            <span
+              aria-hidden="true"
+              className="size-2.5 shrink-0 rounded-full"
+              style={{ backgroundColor: STATUS_COLOR[status] }}
+            />
+            <span className="text-muted-foreground">{chapterStatusLabel(status)}</span>
+            <span className="ml-auto font-semibold tabular-nums text-foreground">
+              {funnel[status]}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
