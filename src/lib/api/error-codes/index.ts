@@ -1,5 +1,6 @@
 import { bookCodes } from "./book";
 import { chapterCodes } from "./chapter";
+import { dashboardCodes } from "./dashboard";
 import { editorCodes } from "./editor";
 import { narratorCodes } from "./narrator";
 import { platformCodes } from "./platform";
@@ -15,6 +16,7 @@ export const errorCodes = {
   ...chapterCodes,
   ...narratorCodes,
   ...editorCodes,
+  ...dashboardCodes,
 } satisfies Readonly<Record<string, ErrorCatalogEntry>>;
 
 export type ErrorCode = keyof typeof errorCodes;

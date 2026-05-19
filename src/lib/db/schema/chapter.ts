@@ -24,6 +24,8 @@ export const chapter = pgTable(
     editorId: text("editor_id").references(() => editor.id, { onDelete: "restrict" }),
     editedSeconds: integer("edited_seconds").notNull().default(0),
     deadline: date("deadline", { mode: "string" }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    paidAt: timestamp("paid_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .defaultNow()
@@ -41,6 +43,10 @@ export const chapter = pgTable(
     index("chapter_deadline_active_idx")
       .on(table.deadline)
       .where(sql`${table.deadline} IS NOT NULL`),
+    index("chapter_completed_at_idx")
+      .on(table.completedAt)
+      .where(sql`${table.completedAt} IS NOT NULL`),
+    index("chapter_paid_at_idx").on(table.paidAt).where(sql`${table.paidAt} IS NOT NULL`),
     check("chapter_title_length", sql`length(${table.title}) <= 100`),
     check("chapter_title_no_newline", sql`${table.title} !~ E'[\\n\\r]'`),
     check("chapter_position_nonnegative", sql`${table.position} >= 0`),

@@ -21,6 +21,8 @@ export interface UpdateChapterInput {
   readonly editorId?: string | null;
   readonly editedSeconds?: number;
   readonly deadline?: string | null;
+  readonly completedAt?: Date | null;
+  readonly paidAt?: Date | null;
 }
 
 export interface ChapterReorderPair {

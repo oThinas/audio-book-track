@@ -34,6 +34,7 @@ describe("UserPreferenceService", () => {
         fontSize: "large",
         primaryColor: "green",
         favoritePage: "books",
+        dashboardWidgets: DEFAULT_USER_PREFERENCE.dashboardWidgets,
       });
     });
   });
@@ -57,6 +58,7 @@ describe("UserPreferenceService", () => {
         fontSize: "large",
         primaryColor: "red",
         favoritePage: "dashboard",
+        dashboardWidgets: DEFAULT_USER_PREFERENCE.dashboardWidgets,
       });
     });
 
@@ -72,6 +74,7 @@ describe("UserPreferenceService", () => {
         fontSize: "small",
         primaryColor: "red",
         favoritePage: "dashboard",
+        dashboardWidgets: DEFAULT_USER_PREFERENCE.dashboardWidgets,
       });
     });
   });

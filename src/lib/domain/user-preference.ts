@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+import {
+  type DashboardWidgetKey,
+  DEFAULT_DASHBOARD_WIDGETS,
+  dashboardWidgetsArraySchema,
+} from "./dashboard-widget";
+
 export const THEMES = ["light", "dark", "system"] as const;
 export const FONT_SIZES = ["small", "medium", "large"] as const;
 export const PRIMARY_COLORS = ["blue", "orange", "green", "red", "amber"] as const;
@@ -22,6 +28,7 @@ export interface UserPreference {
   readonly fontSize: FontSize;
   readonly primaryColor: PrimaryColor;
   readonly favoritePage: FavoritePage;
+  readonly dashboardWidgets: ReadonlyArray<DashboardWidgetKey>;
 }
 
 export const DEFAULT_USER_PREFERENCE: UserPreference = {
@@ -29,6 +36,7 @@ export const DEFAULT_USER_PREFERENCE: UserPreference = {
   fontSize: "medium",
   primaryColor: "blue",
   favoritePage: "dashboard",
+  dashboardWidgets: DEFAULT_DASHBOARD_WIDGETS,
 } as const;
 
 export const themeSchema = z.enum(THEMES);
@@ -42,13 +50,15 @@ export const updateUserPreferenceSchema = z
     fontSize: fontSizeSchema.optional(),
     primaryColor: primaryColorSchema.optional(),
     favoritePage: favoritePageSchema.optional(),
+    dashboardWidgets: dashboardWidgetsArraySchema.optional(),
   })
   .refine(
     (data) =>
       data.theme !== undefined ||
       data.fontSize !== undefined ||
       data.primaryColor !== undefined ||
-      data.favoritePage !== undefined,
+      data.favoritePage !== undefined ||
+      data.dashboardWidgets !== undefined,
     { message: "Pelo menos um campo deve ser informado." },
   );
 
