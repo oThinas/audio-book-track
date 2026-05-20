@@ -50,7 +50,8 @@ export default function RevenueChart({ buckets }: RevenueChartProps) {
           content={
             <ChartTooltipContent
               formatter={(value) => formatCentsBRL(Number(value))}
-              labelKey="label"
+              // No labelKey: ChartTooltipContent then reads Recharts' default
+              // `label` prop (the X axis tick value — e.g. "12/05/2026").
             />
           }
         />
