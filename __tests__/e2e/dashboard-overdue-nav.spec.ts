@@ -26,9 +26,9 @@ test.describe("Dashboard — US3 — Overdue navigation", () => {
 
     await page.goto("/dashboard");
 
-    const verLista = page.getByRole("link", { name: "Ver lista" });
-    await expect(verLista).toBeVisible();
-    await verLista.click();
+    const overdueBadge = page.getByRole("link", { name: /capítulos? atrasados?/i });
+    await expect(overdueBadge).toBeVisible();
+    await overdueBadge.click();
 
     await expect(page).toHaveURL(new RegExp(`/books/${book.id}\\?focus=week`));
   });

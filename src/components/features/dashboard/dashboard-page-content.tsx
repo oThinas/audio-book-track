@@ -16,7 +16,7 @@ import type { DashboardWidgetKey } from "@/lib/domain/dashboard-widget";
 
 import { FinancialKpisSection } from "./financial-kpis-section";
 import { FinancialRankingsSection } from "./financial-rankings-section";
-import { OverdueSection } from "./overdue-section";
+import { OverdueBadge } from "./overdue-badge";
 import { PeriodFilter } from "./period-filter";
 import { RetrospectiveSection } from "./retrospective-section";
 import { SectionSkeleton } from "./section-skeleton";
@@ -42,7 +42,12 @@ export function DashboardPageContent({
             <PageTitle>Dashboard</PageTitle>
             <PageDescription>Visão geral da operação</PageDescription>
           </div>
-          <PeriodFilter todayIso={todayIso} />
+          <div className="flex flex-wrap items-center gap-3">
+            <Suspense fallback={null}>
+              <OverdueBadge enabledWidgets={enabledWidgets} />
+            </Suspense>
+            <PeriodFilter todayIso={todayIso} />
+          </div>
         </div>
       </PageHeader>
 
@@ -56,16 +61,15 @@ export function DashboardPageContent({
               <FinancialKpisSection period={period} enabledWidgets={enabledWidgets} />
             </Suspense>
 
-            {/* Linha 2: Rankings + Funil de status + Atrasados */}
+            {/* Linha 2: Rankings (2 colunas) + Funil de status (1 coluna) */}
             <div className="grid items-stretch gap-4 lg:grid-cols-3">
-              <Suspense fallback={<SectionSkeleton lines={6} />}>
-                <FinancialRankingsSection period={period} enabledWidgets={enabledWidgets} />
-              </Suspense>
+              <div className="lg:col-span-2">
+                <Suspense fallback={<SectionSkeleton lines={6} />}>
+                  <FinancialRankingsSection period={period} enabledWidgets={enabledWidgets} />
+                </Suspense>
+              </div>
               <Suspense fallback={<SectionSkeleton lines={4} />}>
                 <StatusFunnelSection enabledWidgets={enabledWidgets} />
-              </Suspense>
-              <Suspense fallback={<SectionSkeleton lines={2} />}>
-                <OverdueSection enabledWidgets={enabledWidgets} />
               </Suspense>
             </div>
 
