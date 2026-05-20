@@ -69,14 +69,10 @@ function RankingChart({ entries }: { entries: ReadonlyArray<RankingEntry> }) {
     fill: colorForRank(index),
   }));
 
-  // Height scales with row count so each bar gets a comfortable slot
-  // (32px per row + chrome).
-  const height = Math.max(180, data.length * 38 + 24);
-
   return (
-    <div className="flex flex-col gap-4">
-      <ChartContainer config={CHART_CONFIG} className="w-full" style={{ height: `${height}px` }}>
-        <BarChart data={data} layout="vertical" margin={{ left: 12, right: 12, top: 4 }}>
+    <div className="flex h-full min-h-[240px] flex-col gap-4">
+      <ChartContainer config={CHART_CONFIG} className="h-full min-h-[200px] w-full flex-1">
+        <BarChart data={data} layout="vertical" margin={{ left: 12, right: 12, top: 4, bottom: 4 }}>
           <CartesianGrid horizontal={false} strokeDasharray="3 3" />
           <XAxis
             type="number"
@@ -106,7 +102,7 @@ function RankingChart({ entries }: { entries: ReadonlyArray<RankingEntry> }) {
               />
             }
           />
-          <Bar dataKey="totalCents" radius={[0, 4, 4, 0]}>
+          <Bar dataKey="totalCents" radius={[0, 4, 4, 0]} maxBarSize={48}>
             {data.map((entry) => (
               <Cell key={entry.entityId} fill={entry.fill} />
             ))}
@@ -135,7 +131,11 @@ export function FinancialRankingTabs({
   const [active, setActive] = useState<RankingTabKey>(defaultTab);
 
   return (
-    <Tabs value={active} onValueChange={(value) => setActive(value as RankingTabKey)}>
+    <Tabs
+      value={active}
+      onValueChange={(value) => setActive(value as RankingTabKey)}
+      className="h-full"
+    >
       <TabsList>
         <TabsTrigger value="estudio">{TAB_LABEL.estudio}</TabsTrigger>
         <TabsTrigger value="narrador">{TAB_LABEL.narrador}</TabsTrigger>

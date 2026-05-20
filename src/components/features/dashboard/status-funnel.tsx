@@ -56,7 +56,7 @@ export function StatusFunnel({ funnel }: StatusFunnelProps) {
   }
 
   return (
-    <div className="flex flex-col items-center gap-4">
+    <div className="flex flex-col items-center gap-6">
       <ChartContainer config={CHART_CONFIG} className="aspect-square w-full max-w-[220px]">
         <PieChart>
           <ChartTooltip
@@ -86,7 +86,7 @@ export function StatusFunnel({ funnel }: StatusFunnelProps) {
           </Pie>
         </PieChart>
       </ChartContainer>
-      <ul className="grid w-full grid-cols-1 gap-y-1.5 text-sm sm:grid-cols-2">
+      <ul className="grid w-full grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
         {STATUS_ORDER.map((status) => (
           <li key={status} className="flex items-center gap-2">
             <span
