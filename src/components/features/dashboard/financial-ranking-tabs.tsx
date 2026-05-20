@@ -76,7 +76,11 @@ function RankingChart({ entries }: { entries: ReadonlyArray<RankingEntry> }) {
 
   return (
     <div className="flex h-full flex-col justify-center gap-4">
-      <ChartContainer config={CHART_CONFIG} className="w-full" style={{ height: `${height}px` }}>
+      <ChartContainer
+        config={CHART_CONFIG}
+        className="aspect-auto w-full"
+        style={{ height: `${height}px` }}
+      >
         <BarChart data={data} layout="vertical" margin={{ left: 12, right: 12, top: 4 }}>
           <CartesianGrid horizontal={false} strokeDasharray="3 3" />
           <XAxis
@@ -91,7 +95,7 @@ function RankingChart({ entries }: { entries: ReadonlyArray<RankingEntry> }) {
             dataKey="name"
             tickLine={false}
             axisLine={false}
-            width={160}
+            width={120}
             tickMargin={6}
           />
           <ChartTooltip
