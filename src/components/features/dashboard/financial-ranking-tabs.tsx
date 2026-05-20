@@ -69,11 +69,13 @@ function RankingChart({ entries }: { entries: ReadonlyArray<RankingEntry> }) {
     fill: colorForRank(index),
   }));
 
-  // Fixed height per row keeps the chart compact regardless of card height.
+  // Fixed height per row keeps the chart compact regardless of card height;
+  // wrapper uses h-full + justify-center so the (compact) chart is vertically
+  // centered inside the card's remaining space.
   const height = Math.max(180, data.length * 38 + 24);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex h-full flex-col justify-center gap-4">
       <ChartContainer config={CHART_CONFIG} className="w-full" style={{ height: `${height}px` }}>
         <BarChart data={data} layout="vertical" margin={{ left: 12, right: 12, top: 4 }}>
           <CartesianGrid horizontal={false} strokeDasharray="3 3" />
@@ -134,7 +136,11 @@ export function FinancialRankingTabs({
   const [active, setActive] = useState<RankingTabKey>(defaultTab);
 
   return (
-    <Tabs value={active} onValueChange={(value) => setActive(value as RankingTabKey)}>
+    <Tabs
+      value={active}
+      onValueChange={(value) => setActive(value as RankingTabKey)}
+      className="h-full"
+    >
       <TabsList>
         <TabsTrigger value="estudio">{TAB_LABEL.estudio}</TabsTrigger>
         <TabsTrigger value="narrador">{TAB_LABEL.narrador}</TabsTrigger>

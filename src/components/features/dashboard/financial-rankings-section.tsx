@@ -27,7 +27,7 @@ export async function FinancialRankingsSection({
       <CardHeader>
         <CardTitle className="text-sm font-medium text-muted-foreground">Rankings</CardTitle>
       </CardHeader>
-      <CardContent className="flex-1">
+      <CardContent className="flex flex-1 flex-col">
         <FinancialRankingTabs
           studio={enabled.has("ranking-estudio") ? snapshot.rankingEstudio : []}
           narrator={enabled.has("ranking-narrador") ? snapshot.rankingNarrador : []}
