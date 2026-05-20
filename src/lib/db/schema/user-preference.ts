@@ -1,6 +1,9 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import type { DashboardWidgetKey } from "@/lib/domain/dashboard-widget";
 import { user } from "./auth";
+
+const DEFAULT_DASHBOARD_WIDGETS_SQL = sql`'["a-receber-agora","receita-periodo","ticket-medio","ranking-estudio","ranking-narrador","ranking-editor","funil-status","atrasados","grafico-receita"]'::jsonb`;
 
 export const userPreference = pgTable(
   "user_preference",
@@ -27,6 +30,10 @@ export const userPreference = pgTable(
     })
       .notNull()
       .default("dashboard"),
+    dashboardWidgets: jsonb("dashboard_widgets")
+      .$type<DashboardWidgetKey[]>()
+      .notNull()
+      .default(DEFAULT_DASHBOARD_WIDGETS_SQL),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .defaultNow()

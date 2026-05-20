@@ -1,0 +1,181 @@
+openapi: 3.1.0
+info:
+  title: Dashboard Financial Section
+  version: 1.0.0
+  description: |
+    Agregações financeiras do dashboard: "a receber agora" (snapshot, sem
+    período), "receita realizada no período", "ticket médio", e rankings
+    top-10 por estúdio/narrador/editor.
+
+paths:
+  /api/v1/dashboard/financial:
+    get:
+      summary: Obtém o snapshot financeiro
+      operationId: getDashboardFinancial
+      tags: [dashboard]
+      parameters:
+        - in: query
+          name: from
+          required: false
+          schema:
+            type: string
+            format: date
+            pattern: '^\d{4}-\d{2}-\d{2}$'
+          description: |
+            Data inicial inclusiva (YYYY-MM-DD, fuso America/Sao_Paulo).
+            Obrigatório quando preset não é informado.
+        - in: query
+          name: to
+          required: false
+          schema:
+            type: string
+            format: date
+            pattern: '^\d{4}-\d{2}-\d{2}$'
+          description: Data final inclusiva. Mesma regra de `from`.
+        - in: query
+          name: preset
+          required: false
+          schema:
+            type: string
+            enum: [today, this-week, this-month, this-quarter, this-year]
+          description: |
+            Preset de período. Quando informado, `from`/`to` são ignorados
+            e calculados a partir do preset + hoje.
+        - in: query
+          name: widgets
+          required: false
+          schema:
+            type: string
+          description: |
+            CSV opcional de widget keys habilitadas para essa requisição
+            (otimização — FR-032). Valores válidos:
+            a-receber-agora,receita-periodo,ticket-medio,ranking-estudio,
+            ranking-narrador,ranking-editor.
+            Quando ausente, todos os widgets financeiros são calculados.
+      responses:
+        '200':
+          description: Snapshot financeiro
+          headers:
+            X-Request-Id:
+              schema: { type: string }
+              description: ID da requisição para correlação (gerado por withApiErrorHandler).
+            Cache-Control:
+              schema: { type: string, default: 'no-store' }
+              description: |
+                Dados dinâmicos — cliente NÃO deve cachear. Sempre `no-store`.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/FinancialSnapshot'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/InvalidPeriod'
+        '500':
+          $ref: '#/components/responses/Internal'
+
+components:
+  schemas:
+    DateRange:
+      type: object
+      required: [fromIso, toIso, preset]
+      properties:
+        fromIso: { type: string, format: date }
+        toIso: { type: string, format: date }
+        preset:
+          type: string
+          enum: [today, this-week, this-month, this-quarter, this-year, custom]
+    RankingEntry:
+      type: object
+      required: [entityId, name, archived, chaptersPaidCount, totalCents]
+      properties:
+        entityId: { type: string }
+        name: { type: string }
+        archived: { type: boolean }
+        chaptersPaidCount: { type: integer, minimum: 0 }
+        totalCents: { type: integer, minimum: 0 }
+    FinancialSnapshot:
+      type: object
+      required:
+        - periodo
+        - aReceberAgoraCents
+        - receitaPeriodoCents
+        - ticketMedioCents
+        - chaptersPagosCount
+        - rankingEstudio
+        - rankingNarrador
+        - rankingEditor
+        - computedWidgets
+      properties:
+        periodo: { $ref: '#/components/schemas/DateRange' }
+        aReceberAgoraCents:
+          type: integer
+          minimum: 0
+          description: Snapshot atual; ignora período (FR-013).
+        receitaPeriodoCents: { type: integer, minimum: 0 }
+        ticketMedioCents:
+          type: integer
+          minimum: 0
+          description: Zero quando chaptersPagosCount = 0 (FR-015).
+        chaptersPagosCount: { type: integer, minimum: 0 }
+        rankingEstudio:
+          type: array
+          maxItems: 10
+          items: { $ref: '#/components/schemas/RankingEntry' }
+        rankingNarrador:
+          type: array
+          maxItems: 10
+          items: { $ref: '#/components/schemas/RankingEntry' }
+        rankingEditor:
+          type: array
+          maxItems: 10
+          items: { $ref: '#/components/schemas/RankingEntry' }
+        computedWidgets:
+          type: array
+          description: |
+            Lista de widget keys efetivamente computadas (reflete o filtro
+            `widgets`). Útil para auditoria/teste.
+          items:
+            type: string
+            enum:
+              - a-receber-agora
+              - receita-periodo
+              - ticket-medio
+              - ranking-estudio
+              - ranking-narrador
+              - ranking-editor
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details:
+              type: array
+              items: { type: object }
+  responses:
+    Unauthorized:
+      description: Sessão ausente ou inválida.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    InvalidPeriod:
+      description: |
+        `from`/`to` malformados, `from > to`, ou preset inválido. Mensagem
+        em PT-BR via catálogo `errorCodes`.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    Internal:
+      description: Erro inesperado.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }

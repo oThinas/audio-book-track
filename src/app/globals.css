@@ -28,6 +28,7 @@
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
+  --color-chart-6: var(--chart-6);
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
@@ -79,11 +80,16 @@
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  /* Chart ramp derived from --primary via relative OKLCH — light theme:
+     darker shades for readability against light bg. Lightness climbs from
+     anchor (chart-1) → softer (chart-5); chroma falls off so far-end shades
+     don't oversaturate. */
+  --chart-1: oklch(from var(--primary) l c h);
+  --chart-2: oklch(from var(--primary) calc(l + 0.07) calc(c * 0.88) h);
+  --chart-3: oklch(from var(--primary) calc(l + 0.13) calc(c * 0.72) h);
+  --chart-4: oklch(from var(--primary) calc(l + 0.19) calc(c * 0.55) h);
+  --chart-5: oklch(from var(--primary) calc(l + 0.25) calc(c * 0.4) h);
+  --chart-6: oklch(from var(--primary) calc(l + 0.31) calc(c * 0.25) h);
   --radius: 0.625rem;
   --sidebar: oklch(0.235 0.025 265);
   --sidebar-foreground: oklch(0.985 0 0);
@@ -120,11 +126,14 @@
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  /* Chart ramp derived from --primary via relative OKLCH — dark theme: keep
+     lightness near or above primary so shades read against dark bg. */
+  --chart-1: oklch(from var(--primary) l c h);
+  --chart-2: oklch(from var(--primary) calc(l - 0.05) calc(c * 0.88) h);
+  --chart-3: oklch(from var(--primary) calc(l - 0.10) calc(c * 0.72) h);
+  --chart-4: oklch(from var(--primary) calc(l - 0.15) calc(c * 0.55) h);
+  --chart-5: oklch(from var(--primary) calc(l - 0.20) calc(c * 0.4) h);
+  --chart-6: oklch(from var(--primary) calc(l - 0.25) calc(c * 0.25) h);
   --sidebar: oklch(0.195 0.025 265);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.623 0.214 259);

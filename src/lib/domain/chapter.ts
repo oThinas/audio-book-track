@@ -12,6 +12,8 @@ export interface Chapter {
   readonly editorId: string | null;
   readonly editedSeconds: number;
   readonly deadline: string | null;
+  readonly completedAt: Date | null;
+  readonly paidAt: Date | null;
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }
@@ -22,6 +24,8 @@ export const PAID_LOCKED_FIELDS = [
   "editedSeconds",
   "deadline",
   "title",
+  "completedAt",
+  "paidAt",
 ] as const;
 export type PaidLockedField = (typeof PAID_LOCKED_FIELDS)[number];
 

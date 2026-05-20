@@ -119,6 +119,16 @@ export class ChapterService {
     }
 
     const run = async (tx?: RepositoryTx): Promise<UpdateChapterResult> => {
+      const now = new Date();
+      const targetStatus = input.status ?? current.status;
+      const setCompletedAt =
+        targetStatus === "completed" && current.completedAt === null
+          ? { completedAt: now }
+          : targetStatus === "paid" && current.completedAt === null
+            ? { completedAt: now }
+            : {};
+      const setPaidAt = targetStatus === "paid" && current.paidAt === null ? { paidAt: now } : {};
+
       const updated = await this.deps.chapterRepo.update(
         chapterId,
         {
@@ -128,6 +138,8 @@ export class ChapterService {
           ...(input.editorId !== undefined ? { editorId: input.editorId } : {}),
           ...(input.editedSeconds !== undefined ? { editedSeconds: input.editedSeconds } : {}),
           ...(input.deadline !== undefined ? { deadline: input.deadline } : {}),
+          ...setCompletedAt,
+          ...setPaidAt,
         },
         tx,
       );

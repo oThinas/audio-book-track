@@ -1,0 +1,131 @@
+openapi: 3.1.0
+info:
+  title: Dashboard Retrospective Section
+  version: 1.0.0
+  description: |
+    Série temporal da receita realizada no período. Granularidade
+    determinada automaticamente: dia (período ≤ 31d), semana (31d–6mo),
+    mês (≥ 6mo). Fuso fixo America/Sao_Paulo.
+
+paths:
+  /api/v1/dashboard/retrospective:
+    get:
+      summary: Obtém o snapshot retrospectivo
+      operationId: getDashboardRetrospective
+      tags: [dashboard]
+      parameters:
+        - in: query
+          name: from
+          required: false
+          schema: { type: string, format: date, pattern: '^\d{4}-\d{2}-\d{2}$' }
+        - in: query
+          name: to
+          required: false
+          schema: { type: string, format: date, pattern: '^\d{4}-\d{2}-\d{2}$' }
+        - in: query
+          name: preset
+          required: false
+          schema:
+            type: string
+            enum: [today, this-week, this-month, this-quarter, this-year]
+        - in: query
+          name: widgets
+          required: false
+          schema: { type: string }
+          description: CSV. Único valor válido aqui é `grafico-receita`.
+      responses:
+        '200':
+          description: Snapshot retrospectivo
+          headers:
+            X-Request-Id:
+              schema: { type: string }
+              description: ID da requisição para correlação.
+            Cache-Control:
+              schema: { type: string, default: 'no-store' }
+              description: Dados dinâmicos — `no-store`.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/RetrospectiveSnapshot'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/InvalidPeriod'
+        '500':
+          $ref: '#/components/responses/Internal'
+
+components:
+  schemas:
+    DateRange:
+      type: object
+      required: [fromIso, toIso, preset]
+      properties:
+        fromIso: { type: string, format: date }
+        toIso: { type: string, format: date }
+        preset:
+          type: string
+          enum: [today, this-week, this-month, this-quarter, this-year, custom]
+    RetrospectiveBucket:
+      type: object
+      required: [startIso, endIso, labelPtBr, cents]
+      properties:
+        startIso: { type: string, format: date }
+        endIso: { type: string, format: date }
+        labelPtBr:
+          type: string
+          description: |
+            "12/05/2026" (dia), "Semana de 11–17/05/2026" (semana),
+            "Maio 2026" (mês).
+        cents:
+          type: integer
+          minimum: 0
+          description: 0 quando não há receita no bucket (FR-024).
+    RetrospectiveSnapshot:
+      type: object
+      required: [periodo, granularity, buckets, computedWidgets]
+      properties:
+        periodo: { $ref: '#/components/schemas/DateRange' }
+        granularity:
+          type: string
+          enum: [day, week, month]
+        buckets:
+          type: array
+          items: { $ref: '#/components/schemas/RetrospectiveBucket' }
+        computedWidgets:
+          type: array
+          items:
+            type: string
+            enum: [grafico-receita]
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details:
+              type: array
+              items: { type: object }
+  responses:
+    Unauthorized:
+      description: Sessão ausente ou inválida.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    InvalidPeriod:
+      description: from/to malformados ou from > to.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    Internal:
+      description: Erro inesperado.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }

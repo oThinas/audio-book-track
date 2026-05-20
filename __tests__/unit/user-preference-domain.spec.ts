@@ -21,6 +21,17 @@ describe("User Preference Domain", () => {
         fontSize: "medium",
         primaryColor: "blue",
         favoritePage: "dashboard",
+        dashboardWidgets: [
+          "a-receber-agora",
+          "receita-periodo",
+          "ticket-medio",
+          "ranking-estudio",
+          "ranking-narrador",
+          "ranking-editor",
+          "funil-status",
+          "atrasados",
+          "grafico-receita",
+        ],
       });
     });
   });

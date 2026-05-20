@@ -71,6 +71,13 @@
       "when": 1779216877218,
       "tag": "0009_small_ezekiel_stane",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1779222526459,
+      "tag": "0010_daffy_wind_dancer",
+      "breakpoints": true
     }
   ]
 }

@@ -11,6 +11,7 @@ const PREFERENCE_COLUMNS = {
   fontSize: userPreference.fontSize,
   primaryColor: userPreference.primaryColor,
   favoritePage: userPreference.favoritePage,
+  dashboardWidgets: userPreference.dashboardWidgets,
 } as const;
 
 export class DrizzleUserPreferenceRepository implements UserPreferenceRepository {

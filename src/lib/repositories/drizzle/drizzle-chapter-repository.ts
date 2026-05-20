@@ -25,6 +25,8 @@ const CHAPTER_COLUMNS = {
   editorId: chapter.editorId,
   editedSeconds: chapter.editedSeconds,
   deadline: chapter.deadline,
+  completedAt: chapter.completedAt,
+  paidAt: chapter.paidAt,
   createdAt: chapter.createdAt,
   updatedAt: chapter.updatedAt,
 } as const;
@@ -39,6 +41,8 @@ type ChapterRow = {
   editorId: string | null;
   editedSeconds: number;
   deadline: string | null;
+  completedAt: Date | null;
+  paidAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -54,6 +58,8 @@ function toDomain(row: ChapterRow): Chapter {
     editorId: row.editorId,
     editedSeconds: row.editedSeconds,
     deadline: row.deadline,
+    completedAt: row.completedAt,
+    paidAt: row.paidAt,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -121,6 +127,8 @@ export class DrizzleChapterRepository implements ChapterRepository {
         ...(input.editorId !== undefined ? { editorId: input.editorId } : {}),
         ...(input.editedSeconds !== undefined ? { editedSeconds: input.editedSeconds } : {}),
         ...(input.deadline !== undefined ? { deadline: input.deadline } : {}),
+        ...(input.completedAt !== undefined ? { completedAt: input.completedAt } : {}),
+        ...(input.paidAt !== undefined ? { paidAt: input.paidAt } : {}),
       })
       .where(eq(chapter.id, id))
       .returning(CHAPTER_COLUMNS);

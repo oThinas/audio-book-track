@@ -1,0 +1,104 @@
+openapi: 3.1.0
+info:
+  title: Dashboard Operational Section
+  version: 1.0.0
+  description: |
+    Snapshot operacional: funil de status (contagem por estado) e card de
+    atrasados (contagem + ID do livro com o atraso mais antigo). Não usa
+    filtro de período — reflete o estado atual.
+
+paths:
+  /api/v1/dashboard/operational:
+    get:
+      summary: Obtém o snapshot operacional
+      operationId: getDashboardOperational
+      tags: [dashboard]
+      parameters:
+        - in: query
+          name: widgets
+          required: false
+          schema:
+            type: string
+          description: |
+            CSV opcional. Valores válidos: funil-status, atrasados.
+            Quando ausente, ambos são calculados.
+      responses:
+        '200':
+          description: Snapshot operacional
+          headers:
+            X-Request-Id:
+              schema: { type: string }
+              description: ID da requisição para correlação.
+            Cache-Control:
+              schema: { type: string, default: 'no-store' }
+              description: Dados dinâmicos — `no-store`.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/OperationalSnapshot'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/Internal'
+
+components:
+  schemas:
+    OperationalSnapshot:
+      type: object
+      required: [funnel, overdueCount, firstOverdueBookId, computedWidgets]
+      properties:
+        funnel:
+          type: object
+          required: [pending, editing, reviewing, retake, completed, paid]
+          properties:
+            pending: { type: integer, minimum: 0 }
+            editing: { type: integer, minimum: 0 }
+            reviewing: { type: integer, minimum: 0 }
+            retake: { type: integer, minimum: 0 }
+            completed: { type: integer, minimum: 0 }
+            paid: { type: integer, minimum: 0 }
+        overdueCount:
+          type: integer
+          minimum: 0
+          description: |
+            Capítulos com deadline < hoje (fuso America/Sao_Paulo) em status
+            ∈ {pending, editing, reviewing, retake}.
+        firstOverdueBookId:
+          type: [string, 'null']
+          description: |
+            UUID do livro com o capítulo atrasado de deadline mais antigo.
+            Desempate por book.title ASC. NULL quando overdueCount = 0
+            (FR-021a).
+        computedWidgets:
+          type: array
+          items:
+            type: string
+            enum: [funil-status, atrasados]
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details:
+              type: array
+              items: { type: object }
+  responses:
+    Unauthorized:
+      description: Sessão ausente ou inválida.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    Internal:
+      description: Erro inesperado.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
