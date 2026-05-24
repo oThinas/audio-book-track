@@ -1,0 +1,113 @@
+openapi: 3.0.3
+info:
+  title: AudioBook Track — Cron · Purge Audit Log
+  version: "1.0.0"
+  description: |
+    Endpoint chamado **exclusivamente** pelo Vercel Cron diariamente
+    (03:00 UTC ≈ 00:00 BRT) para apagar linhas de `audit_log` mais
+    antigas que 90 dias (FR-011).
+
+    Idempotente: executar duas vezes no mesmo dia tem o mesmo efeito
+    que executar uma. Protegido por `Authorization: Bearer <CRON_SECRET>`
+    (D5/D14 em research.md).
+
+    Não-versionado pelo mesmo motivo do `/api/health` — é infraestrutura.
+servers:
+  - url: https://audio-book-track.app
+    description: Produção (Vercel Cron resolve o host)
+
+paths:
+  /api/cron/purge-audit-log:
+    post:
+      summary: Apagar linhas de audit_log mais antigas que 90 dias.
+      operationId: purgeAuditLog
+      security:
+        - cronBearer: []
+      responses:
+        "200":
+          description: Purga concluída.
+          headers:
+            X-Request-Id:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurgeResult"
+              example:
+                purged: 1842
+                cutoff: "2026-02-22T00:00:00.000Z"
+                duration_ms: 412
+        "401":
+          description: Authorization ausente ou inválido.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthorized"
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: "Acesso não autorizado."
+        "500":
+          description: Erro inesperado — propagado para Sentry; resposta sem stack trace.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InternalError"
+
+components:
+  securitySchemes:
+    cronBearer:
+      type: http
+      scheme: bearer
+      description: |
+        Comparado em tempo constante (`crypto.timingSafeEqual`) com o
+        env var `CRON_SECRET` (≥ 32 chars). Vercel Cron envia o header
+        automaticamente quando configurado em `vercel.json`.
+
+  schemas:
+    PurgeResult:
+      type: object
+      required: [purged, cutoff, duration_ms]
+      properties:
+        purged:
+          type: integer
+          minimum: 0
+          description: Número de linhas removidas. Zero é resultado válido.
+        cutoff:
+          type: string
+          format: date-time
+          description: |
+            Timestamp do `now() - 90 days` calculado no momento da execução.
+            Linhas com `created_at < cutoff` foram apagadas.
+        duration_ms:
+          type: integer
+          minimum: 0
+          description: Duração total da execução do cron, em milissegundos.
+
+    Unauthorized:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              enum: [UNAUTHORIZED]
+            message:
+              type: string
+
+    InternalError:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
