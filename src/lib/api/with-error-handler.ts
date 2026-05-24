@@ -6,6 +6,7 @@ import { type ErrorCode, errorCodes } from "@/lib/api/error-codes";
 import { requestIdHeader } from "@/lib/api/headers";
 import { requestContext } from "@/lib/api/request-context";
 import { extractOrCreateRequestId } from "@/lib/api/request-id";
+import { withRequestLogging } from "@/lib/api/with-request-logging";
 import { auth } from "@/lib/auth/server";
 import type { Session } from "@/lib/auth/session";
 import { DomainError } from "@/lib/errors/domain-error";
@@ -159,22 +160,26 @@ export function withApiErrorHandler<TParams = Record<string, never>>(
     }
 
     return requestContext.run({ requestId, userId: session?.user.id ?? null }, async () => {
-      try {
-        if (requireAuth && !session) {
-          return jsonError(
-            { code: "UNAUTHORIZED", message: errorCodes.UNAUTHORIZED.message },
+      const inner = async (req: Request): Promise<NextResponse> => {
+        try {
+          if (requireAuth && !session) {
+            return jsonError(
+              { code: "UNAUTHORIZED", message: errorCodes.UNAUTHORIZED.message },
+              requestId,
+            );
+          }
+          const response = await anyHandler(req, {
+            params: context.params,
+            session,
             requestId,
-          );
+          });
+          return withRequestIdHeader(response, requestId);
+        } catch (error) {
+          return withRequestIdHeader(mapError(error, requestId, deps.logger), requestId);
         }
-        const response = await anyHandler(request, {
-          params: context.params,
-          session,
-          requestId,
-        });
-        return withRequestIdHeader(response, requestId);
-      } catch (error) {
-        return mapError(error, requestId, deps.logger);
-      }
+      };
+
+      return withRequestLogging(inner, { logger: deps.logger })(request);
     });
   };
 }
