@@ -153,17 +153,18 @@ export function withApiErrorHandler<TParams = Record<string, never>>(
     const incomingHeaders = await deps.headersFn();
     const requestId = extractOrCreateRequestId(incomingHeaders);
 
-    return requestContext.run({ requestId }, async () => {
+    let session: Session | null = null;
+    if (requireAuth) {
+      session = await deps.getSession({ headers: incomingHeaders });
+    }
+
+    return requestContext.run({ requestId, userId: session?.user.id ?? null }, async () => {
       try {
-        let session: Session | null = null;
-        if (requireAuth) {
-          session = await deps.getSession({ headers: incomingHeaders });
-          if (!session) {
-            return jsonError(
-              { code: "UNAUTHORIZED", message: errorCodes.UNAUTHORIZED.message },
-              requestId,
-            );
-          }
+        if (requireAuth && !session) {
+          return jsonError(
+            { code: "UNAUTHORIZED", message: errorCodes.UNAUTHORIZED.message },
+            requestId,
+          );
         }
         const response = await anyHandler(request, {
           params: context.params,

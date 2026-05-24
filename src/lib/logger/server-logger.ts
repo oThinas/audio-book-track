@@ -1,7 +1,18 @@
+import { getCurrentRequestId, getCurrentUserId, requestContext } from "@/lib/api/request-context";
+
 export interface ServerLogger {
   error(message: string, context?: Record<string, unknown>): void;
   warn(message: string, context?: Record<string, unknown>): void;
   info(message: string, context?: Record<string, unknown>): void;
+}
+
+function autoInjectedFields(): Record<string, unknown> {
+  const store = requestContext.getStore();
+  if (!store) return {};
+  return {
+    request_id: getCurrentRequestId(),
+    user_id: getCurrentUserId(),
+  };
 }
 
 function emit(
@@ -10,7 +21,12 @@ function emit(
   message: string,
   context?: Record<string, unknown>,
 ): void {
-  const payload = JSON.stringify({ level, msg: message, ...(context ?? {}) });
+  const payload = JSON.stringify({
+    level,
+    msg: message,
+    ...autoInjectedFields(),
+    ...(context ?? {}),
+  });
   if (channel === "error") {
     console.error(payload);
   } else if (channel === "warn") {
