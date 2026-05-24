@@ -60,8 +60,14 @@ export async function startNextDev(options: StartNextDevOptions): Promise<NextDe
     stdio: ["ignore", "pipe", "pipe"],
   });
 
-  proc.stdout?.on("data", () => {});
-  proc.stderr?.on("data", () => {});
+  const debugLogs = process.env.E2E_DEBUG_LOGS === "1";
+  proc.stdout?.on("data", (chunk: Buffer) => {
+    if (debugLogs) process.stderr.write(`[next-${port}] ${chunk.toString()}`);
+  });
+  proc.stderr?.on("data", (chunk: Buffer) => {
+    if (debugLogs) process.stderr.write(`[next-${port} ERR] ${chunk.toString()}`);
+  });
+  void port;
 
   try {
     await waitUntilReady(`${baseURL}/api/health`, readinessTimeoutMs);

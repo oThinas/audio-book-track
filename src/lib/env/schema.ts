@@ -45,10 +45,12 @@ export const envSchema = z
       });
     }
 
-    // Skip Sentry/CRON checks during `next build` — these are runtime-only
-    // secrets and not available at build time on Vercel. Runtime checks
-    // happen when the env is parsed by serverless handlers.
-    if (values.NODE_ENV === "production" && !isBuildPhase) {
+    // Skip Sentry/CRON checks during `next build` and the E2E harness
+    // (NODE_ENV=production + E2E_TEST_MODE=1 + TEST_DATABASE_URL). These are
+    // runtime-only secrets, not available at build time on Vercel and not
+    // needed by the E2E worker process.
+    const isE2ETestMode = process.env.E2E_TEST_MODE === "1";
+    if (values.NODE_ENV === "production" && !isBuildPhase && !isE2ETestMode) {
       if (!values.SENTRY_DSN) {
         ctx.addIssue({
           code: "custom",
