@@ -3,14 +3,18 @@ import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { book, chapter } from "@/lib/db/schema";
 import type { BlockingBookSummary } from "@/lib/errors/studio-errors";
+import { createAuditService } from "@/lib/factories/audit";
 import { DrizzleStudioRepository } from "@/lib/repositories/drizzle/drizzle-studio-repository";
+import { DrizzleUnitOfWork } from "@/lib/repositories/drizzle/drizzle-unit-of-work";
 import { type SoftDeleteStudioDeps, StudioService } from "@/lib/services/studio-service";
 
 const ACTIVE_CHAPTER_STATUSES = ["pending", "editing", "reviewing", "retake"] as const;
 
 export function createStudioService(): StudioService {
-  const repository = new DrizzleStudioRepository(db);
-  return new StudioService(repository);
+  return new StudioService(new DrizzleStudioRepository(db), {
+    auditService: createAuditService(),
+    uow: new DrizzleUnitOfWork(db),
+  });
 }
 
 export function createGetActiveBooks(): (

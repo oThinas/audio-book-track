@@ -1,3 +1,5 @@
+import { getCurrentUserId } from "@/lib/api/request-context";
+import { AUDIT_ACTIONS, type AuditAction } from "@/lib/audit/audit-actions";
 import type { Book, BookStatus } from "@/lib/domain/book";
 import type { Chapter, ChapterStatus } from "@/lib/domain/chapter";
 import { CHAPTER_TEMPLATES, type ChapterTemplateKey } from "@/lib/domain/chapter-templates";
@@ -20,6 +22,7 @@ import type { EditorRepository } from "@/lib/repositories/editor-repository";
 import type { NarratorRepository } from "@/lib/repositories/narrator-repository";
 import type { StudioRepository } from "@/lib/repositories/studio-repository";
 import type { UnitOfWork } from "@/lib/repositories/unit-of-work";
+import type { AuditService } from "@/lib/services/audit-service";
 
 import { recomputeBookStatusAndBumpVersion } from "./book-status-recompute";
 
@@ -30,6 +33,7 @@ export interface BookServiceDeps {
   readonly narratorRepo: NarratorRepository;
   readonly editorRepo: EditorRepository;
   readonly uow: UnitOfWork;
+  readonly auditService?: AuditService;
 }
 
 export type CreateBookExtra =
@@ -106,6 +110,16 @@ const COMPLETED_STATUSES: ReadonlyArray<ChapterStatus> = ["completed", "paid"];
 
 export class BookService {
   constructor(protected readonly deps: BookServiceDeps) {}
+
+  private async recordAudit(tx: unknown, action: AuditAction, entityId: string): Promise<void> {
+    if (!this.deps.auditService) return;
+    await this.deps.auditService.recordWithin(tx, {
+      action,
+      userId: getCurrentUserId(),
+      entityType: "book",
+      entityId,
+    });
+  }
 
   async list(): Promise<BookSummary[]> {
     const todayIso = todayInAppTimezone();
@@ -238,6 +252,8 @@ export class BookService {
         tx,
       );
 
+      await this.recordAudit(tx, AUDIT_ACTIONS.BOOK_CREATE, inserted.id);
+
       return { book: withStatus, chapters };
     });
   }
@@ -295,6 +311,8 @@ export class BookService {
       if (patchEntries.length > 0) {
         book = await this.deps.bookRepo.update(bookId, Object.fromEntries(patchEntries), tx);
       }
+
+      await this.recordAudit(tx, AUDIT_ACTIONS.BOOK_UPDATE, bookId);
 
       return { book };
     });

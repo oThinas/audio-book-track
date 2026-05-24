@@ -1,3 +1,5 @@
+import { getCurrentUserId } from "@/lib/api/request-context";
+import { AUDIT_ACTIONS, type AuditAction } from "@/lib/audit/audit-actions";
 import type { BookStatus } from "@/lib/domain/book";
 import type { Chapter, ChapterStatus } from "@/lib/domain/chapter";
 import { isValidTransition } from "@/lib/domain/chapter-state-machine";
@@ -23,6 +25,7 @@ import type { ChapterRepository } from "@/lib/repositories/chapter-repository";
 import type { EditorRepository } from "@/lib/repositories/editor-repository";
 import type { NarratorRepository } from "@/lib/repositories/narrator-repository";
 import type { UnitOfWork } from "@/lib/repositories/unit-of-work";
+import type { AuditService } from "@/lib/services/audit-service";
 
 import { recomputeBookStatusAndBumpVersion } from "./book-status-recompute";
 
@@ -32,6 +35,7 @@ export interface ChapterServiceDeps {
   readonly narratorRepo: NarratorRepository;
   readonly editorRepo: EditorRepository;
   readonly uow?: UnitOfWork;
+  readonly auditService?: AuditService;
 }
 
 export interface UpdateChapterServiceInput {
@@ -90,6 +94,21 @@ const PAID_LOCKED_FIELDS = [
 
 export class ChapterService {
   constructor(protected readonly deps: ChapterServiceDeps) {}
+
+  private async recordAudit(
+    tx: RepositoryTx | undefined,
+    action: AuditAction,
+    entityType: "chapter" | "book",
+    entityId: string,
+  ): Promise<void> {
+    if (!this.deps.auditService) return;
+    await this.deps.auditService.recordWithin(tx, {
+      action,
+      userId: getCurrentUserId(),
+      entityType,
+      entityId,
+    });
+  }
 
   async update(chapterId: string, input: UpdateChapterServiceInput): Promise<UpdateChapterResult> {
     const current = await this.deps.chapterRepo.findById(chapterId);
@@ -150,6 +169,14 @@ export class ChapterService {
         tx,
       );
 
+      const isStatusTransition = input.status !== undefined && input.status !== current.status;
+      await this.recordAudit(
+        tx,
+        isStatusTransition ? AUDIT_ACTIONS.CHAPTER_STATUS_TRANSITION : AUDIT_ACTIONS.CHAPTER_UPDATE,
+        "chapter",
+        chapterId,
+      );
+
       return { chapter: updated, bookStatus: book.status };
     };
 
@@ -170,10 +197,12 @@ export class ChapterService {
 
     const run = async (tx?: RepositoryTx): Promise<DeleteChapterResult> => {
       await this.deps.chapterRepo.delete(chapterId, tx);
+      await this.recordAudit(tx, AUDIT_ACTIONS.CHAPTER_DELETE, "chapter", chapterId);
 
       const remaining = await this.deps.chapterRepo.listByBookId(current.bookId, tx);
       if (remaining.length === 0) {
         await this.deps.bookRepo.delete(current.bookId, tx);
+        await this.recordAudit(tx, AUDIT_ACTIONS.BOOK_DELETE, "book", current.bookId);
         return { bookId: current.bookId, bookDeleted: true, bookStatus: null };
       }
 
@@ -216,10 +245,12 @@ export class ChapterService {
 
     const run = async (tx?: RepositoryTx): Promise<BulkDeleteChaptersResult> => {
       const deletedCount = await this.deps.chapterRepo.deleteMany(uniqueIds, tx);
+      await this.recordAudit(tx, AUDIT_ACTIONS.CHAPTER_BULK_DELETE, "book", bookId);
 
       const remaining = await this.deps.chapterRepo.listByBookId(bookId, tx);
       if (remaining.length === 0) {
         await this.deps.bookRepo.delete(bookId, tx);
+        await this.recordAudit(tx, AUDIT_ACTIONS.BOOK_DELETE, "book", bookId);
         return { bookId, bookDeleted: true, bookStatus: null, deletedCount };
       }
 
@@ -302,6 +333,7 @@ export class ChapterService {
       );
 
       const reloaded = await this.deps.chapterRepo.findById(inserted.id, tx);
+      await this.recordAudit(tx, AUDIT_ACTIONS.CHAPTER_CREATE, "chapter", inserted.id);
       return {
         chapter: reloaded ?? inserted,
         bookStatus: refreshed.status,
@@ -358,6 +390,7 @@ export class ChapterService {
         { bookRepo: this.deps.bookRepo, chapterRepo: this.deps.chapterRepo },
         tx,
       );
+      await this.recordAudit(tx, AUDIT_ACTIONS.CHAPTER_REORDER, "book", bookId);
       return { chaptersVersion: refreshed.chaptersVersion };
     };
 

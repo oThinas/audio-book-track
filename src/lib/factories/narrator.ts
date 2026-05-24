@@ -4,14 +4,18 @@ import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/lib/db";
 import { book, chapter } from "@/lib/db/schema";
 import type { BlockingBookSummary } from "@/lib/errors/studio-errors";
+import { createAuditService } from "@/lib/factories/audit";
 import { DrizzleNarratorRepository } from "@/lib/repositories/drizzle/drizzle-narrator-repository";
+import { DrizzleUnitOfWork } from "@/lib/repositories/drizzle/drizzle-unit-of-work";
 import { NarratorService, type SoftDeleteNarratorDeps } from "@/lib/services/narrator-service";
 
 const ACTIVE_CHAPTER_STATUSES = ["pending", "editing", "reviewing", "retake"] as const;
 
 export function createNarratorService(): NarratorService {
-  const repository = new DrizzleNarratorRepository(db);
-  return new NarratorService(repository);
+  return new NarratorService(new DrizzleNarratorRepository(db), {
+    auditService: createAuditService(),
+    uow: new DrizzleUnitOfWork(db),
+  });
 }
 
 export function createGetActiveBooksForNarrator(): (
