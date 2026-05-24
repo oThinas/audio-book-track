@@ -1,6 +1,8 @@
 export type PingFn = () => Promise<void>;
 
-export type HealthCheckResult = { healthy: true } | { healthy: false; error: string };
+export type HealthCheckResult =
+  | { healthy: true; latencyMs?: number }
+  | { healthy: false; error: string; latencyMs?: number };
 
 interface HealthCheckOptions {
   maxRetries: number;
@@ -67,9 +69,11 @@ export async function checkDatabaseHealth(
   let lastError: unknown;
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    const start = performance.now();
     try {
       await withTimeout(ping, timeoutMs);
-      return { healthy: true };
+      const latencyMs = Math.max(0, Math.round(performance.now() - start));
+      return { healthy: true, latencyMs };
     } catch (error: unknown) {
       lastError = error;
 
