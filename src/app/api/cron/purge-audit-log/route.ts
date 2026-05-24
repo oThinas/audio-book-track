@@ -69,4 +69,6 @@ export async function handleCronPurge(
 // inicializado quando algum entry point importar esta rota.
 void createAuditService;
 
-export const POST = handleCronPurge;
+export async function POST(request: NextRequest): Promise<NextResponse> {
+  return handleCronPurge(request);
+}

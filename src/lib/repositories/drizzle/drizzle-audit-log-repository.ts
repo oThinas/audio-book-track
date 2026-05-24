@@ -1,4 +1,4 @@
-import { and, desc, eq, lt } from "drizzle-orm";
+import { and, desc, eq, gt, lt } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
 import type { AuditPayload } from "@/lib/audit/audit-payload";
@@ -60,7 +60,7 @@ export class DrizzleAuditLogRepository implements AuditLogRepository {
     return this.db
       .select(COLUMNS)
       .from(auditLog)
-      .where(and(eq(auditLog.userId, userId), lt(since, auditLog.createdAt)))
+      .where(and(eq(auditLog.userId, userId), gt(auditLog.createdAt, since)))
       .orderBy(desc(auditLog.createdAt))
       .limit(limit);
   }

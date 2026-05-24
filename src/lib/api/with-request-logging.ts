@@ -15,7 +15,7 @@ type Handler<TArgs extends readonly unknown[]> = (
   ...args: TArgs
 ) => Promise<NextResponse>;
 
-interface LogPayload {
+interface LogPayload extends Record<string, unknown> {
   readonly method: string;
   readonly path: string;
   readonly status: number;

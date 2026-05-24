@@ -43,7 +43,7 @@ export class EditorService {
 
     return this.run(async (tx) => {
       if (existing && existingIsSoftDeleted) {
-        const editor = await this.repository.reactivate(existing.id, tx);
+        const editor = await this.repository.reactivate(existing.id, undefined, tx);
         await this.recordAudit(tx, AUDIT_ACTIONS.EDITOR_REACTIVATE, editor.id);
         return { editor, reactivated: true };
       }

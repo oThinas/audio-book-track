@@ -247,12 +247,8 @@
           "name": "account_user_id_user_id_fk",
           "tableFrom": "account",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -340,12 +336,8 @@
           "name": "session_user_id_user_id_fk",
           "tableFrom": "session",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -355,9 +347,7 @@
         "session_token_unique": {
           "name": "session_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
+          "columns": ["token"]
         }
       },
       "policies": {},
@@ -433,16 +423,12 @@
         "user_email_unique": {
           "name": "user_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         },
         "user_username_unique": {
           "name": "user_username_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "username"
-          ]
+          "columns": ["username"]
         }
       },
       "policies": {},
@@ -637,12 +623,8 @@
           "name": "book_studio_id_studio_id_fk",
           "tableFrom": "book",
           "tableTo": "studio",
-          "columnsFrom": [
-            "studio_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["studio_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -897,12 +879,8 @@
           "name": "chapter_book_id_book_id_fk",
           "tableFrom": "chapter",
           "tableTo": "book",
-          "columnsFrom": [
-            "book_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["book_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -910,12 +888,8 @@
           "name": "chapter_narrator_id_narrator_id_fk",
           "tableFrom": "chapter",
           "tableTo": "narrator",
-          "columnsFrom": [
-            "narrator_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["narrator_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -923,12 +897,8 @@
           "name": "chapter_editor_id_editor_id_fk",
           "tableFrom": "chapter",
           "tableTo": "editor",
-          "columnsFrom": [
-            "editor_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["editor_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1328,12 +1298,8 @@
           "name": "user_preference_user_id_user_id_fk",
           "tableFrom": "user_preference",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
