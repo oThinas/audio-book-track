@@ -13,7 +13,11 @@ describe("Database Health Check Integration", () => {
 
     const result = await checkDatabaseConnection(ping, 5000);
 
-    expect(result).toEqual({ healthy: true });
+    expect(result.healthy).toBe(true);
+    if (result.healthy) {
+      expect(typeof result.latencyMs).toBe("number");
+      expect(result.latencyMs).toBeGreaterThanOrEqual(0);
+    }
   });
 
   it("should execute SELECT 1 successfully via createDatabasePing", async () => {
