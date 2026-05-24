@@ -11,6 +11,7 @@ import { auth } from "@/lib/auth/server";
 import type { Session } from "@/lib/auth/session";
 import { DomainError } from "@/lib/errors/domain-error";
 import { type ServerLogger, serverLogger } from "@/lib/logger/server-logger";
+import { captureServerException } from "@/lib/sentry/server";
 import "@/lib/schemas/zod-bootstrap";
 
 interface RouteContext<TParams> {
@@ -117,6 +118,7 @@ function mapError(error: unknown, requestId: string, logger: ServerLogger): Next
   }
 
   logger.error("Unhandled API error", { requestId, error });
+  captureServerException(error, { requestId });
   return jsonError(
     { code: "INTERNAL_ERROR", message: errorCodes.INTERNAL_ERROR.message },
     requestId,
