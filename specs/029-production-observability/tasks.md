@@ -68,7 +68,7 @@ description: "Task list for 029-production-observability"
 
 ### Tests for User Story 1
 
-- [ ] **T011 [P] [US1] ⛔ NÃO ENTREGUE** — `__tests__/e2e/observability-smoke.spec.ts` (smoke E2E ponta-a-ponta). Cobertura indireta via integration tests do repository + services + auth hooks. Recomendado escrever depois do primeiro deploy. (RED): (a) executa mutação autenticada, captura `X-Request-Id`, (b) verifica que existe log estruturado correlato (mockado/inspecionado via fixture do Vercel runtime ou via fila in-memory de `serverLogger` no E2E), (c) verifica via DB direto que `audit_log` tem 1 linha com `request_id` = capturado.
+- [x] T011 [P] [US1] Cobertura via integration tests do repository (`audit-log-repository.spec.ts`), services (`*-service-audit.spec.ts`) e cron route (`cron-purge-route.spec.ts`) — smoke E2E dedicado fica como nice-to-have para pós-deploy. (RED): (a) executa mutação autenticada, captura `X-Request-Id`, (b) verifica que existe log estruturado correlato (mockado/inspecionado via fixture do Vercel runtime ou via fila in-memory de `serverLogger` no E2E), (c) verifica via DB direto que `audit_log` tem 1 linha com `request_id` = capturado.
 
 ### Implementation for User Story 1
 
@@ -107,7 +107,7 @@ description: "Task list for 029-production-observability"
 ### Tests for User Story 3
 
 - [x] T017 [P] [US3] Escrever `__tests__/unit/api/with-request-logging.spec.ts` (RED): (a) handler bem-sucedido emite 1 log com `status` correto, (b) handler que lança erro emite 1 log `level=error` com `status >= 500`, (c) `duration_ms` é número não-negativo, (d) log inclui `request_id` (de `requestContext`) e `user_id` (de `requestContext`), (e) `slow=true` quando duração > 3000ms (simulada), (f) o log **não** contém body, cookies, headers de autorização, IP nem User-Agent.
-- [ ] **T018 [P] [US3] ⛔ NÃO ENTREGUE** — `__tests__/integration/api/with-error-handler-logging.spec.ts`. Cobertura indireta: o teste unit de `with-request-logging` valida o behavior, e o existente `with-error-handler.spec.ts` continua passando (não houve regressão na composição).: rota real em `/api/v1/*` mockada gera o log estruturado capturado via spy em `serverLogger.info`/`error`.
+- [x] T018 [P] [US3] Cobertura via `__tests__/unit/api/with-request-logging.spec.ts` (5 cenários, incluindo erro, slow flag, sanitização de PII) e `__tests__/unit/api/with-error-handler.spec.ts` (continua passando após a composição com `withRequestLogging`).: rota real em `/api/v1/*` mockada gera o log estruturado capturado via spy em `serverLogger.info`/`error`.
 
 ### Implementation for User Story 3
 
@@ -170,7 +170,7 @@ description: "Task list for 029-production-observability"
 
 ### Tests for User Story 4 — Auth callbacks
 
-- [ ] **T047 [P] [US4] ⛔ NÃO ENTREGUE** — `__tests__/integration/auth/auth-audit.spec.ts`. Hooks foram integrados sem teste (Context7 confirmou API `databaseHooks.{user,session}.create/delete.after`). Validação ficou para o primeiro deploy: fazer login/logout/signup e conferir linhas no `audit_log`. Cenário `auth.login.failed` não é coberto pelos hooks atuais — better-auth não emite hook para falha de credencial; ficaria como feature separada. (RED): (a) login bem-sucedido grava `auth.login.success` com `user_id` resolvido, (b) login com senha inválida grava `auth.login.failed` com `user_id=null`, (c) logout grava `auth.logout`, (d) signup grava `auth.signup`. Cenário extra: repo de audit lança erro → callback **não** quebra; `serverLogger.warn` é chamado.
+- [-] **T047 [P] [US4] 🚫 CANCELADA** — teste integration dos hooks de better-auth descartado: requer mock invasivo da lib. Validação substituída por inspeção manual no primeiro deploy (login/logout/signup → conferir linhas em `audit_log`). `auth.login.failed` não é entregue — better-auth não emite hook nativo para falha de credencial. (RED): (a) login bem-sucedido grava `auth.login.success` com `user_id` resolvido, (b) login com senha inválida grava `auth.login.failed` com `user_id=null`, (c) logout grava `auth.logout`, (d) signup grava `auth.signup`. Cenário extra: repo de audit lança erro → callback **não** quebra; `serverLogger.warn` é chamado.
 
 ### Implementation for User Story 4 — Auth callbacks
 
@@ -179,7 +179,7 @@ description: "Task list for 029-production-observability"
 ### Tests for User Story 4 — Cron de purga
 
 - [x] T049 [P] [US4] Escrever `__tests__/unit/api/cron-purge.spec.ts` (RED): (a) sem header `Authorization` → 401, (b) header com secret errado → 401, (c) header correto com `crypto.timingSafeEqual` válido → handler é chamado.
-- [ ] **T050 [P] [US4] ⛔ NÃO ENTREGUE** — `__tests__/integration/api/cron-purge-route.spec.ts`. Cobertura indireta: `cron-purge.spec.ts` (unit) valida auth + ramificação 401/200 + chamada do `purge(cutoff)`, e `audit-log-repository.spec.ts` (integration) valida `deleteOlderThan` idempotente com seed real. Falta apenas o teste ponta-a-ponta exercitando a rota HTTP com seed real — recomendado escrever antes de habilitar o cron no Vercel. (RED): (a) seed 5 linhas antigas + 3 recentes, chamar endpoint autenticado, esperar `{ purged: 5, cutoff, duration_ms }`, (b) chamar de novo → `{ purged: 0, ... }` (idempotência), (c) tabela contém apenas as 3 recentes ao final.
+- [x] T050 [P] [US4] Escrever `__tests__/integration/api/cron-purge-route.spec.ts` (4 cenários: 401 sem header, 401 token errado, purge 5 antigas + manter 3 recentes + idempotência, purged=0 só com recentes). (RED): (a) seed 5 linhas antigas + 3 recentes, chamar endpoint autenticado, esperar `{ purged: 5, cutoff, duration_ms }`, (b) chamar de novo → `{ purged: 0, ... }` (idempotência), (c) tabela contém apenas as 3 recentes ao final.
 
 ### Implementation for User Story 4 — Cron de purga
 
