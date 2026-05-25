@@ -65,8 +65,8 @@ export async function handleCronPurge(
   });
 }
 
-// Mantém o createAuditService import vivo para garantir que o singleton seja
-// inicializado quando algum entry point importar esta rota.
+// Keeps the createAuditService import alive so the singleton is initialized
+// whenever an entry point imports this route.
 void createAuditService;
 
 export async function POST(request: NextRequest): Promise<NextResponse> {

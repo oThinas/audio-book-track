@@ -8,10 +8,10 @@ export interface ServerSentryContext {
 }
 
 /**
- * Captura uma exceção inesperada do server-side enriquecendo com o
- * request_id, user_id e dados da rota correntes. Use SOMENTE para
- * erros que não sejam `DomainError`/`ZodError`/`SyntaxError` — esses
- * são esperados e tratados pelo `withApiErrorHandler`.
+ * Captures an unexpected server-side exception, enriched with the current
+ * request_id, user_id and route metadata. Use ONLY for errors that are NOT
+ * `DomainError`/`ZodError`/`SyntaxError` — those are expected and handled
+ * by `withApiErrorHandler`.
  */
 export function captureServerException(error: unknown, context: ServerSentryContext): void {
   Sentry.withScope((scope) => {

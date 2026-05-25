@@ -3,16 +3,16 @@ import type { AuditLogRow } from "@/lib/db/schema/audit-log";
 import type { RepositoryTx } from "@/lib/repositories/book-repository";
 
 export interface AuditLogRepository {
-  /** Insere uma linha dentro da transação ativa (obrigatório para mutações de domínio). */
+  /** Inserts a row inside the active transaction (required for domain mutations). */
   insertWithin(tx: RepositoryTx, event: AuditPayload): Promise<void>;
 
-  /** Insere uma linha em conexão própria (best-effort, callbacks de auth). */
+  /** Inserts a row using its own connection (best-effort, used by auth callbacks). */
   insert(event: AuditPayload): Promise<void>;
 
-  /** Apaga linhas com `created_at < cutoff`. Retorna número de linhas removidas. Idempotente. */
+  /** Deletes rows with `created_at < cutoff`. Returns the number of rows removed. Idempotent. */
   deleteOlderThan(cutoff: Date): Promise<number>;
 
-  /** Investigação: ações do usuário X desde a data, ordem cronológica reversa. */
+  /** Investigation: actions by user X since the given date, reverse chronological order. */
   findByUserSince(userId: string, since: Date, limit: number): Promise<readonly AuditLogRow[]>;
   findByEntity(
     entityType: string,

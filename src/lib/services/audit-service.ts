@@ -5,16 +5,16 @@ import type { RepositoryTx } from "@/lib/repositories/book-repository";
 
 export interface AuditService {
   /**
-   * Insere o evento DENTRO da transação ativa. Uso obrigatório para mutações
-   * de domínio: o rollback da transação descarta o audit junto.
+   * Inserts the event INSIDE the active transaction. Mandatory for domain
+   * mutations: a transaction rollback discards the audit row along with it.
    */
   recordWithin(tx: RepositoryTx, event: AuditEvent): Promise<void>;
 
   /**
-   * Insere o evento em conexão própria (best-effort). Uso EXCLUSIVO de
-   * callbacks de auth — better-auth não expõe a transação. Erros de insert
-   * são capturados e logados via serverLogger.warn; não propagam para não
-   * bloquear o callback.
+   * Inserts the event using its own connection (best-effort). EXCLUSIVELY for
+   * auth callbacks — better-auth does not expose the transaction. Insert
+   * errors are captured and logged via serverLogger.warn; they do not
+   * propagate, so the auth callback never blocks.
    */
   record(event: AuditEvent): Promise<void>;
 }
