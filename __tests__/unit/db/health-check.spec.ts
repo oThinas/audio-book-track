@@ -12,7 +12,11 @@ describe("checkDatabaseHealth", () => {
       timeoutMs: 100,
     });
 
-    expect(result).toEqual({ healthy: true });
+    expect(result.healthy).toBe(true);
+    if (result.healthy) {
+      expect(typeof result.latencyMs).toBe("number");
+      expect(result.latencyMs).toBeGreaterThanOrEqual(0);
+    }
     expect(ping).toHaveBeenCalledTimes(1);
   });
 
@@ -29,7 +33,11 @@ describe("checkDatabaseHealth", () => {
       timeoutMs: 100,
     });
 
-    expect(result).toEqual({ healthy: true });
+    expect(result.healthy).toBe(true);
+    if (result.healthy) {
+      expect(typeof result.latencyMs).toBe("number");
+      expect(result.latencyMs).toBeGreaterThanOrEqual(0);
+    }
     expect(ping).toHaveBeenCalledTimes(3);
   });
 
@@ -69,7 +77,11 @@ describe("checkDatabaseHealth", () => {
 
     const result = await checkDatabaseHealth(ping);
 
-    expect(result).toEqual({ healthy: true });
+    expect(result.healthy).toBe(true);
+    if (result.healthy) {
+      expect(typeof result.latencyMs).toBe("number");
+      expect(result.latencyMs).toBeGreaterThanOrEqual(0);
+    }
     expect(ping).toHaveBeenCalledTimes(1);
   });
 
@@ -169,7 +181,11 @@ describe("checkDatabaseConnection", () => {
 
     const result = await checkDatabaseConnection(ping, 100);
 
-    expect(result).toEqual({ healthy: true });
+    expect(result.healthy).toBe(true);
+    if (result.healthy) {
+      expect(typeof result.latencyMs).toBe("number");
+      expect(result.latencyMs).toBeGreaterThanOrEqual(0);
+    }
     expect(ping).toHaveBeenCalledTimes(1);
   });
 
@@ -211,6 +227,10 @@ describe("checkDatabaseConnection", () => {
 
     const result = await checkDatabaseConnection(ping);
 
-    expect(result).toEqual({ healthy: true });
+    expect(result.healthy).toBe(true);
+    if (result.healthy) {
+      expect(typeof result.latencyMs).toBe("number");
+      expect(result.latencyMs).toBeGreaterThanOrEqual(0);
+    }
   });
 });

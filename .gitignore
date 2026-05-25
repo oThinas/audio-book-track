@@ -50,3 +50,4 @@ futuras-features.md
 
 # spec-kit extension
 .spec-context.json
+.baseline/

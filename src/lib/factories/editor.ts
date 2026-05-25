@@ -4,14 +4,18 @@ import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/lib/db";
 import { book, chapter } from "@/lib/db/schema";
 import type { BlockingBookSummary } from "@/lib/errors/studio-errors";
+import { createAuditService } from "@/lib/factories/audit";
 import { DrizzleEditorRepository } from "@/lib/repositories/drizzle/drizzle-editor-repository";
+import { DrizzleUnitOfWork } from "@/lib/repositories/drizzle/drizzle-unit-of-work";
 import { EditorService, type SoftDeleteEditorDeps } from "@/lib/services/editor-service";
 
 const ACTIVE_CHAPTER_STATUSES = ["pending", "editing", "reviewing", "retake"] as const;
 
 export function createEditorService(): EditorService {
-  const repository = new DrizzleEditorRepository(db);
-  return new EditorService(repository);
+  return new EditorService(new DrizzleEditorRepository(db), {
+    auditService: createAuditService(),
+    uow: new DrizzleUnitOfWork(db),
+  });
 }
 
 export function createGetActiveBooksForEditor(): (

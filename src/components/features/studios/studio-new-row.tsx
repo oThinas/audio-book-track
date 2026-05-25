@@ -84,6 +84,7 @@ export function StudioNewRow({ onCreated, onCancelled }: StudioNewRowProps) {
           <p className="mt-1 text-xs text-destructive">{errors.defaultHourlyRateCents.message}</p>
         )}
       </TableCell>
+      <TableCell aria-hidden="true" />
       <TableCell className="w-24">
         <div className="flex items-center justify-end gap-1">
           <Button

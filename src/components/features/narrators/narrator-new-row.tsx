@@ -58,6 +58,7 @@ export function NarratorNewRow({ onCreated, onCancelled }: NarratorNewRowProps) 
         />
         {errors.name && <p className="mt-1 text-xs text-destructive">{errors.name.message}</p>}
       </TableCell>
+      <TableCell aria-hidden="true" />
       <TableCell className="w-24">
         <div className="flex items-center justify-end gap-1">
           <Button

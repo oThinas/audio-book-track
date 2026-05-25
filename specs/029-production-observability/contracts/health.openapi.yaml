@@ -1,0 +1,131 @@
+openapi: 3.0.3
+info:
+  title: AudioBook Track — Health Check
+  version: "1.0.0"
+  description: |
+    Endpoint de health check consumido por monitor externo de uptime
+    (UptimeRobot/BetterStack/equivalente) e por equipe de operação para
+    investigação rápida do estado da aplicação.
+
+    Não-versionado intencionalmente (decisão D6 em research.md) — é
+    contrato de infraestrutura, não recurso de domínio.
+servers:
+  - url: https://audio-book-track.app
+    description: Produção
+  - url: http://localhost:3000
+    description: Desenvolvimento local
+
+paths:
+  /api/health:
+    get:
+      summary: Health check da aplicação
+      operationId: getHealth
+      security: []  # rota pública, sem autenticação
+      responses:
+        "200":
+          description: Aplicação saudável (DB alcançável).
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: no-store
+            X-Request-Id:
+              schema:
+                type: string
+                format: uuid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthOk"
+              example:
+                status: ok
+                uptime_seconds: 12345
+                app_version: "0.29.0"
+                checks:
+                  database:
+                    status: ok
+                    latency_ms: 8
+        "503":
+          description: Aplicação degradada (DB inalcançável ou lento além do timeout).
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: no-store
+            X-Request-Id:
+              schema:
+                type: string
+                format: uuid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthDegraded"
+              example:
+                status: degraded
+                uptime_seconds: 12345
+                app_version: "0.29.0"
+                checks:
+                  database:
+                    status: down
+                    message: "timeout after 2000ms"
+
+components:
+  schemas:
+    HealthOk:
+      type: object
+      required: [status, uptime_seconds, checks]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        uptime_seconds:
+          type: integer
+          minimum: 0
+          description: Segundos desde o boot do processo (process.uptime()).
+        app_version:
+          type: string
+          description: |
+            Versão da aplicação atualmente deployada — vem do env
+            var APP_VERSION (ou commit SHA quando não setada).
+        checks:
+          type: object
+          required: [database]
+          properties:
+            database:
+              type: object
+              required: [status, latency_ms]
+              properties:
+                status:
+                  type: string
+                  enum: [ok]
+                latency_ms:
+                  type: integer
+                  minimum: 0
+                  description: Tempo do `SELECT 1` em ms.
+
+    HealthDegraded:
+      type: object
+      required: [status, uptime_seconds, checks]
+      properties:
+        status:
+          type: string
+          enum: [degraded]
+        uptime_seconds:
+          type: integer
+          minimum: 0
+        app_version:
+          type: string
+        checks:
+          type: object
+          required: [database]
+          properties:
+            database:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [down]
+                message:
+                  type: string
+                  description: Mensagem curta diagnóstica (sem stack trace, sem SQL).

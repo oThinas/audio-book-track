@@ -6,10 +6,12 @@ import { type ErrorCode, errorCodes } from "@/lib/api/error-codes";
 import { requestIdHeader } from "@/lib/api/headers";
 import { requestContext } from "@/lib/api/request-context";
 import { extractOrCreateRequestId } from "@/lib/api/request-id";
+import { withRequestLogging } from "@/lib/api/with-request-logging";
 import { auth } from "@/lib/auth/server";
 import type { Session } from "@/lib/auth/session";
 import { DomainError } from "@/lib/errors/domain-error";
 import { type ServerLogger, serverLogger } from "@/lib/logger/server-logger";
+import { captureServerException } from "@/lib/sentry/server";
 import "@/lib/schemas/zod-bootstrap";
 
 interface RouteContext<TParams> {
@@ -116,6 +118,7 @@ function mapError(error: unknown, requestId: string, logger: ServerLogger): Next
   }
 
   logger.error("Unhandled API error", { requestId, error });
+  captureServerException(error, { requestId });
   return jsonError(
     { code: "INTERNAL_ERROR", message: errorCodes.INTERNAL_ERROR.message },
     requestId,
@@ -153,27 +156,32 @@ export function withApiErrorHandler<TParams = Record<string, never>>(
     const incomingHeaders = await deps.headersFn();
     const requestId = extractOrCreateRequestId(incomingHeaders);
 
-    return requestContext.run({ requestId }, async () => {
-      try {
-        let session: Session | null = null;
-        if (requireAuth) {
-          session = await deps.getSession({ headers: incomingHeaders });
-          if (!session) {
+    let session: Session | null = null;
+    if (requireAuth) {
+      session = await deps.getSession({ headers: incomingHeaders });
+    }
+
+    return requestContext.run({ requestId, userId: session?.user.id ?? null }, async () => {
+      const inner = async (req: Request): Promise<NextResponse> => {
+        try {
+          if (requireAuth && !session) {
             return jsonError(
               { code: "UNAUTHORIZED", message: errorCodes.UNAUTHORIZED.message },
               requestId,
             );
           }
+          const response = await anyHandler(req, {
+            params: context.params,
+            session,
+            requestId,
+          });
+          return withRequestIdHeader(response, requestId);
+        } catch (error) {
+          return withRequestIdHeader(mapError(error, requestId, deps.logger), requestId);
         }
-        const response = await anyHandler(request, {
-          params: context.params,
-          session,
-          requestId,
-        });
-        return withRequestIdHeader(response, requestId);
-      } catch (error) {
-        return mapError(error, requestId, deps.logger);
-      }
+      };
+
+      return withRequestLogging(inner, { logger: deps.logger })(request);
     });
   };
 }

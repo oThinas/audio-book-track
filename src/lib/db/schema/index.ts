@@ -1,3 +1,4 @@
+export * from "./audit-log";
 export * from "./auth";
 export * from "./book";
 export * from "./chapter";

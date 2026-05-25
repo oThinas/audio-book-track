@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { createAuditService } from "@/lib/factories/audit";
 import { DrizzleBookRepository } from "@/lib/repositories/drizzle/drizzle-book-repository";
 import { DrizzleChapterRepository } from "@/lib/repositories/drizzle/drizzle-chapter-repository";
 import { DrizzleEditorRepository } from "@/lib/repositories/drizzle/drizzle-editor-repository";
@@ -15,5 +16,6 @@ export function createBookService(): BookService {
     narratorRepo: new DrizzleNarratorRepository(db),
     editorRepo: new DrizzleEditorRepository(db),
     uow: new DrizzleUnitOfWork(db),
+    auditService: createAuditService(),
   });
 }

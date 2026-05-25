@@ -1,7 +1,12 @@
 import { getSessionCookie } from "better-auth/cookies";
 import { type NextRequest, NextResponse } from "next/server";
 
-const PUBLIC_ROUTES = ["/login", "/api/auth"];
+// Public routes bypass the session-cookie redirect:
+// - /login: the login page itself
+// - /api/auth: better-auth endpoints (handle their own auth)
+// - /api/health: pinged by the external uptime monitor (no cookie)
+// - /api/cron: authenticated by Authorization: Bearer <CRON_SECRET>, not by cookie
+const PUBLIC_ROUTES = ["/login", "/api/auth", "/api/health", "/api/cron"];
 
 function isPublicRoute(pathname: string): boolean {
   return PUBLIC_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`));
