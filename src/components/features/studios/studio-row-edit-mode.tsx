@@ -94,7 +94,7 @@ export function StudioRowEditMode({ studio, onCancel, onUpdated }: StudioRowEdit
           <p className="mt-1 text-xs text-destructive">{errors.defaultHourlyRateCents.message}</p>
         )}
       </TableCell>
-      <TableCell className="text-foreground align-top">
+      <TableCell className="text-foreground">
         <span className="text-muted-foreground">{studio.booksCount}</span>
       </TableCell>
       <TableCell className="w-24">

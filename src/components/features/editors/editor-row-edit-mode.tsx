@@ -79,7 +79,7 @@ export function EditorRowEditMode({ editor, onCancel, onUpdated }: EditorRowEdit
         />
         {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>}
       </TableCell>
-      <TableCell className="text-foreground align-top">
+      <TableCell className="text-foreground">
         <span className="text-muted-foreground">{editor.chaptersCount}</span>
       </TableCell>
       <TableCell className="w-24">

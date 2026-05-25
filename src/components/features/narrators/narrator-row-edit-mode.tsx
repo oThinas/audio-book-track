@@ -63,7 +63,7 @@ export function NarratorRowEditMode({ narrator, onCancel, onUpdated }: NarratorR
         />
         {errors.name && <p className="mt-1 text-xs text-destructive">{errors.name.message}</p>}
       </TableCell>
-      <TableCell className="text-foreground align-top">
+      <TableCell className="text-foreground">
         <span className="text-muted-foreground">{narrator.chaptersCount}</span>
       </TableCell>
       <TableCell className="w-24">
