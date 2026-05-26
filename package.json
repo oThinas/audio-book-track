@@ -9,6 +9,7 @@
     "db:generate": "bunx drizzle-kit generate",
     "db:migrate": "bun run src/lib/db/migrate.ts",
     "db:seed": "bun run src/lib/db/seed.ts",
+    "db:seed:prod-users": "bun run scripts/seed-prod-users.ts",
     "db:studio": "bunx drizzle-kit studio",
     "db:test:setup": "NODE_ENV=test bun run scripts/db/ensure-test-db.ts && NODE_ENV=test bun run src/lib/db/migrate.ts && NODE_ENV=test bun run src/lib/db/seed-test.ts",
     "db:test:seed": "NODE_ENV=test bun run src/lib/db/seed-test.ts",

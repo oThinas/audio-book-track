@@ -204,16 +204,13 @@ DATABASE_URL='<production-direct-connection-string>' bun run db:migrate
 # 2. Confirmar que a tabela audit_log existe e os 4 índices estão criados
 psql '<production-direct-connection-string>' -c "\d audit_log"
 
-# 3. Confirmar que a extensão pgcrypto está habilitada
-psql '<production-direct-connection-string>' -c "SELECT * FROM pg_extension WHERE extname='pgcrypto';"
-
-# 4. Deploy
+# 3. Deploy
 vercel --prod
 
-# 5. Aguardar build (3–5 min). Acompanhar logs:
+# 4. Aguardar build (3–5 min). Acompanhar logs:
 vercel logs --prod --follow
 
-# 6. Confirmar URL final
+# 5. Confirmar URL final
 vercel inspect --logs <deployment-url>
 ```
 
@@ -222,6 +219,53 @@ vercel inspect --logs <deployment-url>
 - Etapa `Creating an optimized production build` passou.
 - Etapa Sentry: linhas tipo `Uploaded source maps for release <SHA>`.
 - Status final `Deployment ready`.
+
+### 7.1. Provisionar usuários iniciais
+
+Como `signUp` público está desabilitado em produção (FR-005 + better-auth `disableSignUp`), é necessário criar os primeiros usuários por script. Usa o mesmo fluxo do `signUpEmail` que o login consome, então a hash de senha e o plugin `username` ficam idênticos aos do runtime.
+
+**Pré-requisitos**:
+- `DATABASE_URL` de produção (use a **direct connection string**, não a pooled — Drizzle usa prepared statements).
+- `BETTER_AUTH_URL` e `BETTER_AUTH_SECRET` idênticos aos configurados na Vercel.
+
+**Gerar senhas fortes**:
+```bash
+openssl rand -base64 18 | tr -d '/+='
+```
+
+**Rodar — 1 invocação por usuário** (idempotente; re-rodar com o mesmo email é seguro):
+```bash
+export DATABASE_URL='postgres://...prod-direct...'
+export BETTER_AUTH_URL='https://<seu-domínio>.vercel.app'
+export BETTER_AUTH_SECRET='<mesmo valor da Vercel>'
+
+bun run db:seed:prod-users \
+  --email thiago@coodex.ai \
+  --username thinas \
+  --name "Thiago Prado" \
+  --password '<senha-1>'
+
+bun run db:seed:prod-users \
+  --email cliente1@dominio.com \
+  --username cliente1 \
+  --name "Cliente 1" \
+  --password '<senha-2>'
+
+bun run db:seed:prod-users \
+  --email cliente2@dominio.com \
+  --username cliente2 \
+  --name "Cliente 2" \
+  --password '<senha-3>'
+
+unset DATABASE_URL BETTER_AUTH_URL BETTER_AUTH_SECRET
+```
+
+**Dicas de segurança**:
+- Rodar `set +o history` (bash/zsh) antes de colar senhas, ou exportar via `.env` temporário e apagar depois.
+- Validações do plugin: `username` 3–30 chars; senha mínimo 8 chars (better-auth padrão).
+- Confirmar no banco: `SELECT email, username FROM "user" ORDER BY created_at DESC;`.
+
+Implementação: [`scripts/seed-prod-users.ts`](../scripts/seed-prod-users.ts).
 
 ---
 
