@@ -89,7 +89,11 @@ function zodErrorToDetails(error: ZodError): ReadonlyArray<{ field: string; mess
   }));
 }
 
-function mapError(error: unknown, requestId: string, logger: ServerLogger): NextResponse {
+async function mapError(
+  error: unknown,
+  requestId: string,
+  logger: ServerLogger,
+): Promise<NextResponse> {
   if (error instanceof ZodError) {
     return jsonError(
       {
@@ -118,7 +122,7 @@ function mapError(error: unknown, requestId: string, logger: ServerLogger): Next
   }
 
   logger.error("Unhandled API error", { requestId, error });
-  captureServerException(error, { requestId });
+  await captureServerException(error, { requestId });
   return jsonError(
     { code: "INTERNAL_ERROR", message: errorCodes.INTERNAL_ERROR.message },
     requestId,
@@ -177,7 +181,7 @@ export function withApiErrorHandler<TParams = Record<string, never>>(
           });
           return withRequestIdHeader(response, requestId);
         } catch (error) {
-          return withRequestIdHeader(mapError(error, requestId, deps.logger), requestId);
+          return withRequestIdHeader(await mapError(error, requestId, deps.logger), requestId);
         }
       };
 
