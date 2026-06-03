@@ -1,7 +1,9 @@
 {
-  "version": "0.8.6",
+  "version": "0.9.2",
   "integration_state_schema": 1,
-  "installed_integrations": ["claude"],
+  "installed_integrations": [
+    "claude"
+  ],
   "integration_settings": {
     "claude": {
       "script": "sh",
