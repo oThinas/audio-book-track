@@ -29,7 +29,7 @@
 |---|---|---|
 | Servidor de produção | **PostgreSQL 16.14** (Neon, aarch64) | Fonte dos dumps |
 | Client no workflow | `postgresql-client-17` (PGDG, pinado) | `pg_dump`/`pg_restore` major DEVE ser ≥ major do servidor |
-| Restore (target) | PostgreSQL **≥ 16** | Restaurar em versão igual ou superior; nunca inferior |
+| Restore (target) | PostgreSQL **≥ 17** | Target major DEVE ser ≥ ao major do **client `pg_restore` usado** (não só ≥ à origem): `pg_restore` 17 emite `SET transaction_timeout` (GUC do PG 17) que um target 16 rejeita. Nunca restaurar em major inferior à origem |
 
 Se o Neon for atualizado para major 17+ (upgrade manual — Neon não faz major upgrade automático), o pin do client no workflow já cobre 17; acima disso, atualizar o pin em `backup-db.yml` e esta tabela.
 
@@ -93,10 +93,14 @@ aws s3 ls "s3://${R2_BUCKET}/backups/" --endpoint-url "$R2_ENDPOINT"
 aws s3 cp "s3://${R2_BUCKET}/backups/<arquivo>.dump" ./restore-test.dump \
   --endpoint-url "$R2_ENDPOINT"
 
-# 3. Subir um Postgres 16 descartável (porta 5433 para não colidir com local)
+# 3. Subir um Postgres descartável (porta 5433 para não colidir com local).
+#    ⚠️ O major do container deve ser >= o major do SEU pg_restore local
+#    (`pg_restore --version`): pg_restore 17 emite SET transaction_timeout
+#    (GUC do PG 17) e um target 16 rejeita com "unrecognized configuration
+#    parameter". postgres:17 cobre clients 16 e 17.
 docker run --name restore-test -d \
   -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=verify \
-  -p 5433:5432 postgres:16
+  -p 5433:5432 postgres:17
 
 # aguardar healthy (~5s)
 until docker exec restore-test pg_isready -U postgres >/dev/null 2>&1; do sleep 1; done
@@ -138,7 +142,7 @@ docker rm -f restore-test && rm -f restore-test.dump
 
 Em caso de perda do banco de produção:
 
-1. Criar novo projeto/branch no Neon (PostgreSQL ≥ 16).
+1. Criar novo projeto/branch no Neon (PostgreSQL **≥ 17** — ou igual ao major do `pg_restore` que será usado; ver regra na Seção 2).
 2. Restaurar o dump mais recente nele (Seção 5.2, apontando para a connection string do novo banco em vez do container).
 3. Atualizar `DATABASE_URL` na **Vercel** (pooled string nova) e no **GitHub Actions** (direct string nova — ver Seção 6.1).
 4. Redeploy na Vercel e smoke test (`/api/health`).

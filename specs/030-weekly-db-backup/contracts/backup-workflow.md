@@ -26,7 +26,7 @@ Job único, `runs-on: ubuntu-latest`, `timeout-minutes: 15`.
 
 ## Service container
 
-`postgres:16` com `POSTGRES_USER: postgres`, `POSTGRES_PASSWORD: postgres`, **`POSTGRES_DB: verify`** + health-check `pg_isready` (mesmo padrão de `pr-checks.yml`, trocando o nome do banco). Banco descartável `verify` usado exclusivamente pela verificação de restauração — o step 9 restaura em `postgresql://postgres:postgres@localhost:5432/verify`.
+`postgres:17` com `POSTGRES_USER: postgres`, `POSTGRES_PASSWORD: postgres`, **`POSTGRES_DB: verify`** + health-check `pg_isready` (mesmo padrão de `pr-checks.yml`, trocando imagem e nome do banco). Banco descartável `verify` usado exclusivamente pela verificação de restauração — o step 9 restaura em `postgresql://postgres:postgres@localhost:5432/verify`. **Major do container DEVE ser ≥ major do client `pg_restore` (17)**: `pg_restore` 17 emite `SET transaction_timeout` (GUC do PG 17) que um target 16 rejeita sob `--exit-on-error` — falha real observada no run 26924745370.
 
 ## Secrets consumidos
 

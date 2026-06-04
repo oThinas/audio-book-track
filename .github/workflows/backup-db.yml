@@ -20,7 +20,11 @@ jobs:
     timeout-minutes: 15
     services:
       postgres:
-        image: postgres:16
+        # Must be >= the pg_restore client major (17): pg_restore 17 emits
+        # SET transaction_timeout (a PG 17 GUC) which a PG 16 target rejects
+        # under --exit-on-error. Restoring a 16-origin dump into 17 is the
+        # supported forward direction.
+        image: postgres:17
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres

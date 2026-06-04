@@ -8,13 +8,13 @@
 
 ## Summary
 
-Backup diário automatizado do Postgres de produção (Neon, PG 16.14): GitHub Actions agendado (`0 6 * * *` = 03:00 BRT) executa `pg_dump --format=custom --compress=9` pela direct connection (com guarda anti-pooler), sobe o artefato para bucket Cloudflare R2 (lifecycle de 90 dias ≈ 90 dumps em rotação, ~270 MB, custo zero) e **verifica a restaurabilidade na própria execução**: baixa o objeto de volta do R2 e restaura em service container `postgres:16` com sanity queries — só então declara sucesso. Sentry Crons atua como dead man's switch (check-ins `in_progress`/`ok`/`error`; alerta em check-in ausente cobre não-execução silenciosa, incl. o auto-disable de 60 dias do GitHub). Runbook operacional em `docs/backup.md` com setup completo (Cloudflare/R2/token/lifecycle/Sentry/secrets), procedimento de restore manual e registro do teste de restore obrigatório na entrega.
+Backup diário automatizado do Postgres de produção (Neon, PG 16.14): GitHub Actions agendado (`0 6 * * *` = 03:00 BRT) executa `pg_dump --format=custom --compress=9` pela direct connection (com guarda anti-pooler), sobe o artefato para bucket Cloudflare R2 (lifecycle de 90 dias ≈ 90 dumps em rotação, ~270 MB, custo zero) e **verifica a restaurabilidade na própria execução**: baixa o objeto de volta do R2 e restaura em service container `postgres:17` com sanity queries — só então declara sucesso. Sentry Crons atua como dead man's switch (check-ins `in_progress`/`ok`/`error`; alerta em check-in ausente cobre não-execução silenciosa, incl. o auto-disable de 60 dias do GitHub). Runbook operacional em `docs/backup.md` com setup completo (Cloudflare/R2/token/lifecycle/Sentry/secrets), procedimento de restore manual e registro do teste de restore obrigatório na entrega.
 
 ## Technical Context
 
 **Language/Version**: Bash (steps de workflow) + YAML GitHub Actions; PostgreSQL client 17 (PGDG) contra servidor 16.14
 
-**Primary Dependencies**: `pg_dump`/`pg_restore` 17 (PGDG), AWS CLI v2 (pré-instalada no runner, com `AWS_REQUEST_CHECKSUM_CALCULATION=when_required` para compat R2), `curl` (check-ins Sentry), service container `postgres:16`
+**Primary Dependencies**: `pg_dump`/`pg_restore` 17 (PGDG), AWS CLI v2 (pré-instalada no runner, com `AWS_REQUEST_CHECKSUM_CALCULATION=when_required` para compat R2), `curl` (check-ins Sentry), service container `postgres:17` (major ≥ client de restore)
 
 **Storage**: Cloudflare R2 (S3-compatible) — bucket único, prefixo `backups/`, lifecycle 90 dias; origem Neon PostgreSQL 16.14 via direct connection string
 
