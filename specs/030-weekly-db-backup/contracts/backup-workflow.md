@@ -50,7 +50,7 @@ AWS_DEFAULT_REGION=auto
 | 4 | `pg_dump` | `--format=custom --compress=9 --file=<artefato>` contra `DATABASE_URL`; falha do comando = falha do job | FR-003 |
 | 5 | Upload | `aws s3 cp <artefato> s3://$R2_BUCKET/backups/audiobook-track-<UTC-ts>.dump --endpoint-url $R2_ENDPOINT` | FR-002 |
 | 6 | Download round-trip | `aws s3 cp` do MESMO objeto de volta para um caminho distinto | FR-005 |
-| 7 | Piso de tamanho | Arquivo baixado < 102400 bytes → `exit 1` | FR-005 |
+| 7 | Piso de tamanho | Arquivo baixado < 10240 bytes → `exit 1` (tripwire vazio/truncado; calibrado com dump real de ~32 KB) | FR-005 |
 | 8 | TOC check | `pg_restore --list` no arquivo baixado; falha = job falha | FR-005 |
 | 9 | Restore verify | `pg_restore --no-owner --no-privileges --exit-on-error -d postgresql://...@localhost:5432/verify` (service container) | FR-005 |
 | 10 | Sanity queries | `pg_tables` public ≥ 8; `__drizzle_migrations` ≥ 1; `"user"` ≥ 1 — qualquer uma reprovando → `exit 1` | FR-005 |

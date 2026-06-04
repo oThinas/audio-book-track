@@ -11,8 +11,8 @@ Esta feature **não altera o schema PostgreSQL** nem adiciona entidades de domí
 | Key | `backups/audiobook-track-<UTC-timestamp>.dump` |
 | Timestamp | `date -u +%Y-%m-%dT%H-%M-%SZ` — único por execução, sem colisão agendado×manual |
 | Formato | `pg_dump --format=custom --compress=9` (estrutura + dados, restauração completa e seletiva) |
-| Tamanho mínimo | ≥ 100 KB (102400 bytes) — piso de validação (FR-005) |
-| Tamanho projetado | ~1-3 MB comprimido (base atual ~8,4 MB) |
+| Tamanho mínimo | ≥ 10 KB (10240 bytes) — tripwire para vazio/truncado (FR-005); recalibrado após medição real |
+| Tamanho real medido | ~32 KB comprimido (base atual ~8,4 MB de `pg_database_size` é majoritariamente catálogo/índices, não dados) |
 | Origem | PostgreSQL 16.14 (Neon, direct connection) |
 | Compatibilidade de restore | PostgreSQL ≥ 16 (FR-014) |
 | Ciclo de vida | Criado 1×/dia (cron) ou sob demanda (dispatch) → verificado round-trip na mesma execução → expirado server-side aos 90 dias |
@@ -62,7 +62,7 @@ Regras (FR-011): nenhum desses valores aparece em código, logs ou nome de artef
                     ┌──────────────────────────────────────────────┐
 agendamento/dispatch → check-in in_progress → guarda anti-pooler   │
                     │  → pg_dump → upload R2 → download round-trip │
-                    │  → piso 100KB → pg_restore --list            │
+                    │  → piso 10KB → pg_restore --list             │
                     │  → restore em postgres:16 → sanity queries   │
                     └──────────────────────────────────────────────┘
                           │ tudo OK                      │ qualquer etapa falha

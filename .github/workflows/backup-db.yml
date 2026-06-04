@@ -116,12 +116,17 @@ jobs:
           aws s3 cp "s3://${R2_BUCKET}/${{ steps.artifact.outputs.key }}" \
             verify.dump --endpoint-url "$R2_ENDPOINT"
 
+      # Cheap tripwire for empty/truncated artifacts only — legitimacy of the
+      # content is proven by the restore + sanity queries below. Calibrated
+      # empirically: a real dump of the near-empty production DB is ~32 KB
+      # (pg_database_size says 8.4 MB, but that's mostly catalog/index
+      # overhead, not compressible row data).
       - name: Enforce minimum artifact size
         run: |
           size="$(stat -c%s verify.dump)"
           echo "Downloaded artifact: ${size} bytes"
-          if [ "$size" -lt 102400 ]; then
-            echo "::error::Artefato baixado tem ${size} bytes (< 100 KB) — dump vazio, truncado ou de banco errado."
+          if [ "$size" -lt 10240 ]; then
+            echo "::error::Artefato baixado tem ${size} bytes (< 10 KB) — dump vazio ou truncado."
             exit 1
           fi
 
