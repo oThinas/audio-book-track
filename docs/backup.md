@@ -39,11 +39,12 @@ Estado: **concluído em 2026-06-03**. Passos para reprodução (novo ambiente/co
 
 1. Criar conta em [dash.cloudflare.com](https://dash.cloudflare.com) e habilitar **R2 Object Storage** (exige cartão de crédito mesmo no free tier — 10 GB de armazenamento, egress gratuito).
 2. **Create bucket**: nome `audiobook-track-backups`, location Automatic, classe Standard, acesso privado (default).
-3. **Manage R2 API Tokens → Create API Token**:
+3. Criar o token S3 — **atenção ao fluxo**: Dashboard → **R2 Object Storage** → botão **`{} API`** (canto superior direito) → **Manage API tokens** → **Create Account API token**:
    - Permissão: **Object Read & Write**
    - Escopo: **somente** o bucket `audiobook-track-backups` (nunca account-wide)
    - TTL: Forever
-   - Anotar **Access Key ID**, **Secret Access Key** (exibidos uma única vez) e o endpoint `https://<account_id>.r2.cloudflarestorage.com`
+   - Na tela de sucesso, rolar até a seção **"Use the following credentials with S3-compatible clients"**: anotar **Access Key ID** e **Secret Access Key** (exibidos **uma única vez**) e o endpoint `https://<account_id>.r2.cloudflarestorage.com`
+   - ⚠️ **Não** usar o fluxo genérico My Profile → API Tokens — ele gera um token Cloudflare comum, **sem** as credenciais S3. Se um token foi criado e o par de chaves se perdeu: criar token novo pelo fluxo acima e **deletar o antigo** (as credenciais S3 também podem ser derivadas — Access Key ID = ID do token, Secret = SHA-256 do valor — mas recriar é menos sujeito a erro)
 4. Configurar os secrets no GitHub (Seção 4).
 5. Configurar as lifecycle rules de retenção (Seção 7 — pendente nesta fase).
 
