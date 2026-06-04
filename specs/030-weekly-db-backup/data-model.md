@@ -63,7 +63,7 @@ Regras (FR-011): nenhum desses valores aparece em código, logs ou nome de artef
 agendamento/dispatch → check-in in_progress → guarda anti-pooler   │
                     │  → pg_dump → upload R2 → download round-trip │
                     │  → piso 10KB → pg_restore --list             │
-                    │  → restore em postgres:16 → sanity queries   │
+                    │  → restore em postgres:17 → sanity queries   │
                     └──────────────────────────────────────────────┘
                           │ tudo OK                      │ qualquer etapa falha
                           ▼                              ▼

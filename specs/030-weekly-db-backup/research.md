@@ -48,7 +48,7 @@ export AWS_RESPONSE_CHECKSUM_VALIDATION=when_required
 
 ## R4. Verificação round-trip de restauração
 
-**Decision**: Service container `postgres:16` no próprio job (mesmo padrão e health-check de `pr-checks.yml`). Pipeline da verificação:
+**Decision**: Service container `postgres:17` no próprio job (mesmo padrão e health-check de `pr-checks.yml`; era 16 — elevado para 17 porque o `pg_restore` 17 emite `SET transaction_timeout`, GUC do PG 17, que um target 16 rejeita sob `--exit-on-error`). Pipeline da verificação:
 
 1. `aws s3 cp` (download do artefato recém-enviado, do R2 de volta ao runner);
 2. piso de tamanho: falha se < 10 KB (10240 bytes) — recalibrado: a primeira execução real mediu ~32 KB para dump legítimo da base quase vazia;
