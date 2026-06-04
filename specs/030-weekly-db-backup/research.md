@@ -51,7 +51,7 @@ export AWS_RESPONSE_CHECKSUM_VALIDATION=when_required
 **Decision**: Service container `postgres:16` no próprio job (mesmo padrão e health-check de `pr-checks.yml`). Pipeline da verificação:
 
 1. `aws s3 cp` (download do artefato recém-enviado, do R2 de volta ao runner);
-2. piso de tamanho: falha se < 100 KB (102400 bytes);
+2. piso de tamanho: falha se < 10 KB (10240 bytes) — recalibrado: a primeira execução real mediu ~32 KB para dump legítimo da base quase vazia;
 3. `pg_restore --list` (TOC legível — falha rápida antes do restore caro);
 4. `pg_restore --no-owner --no-privileges --exit-on-error -d $VERIFY_DATABASE_URL` no container;
 5. Sanity queries:
