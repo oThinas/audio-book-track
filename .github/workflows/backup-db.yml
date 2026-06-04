@@ -68,11 +68,27 @@ jobs:
       # Client major must be >= server major (production is PostgreSQL 16 on
       # Neon). Pinning 17 via PGDG survives runner image changes and a future
       # manual server upgrade to 17.
+      #
+      # PATH pin is required: /usr/bin/pg_dump is Debian's pg_wrapper, which
+      # resolves to the runner's preinstalled local cluster version (16), not
+      # the newest installed client. Prepending 17's bin dir via GITHUB_PATH
+      # makes every later step use the 17 binaries directly.
       - name: Install PostgreSQL 17 client
         run: |
           sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
           sudo apt-get install -y --no-install-recommends postgresql-client-17
+          echo "/usr/lib/postgresql/17/bin" >> "$GITHUB_PATH"
+          /usr/lib/postgresql/17/bin/pg_dump --version
+
+      # Audit the effective binary seen by the following steps — fails loudly
+      # if the PATH pin ever stops working.
+      - name: Assert pg_dump resolves to major 17
+        run: |
           pg_dump --version
+          if ! pg_dump --version | grep -q "(PostgreSQL) 17"; then
+            echo "::error::pg_dump no PATH não é o major 17 — pino via GITHUB_PATH falhou (wrapper do Debian voltou a interceptar?)."
+            exit 1
+          fi
 
       # Single timestamp shared by upload and round-trip download — also
       # prevents key collision between a scheduled and a manual run.
