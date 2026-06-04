@@ -72,7 +72,7 @@ Nenhum NEEDS CLARIFICATION restante na spec (sessão de clarificação 2026-06-0
 
 ## R6. E2E determinístico: interceptação Playwright do fetch RSC
 
-**Decision**: Um único teste E2E (`books-loading-skeleton.spec.ts`): login → interceptar requests da navegação para `/books` cujo header `RSC: 1` esteja presente, atrasando a resposta (~1.5s) → clicar no link da sidebar → asserts: (1) bloco de skeleton (`data-testid="page-loading-skeleton"`) e heading real "Livros" visíveis **durante** o atraso; (2) após liberar, tabela/empty-state visível e skeleton ausente.
+**Decision**: Um único teste E2E (`books-loading-skeleton.spec.ts`): login → `page.goto("/dashboard")` como origem fixa → interceptar requests da navegação para `/books` cujo header `RSC: 1` esteja presente **e** que não sejam prefetch (excluir requests com header `Next-Router-Prefetch` — atrasá-los mudaria o timing do prefetch em viewport e reintroduziria flakiness), atrasando a resposta (~1.5s) → clicar no link da sidebar (`getByRole("link", { name: "Livros" })`) → asserts: (1) bloco de skeleton (`data-testid="page-loading-skeleton"`) e heading real "Livros" visíveis **durante** o atraso; (2) após liberar, tabela/empty-state visível e skeleton ausente.
 
 **Rationale**:
 

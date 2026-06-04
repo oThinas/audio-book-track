@@ -25,15 +25,15 @@
 
 ### User Story 1 - Feedback imediato ao navegar para listagens (Priority: P1)
 
-Como operador do sistema, ao navegar para qualquer página de listagem (Livros, Narradores, Editores, Estúdios), quero ver imediatamente a moldura real da página (título, descrição, botão de ação e busca, estes desabilitados) com um placeholder pulsante na região da tabela, em vez de uma tela em branco, para perceber que o sistema está respondendo e que os dados estão a caminho.
+Como operador do sistema, ao navegar para qualquer página de listagem (Livros, Narradores, Editores, Estúdios), quero ver imediatamente a moldura real da página (título, descrição, botão de ação e — quando a página possui, como em Livros — campo de busca, estes desabilitados) com um placeholder pulsante na região da tabela, em vez de uma tela em branco, para perceber que o sistema está respondendo e que os dados estão a caminho.
 
 **Why this priority**: As quatro listagens são as páginas mais visitadas no fluxo diário do operador (cadastro e acompanhamento de produção). Hoje todas exibem tela em branco durante o carregamento — é o maior volume de navegações afetadas e o ganho de percepção de qualidade mais imediato.
 
-**Independent Test**: Pode ser testado de forma totalmente independente navegando para `/books`, `/narrators`, `/editors` e `/studios` com rede lenta simulada e verificando que a moldura real (cabeçalho + busca desabilitada) com bloco de skeleton na região da tabela aparece instantaneamente antes do conteúdo real. Entrega valor sozinho, mesmo sem as demais histórias.
+**Independent Test**: Pode ser testado de forma totalmente independente navegando para `/books`, `/narrators`, `/editors` e `/studios` com rede lenta simulada e verificando que a moldura real (cabeçalho real e, em Livros, busca desabilitada) com bloco de skeleton na região da tabela aparece instantaneamente antes do conteúdo real. Entrega valor sozinho, mesmo sem as demais histórias.
 
 **Acceptance Scenarios**:
 
-1. **Given** o operador autenticado em qualquer página, **When** ele navega para uma das quatro listagens e os dados ainda não chegaram, **Then** o cabeçalho real da página (título, descrição e botão de ação desabilitado) e o campo de busca desabilitado aparecem imediatamente, com um bloco único de skeleton pulsante na região da tabela.
+1. **Given** o operador autenticado em qualquer página, **When** ele navega para uma das quatro listagens e os dados ainda não chegaram, **Then** o cabeçalho real da página (título, descrição e botão de ação desabilitado) — e, em Livros, o campo de busca desabilitado — aparecem imediatamente, com um bloco único de skeleton pulsante na região da tabela.
 2. **Given** o estado de carregamento visível, **When** os dados terminam de carregar, **Then** o conteúdo real substitui o bloco de skeleton e os controles são habilitados, automaticamente, sem ação do usuário e sem salto brusco de layout — a moldura (cabeçalho + busca) permanece estável.
 
 ---
@@ -82,7 +82,7 @@ Como operador, ao abrir a página de Configurações, quero ver o título real "
 
 - **FR-001**: O sistema MUST exibir um estado de carregamento visual imediatamente após a navegação para cada uma das seis rotas autenticadas hoje sem feedback (`/books`, `/books/[id]`, `/narrators`, `/editors`, `/studios`, `/settings`), eliminando a tela em branco durante o fetch de dados.
 - **FR-002**: O estado de carregamento MUST seguir o princípio híbrido: todo conteúdo conhecido estaticamente é renderizado real desde o primeiro instante; skeleton apenas no conteúdo que depende de dados. Por tipo de página:
-  - **Listagens** (`/books`, `/narrators`, `/editors`, `/studios`): título, descrição e botão de ação reais (botão desabilitado) + campo de busca real desabilitado + um único bloco de skeleton na região da tabela.
+  - **Listagens** (`/books`, `/narrators`, `/editors`, `/studios`): título, descrição e botão de ação reais (botão desabilitado) + campo de busca real desabilitado **quando a página real o possui** (hoje, apenas `/books` — as demais listagens não têm busca e omitem essa região) + um único bloco de skeleton na região da tabela.
   - **Detalhe do livro** (`/books/[id]`): barras de skeleton estruturadas no cabeçalho (título, linha de meta, linha de estatísticas) + um único bloco na região da toolbar + tabela de capítulos.
   - **Configurações** (`/settings`): título real "Configurações" + dois blocos de skeleton (região da seção de aparência e região da seção de widgets).
 - **FR-003**: Os placeholders MUST usar exclusivamente cores semânticas do sistema de design existente — nenhuma cor fixa; a adaptação aos temas claro e escuro decorre disso por construção.

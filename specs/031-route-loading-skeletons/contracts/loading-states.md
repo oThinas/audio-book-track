@@ -25,10 +25,10 @@ A feature não expõe API REST — os contratos são de interface visual e acess
 | Título (`h1`) | **Real** (ex.: "Livros") | Idêntico |
 | Descrição | **Real** | Idêntica |
 | Botão de ação | **Real, `disabled`** (ícone + rótulo) | Idêntico, habilitado |
-| Campo de busca | **Real, `disabled`** (placeholder + aria-label) | Idêntico, habilitado |
+| Campo de busca | **Apenas `/books`**: real, `disabled` (placeholder + aria-label). Demais listagens não possuem busca — região omitida | Idêntico, habilitado (onde existe) |
 | Tabela | 1 bloco `<Skeleton>` (~altura da tabela) | Tabela real |
 
-**Critério de aceite (unit)**: render de cada `loading.tsx` → `getByRole("heading", { name })` encontra o título real; `getByRole("status")` presente; botão e busca `disabled`; 1 bloco com testid presente.
+**Critério de aceite (unit)**: render de cada `loading.tsx` → `getByRole("heading", { name })` encontra o título real; `getByRole("status")` presente; botão `disabled`; busca `disabled` presente **somente** em `/books` (ausente nas demais); 1 bloco com testid presente.
 
 ### Detalhe do livro — `/books/[id]`
 
