@@ -21,6 +21,12 @@ import { DrizzleAuditLogRepository } from "@/lib/repositories/drizzle/drizzle-au
 
 const VALID_SECRET = "abcdef0123456789abcdef0123456789abcdef0123456789";
 
+// Single clock source: the handler's "now" AND every seeded created_at derive
+// from this frozen instant. Mixing it with the database's real now() turns the
+// test into a time bomb — it started failing once real time drifted 10+ days
+// past the frozen date (seeded "old" rows became newer than the fixed cutoff).
+const FROZEN_NOW = "2026-05-25T00:00:00.000Z";
+
 function makeRequest(token?: string): NextRequest {
   const headers = new Headers();
   if (token !== undefined) headers.set("authorization", `Bearer ${token}`);
@@ -35,7 +41,7 @@ function buildDeps() {
   const repo = new DrizzleAuditLogRepository(db);
   return {
     purge: (cutoff: Date) => repo.deleteOlderThan(cutoff),
-    now: () => new Date("2026-05-25T00:00:00.000Z"),
+    now: () => new Date(FROZEN_NOW),
     repo,
     db,
   };
@@ -50,7 +56,7 @@ async function seedAuditRow(
   const entityType = overrides.entityType ?? "studio";
   const entityId = overrides.entityId ?? `studio-${crypto.randomUUID()}`;
   const userId = overrides.userId ?? "user-1";
-  const createdAtSql = overrides.createdAtSql ?? "now()";
+  const createdAtSql = overrides.createdAtSql ?? `timestamptz '${FROZEN_NOW}' - interval '1 hour'`;
 
   const id = crypto.randomUUID();
   await db.execute(
@@ -84,7 +90,7 @@ describe("POST /api/cron/purge-audit-log (integration)", () => {
       oldRequestIds.push(
         await seedAuditRow(deps.db, {
           requestId: `req-old-${i}-${crypto.randomUUID()}`,
-          createdAtSql: "now() - interval '100 days'",
+          createdAtSql: `timestamptz '${FROZEN_NOW}' - interval '100 days'`,
         }),
       );
     }

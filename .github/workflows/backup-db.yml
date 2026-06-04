@@ -1,0 +1,179 @@
+name: Database Backup
+
+on:
+  schedule:
+    # 06:00 UTC = 03:00 America/Sao_Paulo (Brazil currently has no DST)
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+# The pipeline never checks out the repo nor calls the GitHub API.
+permissions: {}
+
+concurrency:
+  group: backup-db
+  cancel-in-progress: false # queue concurrent runs; never kill a backup in flight
+
+jobs:
+  backup:
+    name: backup
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: verify
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      # AWS CLI v2.23+ sends CRC32 checksums by default, which S3-compatible
+      # providers like R2 may reject — restore the "only when required" behavior.
+      AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+      AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+      AWS_DEFAULT_REGION: auto
+    steps:
+      # Pipeline per specs/030-weekly-db-backup/contracts/backup-workflow.md.
+
+      # Sentry Crons dead man's switch. Telemetry must never break the backup
+      # itself, hence "|| true" on this opening check-in.
+      - name: Sentry check-in (in_progress)
+        env:
+          SENTRY_CRON_URL: ${{ secrets.SENTRY_CRON_URL }}
+        run: curl -sf "${SENTRY_CRON_URL}?status=in_progress" || true
+
+      # Fails fast on misconfiguration BEFORE producing any artifact: pg_dump
+      # requires Neon's direct connection string — the transaction pooler
+      # (host containing "-pooler") breaks consistent dumps.
+      - name: Guard against pooled connection string
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [[ -z "$DATABASE_URL" ]]; then
+            echo "::error::Secret DATABASE_URL ausente. Configure a DIRECT connection string do Neon — veja docs/backup.md."
+            exit 1
+          fi
+          if [[ "$DATABASE_URL" == *-pooler* ]]; then
+            echo "::error::DATABASE_URL aponta para o pooler do Neon (host com '-pooler'). pg_dump exige a DIRECT connection string (sem '-pooler') — veja docs/backup.md."
+            exit 1
+          fi
+          echo "Connection string OK (direct)"
+
+      # Client major must be >= server major (production is PostgreSQL 16 on
+      # Neon). Pinning 17 via PGDG survives runner image changes and a future
+      # manual server upgrade to 17.
+      - name: Install PostgreSQL 17 client
+        run: |
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y --no-install-recommends postgresql-client-17
+          pg_dump --version
+
+      # Single timestamp shared by upload and round-trip download — also
+      # prevents key collision between a scheduled and a manual run.
+      - name: Compute artifact name
+        id: artifact
+        run: |
+          ts="$(date -u +%Y-%m-%dT%H-%M-%SZ)"
+          echo "file=audiobook-track-${ts}.dump" >> "$GITHUB_OUTPUT"
+          echo "key=backups/audiobook-track-${ts}.dump" >> "$GITHUB_OUTPUT"
+
+      - name: Dump production database
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          pg_dump --format=custom --compress=9 \
+            --file="${{ steps.artifact.outputs.file }}" \
+            "$DATABASE_URL"
+          ls -lh "${{ steps.artifact.outputs.file }}"
+
+      - name: Upload to R2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+        run: |
+          aws s3 cp "${{ steps.artifact.outputs.file }}" \
+            "s3://${R2_BUCKET}/${{ steps.artifact.outputs.key }}" \
+            --endpoint-url "$R2_ENDPOINT"
+
+      # Round-trip verification: a backup only counts as successful after the
+      # object that actually landed in R2 is downloaded back (egress is free)
+      # and proven restorable. "Backup sem restore testado não conta."
+      - name: Download artifact back from R2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+        run: |
+          aws s3 cp "s3://${R2_BUCKET}/${{ steps.artifact.outputs.key }}" \
+            verify.dump --endpoint-url "$R2_ENDPOINT"
+
+      - name: Enforce minimum artifact size
+        run: |
+          size="$(stat -c%s verify.dump)"
+          echo "Downloaded artifact: ${size} bytes"
+          if [ "$size" -lt 102400 ]; then
+            echo "::error::Artefato baixado tem ${size} bytes (< 100 KB) — dump vazio, truncado ou de banco errado."
+            exit 1
+          fi
+
+      - name: Check archive TOC is readable
+        run: pg_restore --list verify.dump > /dev/null
+
+      # --clean --if-exists makes the restore deterministic regardless of
+      # whether the dump carries a CREATE SCHEMA public entry (managed
+      # providers like Neon often do); --no-owner/--no-privileges skip
+      # Neon-specific roles that don't exist in the throwaway container.
+      - name: Restore into throwaway database
+        run: |
+          pg_restore --clean --if-exists --no-owner --no-privileges \
+            --exit-on-error \
+            -d "postgresql://postgres:postgres@localhost:5432/verify" \
+            verify.dump
+
+      - name: Run sanity queries on restored database
+        env:
+          VERIFY_URL: postgresql://postgres:postgres@localhost:5432/verify
+        run: |
+          tables="$(psql "$VERIFY_URL" -tAc "SELECT count(*) FROM pg_tables WHERE schemaname = 'public'")"
+          migrations="$(psql "$VERIFY_URL" -tAc "SELECT count(*) FROM drizzle.__drizzle_migrations")"
+          users="$(psql "$VERIFY_URL" -tAc 'SELECT count(*) FROM "user"')"
+          echo "public tables: ${tables} | applied migrations: ${migrations} | users: ${users}"
+          fail=0
+          if [ "$tables" -lt 8 ]; then
+            echo "::error::Esperado >= 8 tabelas no schema public, encontrado ${tables}."
+            fail=1
+          fi
+          if [ "$migrations" -lt 1 ]; then
+            echo "::error::Nenhuma migration registrada em drizzle.__drizzle_migrations."
+            fail=1
+          fi
+          if [ "$users" -lt 1 ]; then
+            echo "::error::Tabela \"user\" vazia — dump do banco errado?"
+            fail=1
+          fi
+          exit $fail
+
+      # Deliberately NO "|| true": a success Sentry doesn't know about is not
+      # a success — if Sentry is unreachable, fail the run and investigate.
+      - name: Sentry check-in (ok)
+        env:
+          SENTRY_CRON_URL: ${{ secrets.SENTRY_CRON_URL }}
+        run: curl -sf "${SENTRY_CRON_URL}?status=ok"
+
+      # Runs on any failed step above; best-effort ("|| true") since we are
+      # already on the failure path and the red run + missed check-in alert
+      # both reach the operator regardless.
+      - name: Sentry check-in (error)
+        if: failure()
+        env:
+          SENTRY_CRON_URL: ${{ secrets.SENTRY_CRON_URL }}
+        run: curl -sf "${SENTRY_CRON_URL}?status=error" || true
