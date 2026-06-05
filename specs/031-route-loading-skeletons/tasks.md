@@ -4,7 +4,7 @@
 
 **Prerequisites**: plan.md, spec.md, research.md, data-model.md, contracts/loading-states.md, quickstart.md
 
-**Tests**: TDD é **obrigatório** pela constituição (Princípio V) — todo teste é escrito antes da implementação, com validação de RED antes de qualquer código de produção e checkpoint commits por estágio (`test:` → `feat:` → `refactor:`, skill /tdd).
+**Tests**: TDD é **obrigatório** pela constituição (Princípio V) — todo teste é escrito antes da implementação, com validação de RED antes de qualquer código de produção (skill /tdd). Commits ficam a cargo do usuário — nenhum commit automático por checkpoint.
 
 **Organization**: Tasks agrupadas por user story, conforme prioridades da spec (P1: listagens, P2: detalhe do livro, P3: configurações).
 
@@ -32,12 +32,12 @@ Projeto Next.js App Router único: código em `src/`, testes em `__tests__/` na 
 
 **⚠️ CRITICAL**: Nenhuma user story pode começar antes desta fase completa.
 
-- [ ] T001 [P] Escrever teste unit (RED) do primitivo: `Skeleton` renderiza com classes `animate-pulse` E `motion-reduce:animate-none`, em `__tests__/unit/components/skeleton.spec.tsx` (pragma `// @vitest-environment jsdom`, AAA, títulos em inglês)
-- [ ] T002 [P] Escrever testes unit (RED) de `LoadingStatus`: renderiza `role="status"` com `data-testid="page-loading-status"` e texto sr-only "Carregando…", única ocorrência, em `__tests__/unit/components/layout/page-loading.spec.tsx`
-- [ ] T003 Validar RED: rodar `bun run test:unit` — os novos testes DEVEM falhar pelos motivos esperados (componente/classe inexistentes); commit checkpoint `test: add reproducers for skeleton motion-reduce and loading status`
-- [ ] T004 [P] Adicionar `motion-reduce:animate-none` à className do primitivo em `src/components/ui/skeleton.tsx` (1 linha, demais classes intactas)
-- [ ] T005 [P] Criar `LoadingStatus` (Server Component sem props: `<div role="status" data-testid="page-loading-status">` + `<span className="sr-only">Carregando…</span>`) em `src/components/layout/page-loading.tsx`
-- [ ] T006 Validar GREEN: rodar `bun run test:unit` — T001/T002 passam, suíte inteira verde; commit checkpoint `feat: add motion-reduce skeleton and loading status primitive`
+- [X] T001 [P] Escrever teste unit (RED) do primitivo: `Skeleton` renderiza com classes `animate-pulse` E `motion-reduce:animate-none`, em `__tests__/unit/components/skeleton.spec.tsx` (pragma `// @vitest-environment jsdom`, AAA, títulos em inglês)
+- [X] T002 [P] Escrever testes unit (RED) de `LoadingStatus`: renderiza `role="status"` com `data-testid="page-loading-status"` e texto sr-only "Carregando…", única ocorrência, em `__tests__/unit/components/layout/page-loading.spec.tsx`
+- [X] T003 Validar RED: rodar `bun run test:unit` — os novos testes DEVEM falhar pelos motivos esperados (componente/classe inexistentes)
+- [X] T004 [P] Adicionar `motion-reduce:animate-none` à className do primitivo em `src/components/ui/skeleton.tsx` (1 linha, demais classes intactas)
+- [X] T005 [P] Criar `LoadingStatus` (Server Component sem props: `<div role="status" data-testid="page-loading-status">` + `<span className="sr-only">Carregando…</span>`) em `src/components/layout/page-loading.tsx`
+- [X] T006 Validar GREEN: rodar `bun run test:unit` — T001/T002 passam, suíte inteira verde
 
 **Checkpoint**: Fundação pronta — user stories podem começar (US1, US2 e US3 são independentes entre si a partir daqui).
 
@@ -53,7 +53,7 @@ Projeto Next.js App Router único: código em `src/`, testes em `__tests__/` na 
 
 - [ ] T007 [US1] Escrever testes unit (RED) do contrato de `ListPageLoading` (props `title`/`description`/`actionLabel`/`searchPlaceholder`/`searchLabel`; título real via `getByRole("heading")`; botão e busca `disabled`; bloco único `data-testid="page-loading-skeleton"` com `aria-hidden="true"`; 1 `LoadingStatus`; props opcionais omitidas → elementos ausentes), estendendo `__tests__/unit/components/layout/page-loading.spec.tsx`
 - [ ] T008 [P] [US1] Escrever testes unit (RED) dos 4 `loading.tsx` de listagem (cada default export renderiza o título correto — "Livros", "Narradores", "Editores", "Estúdios" — com `role="status"` presente e bloco de skeleton), criando `__tests__/unit/app/route-loading-states.spec.tsx`
-- [ ] T009 [US1] Validar RED: `bun run test:unit` — novos testes falham por componente/arquivos inexistentes; commit checkpoint `test: add reproducers for listing loading frames`
+- [ ] T009 [US1] Validar RED: `bun run test:unit` — novos testes falham por componente/arquivos inexistentes
 
 ### Implementation for User Story 1
 
@@ -62,8 +62,8 @@ Projeto Next.js App Router único: código em `src/`, testes em `__tests__/` na 
 - [ ] T012 [P] [US1] Criar `src/app/(authenticated)/narrators/loading.tsx` com strings exatas copiadas de `src/components/features/narrators/narrators-client.tsx` (omitir props sem equivalente real)
 - [ ] T013 [P] [US1] Criar `src/app/(authenticated)/editors/loading.tsx` com strings exatas copiadas de `src/components/features/editors/editors-client.tsx`
 - [ ] T014 [P] [US1] Criar `src/app/(authenticated)/studios/loading.tsx` com strings exatas copiadas de `src/components/features/studios/studios-client.tsx`
-- [ ] T015 [US1] Validar GREEN: `bun run test:unit` — T007/T008 passam, suíte verde; commit checkpoint `feat: add loading states for listing routes`
-- [ ] T016 [US1] Escrever e validar E2E determinístico em `__tests__/e2e/books-loading-skeleton.spec.ts`: login (helper `login`) e `page.goto("/dashboard")` como origem fixa da navegação client-side; `page.route("**/books*")` atrasando ~1.5s **somente** requests com header `RSC: 1` e **sem** header `Next-Router-Prefetch` (prefetch em viewport não pode ser atrasado — preserva determinismo); clicar no link da sidebar via `page.getByRole("link", { name: "Livros" })` (confirmar o nome acessível real em `src/components/layout/` na implementação); asserts: durante o atraso heading "Livros" E `page-loading-skeleton` visíveis; após, skeleton ausente E tabela/empty-state visível (contrato em contracts/loading-states.md); rodar `bun run test:e2e -- books-loading-skeleton` (ajustar forma do filtro se o `--` não repassar ao Playwright); commit `test: add e2e for books loading skeleton navigation`
+- [ ] T015 [US1] Validar GREEN: `bun run test:unit` — T007/T008 passam, suíte verde
+- [ ] T016 [US1] Escrever e validar E2E determinístico em `__tests__/e2e/books-loading-skeleton.spec.ts`: login (helper `login`) e `page.goto("/dashboard")` como origem fixa da navegação client-side; `page.route("**/books*")` atrasando ~1.5s **somente** requests com header `RSC: 1` e **sem** header `Next-Router-Prefetch` (prefetch em viewport não pode ser atrasado — preserva determinismo); clicar no link da sidebar via `page.getByRole("link", { name: "Livros" })` (confirmar o nome acessível real em `src/components/layout/` na implementação); asserts: durante o atraso heading "Livros" E `page-loading-skeleton` visíveis; após, skeleton ausente E tabela/empty-state visível (contrato em contracts/loading-states.md); rodar `bun run test:e2e -- books-loading-skeleton` (ajustar forma do filtro se o `--` não repassar ao Playwright)
 
 **Checkpoint**: US1 completa e independentemente testável — MVP entregável.
 
@@ -77,11 +77,11 @@ Projeto Next.js App Router único: código em `src/`, testes em `__tests__/` na 
 
 ### Tests for User Story 2 (RED antes da implementação) ⚠️
 
-- [ ] T017 [US2] Escrever testes unit (RED) do loading do detalhe (default export renderiza: nenhum heading textual, 4 skeletons `aria-hidden` — 3 barras + 1 bloco —, 1 `role="status"`), estendendo `__tests__/unit/app/route-loading-states.spec.tsx`; validar RED via `bun run test:unit`; commit checkpoint `test: add reproducer for book detail loading silhouette`
+- [ ] T017 [US2] Escrever testes unit (RED) do loading do detalhe (default export renderiza: nenhum heading textual, 4 skeletons `aria-hidden` — 3 barras + 1 bloco —, 1 `role="status"`), estendendo `__tests__/unit/app/route-loading-states.spec.tsx`; validar RED via `bun run test:unit`
 
 ### Implementation for User Story 2
 
-- [ ] T018 [US2] Criar `src/app/(authenticated)/books/[id]/loading.tsx`: `<PageContainer>` + barras `Skeleton` (~`h-9 w-64` título, `h-5 w-48` meta, `h-5 max-w-md` stats — aproximando a silhueta de `src/components/features/books/book-header.tsx`) + bloco único `data-testid="page-loading-skeleton"` + `LoadingStatus`; validar GREEN via `bun run test:unit`; commit checkpoint `feat: add loading state for book detail route`
+- [ ] T018 [US2] Criar `src/app/(authenticated)/books/[id]/loading.tsx`: `<PageContainer>` + barras `Skeleton` (~`h-9 w-64` título, `h-5 w-48` meta, `h-5 max-w-md` stats — aproximando a silhueta de `src/components/features/books/book-header.tsx`) + bloco único `data-testid="page-loading-skeleton"` + `LoadingStatus`; validar GREEN via `bun run test:unit`
 
 **Checkpoint**: US1 e US2 funcionais e independentes.
 
@@ -95,11 +95,11 @@ Projeto Next.js App Router único: código em `src/`, testes em `__tests__/` na 
 
 ### Tests for User Story 3 (RED antes da implementação) ⚠️
 
-- [ ] T019 [US3] Escrever testes unit (RED) do loading de settings (default export renderiza: heading real "Configurações", 2 blocos `aria-hidden`, 1 `role="status"`), estendendo `__tests__/unit/app/route-loading-states.spec.tsx`; validar RED via `bun run test:unit`; commit checkpoint `test: add reproducer for settings loading state`
+- [ ] T019 [US3] Escrever testes unit (RED) do loading de settings (default export renderiza: heading real "Configurações", 2 blocos `aria-hidden`, 1 `role="status"`), estendendo `__tests__/unit/app/route-loading-states.spec.tsx`; validar RED via `bun run test:unit`
 
 ### Implementation for User Story 3
 
-- [ ] T020 [US3] Criar `src/app/(authenticated)/settings/loading.tsx`: `<PageContainer><PageHeader><PageTitle>Configurações</PageTitle></PageHeader>` + 2 blocos `Skeleton` (alturas aproximadas do card Aparência e da seção widgets de `src/app/(authenticated)/settings/page.tsx`, segundo bloco com `mt-6`) + `LoadingStatus`; validar GREEN via `bun run test:unit`; commit checkpoint `feat: add loading state for settings route`
+- [ ] T020 [US3] Criar `src/app/(authenticated)/settings/loading.tsx`: `<PageContainer><PageHeader><PageTitle>Configurações</PageTitle></PageHeader>` + 2 blocos `Skeleton` (alturas aproximadas do card Aparência e da seção widgets de `src/app/(authenticated)/settings/page.tsx`, segundo bloco com `mt-6`) + `LoadingStatus`; validar GREEN via `bun run test:unit`
 
 **Checkpoint**: Todas as user stories funcionais — zero rotas autenticadas sem feedback (SC-001).
 
@@ -109,9 +109,9 @@ Projeto Next.js App Router único: código em `src/`, testes em `__tests__/` na 
 
 **Purpose**: Refinamento, verificação manual e gate final de qualidade (Princípio XVI).
 
-- [ ] T021 Refactor com testes verdes (IMPROVE): dedupe entre os `loading.tsx`, nomes, alturas consistentes dos blocos; manter `bun run test:unit` verde; commit `refactor: clean up loading states composition` (somente se houver mudanças)
+- [ ] T021 Refactor com testes verdes (IMPROVE): dedupe entre os `loading.tsx`, nomes, alturas consistentes dos blocos; manter `bun run test:unit` verde
 - [ ] T022 Verificação manual conforme `specs/031-route-loading-skeletons/quickstart.md`: DevTools Slow 4G nas 6 rotas (moldura estável, sem salto — SC-003), emulação `prefers-reduced-motion: reduce` (blocos estáticos — FR-009, incluindo dashboard)
-- [ ] T023 Gate final de qualidade (fase única antes do PR): `bun run lint` (zero erros/warnings), `bun run test:unit`, `bun run test:integration`, `bun run test:e2e`, `bun run build` — todos verdes; commit de ajustes se necessário
+- [ ] T023 Gate final de qualidade (fase única antes do PR): `bun run lint` (zero erros/warnings), `bun run test:unit`, `bun run test:integration`, `bun run test:e2e`, `bun run build` — todos verdes
 
 ---
 
@@ -135,7 +135,6 @@ Projeto Next.js App Router único: código em `src/`, testes em `__tests__/` na 
 
 - Testes escritos e **validados em RED** antes de qualquer implementação (gate da skill /tdd)
 - Componente compartilhado antes dos arquivos de rota que o consomem (T010 antes de T011–T014)
-- Checkpoint commit após cada estágio validado (RED → `test:`, GREEN → `feat:`, refactor → `refactor:`)
 
 ### Parallel Opportunities
 
@@ -185,6 +184,6 @@ Trabalho solo é o esperado; se paralelizar, uma pessoa por story após Phase 2,
 
 - [P] = arquivos diferentes, sem dependência pendente
 - Verificar RED antes de implementar — teste que nunca falhou não conta (skill /tdd)
-- Commits convencionais por checkpoint; nunca `--no-verify`
+- Commits são responsabilidade do usuário (sem auto-commit); quando solicitados, seguem o formato convencional e nunca usam `--no-verify`
 - Strings da moldura copiadas dos `*-client.tsx` reais — qualquer divergência de coluna/label é revisável no mesmo PR (risco de drift aceito na spec)
 - Cobertura: componentes novos são JSX puro — ≥ 80% trivialmente atingido; regra de 100% (cálculo de ganho) não se aplica
