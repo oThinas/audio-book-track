@@ -55,7 +55,7 @@ Região acessível de anúncio de carregamento. Reutilizada pelos `loading.tsx` 
 | `narrators/loading.tsx` | idem com strings de Narradores |
 | `editors/loading.tsx` | idem com strings de Editores |
 | `studios/loading.tsx` | idem com strings de Estúdios |
-| `books/[id]/loading.tsx` | `<PageContainer>` + 3 barras `<Skeleton aria-hidden>` (título/meta/stats) + bloco único + `<LoadingStatus>` |
+| `books/[id]/loading.tsx` | ⚠️ REVERTIDO (vercel/next.js#86151) — `<PageContainer>` + 3 barras `<Skeleton aria-hidden>` (título/meta/stats) + bloco único + `<LoadingStatus>` |
 | `settings/loading.tsx` | `<PageContainer><PageHeader><PageTitle>Configurações</PageTitle></PageHeader>` + 2 blocos `<Skeleton aria-hidden>` + `<LoadingStatus>` |
 
 ## State transitions

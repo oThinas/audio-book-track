@@ -30,7 +30,7 @@ A feature não expõe API REST — os contratos são de interface visual e acess
 
 **Critério de aceite (unit)**: render de cada `loading.tsx` → `getByRole("heading", { name })` encontra o título real; `getByRole("status")` presente; botão `disabled`; busca `disabled` presente **somente** em `/books` (ausente nas demais); 1 bloco com testid presente.
 
-### Detalhe do livro — `/books/[id]`
+### Detalhe do livro — `/books/[id]` — ⚠️ REVERTIDO (vercel/next.js#86151; ver spec US2 e futuras-features.md)
 
 | Região | Estado de loading |
 |--------|-------------------|

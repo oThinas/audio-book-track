@@ -69,7 +69,9 @@ Projeto Next.js App Router único: código em `src/`, testes em `__tests__/` na 
 
 ---
 
-## Phase 4: User Story 2 - Feedback imediato no detalhe do livro (Priority: P2)
+## Phase 4: User Story 2 - Feedback imediato no detalhe do livro (Priority: P2) — ⚠️ REVERTIDA
+
+> **Status (2026-06-05)**: T017/T018 foram implementadas (TDD completo, commit `d4154de`) e **revertidas na Phase 6**: o bug aberto [vercel/next.js#86151](https://github.com/vercel/next.js/issues/86151) (`router.refresh()` trava com `loading.tsx` no segmento) reproduziu consistentemente no E2E `chapter-reorder-then-add` (0/4 com o arquivo; 4/4 sem) — no detalhe, `handleChapterCreated` depende 100% do refresh para o capítulo novo aparecer. Plano de retomada em [futuras-features.md](../../futuras-features.md).
 
 **Goal**: `/books/[id]` exibe silhueta estruturada (3 barras: título, meta, stats) + bloco único na região toolbar+tabela de capítulos.
 
@@ -109,9 +111,9 @@ Projeto Next.js App Router único: código em `src/`, testes em `__tests__/` na 
 
 **Purpose**: Refinamento, verificação manual e gate final de qualidade (Princípio XVI).
 
-- [ ] T021 Refactor com testes verdes (IMPROVE): dedupe entre os `loading.tsx`, nomes, alturas consistentes dos blocos; manter `bun run test:unit` verde
-- [ ] T022 Verificação manual conforme `specs/031-route-loading-skeletons/quickstart.md`: DevTools Slow 4G nas 6 rotas (moldura estável, sem salto — SC-003), emulação `prefers-reduced-motion: reduce` (blocos estáticos — FR-009, incluindo dashboard)
-- [ ] T023 Gate final de qualidade (fase única antes do PR): `bun run lint` (zero erros/warnings), `bun run test:unit`, `bun run test:integration`, `bun run test:e2e`, `bun run build` — todos verdes
+- [X] T021 Refactor com testes verdes (IMPROVE): dedupe entre os `loading.tsx`, nomes, alturas consistentes dos blocos; manter `bun run test:unit` verde — extraído `LoadingBlock` compartilhado (testid + aria-hidden + altura padrão) consumido por `ListPageLoading`, detalhe e settings
+- [X] T022 Verificação manual conforme `specs/031-route-loading-skeletons/quickstart.md` — **passo de Slow 4G obsoletado** pelo prefetch dinâmico do Next 16 (ver research R6); quickstart atualizado para preview via Next.js DevTools, realizado pelo usuário nas rotas (moldura estável — SC-003); `prefers-reduced-motion` garantido por construção (`motion-reduce:animate-none` + unit test), emulação manual segue documentada como opcional
+- [X] T023 Gate final de qualidade (fase única antes do PR): `bun run lint` (zero erros/warnings), `bun run test:unit` (1276), `bun run test:integration` (320), `bun run test:e2e` (229/229), `bun run build` — todos verdes. Descobertas da fase: (1) US2 revertida — bug [vercel/next.js#86151](https://github.com/vercel/next.js/issues/86151) trava `router.refresh()` com `loading.tsx` no segmento (ver research R9 e futuras-features.md); (2) o boundary de `books/loading.tsx` envolvia o segmento filho `[id]` mantendo streaming no detalhe (404 com HTTP 200, race de DOM escondido) — resolvido movendo listagem para route group `books/(list)/` (URL inalterada), restaurando o comportamento pré-031 do detalhe sem adaptar nenhum teste
 
 ---
 

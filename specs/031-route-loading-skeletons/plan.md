@@ -80,9 +80,10 @@ specs/031-route-loading-skeletons/
 src/
 ├── app/(authenticated)/
 │   ├── books/
-│   │   ├── loading.tsx                    # NEW — <ListPageLoading> com moldura de Livros
-│   │   ├── page.tsx                       # EDIT — chamada a applyE2eDataDelay() antes do fetch de dados
-│   │   └── [id]/loading.tsx               # NEW — silhueta do detalhe (barras header + bloco)
+│   │   ├── (list)/                        # NEW — route group escopa o boundary à listagem (não envolve [id])
+│   │   │   ├── loading.tsx                # NEW — <ListPageLoading> com moldura de Livros
+│   │   │   └── page.tsx                   # MOVED+EDIT — chamada a applyE2eDataDelay() antes do fetch
+│   │   └── [id]/loading.tsx               # REVERTIDO — bloqueado por vercel/next.js#86151 (ver spec US2)
 │   ├── narrators/loading.tsx              # NEW — <ListPageLoading> com moldura de Narradores
 │   ├── editors/loading.tsx                # NEW — <ListPageLoading> com moldura de Editores
 │   ├── studios/loading.tsx                # NEW — <ListPageLoading> com moldura de Estúdios

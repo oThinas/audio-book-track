@@ -107,3 +107,21 @@ Nenhum NEEDS CLARIFICATION restante na spec (sessão de clarificação 2026-06-0
 | `/settings` | "Configurações" | `settings/page.tsx` (título real + card Aparência + seção widgets) |
 
 **Nota**: os textos exatos de narrators/editors/studios serão copiados dos respectivos `*-client.tsx` durante a implementação (mesmo padrão verificado em books). Qualquer listagem que não tenha descrição ou botão simplesmente omite a prop correspondente.
+
+## R9. Rollback da US2: router.refresh() trava com loading.tsx no segmento (descoberto na implementação)
+
+**Decision**: `books/[id]/loading.tsx` foi implementado (TDD completo, commit `d4154de`) e **revertido na fase de polish**: o bug aberto [vercel/next.js#86151](https://github.com/vercel/next.js/issues/86151) faz o `router.refresh()` travar de forma intermitente quando o segmento tem `loading.tsx` — a resposta chega do servidor, mas o router nunca commita a árvore nova (sem erro, sem retry). A US2 fica bloqueada até o fix upstream ou até a refatoração de resiliência descrita em `futuras-features.md`.
+
+**Evidência empírica (A/B no E2E `chapter-reorder-then-add`)**:
+
+- Com `loading.tsx` no detalhe: 0/4 execuções verdes — após o POST 201 do capítulo, a página permaneceu com os dados antigos (instrumentação: 2 capítulos e "0/2" 7s após o dialog fechar).
+- Sem o arquivo: 4/4 verdes.
+- Probabilidade cresce com a complexidade da página (detalhe = página mais pesada do app) e com conexão rápida (relatos do issue: Fast 4G reproduz, Slow 4G não) — coerente com race no commit da transition.
+
+**Por que só o detalhe foi revertido**: as listagens têm proteção dupla — páginas leves (janela de race mínima; dezenas de specs de CRUD verdes na suíte) e atualização otimista local (`setEditors`/`setNarrators`/etc. inserem o registro novo antes do refresh, que é só re-sync). No detalhe, `handleChapterCreated` é o único fluxo sem atualização local — depende 100% do refresh para o capítulo aparecer.
+
+**Efeitos colaterais documentados do `loading.tsx` em `[id]` (relevantes para a retomada)**: (1) streaming faz o 404 de livro inexistente responder HTTP 200 (shell enviado antes do `notFound()`); (2) conteúdo entra no DOM escondido antes do swap do Suspense — testes que medem dimensões precisam aguardar visibilidade.
+
+**Alternatives considered**: manter o arquivo e adaptar testes (rejeitado — mascararia UI travada/stale real para o operador); remover loading.tsx de todas as rotas com refresh (rejeitado — desfaria o MVP sem evidência de falha nas listagens); criação otimista de capítulo nesta feature (rejeitado — toca fluxos da 026/contratos de API; movido para follow-up em futuras-features.md).
+
+**Adendo — escopo do boundary da listagem (route group)**: removido o `loading.tsx` de `[id]`, os specs `books-detail` (404) e `chapters-table-scroll` continuaram falhando — o boundary de `books/loading.tsx` envolve também os segmentos filhos, mantendo o streaming em `/books/[id]`. Solução: listagem movida para o route group `books/(list)/` (`page.tsx` + `loading.tsx`; URL inalterada), escopando o boundary à listagem. O detalhe voltou ao comportamento pré-031 (404 com status HTTP real, sem reveal escondido do Suspense) e a suíte E2E fechou 229/229 sem adaptação de testes. Na retomada da US2, o `loading.tsx` do detalhe entra em `books/[id]/` como antes — e os 2 specs precisarão dos ajustes descritos em futuras-features.md.

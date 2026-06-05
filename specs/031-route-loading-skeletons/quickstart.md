@@ -8,13 +8,14 @@
 bun dev
 ```
 
-1. Abra DevTools → Network → throttling "Slow 4G".
-2. Logado, navegue entre as páginas pela sidebar: `/books`, `/narrators`, `/editors`, `/studios`, `/settings` e o detalhe de um livro.
+1. Logado em qualquer rota, abra o **Next.js DevTools** (indicador no canto da tela) → segment explorer → ative o preview do `loading.tsx` da rota atual.
+2. Repita para: `/books`, `/narrators`, `/editors`, `/studios`, `/settings` e o detalhe de um livro.
 3. Esperado por página:
-   - **Listagens**: título/descrição/botão e busca reais (desabilitados) + bloco pulsante na região da tabela.
+   - **Listagens**: título/descrição/botão (e busca, apenas em `/books`) reais e desabilitados + bloco pulsante na região da tabela.
    - **Detalhe do livro**: 3 barras (título, meta, stats) + bloco único abaixo.
    - **Configurações**: título real + 2 blocos.
-4. Sem throttling (rede local), um flash breve do skeleton é esperado e aceito.
+
+> **Por que não throttling de rede?** Em produção, o Next 16 prefetcha o conteúdo dinâmico completo enquanto o usuário está na página de origem — ao clicar, a navegação é servida do segment cache e a janela de loading não aparece, mesmo com Slow 4G. O comportamento temporal real (skeleton durante a navegação → swap) é coberto pelo E2E determinístico (atraso server-side, ver research R6). Em rede realmente lenta com cache frio, um flash breve do skeleton é esperado e aceito.
 
 ## Verificar movimento reduzido
 
@@ -40,13 +41,13 @@ bun run test:e2e
 bun run build
 ```
 
-Verificação manual de layout shift (SC-003): com throttling, observar a troca skeleton → conteúdo em `/books` e `/books/[id]` — a moldura (título, busca, botão) não deve se mover.
+Verificação manual de layout shift (SC-003): com o preview do `loading.tsx` ativo no Next DevTools, alternar entre loading e conteúdo real em `/books` e `/books/[id]` — a moldura (título, busca, botão) não deve se mover. A fidelidade da moldura é garantida por construção: `ListPageLoading` espelha classes/spacing de `books-client.tsx`.
 
 ## Arquivos-chave
 
 | Arquivo | Papel |
 |---------|-------|
-| `src/components/layout/page-loading.tsx` | `ListPageLoading` + `LoadingStatus` |
+| `src/components/layout/page-loading.tsx` | `ListPageLoading` + `LoadingBlock` + `LoadingStatus` |
 | `src/components/ui/skeleton.tsx` | Primitivo com `motion-reduce:animate-none` |
 | `src/app/(authenticated)/*/loading.tsx` | 6 estados de carregamento por rota |
 | `__tests__/unit/components/layout/page-loading.spec.tsx` | Contrato do componente compartilhado |

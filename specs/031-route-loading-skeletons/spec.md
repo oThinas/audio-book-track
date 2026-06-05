@@ -38,7 +38,9 @@ Como operador do sistema, ao navegar para qualquer página de listagem (Livros, 
 
 ---
 
-### User Story 2 - Feedback imediato no detalhe do livro (Priority: P2)
+### User Story 2 - Feedback imediato no detalhe do livro (Priority: P2) — ⚠️ REVERTIDA (bloqueada por bug upstream)
+
+> **Status (2026-06-05)**: implementada com TDD e depois **revertida antes do merge**. O bug aberto [vercel/next.js#86151](https://github.com/vercel/next.js/issues/86151) faz o `router.refresh()` travar de forma intermitente quando o segmento tem `loading.tsx` — no detalhe do livro (página mais pesada do app, com `handleChapterCreated` dependendo 100% do refresh), o E2E `chapter-reorder-then-add` reproduziu o travamento consistentemente (0/4 com o arquivo; 4/4 sem). Implementação e testes preservados no histórico git (commit `d4154de`). Plano completo de retomada em [futuras-features.md](../../futuras-features.md) (criação otimista de capítulo + tokens de versão nos responses de mutação + re-add do `loading.tsx`).
 
 Como operador, ao abrir a página de detalhe de um livro, quero ver um placeholder estruturado que reflete a silhueta real da página (barras no lugar do título, da linha de meta e das estatísticas do livro + um bloco na região da toolbar e tabela de capítulos), em vez de tela em branco, para ter continuidade visual durante o carregamento. Como o título é dinâmico (nome do livro), aqui não há conteúdo estático a antecipar.
 
