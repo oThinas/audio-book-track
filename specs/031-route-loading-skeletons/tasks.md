@@ -95,11 +95,11 @@ Projeto Next.js App Router único: código em `src/`, testes em `__tests__/` na 
 
 ### Tests for User Story 3 (RED antes da implementação) ⚠️
 
-- [ ] T019 [US3] Escrever testes unit (RED) do loading de settings (default export renderiza: heading real "Configurações", 2 blocos `aria-hidden`, 1 `role="status"`), estendendo `__tests__/unit/app/route-loading-states.spec.tsx`; validar RED via `bun run test:unit`
+- [X] T019 [US3] Escrever testes unit (RED) do loading de settings (default export renderiza: heading real "Configurações", 2 blocos `aria-hidden`, 1 `role="status"`), estendendo `__tests__/unit/app/route-loading-states.spec.tsx`; validar RED via `bun run test:unit`
 
 ### Implementation for User Story 3
 
-- [ ] T020 [US3] Criar `src/app/(authenticated)/settings/loading.tsx`: `<PageContainer><PageHeader><PageTitle>Configurações</PageTitle></PageHeader>` + 2 blocos `Skeleton` (alturas aproximadas do card Aparência e da seção widgets de `src/app/(authenticated)/settings/page.tsx`, segundo bloco com `mt-6`) + `LoadingStatus`; validar GREEN via `bun run test:unit`
+- [X] T020 [US3] Criar `src/app/(authenticated)/settings/loading.tsx`: `<PageContainer><PageHeader><PageTitle>Configurações</PageTitle></PageHeader>` + 2 blocos `Skeleton` (alturas aproximadas do card Aparência e da seção widgets de `src/app/(authenticated)/settings/page.tsx`, segundo bloco com `mt-6`) + `LoadingStatus`; validar GREEN via `bun run test:unit`
 
 **Checkpoint**: Todas as user stories funcionais — zero rotas autenticadas sem feedback (SC-001).
 
