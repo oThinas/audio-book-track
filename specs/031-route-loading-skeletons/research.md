@@ -70,17 +70,19 @@ Nenhum NEEDS CLARIFICATION restante na spec (sessão de clarificação 2026-06-0
 
 **Alternatives considered**: `aria-busy` no container (rejeitado — suporte inconsistente entre leitores de tela); sem anúncio (rejeitado na clarificação — Q6).
 
-## R6. E2E determinístico: interceptação Playwright do fetch RSC
+## R6. E2E determinístico: atraso server-side na região de dados (revisado na implementação)
 
-**Decision**: Um único teste E2E (`books-loading-skeleton.spec.ts`): login → `page.goto("/dashboard")` como origem fixa → interceptar requests da navegação para `/books` cujo header `RSC: 1` esteja presente **e** que não sejam prefetch (excluir requests com header `Next-Router-Prefetch` — atrasá-los mudaria o timing do prefetch em viewport e reintroduziria flakiness), atrasando a resposta (~1.5s) → clicar no link da sidebar (`getByRole("link", { name: "Livros" })`) → asserts: (1) bloco de skeleton (`data-testid="page-loading-skeleton"`) e heading real "Livros" visíveis **durante** o atraso; (2) após liberar, tabela/empty-state visível e skeleton ausente.
+**Decision**: Um único teste E2E (`books-loading-skeleton.spec.ts`): login → abortar via `page.route()` os prefetches RSC de `/books` (requests com header `Next-Router-Prefetch`) → setar cookie `e2e-data-delay-ms=1500` → `page.goto("/dashboard")` como origem fixa → clicar no link da sidebar (`getByRole("link", { name: "Livros" })`) → asserts: (1) bloco de skeleton (`data-testid="page-loading-skeleton"`) e heading real "Livros" visíveis **durante** o atraso; (2) após o swap, empty-state visível e skeleton ausente. O atraso acontece **server-side**, dentro de `books/page.tsx`, via helper `applyE2eDataDelay()` (`src/lib/e2e/data-delay.ts`) — no-op exceto quando `E2E_TEST_MODE=1` **e** o cookie está presente (mesmo padrão request-time de `auth/server.ts`).
 
 **Rationale**:
 
-- Na navegação client-side, o App Router busca o payload RSC via fetch com header `RSC: 1` — interceptável e atrasável por `page.route()`, tornando a janela de loading determinística (sem flakiness de timing).
+- A decisão original (atrasar via `page.route()` apenas o fetch RSC de navegação, excluindo prefetches) foi **invalidada empiricamente** no Next 16: em produção, o prefetch (viewport/hover) entrega o **conteúdo dinâmico completo** para o segment cache; a navegação consome o cache e o `loading.tsx` nunca aparece — o request "de navegação" atrasado era só revalidação em background.
+- Atrasar a rede inteira tampouco funciona: o shell estático (com o `loading.tsx`) chega no **mesmo stream** que o conteúdo — o skeleton só apareceria por ~50ms (flaky).
+- Com o atraso dentro da região de dados do `page.tsx`, o App Router faz flush do shell + fallback do Suspense imediatamente e o conteúdo resolve ~1.5s depois — exatamente o cenário real de rede lenta, de forma determinística. Abortar os prefetches impede que o segment cache sirva o conteúdo antes do clique.
 - A suíte E2E roda `next start` (produção) por worker — prefetch ativo, fiel ao comportamento real.
 - Decisão 7 da clarificação: o mecanismo é um só; provado em `/books`, as demais rotas diferem apenas no conteúdo (coberto por unit tests).
 
-**Alternatives considered**: E2E nas 6 rotas (rejeitado — Q7, superfície de manutenção desproporcional); throttling de rede global do CDP (rejeitado — atrasa tudo, inclusive login e assets, teste lento e frágil).
+**Alternatives considered**: atrasar só o fetch RSC de navegação via `page.route()` (decisão original — rejeitada: invalidada pelo prefetch dinâmico do Next 16, ver acima); E2E nas 6 rotas (rejeitado — Q7, superfície de manutenção desproporcional); throttling de rede global do CDP (rejeitado — atrasa tudo, inclusive login e assets, teste lento e frágil); streaming parcial de resposta via CDP `Fetch` (rejeitado — complexidade desproporcional e frágil).
 
 ## R7. Classificação e ordem dos testes (TDD)
 

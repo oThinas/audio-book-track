@@ -81,23 +81,28 @@ src/
 ├── app/(authenticated)/
 │   ├── books/
 │   │   ├── loading.tsx                    # NEW — <ListPageLoading> com moldura de Livros
+│   │   ├── page.tsx                       # EDIT — chamada a applyE2eDataDelay() antes do fetch de dados
 │   │   └── [id]/loading.tsx               # NEW — silhueta do detalhe (barras header + bloco)
 │   ├── narrators/loading.tsx              # NEW — <ListPageLoading> com moldura de Narradores
 │   ├── editors/loading.tsx                # NEW — <ListPageLoading> com moldura de Editores
 │   ├── studios/loading.tsx                # NEW — <ListPageLoading> com moldura de Estúdios
 │   └── settings/loading.tsx               # NEW — título real + 2 blocos de seção
-└── components/
-    ├── layout/
-    │   └── page-loading.tsx               # NEW — ListPageLoading + LoadingStatus (compartilhados)
-    └── ui/
-        └── skeleton.tsx                   # EDIT — adicionar motion-reduce:animate-none (1 linha)
+├── components/
+│   ├── layout/
+│   │   └── page-loading.tsx               # NEW — ListPageLoading + LoadingStatus (compartilhados)
+│   └── ui/
+│       └── skeleton.tsx                   # EDIT — adicionar motion-reduce:animate-none (1 linha)
+└── lib/
+    └── e2e/
+        └── data-delay.ts                  # NEW — atraso server-side test-only p/ E2E determinístico (R6)
 
 __tests__/
 ├── unit/
 │   ├── components/layout/page-loading.spec.tsx   # NEW — contrato do componente compartilhado
-│   └── app/route-loading-states.spec.tsx         # NEW — render de cada loading.tsx (6 rotas)
+│   ├── app/route-loading-states.spec.tsx         # NEW — render de cada loading.tsx (6 rotas)
+│   └── lib/e2e/data-delay.spec.ts                # NEW — guards e clamp do helper de atraso
 └── e2e/
-    └── books-loading-skeleton.spec.ts            # NEW — navegação com atraso RSC determinístico
+    └── books-loading-skeleton.spec.ts            # NEW — navegação com atraso server-side determinístico
 ```
 
 **Structure Decision**: Web application Next.js já estabelecida — a feature adiciona apenas arquivos de convenção do App Router (`loading.tsx` por segmento de rota) e um componente de layout compartilhado. `books/` e `books/[id]/` exigem arquivos separados porque são segmentos aninhados com estruturas distintas (listagem vs detalhe). O componente compartilhado vive em `src/components/layout/` (não em `features/`) porque atende 4 features distintas — mesmo critério que posiciona `page-container.tsx` lá. Detalhe do livro e settings compõem inline nos seus `loading.tsx` (estruturas únicas, sem reuso — YAGNI).

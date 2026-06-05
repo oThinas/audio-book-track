@@ -54,11 +54,11 @@ A feature não expõe API REST — os contratos são de interface visual e acess
 ## Contrato E2E (mecanismo, rota representativa `/books`)
 
 ```text
-Dado   operador logado em qualquer página autenticada
-Quando o fetch RSC da navegação para /books é atrasado (interceptação, ~1.5s)
-       e o operador clica no link "Livros"
-Então  durante o atraso: heading "Livros" visível E page-loading-skeleton visível
+Dado   operador logado, prefetches RSC de /books abortados
+       e cookie e2e-data-delay-ms=1500 presente
+Quando o operador navega para /dashboard e clica no link "Livros"
+Então  durante o atraso server-side: heading "Livros" visível E page-loading-skeleton visível
 E      após o atraso: page-loading-skeleton ausente E tabela (ou empty-state) visível
 ```
 
-**Implementação de referência**: `page.route()` filtrando requests com header `RSC: 1` para a rota alvo; servidor `next start` de produção (prefetch ativo) — padrão do harness E2E existente.
+**Implementação de referência**: atraso **server-side** na região de dados de `books/page.tsx` via `applyE2eDataDelay()` (`src/lib/e2e/data-delay.ts` — no-op sem `E2E_TEST_MODE=1` + cookie), com `page.route()` abortando os prefetches RSC (header `Next-Router-Prefetch`) para o segment cache não servir o conteúdo antes do clique; servidor `next start` de produção — padrão do harness E2E existente. Ver research R6 para o porquê da revisão (prefetch dinâmico do Next 16 invalidou o atraso por interceptação de rede).
