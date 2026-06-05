@@ -4,6 +4,7 @@ import { PageDescription, PageHeader, PageTitle } from "@/components/layout/page
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 /**
  * Accessible loading announcement region. Rendered exactly once per
@@ -15,6 +16,25 @@ export function LoadingStatus() {
     <div role="status" data-testid="page-loading-status">
       <span className="sr-only">Carregando…</span>
     </div>
+  );
+}
+
+interface LoadingBlockProps {
+  readonly className?: string;
+}
+
+/**
+ * Main data-region skeleton block. Carries the page-loading-skeleton
+ * testid — render exactly one per loading state (secondary regions use
+ * the raw Skeleton primitive).
+ */
+export function LoadingBlock({ className }: LoadingBlockProps) {
+  return (
+    <Skeleton
+      aria-hidden="true"
+      data-testid="page-loading-skeleton"
+      className={cn("h-96 w-full", className)}
+    />
   );
 }
 
@@ -71,7 +91,7 @@ export function ListPageLoading({
         </div>
       )}
 
-      <Skeleton aria-hidden="true" data-testid="page-loading-skeleton" className="h-96 w-full" />
+      <LoadingBlock />
       <LoadingStatus />
     </div>
   );
