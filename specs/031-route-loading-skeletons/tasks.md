@@ -77,11 +77,11 @@ Projeto Next.js App Router único: código em `src/`, testes em `__tests__/` na 
 
 ### Tests for User Story 2 (RED antes da implementação) ⚠️
 
-- [ ] T017 [US2] Escrever testes unit (RED) do loading do detalhe (default export renderiza: nenhum heading textual, 4 skeletons `aria-hidden` — 3 barras + 1 bloco —, 1 `role="status"`), estendendo `__tests__/unit/app/route-loading-states.spec.tsx`; validar RED via `bun run test:unit`
+- [X] T017 [US2] Escrever testes unit (RED) do loading do detalhe (default export renderiza: nenhum heading textual, 4 skeletons `aria-hidden` — 3 barras + 1 bloco —, 1 `role="status"`), estendendo `__tests__/unit/app/route-loading-states.spec.tsx`; validar RED via `bun run test:unit`
 
 ### Implementation for User Story 2
 
-- [ ] T018 [US2] Criar `src/app/(authenticated)/books/[id]/loading.tsx`: `<PageContainer>` + barras `Skeleton` (~`h-9 w-64` título, `h-5 w-48` meta, `h-5 max-w-md` stats — aproximando a silhueta de `src/components/features/books/book-header.tsx`) + bloco único `data-testid="page-loading-skeleton"` + `LoadingStatus`; validar GREEN via `bun run test:unit`
+- [X] T018 [US2] Criar `src/app/(authenticated)/books/[id]/loading.tsx`: `<PageContainer>` + barras `Skeleton` (~`h-9 w-64` título, `h-5 w-48` meta, `h-5 max-w-md` stats — aproximando a silhueta de `src/components/features/books/book-header.tsx`) + bloco único `data-testid="page-loading-skeleton"` + `LoadingStatus`; validar GREEN via `bun run test:unit`
 
 **Checkpoint**: US1 e US2 funcionais e independentes.
 

@@ -2,6 +2,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
+import BookDetailLoading from "@/app/(authenticated)/books/[id]/loading";
 import BooksLoading from "@/app/(authenticated)/books/loading";
 import EditorsLoading from "@/app/(authenticated)/editors/loading";
 import NarratorsLoading from "@/app/(authenticated)/narrators/loading";
@@ -42,6 +43,37 @@ describe.each(listingRoutes)("$route loading state", ({ Loading, title }) => {
     const button = screen.getByRole("button");
 
     expect(button.hasAttribute("disabled")).toBe(true);
+  });
+});
+
+describe("/books/[id] loading state", () => {
+  it("renders no textual heading since the title is dynamic", () => {
+    render(<BookDetailLoading />);
+
+    expect(screen.queryByRole("heading")).toBeNull();
+  });
+
+  it("renders exactly one loading status announcement", () => {
+    render(<BookDetailLoading />);
+
+    expect(screen.getAllByRole("status")).toHaveLength(1);
+  });
+
+  it("renders four aria-hidden skeletons (three header bars + one block)", () => {
+    const { container } = render(<BookDetailLoading />);
+
+    const skeletons = container.querySelectorAll('[data-slot="skeleton"]');
+
+    expect(skeletons).toHaveLength(4);
+    for (const skeleton of skeletons) {
+      expect(skeleton.getAttribute("aria-hidden")).toBe("true");
+    }
+  });
+
+  it("renders a single skeleton block for the chapters region", () => {
+    render(<BookDetailLoading />);
+
+    expect(screen.getAllByTestId("page-loading-skeleton")).toHaveLength(1);
   });
 });
 
