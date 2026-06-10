@@ -117,9 +117,9 @@ Projeto web Next.js de projeto único: produção em `src/`, testes em `__tests_
 
 **Purpose**: Encerramento e verificação final.
 
-- [ ] T025 [P] Atualizar `futuras-features.md`: remover/arquivar a seção "Resiliência de refresh no detalhe do livro + loading.tsx do detalhe (US2 da 031)" (implementada nesta feature 032).
-- [ ] T026 Self-review contra o checklist da Constituição (Princípios I–XVI), com atenção especial à **revisão dupla** dos fluxos de capítulo (Princípio II / Governance) e aos anti-padrões frontend (Princípio XII: nada de `fetch`/`router.refresh` em componente client; sem `toast.success`).
-- [ ] T027 Fase final de verificação (Princípio XVI), em ordem: `bun run lint` (zero erros/warnings) → `bun run test:unit` → `bun run test:integration` → `bun run test:e2e` → `bun run build`. Todos verdes antes do PR.
+- [X] T025 [P] Atualizar `futuras-features.md`: remover/arquivar a seção "Resiliência de refresh no detalhe do livro + loading.tsx do detalhe (US2 da 031)" (implementada nesta feature 032).
+- [X] T026 Self-review contra o checklist da Constituição (Princípios I–XVI), com atenção especial à **revisão dupla** dos fluxos de capítulo (Princípio II / Governance) e aos anti-padrões frontend (Princípio XII: nada de `fetch`/`router.refresh` em componente client; sem `toast.success`).
+- [X] T027 Fase final de verificação (Princípio XVI), em ordem: `bun run lint` (zero erros/warnings) → `bun run test:unit` → `bun run test:integration` → `bun run test:e2e` → `bun run build`. Todos verdes antes do PR.
 
 ---
 
