@@ -5,6 +5,21 @@ import { useRouter } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { BookDetailData } from "@/components/features/books/book-detail-client";
 import { useBookDetail } from "@/components/features/books/hooks/use-book-detail";
+import type { ChapterRowData } from "@/components/features/chapters/chapters-table";
+import type { ChapterStatus } from "@/lib/domain/chapter";
+
+function rowAt(id: string, position: number, status: ChapterStatus = "pending"): ChapterRowData {
+  return {
+    id,
+    title: `Capítulo ${position + 1}`,
+    position,
+    status,
+    narrator: null,
+    editor: null,
+    editedSeconds: 0,
+    deadline: null,
+  };
+}
 
 vi.mock("@/lib/api/api-fetch", () => ({
   apiFetch: vi.fn(),
@@ -45,6 +60,73 @@ describe("useBookDetail", () => {
       forward: vi.fn(),
       prefetch: vi.fn(),
     } as unknown as ReturnType<typeof useRouter>);
+  });
+
+  const ORDERED_BOOK: BookDetailData = {
+    ...BASE_BOOK,
+    chaptersVersion: 3,
+    chapters: [rowAt("c-1", 0), rowAt("c-2", 1)],
+  };
+
+  it("handleChapterCreated insere o capítulo na posição retornada (fim) e re-densifica", () => {
+    const { result } = renderHook(() => useBookDetail(ORDERED_BOOK));
+    act(() =>
+      result.current.handleChapterCreated({
+        chapter: { id: "c-3", title: "Capítulo 3", position: 2, status: "pending" },
+        bookStatus: "pending",
+        chaptersVersion: 4,
+      }),
+    );
+    expect(result.current.state.chapters.map((c) => [c.id, c.position])).toEqual([
+      ["c-1", 0],
+      ["c-2", 1],
+      ["c-3", 2],
+    ]);
+    expect(result.current.chaptersVersion).toBe(4);
+  });
+
+  it("handleChapterCreated insere no início e re-densifica todas as posições", () => {
+    const { result } = renderHook(() => useBookDetail(ORDERED_BOOK));
+    act(() =>
+      result.current.handleChapterCreated({
+        chapter: { id: "c-0", title: "Novo", position: 0, status: "pending" },
+        bookStatus: "pending",
+        chaptersVersion: 4,
+      }),
+    );
+    expect(result.current.state.chapters.map((c) => [c.id, c.position])).toEqual([
+      ["c-0", 0],
+      ["c-1", 1],
+      ["c-2", 2],
+    ]);
+  });
+
+  it("handleChapterCreated insere no meio (após um capítulo) e re-densifica", () => {
+    const { result } = renderHook(() => useBookDetail(ORDERED_BOOK));
+    act(() =>
+      result.current.handleChapterCreated({
+        chapter: { id: "c-mid", title: "Meio", position: 1, status: "pending" },
+        bookStatus: "pending",
+        chaptersVersion: 4,
+      }),
+    );
+    expect(result.current.state.chapters.map((c) => [c.id, c.position])).toEqual([
+      ["c-1", 0],
+      ["c-mid", 1],
+      ["c-2", 2],
+    ]);
+  });
+
+  it("handleChapterCreated aplica o bookStatus retornado pelo servidor", () => {
+    const { result } = renderHook(() => useBookDetail(ORDERED_BOOK));
+    act(() =>
+      result.current.handleChapterCreated({
+        chapter: { id: "c-3", title: "Capítulo 3", position: 2, status: "pending" },
+        bookStatus: "editing",
+        chaptersVersion: 4,
+      }),
+    );
+    expect(result.current.state.status).toBe("editing");
   });
 
   it("computes nonPaidChapters and paidCount correctly", () => {
@@ -165,5 +247,51 @@ describe("useBookDetail", () => {
     });
 
     expect(result.current.state.chapters.map((c) => c.id)).toEqual(["c-1", "c-2"]);
+  });
+
+  it("handleBulkDeleteConfirm applies X-Chapters-Version header when present", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: true,
+      data: null,
+      headers: new Headers({ "X-Chapters-Version": "12" }),
+    });
+
+    const { result } = renderHook(() => useBookDetail(ORDERED_BOOK));
+    act(() => result.current.enterSelectionMode());
+    act(() => result.current.handleToggleSelected("c-1", true));
+
+    await act(async () => {
+      await result.current.handleBulkDeleteConfirm();
+    });
+
+    expect(result.current.chaptersVersion).toBe(12);
+  });
+
+  it("handleChaptersConflict re-syncs the detail via GET and applies it locally", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: true,
+      data: {
+        data: {
+          ...ORDERED_BOOK,
+          status: "editing",
+          pdfUrl: "https://x.test/y.pdf",
+          chaptersVersion: 9,
+          chapters: [rowAt("c-9", 0)],
+        },
+      },
+      headers: new Headers(),
+    });
+
+    const { result } = renderHook(() => useBookDetail(ORDERED_BOOK));
+
+    await act(async () => {
+      await result.current.handleChaptersConflict();
+    });
+
+    expect(apiFetch).toHaveBeenCalledWith("/api/v1/books/b-1");
+    expect(result.current.state.chapters.map((c) => c.id)).toEqual(["c-9"]);
+    expect(result.current.state.status).toBe("editing");
+    expect(result.current.state.pdfUrl).toBe("https://x.test/y.pdf");
+    expect(result.current.chaptersVersion).toBe(9);
   });
 });

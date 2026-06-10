@@ -51,12 +51,14 @@ export interface UpdateChapterServiceInput {
 export interface UpdateChapterResult {
   readonly chapter: Chapter;
   readonly bookStatus: BookStatus;
+  readonly chaptersVersion: number;
 }
 
 export interface DeleteChapterResult {
   readonly bookId: string;
   readonly bookDeleted: boolean;
   readonly bookStatus: BookStatus | null;
+  readonly chaptersVersion: number | null;
 }
 
 export interface BulkDeleteChaptersResult {
@@ -64,6 +66,7 @@ export interface BulkDeleteChaptersResult {
   readonly bookDeleted: boolean;
   readonly bookStatus: BookStatus | null;
   readonly deletedCount: number;
+  readonly chaptersVersion: number | null;
 }
 
 export interface ReorderChaptersResult {
@@ -177,7 +180,7 @@ export class ChapterService {
         chapterId,
       );
 
-      return { chapter: updated, bookStatus: book.status };
+      return { chapter: updated, bookStatus: book.status, chaptersVersion: book.chaptersVersion };
     };
 
     if (this.deps.uow) {
@@ -203,7 +206,12 @@ export class ChapterService {
       if (remaining.length === 0) {
         await this.deps.bookRepo.delete(current.bookId, tx);
         await this.recordAudit(tx, AUDIT_ACTIONS.BOOK_DELETE, "book", current.bookId);
-        return { bookId: current.bookId, bookDeleted: true, bookStatus: null };
+        return {
+          bookId: current.bookId,
+          bookDeleted: true,
+          bookStatus: null,
+          chaptersVersion: null,
+        };
       }
 
       const book = await recomputeBookStatusAndBumpVersion(
@@ -211,7 +219,12 @@ export class ChapterService {
         { bookRepo: this.deps.bookRepo, chapterRepo: this.deps.chapterRepo },
         tx,
       );
-      return { bookId: current.bookId, bookDeleted: false, bookStatus: book.status };
+      return {
+        bookId: current.bookId,
+        bookDeleted: false,
+        bookStatus: book.status,
+        chaptersVersion: book.chaptersVersion,
+      };
     };
 
     if (this.deps.uow) {
@@ -251,7 +264,7 @@ export class ChapterService {
       if (remaining.length === 0) {
         await this.deps.bookRepo.delete(bookId, tx);
         await this.recordAudit(tx, AUDIT_ACTIONS.BOOK_DELETE, "book", bookId);
-        return { bookId, bookDeleted: true, bookStatus: null, deletedCount };
+        return { bookId, bookDeleted: true, bookStatus: null, deletedCount, chaptersVersion: null };
       }
 
       const refreshed = await recomputeBookStatusAndBumpVersion(
@@ -259,7 +272,13 @@ export class ChapterService {
         { bookRepo: this.deps.bookRepo, chapterRepo: this.deps.chapterRepo },
         tx,
       );
-      return { bookId, bookDeleted: false, bookStatus: refreshed.status, deletedCount };
+      return {
+        bookId,
+        bookDeleted: false,
+        bookStatus: refreshed.status,
+        deletedCount,
+        chaptersVersion: refreshed.chaptersVersion,
+      };
     };
 
     if (this.deps.uow) {

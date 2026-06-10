@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-
 import BooksLoading from "@/app/(authenticated)/books/(list)/loading";
+import BookDetailLoading from "@/app/(authenticated)/books/[id]/loading";
 import EditorsLoading from "@/app/(authenticated)/editors/loading";
 import NarratorsLoading from "@/app/(authenticated)/narrators/loading";
 import SettingsLoading from "@/app/(authenticated)/settings/loading";
@@ -72,6 +72,37 @@ describe("/settings loading state", () => {
 
   it("renders a single skeleton block with the main region testid", () => {
     render(<SettingsLoading />);
+
+    expect(screen.getAllByTestId("page-loading-skeleton")).toHaveLength(1);
+  });
+});
+
+describe("/books/[id] loading state", () => {
+  it("renders no textual heading since the title is dynamic", () => {
+    render(<BookDetailLoading />);
+
+    expect(screen.queryByRole("heading")).toBeNull();
+  });
+
+  it("renders exactly one loading status announcement", () => {
+    render(<BookDetailLoading />);
+
+    expect(screen.getAllByRole("status")).toHaveLength(1);
+  });
+
+  it("renders four aria-hidden skeletons (three header bars + one block)", () => {
+    const { container } = render(<BookDetailLoading />);
+
+    const skeletons = container.querySelectorAll('[data-slot="skeleton"]');
+
+    expect(skeletons).toHaveLength(4);
+    for (const skeleton of skeletons) {
+      expect(skeleton.getAttribute("aria-hidden")).toBe("true");
+    }
+  });
+
+  it("renders a single skeleton block for the chapters region", () => {
+    render(<BookDetailLoading />);
 
     expect(screen.getAllByTestId("page-loading-skeleton")).toHaveLength(1);
   });

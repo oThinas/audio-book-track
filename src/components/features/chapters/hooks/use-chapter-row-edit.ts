@@ -24,6 +24,12 @@ export interface UseChapterRowEditArgs {
   readonly form: UseFormReturn<ChapterEditDraftValues>;
   readonly onCancel: () => void;
   readonly onSaved: (updated: ChapterRowEntity, bookStatus: ChapterStatus) => void;
+  /**
+   * Re-syncs the lifted `chaptersVersion` token from the PATCH response so the
+   * next chapter mutation does not raise a spurious version conflict — without
+   * depending on the background refresh (which can hang under loading.tsx).
+   */
+  readonly onVersionChange?: (newVersion: number) => void;
 }
 
 export interface UseChapterRowEditReturn {
@@ -69,6 +75,7 @@ export function useChapterRowEdit({
   editorNameById,
   onCancel,
   onSaved,
+  onVersionChange,
 }: UseChapterRowEditArgs): UseChapterRowEditReturn {
   const reversion = usePaidReversion<ChapterEditDraftValues>();
 
@@ -84,7 +91,7 @@ export function useChapterRowEdit({
         editedSeconds: number;
         deadline: string | null;
       };
-      meta: { bookStatus: ChapterStatus };
+      meta: { bookStatus: ChapterStatus; chaptersVersion: number };
     }>(`/api/v1/chapters/${chapter.id}`, { method: "PATCH", body: patch });
 
     if (!result.ok) return;
@@ -104,6 +111,7 @@ export function useChapterRowEdit({
         : null,
     };
     onSaved(updated, meta.bookStatus);
+    onVersionChange?.(meta.chaptersVersion);
   }
 
   async function onSubmit(values: ChapterEditDraftValues): Promise<void> {

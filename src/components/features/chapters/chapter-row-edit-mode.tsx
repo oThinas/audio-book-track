@@ -38,6 +38,7 @@ interface ChapterRowEditModeProps {
   readonly canReorder: boolean;
   readonly onCancel: () => void;
   readonly onSaved: (updated: ChapterRowEntity, bookStatus: ChapterStatus) => void;
+  readonly onChaptersVersionChange?: (newVersion: number) => void;
 }
 
 export function ChapterRowEditMode({
@@ -49,6 +50,7 @@ export function ChapterRowEditMode({
   canReorder,
   onCancel,
   onSaved,
+  onChaptersVersionChange,
 }: ChapterRowEditModeProps) {
   const formId = `chapter-edit-row-form-${chapter.id}`;
   const form = useForm<ChapterEditDraftValues>({ defaultValues: buildChapterDraft(chapter) });
@@ -67,6 +69,7 @@ export function ChapterRowEditMode({
       form,
       onCancel,
       onSaved,
+      onVersionChange: onChaptersVersionChange,
     });
 
   return (

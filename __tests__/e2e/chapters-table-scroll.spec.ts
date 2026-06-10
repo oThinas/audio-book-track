@@ -33,6 +33,10 @@ test.describe("Chapters table scroll", () => {
     await page.goto(`/books/${bookId}`);
     const rows = page.locator('[data-testid^="chapter-row-"]');
     await expect(rows).toHaveCount(CHAPTER_COUNT);
+    // With the route loading.tsx present, content streams into the DOM behind
+    // the Suspense fallback before the swap; wait for the first row to be
+    // visible so height/box measurements run against painted layout.
+    await expect(rows.first()).toBeVisible();
 
     const container = page.getByTestId("chapters-scroll-area");
     const viewport = container.locator('[data-slot="scroll-area-viewport"]');

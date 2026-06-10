@@ -64,7 +64,27 @@ describe("useAddChapter", () => {
         body: { title: "Abertura", position: "end", expectedVersion: 0 },
       }),
     );
-    expect(onCreated).toHaveBeenCalledWith({ chaptersVersion: 1, bookStatus: "pending" });
+    expect(onCreated).toHaveBeenCalledWith({
+      chapter: { id: "c-new", title: "Capítulo 3", position: 2, status: "pending" },
+      chaptersVersion: 1,
+      bookStatus: "pending",
+    });
+  });
+
+  it("api-error não-conflito não chama onCreated nem onConflict (FR-011)", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: false,
+      kind: "api-error",
+      code: "CHAPTER_TITLE_ALREADY_IN_USE",
+    });
+
+    const { result, onCreated, onConflict } = setup();
+    await act(async () => {
+      await result.current.onSubmit();
+    });
+
+    expect(onCreated).not.toHaveBeenCalled();
+    expect(onConflict).not.toHaveBeenCalled();
   });
 
   it("409 dispara onConflict e não chama onCreated", async () => {

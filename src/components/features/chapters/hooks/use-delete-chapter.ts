@@ -6,6 +6,13 @@ import { apiFetch } from "@/lib/api/api-fetch";
 export interface UseDeleteChapterArgs {
   readonly chapterId: string;
   readonly onDeleted: (chapterId: string, bookDeleted: boolean) => void;
+  /**
+   * Re-syncs the lifted `chaptersVersion` token from the DELETE response header
+   * so the next chapter mutation does not raise a spurious version conflict —
+   * without depending on the background refresh (which can hang under
+   * loading.tsx). Absent when the book itself was deleted.
+   */
+  readonly onVersionChange?: (newVersion: number) => void;
 }
 
 export interface UseDeleteChapterReturn {
@@ -19,6 +26,7 @@ export interface UseDeleteChapterReturn {
 export function useDeleteChapter({
   chapterId,
   onDeleted,
+  onVersionChange,
 }: UseDeleteChapterArgs): UseDeleteChapterReturn {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -31,6 +39,8 @@ export function useDeleteChapter({
       const bookDeleted = result.headers.get("X-Book-Deleted") === "true";
       setDeleteOpen(false);
       onDeleted(chapterId, bookDeleted);
+      const version = result.headers.get("X-Chapters-Version");
+      if (version !== null) onVersionChange?.(Number(version));
     } finally {
       setDeleting(false);
     }
