@@ -24,7 +24,7 @@ export async function handleChapterUpdate(
   const body: unknown = await request.json();
   const parsed = updateChapterSchema.parse(body);
   const service = routeDeps.createService();
-  const { chapter, bookStatus } = await service.update(params.id, parsed);
+  const { chapter, bookStatus, chaptersVersion } = await service.update(params.id, parsed);
   return NextResponse.json(
     {
       data: {
@@ -40,7 +40,7 @@ export async function handleChapterUpdate(
         createdAt: chapter.createdAt,
         updatedAt: chapter.updatedAt,
       },
-      meta: { bookStatus },
+      meta: { bookStatus, chaptersVersion },
     },
     { headers: NO_STORE_HEADERS },
   );
@@ -57,6 +57,9 @@ export async function handleChapterDelete(
   const responseHeaders = new Headers(NO_STORE_HEADERS);
   if (result.bookDeleted) {
     responseHeaders.set("X-Book-Deleted", "true");
+  }
+  if (result.chaptersVersion !== null) {
+    responseHeaders.set("X-Chapters-Version", String(result.chaptersVersion));
   }
   return new NextResponse(null, { status: 204, headers: responseHeaders });
 }

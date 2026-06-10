@@ -29,6 +29,9 @@ export async function handleChaptersBulkDelete(
   if (result.bookDeleted) {
     responseHeaders.set("X-Book-Deleted", "true");
   }
+  if (result.chaptersVersion !== null) {
+    responseHeaders.set("X-Chapters-Version", String(result.chaptersVersion));
+  }
   return new NextResponse(null, { status: 204, headers: responseHeaders });
 }
 

@@ -248,4 +248,50 @@ describe("useBookDetail", () => {
 
     expect(result.current.state.chapters.map((c) => c.id)).toEqual(["c-1", "c-2"]);
   });
+
+  it("handleBulkDeleteConfirm applies X-Chapters-Version header when present", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: true,
+      data: null,
+      headers: new Headers({ "X-Chapters-Version": "12" }),
+    });
+
+    const { result } = renderHook(() => useBookDetail(ORDERED_BOOK));
+    act(() => result.current.enterSelectionMode());
+    act(() => result.current.handleToggleSelected("c-1", true));
+
+    await act(async () => {
+      await result.current.handleBulkDeleteConfirm();
+    });
+
+    expect(result.current.chaptersVersion).toBe(12);
+  });
+
+  it("handleChaptersConflict re-syncs the detail via GET and applies it locally", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: true,
+      data: {
+        data: {
+          ...ORDERED_BOOK,
+          status: "editing",
+          pdfUrl: "https://x.test/y.pdf",
+          chaptersVersion: 9,
+          chapters: [rowAt("c-9", 0)],
+        },
+      },
+      headers: new Headers(),
+    });
+
+    const { result } = renderHook(() => useBookDetail(ORDERED_BOOK));
+
+    await act(async () => {
+      await result.current.handleChaptersConflict();
+    });
+
+    expect(apiFetch).toHaveBeenCalledWith("/api/v1/books/b-1");
+    expect(result.current.state.chapters.map((c) => c.id)).toEqual(["c-9"]);
+    expect(result.current.state.status).toBe("editing");
+    expect(result.current.state.pdfUrl).toBe("https://x.test/y.pdf");
+    expect(result.current.chaptersVersion).toBe(9);
+  });
 });

@@ -91,6 +91,8 @@ describe("DELETE /api/v1/chapters/:id (handleChapterDelete)", () => {
 
     expect(response.status).toBe(204);
     expect(response.headers.get("X-Book-Deleted")).toBeNull();
+    expect(response.headers.get("X-Chapters-Version")).not.toBeNull();
+    expect(Number(response.headers.get("X-Chapters-Version"))).toBeGreaterThan(0);
 
     const remaining = await db.select().from(chapterTable).where(eq(chapterTable.bookId, book.id));
     expect(remaining).toHaveLength(1);
@@ -113,6 +115,7 @@ describe("DELETE /api/v1/chapters/:id (handleChapterDelete)", () => {
 
     expect(response.status).toBe(204);
     expect(response.headers.get("X-Book-Deleted")).toBe("true");
+    expect(response.headers.get("X-Chapters-Version")).toBeNull();
 
     const bookRows = await db.select().from(bookTable).where(eq(bookTable.id, book.id));
     expect(bookRows).toHaveLength(0);

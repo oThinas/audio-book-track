@@ -49,6 +49,7 @@ interface ChapterRowProps {
   readonly focusContext: FocusWeekContext;
   readonly onSaved: (updated: ChapterRowEntity, bookStatus: ChapterStatus) => void;
   readonly onDeleted: (chapterId: string, bookDeleted: boolean) => void;
+  readonly onChaptersVersionChange?: (newVersion: number) => void;
   readonly onToggleSelected: (chapterId: string, selected: boolean) => void;
   readonly onMoveBy: (chapterId: string, delta: number) => void;
 }
@@ -68,6 +69,7 @@ export function ChapterRow({
   focusContext,
   onSaved,
   onDeleted,
+  onChaptersVersionChange,
   onToggleSelected,
   onMoveBy,
 }: ChapterRowProps) {
@@ -83,6 +85,7 @@ export function ChapterRow({
   const { deleteOpen, deleting, openDelete, cancelDelete, handleDelete } = useDeleteChapter({
     chapterId: chapter.id,
     onDeleted,
+    onVersionChange: onChaptersVersionChange,
   });
 
   if (mode === "edit") {
@@ -99,6 +102,7 @@ export function ChapterRow({
           exitEditMode();
           onSaved(updated, bookStatus);
         }}
+        onChaptersVersionChange={onChaptersVersionChange}
       />
     );
   }

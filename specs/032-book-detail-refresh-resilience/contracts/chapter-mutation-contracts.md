@@ -71,7 +71,7 @@ Contratos HTTP das mutações de capítulo. Apenas os **deltas** desta feature e
  }
 ```
 
-**Consumo**: `useChapterRowEdit.persist` lê `meta.chaptersVersion` → `onSaved(updated, bookStatus, chaptersVersion)` → bump local do token.
+**Consumo**: `useChapterRowEdit.persist` lê `meta.chaptersVersion` e o re-sincroniza via o callback `onVersionChange` (canal `onChaptersVersionChange` já existente, ligado a `handleChaptersVersionBump`). `onSaved(updated, bookStatus)` permanece inalterado — o token viaja pelo canal de versão, não pela assinatura de `onSaved`.
 
 ---
 
@@ -89,7 +89,7 @@ Contratos HTTP das mutações de capítulo. Apenas os **deltas** desta feature e
 
 - Quando o último capítulo não-pago é removido e o livro é deletado: `X-Book-Deleted: true`, **sem** `X-Chapters-Version` (não há livro/token). Cliente redireciona para `/books`.
 
-**Consumo**: `useDeleteChapter.handleDelete` lê `X-Chapters-Version` (quando presente) → `onDeleted(chapterId, bookDeleted, chaptersVersion)` → bump local.
+**Consumo**: `useDeleteChapter.handleDelete` lê `X-Chapters-Version` (quando presente) e o re-sincroniza via `onVersionChange` (canal `onChaptersVersionChange`). `onDeleted(chapterId, bookDeleted)` permanece inalterado.
 
 ---
 
@@ -105,7 +105,7 @@ Contratos HTTP das mutações de capítulo. Apenas os **deltas** desta feature e
 +  X-Chapters-Version: "9"           # NOVO — presente apenas quando o livro NÃO foi removido
 ```
 
-**Consumo**: `useBookDetail.handleBulkDeleteConfirm` (já lê `X-Book-Deleted`) passa a ler `X-Chapters-Version` → bump local.
+**Consumo**: `useBookDetail.handleBulkDeleteConfirm` (já lê `X-Book-Deleted`) passa a ler `X-Chapters-Version` e aplica via `setChaptersVersion` (lógica local; não passa por hook de linha).
 
 ---
 

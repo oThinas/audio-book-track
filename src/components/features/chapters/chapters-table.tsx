@@ -234,6 +234,7 @@ export function ChaptersTable({
                     focusContext={focusContext}
                     onSaved={onChapterSaved}
                     onDeleted={onChapterDeleted}
+                    onChaptersVersionChange={onChaptersVersionChange}
                     onToggleSelected={onToggleSelected}
                     onMoveBy={(id, delta) => void reorder.moveBy(id, delta)}
                   />

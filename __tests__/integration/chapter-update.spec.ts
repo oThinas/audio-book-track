@@ -97,6 +97,29 @@ describe("PATCH /api/v1/chapters/:id (handleChapterUpdate)", () => {
     expect(body.meta.bookStatus).toBe("editing");
   });
 
+  it("returns meta.chaptersVersion bumped by the mutation", async () => {
+    const db = getTestDb();
+    const { book } = await createTestBook(db);
+    const { narrator } = await createTestNarrator(db);
+    const { chapter } = await createTestChapter(db, {
+      bookId: book.id,
+      number: 1,
+      status: "pending",
+    });
+
+    const PATCH = buildPatch(session);
+    const response = await PATCH(makeRequest({ status: "editing", narratorId: narrator.id }), {
+      params: Promise.resolve({ id: chapter.id }),
+    });
+
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      meta: { bookStatus: string; chaptersVersion: number };
+    };
+    expect(typeof body.meta.chaptersVersion).toBe("number");
+    expect(body.meta.chaptersVersion).toBeGreaterThan(0);
+  });
+
   it("returns 422 NARRATOR_REQUIRED for pending → editing without narrator", async () => {
     const db = getTestDb();
     const { book } = await createTestBook(db);

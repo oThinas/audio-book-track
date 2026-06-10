@@ -53,7 +53,7 @@ export interface UseBookDetailReturn {
   readonly setAddChapterOpen: (next: boolean) => void;
   readonly handleChapterCreated: (result: ChapterCreatedResult) => void;
   readonly handleChaptersVersionBump: (newVersion: number) => void;
-  readonly handleChaptersConflict: () => void;
+  readonly handleChaptersConflict: () => Promise<void>;
 }
 
 function recomputeAggregates(
@@ -198,8 +198,14 @@ export function useBookDetail(book: BookDetailData): UseBookDetailReturn {
     setChaptersVersion(newVersion);
   }
 
-  function handleChaptersConflict() {
-    router.refresh();
+  // Re-sync the whole detail after a version conflict via a dedicated GET
+  // instead of router.refresh() (which can hang under loading.tsx — #86151).
+  async function handleChaptersConflict() {
+    const result = await apiFetch<{ data: BookDetailData }>(`/api/v1/books/${book.id}`);
+    if (!result.ok) return;
+    const detail = result.data.data;
+    setState({ status: detail.status, chapters: detail.chapters, pdfUrl: detail.pdfUrl });
+    setChaptersVersion(detail.chaptersVersion);
   }
 
   function exitSelectionMode() {
@@ -248,8 +254,11 @@ export function useBookDetail(book: BookDetailData): UseBookDetailReturn {
       });
       setConfirmOpen(false);
       exitSelectionMode();
-      // Bulk-delete bumps `book.chapters_version` on the server. Refresh so
-      // the sync effect picks up the new token for the next mutation.
+      // Re-sync the lifted token from the response header so the next mutation
+      // sends the right expectedVersion even if the refresh below hangs.
+      const version = result.headers.get("X-Chapters-Version");
+      if (version !== null) setChaptersVersion(Number(version));
+      // Background re-sync only (may hang under loading.tsx — #86151 — no harm).
       router.refresh();
     } finally {
       setBulkDeleting(false);
