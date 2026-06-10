@@ -63,8 +63,12 @@ test.describe("Books detail", () => {
     await expect(page).toHaveURL(/\/books$/);
   });
 
-  test("returns 404 page for unknown book id", async ({ page }) => {
-    const response = await page.goto(`/books/${crypto.randomUUID()}`);
-    expect(response?.status()).toBe(404);
+  test("renders the not-found page for unknown book id", async ({ page }) => {
+    // With the route loading.tsx present, the server commits HTTP 200 to start
+    // streaming the shell; notFound() then fires mid-stream and renders the
+    // not-found UI client-side (the HTTP status stays 200 — Next.js streaming
+    // contract). Assert the rendered UI rather than the response status.
+    await page.goto(`/books/${crypto.randomUUID()}`);
+    await expect(page.getByTestId("not-found-message")).toBeVisible();
   });
 });
