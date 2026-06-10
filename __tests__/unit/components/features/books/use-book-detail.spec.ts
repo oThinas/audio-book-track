@@ -5,6 +5,21 @@ import { useRouter } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { BookDetailData } from "@/components/features/books/book-detail-client";
 import { useBookDetail } from "@/components/features/books/hooks/use-book-detail";
+import type { ChapterRowData } from "@/components/features/chapters/chapters-table";
+import type { ChapterStatus } from "@/lib/domain/chapter";
+
+function rowAt(id: string, position: number, status: ChapterStatus = "pending"): ChapterRowData {
+  return {
+    id,
+    title: `Capítulo ${position + 1}`,
+    position,
+    status,
+    narrator: null,
+    editor: null,
+    editedSeconds: 0,
+    deadline: null,
+  };
+}
 
 vi.mock("@/lib/api/api-fetch", () => ({
   apiFetch: vi.fn(),
@@ -45,6 +60,73 @@ describe("useBookDetail", () => {
       forward: vi.fn(),
       prefetch: vi.fn(),
     } as unknown as ReturnType<typeof useRouter>);
+  });
+
+  const ORDERED_BOOK: BookDetailData = {
+    ...BASE_BOOK,
+    chaptersVersion: 3,
+    chapters: [rowAt("c-1", 0), rowAt("c-2", 1)],
+  };
+
+  it("handleChapterCreated insere o capítulo na posição retornada (fim) e re-densifica", () => {
+    const { result } = renderHook(() => useBookDetail(ORDERED_BOOK));
+    act(() =>
+      result.current.handleChapterCreated({
+        chapter: { id: "c-3", title: "Capítulo 3", position: 2, status: "pending" },
+        bookStatus: "pending",
+        chaptersVersion: 4,
+      }),
+    );
+    expect(result.current.state.chapters.map((c) => [c.id, c.position])).toEqual([
+      ["c-1", 0],
+      ["c-2", 1],
+      ["c-3", 2],
+    ]);
+    expect(result.current.chaptersVersion).toBe(4);
+  });
+
+  it("handleChapterCreated insere no início e re-densifica todas as posições", () => {
+    const { result } = renderHook(() => useBookDetail(ORDERED_BOOK));
+    act(() =>
+      result.current.handleChapterCreated({
+        chapter: { id: "c-0", title: "Novo", position: 0, status: "pending" },
+        bookStatus: "pending",
+        chaptersVersion: 4,
+      }),
+    );
+    expect(result.current.state.chapters.map((c) => [c.id, c.position])).toEqual([
+      ["c-0", 0],
+      ["c-1", 1],
+      ["c-2", 2],
+    ]);
+  });
+
+  it("handleChapterCreated insere no meio (após um capítulo) e re-densifica", () => {
+    const { result } = renderHook(() => useBookDetail(ORDERED_BOOK));
+    act(() =>
+      result.current.handleChapterCreated({
+        chapter: { id: "c-mid", title: "Meio", position: 1, status: "pending" },
+        bookStatus: "pending",
+        chaptersVersion: 4,
+      }),
+    );
+    expect(result.current.state.chapters.map((c) => [c.id, c.position])).toEqual([
+      ["c-1", 0],
+      ["c-mid", 1],
+      ["c-2", 2],
+    ]);
+  });
+
+  it("handleChapterCreated aplica o bookStatus retornado pelo servidor", () => {
+    const { result } = renderHook(() => useBookDetail(ORDERED_BOOK));
+    act(() =>
+      result.current.handleChapterCreated({
+        chapter: { id: "c-3", title: "Capítulo 3", position: 2, status: "pending" },
+        bookStatus: "editing",
+        chaptersVersion: 4,
+      }),
+    );
+    expect(result.current.state.status).toBe("editing");
   });
 
   it("computes nonPaidChapters and paidCount correctly", () => {

@@ -3,11 +3,13 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { ChapterRowData } from "@/components/features/chapters/chapters-table";
+import type { ChapterCreatedResult } from "@/components/features/chapters/hooks/use-add-chapter";
 import { apiFetch } from "@/lib/api/api-fetch";
 import type { BookStatus } from "@/lib/domain/book";
 import { computeBookStatus } from "@/lib/domain/book-status";
 import type { ChapterStatus } from "@/lib/domain/chapter";
 import { computeEarningsCents } from "@/lib/domain/earnings";
+import { densifyPositions } from "@/lib/domain/normalize-positions";
 import type { BookDetailData } from "../book-detail-client";
 import type { UpdatedBookDetail } from "../book-edit-dialog";
 
@@ -49,10 +51,7 @@ export interface UseBookDetailReturn {
   readonly handleBulkDeleteConfirm: () => Promise<void>;
   readonly addChapterOpen: boolean;
   readonly setAddChapterOpen: (next: boolean) => void;
-  readonly handleChapterCreated: (result: {
-    readonly chaptersVersion: number;
-    readonly bookStatus: BookStatus;
-  }) => void;
+  readonly handleChapterCreated: (result: ChapterCreatedResult) => void;
   readonly handleChaptersVersionBump: (newVersion: number) => void;
   readonly handleChaptersConflict: () => void;
 }
@@ -166,11 +165,32 @@ export function useBookDetail(book: BookDetailData): UseBookDetailReturn {
     router.refresh();
   }
 
-  function handleChapterCreated(result: {
-    readonly chaptersVersion: number;
-    readonly bookStatus: BookStatus;
-  }) {
-    setChaptersVersion(result.chaptersVersion);
+  function handleChapterCreated(result: ChapterCreatedResult) {
+    const { chapter, bookStatus, chaptersVersion } = result;
+    setState((prev) => {
+      const newRow: ChapterRowData = {
+        id: chapter.id,
+        title: chapter.title,
+        position: chapter.position,
+        status: chapter.status,
+        narrator: null,
+        editor: null,
+        editedSeconds: 0,
+        deadline: null,
+      };
+      const withNew = [...prev.chapters];
+      const insertAt = Math.min(Math.max(chapter.position, 0), withNew.length);
+      withNew.splice(insertAt, 0, newRow);
+      const positionById = new Map(densifyPositions(withNew).map((p) => [p.id, p.position]));
+      return {
+        ...prev,
+        status: bookStatus,
+        chapters: withNew.map((c) => ({ ...c, position: positionById.get(c.id) ?? c.position })),
+      };
+    });
+    setChaptersVersion(chaptersVersion);
+    // Optimistic insert above already shows the new chapter; refresh is only a
+    // background re-sync (it may hang under loading.tsx — #86151 — without harm).
     router.refresh();
   }
 

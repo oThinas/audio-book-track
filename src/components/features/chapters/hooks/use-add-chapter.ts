@@ -19,22 +19,25 @@ export interface AddChapterFormValues {
   readonly positionMode: AddChapterPosition;
 }
 
-export interface UseAddChapterArgs {
-  readonly bookId: string;
-  readonly chaptersVersion: number;
-  readonly existingTitles: ReadonlyArray<string>;
-  readonly onCreated: (result: {
-    readonly chaptersVersion: number;
-    readonly bookStatus: BookStatus;
-  }) => void;
-  readonly onConflict: () => void;
-}
-
-interface CreatedChapter {
+export interface CreatedChapter {
   readonly id: string;
   readonly title: string;
   readonly position: number;
   readonly status: ChapterStatus;
+}
+
+export interface ChapterCreatedResult {
+  readonly chapter: CreatedChapter;
+  readonly bookStatus: BookStatus;
+  readonly chaptersVersion: number;
+}
+
+export interface UseAddChapterArgs {
+  readonly bookId: string;
+  readonly chaptersVersion: number;
+  readonly existingTitles: ReadonlyArray<string>;
+  readonly onCreated: (result: ChapterCreatedResult) => void;
+  readonly onConflict: () => void;
 }
 
 interface CreateResponse {
@@ -139,8 +142,9 @@ export function useAddChapter({
     }
 
     onCreated({
-      chaptersVersion: result.data.data.chaptersVersion,
+      chapter: result.data.data.chapter,
       bookStatus: result.data.data.bookStatus,
+      chaptersVersion: result.data.data.chaptersVersion,
     });
     reset();
   }

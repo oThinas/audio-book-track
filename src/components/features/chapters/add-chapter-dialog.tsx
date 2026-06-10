@@ -16,9 +16,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
-import type { BookStatus } from "@/lib/domain/book";
 
-import { useAddChapter } from "./hooks/use-add-chapter";
+import { type ChapterCreatedResult, useAddChapter } from "./hooks/use-add-chapter";
 
 const TEMPLATE_LABELS: Record<"prologue" | "presentation" | "epilogue", string> = {
   prologue: "Prólogo",
@@ -37,10 +36,7 @@ interface AddChapterDialogProps {
   readonly bookId: string;
   readonly chaptersVersion: number;
   readonly existingChapters: ReadonlyArray<ExistingChapter>;
-  readonly onCreated: (result: {
-    readonly chaptersVersion: number;
-    readonly bookStatus: BookStatus;
-  }) => void;
+  readonly onCreated: (result: ChapterCreatedResult) => void;
   readonly onConflict: () => void;
 }
 
