@@ -1,19 +1,18 @@
 "use client";
 
-import { Check, Loader2, X } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SecondsInput } from "@/components/ui/seconds-input";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { ChapterStatus } from "@/lib/domain/chapter";
-import { cn } from "@/lib/utils";
 
+import { ChapterAssigneeSelectCell } from "./chapter-assignee-select-cell";
 import { ChapterDeadlinePicker } from "./chapter-deadline-picker";
 import { ChapterPaidReversionDialog } from "./chapter-paid-reversion-dialog";
 import type { ChapterRowEntity, ChapterRowOption } from "./chapter-row";
+import { type ChapterEditField, resolveActivation } from "./chapter-row-activation";
+import { ChapterRowEditActions } from "./chapter-row-edit-actions";
 import { ChapterStatusSelect } from "./chapter-status-select";
 import {
   buildChapterDraft,
@@ -29,16 +28,13 @@ interface ChapterRowEditModeProps {
   readonly editors: ReadonlyArray<ChapterRowOption>;
   readonly narratorNameById: ReadonlyMap<string, string>;
   readonly editorNameById: ReadonlyMap<string, string>;
-  /**
-   * When true, the view-mode row has an extra leading cell for the drag handle.
-   * Edit mode must render an empty placeholder cell to keep `table-fixed`
-   * columns aligned — without it cells shift one column to the left and the
-   * title input ends up in the 32px drag column.
-   */
+  /** Renders a leading placeholder cell so `table-fixed` columns stay aligned with the view row. */
   readonly canReorder: boolean;
   readonly onCancel: () => void;
   readonly onSaved: (updated: ChapterRowEntity, bookStatus: ChapterStatus) => void;
   readonly onChaptersVersionChange?: (newVersion: number) => void;
+  /** Which control to auto-open/focus when entering edit via double-click. */
+  readonly activateField: ChapterEditField | null;
 }
 
 export function ChapterRowEditMode({
@@ -51,6 +47,7 @@ export function ChapterRowEditMode({
   onCancel,
   onSaved,
   onChaptersVersionChange,
+  activateField,
 }: ChapterRowEditModeProps) {
   const formId = `chapter-edit-row-form-${chapter.id}`;
   const form = useForm<ChapterEditDraftValues>({ defaultValues: buildChapterDraft(chapter) });
@@ -72,6 +69,8 @@ export function ChapterRowEditMode({
       onVersionChange: onChaptersVersionChange,
     });
 
+  const activation = resolveActivation(activateField, chapter);
+
   return (
     <>
       <TableRow data-testid={`chapter-row-${chapter.id}`} data-mode="edit">
@@ -84,6 +83,7 @@ export function ChapterRowEditMode({
               data-testid={`chapter-title-${chapter.id}`}
               aria-label={`Título do ${chapter.title}`}
               disabled={isSubmitting || chapter.status === "paid"}
+              autoFocus={activation.titleAutoFocus}
               maxLength={100}
               {...register("title", {
                 validate: (value) => {
@@ -117,70 +117,33 @@ export function ChapterRowEditMode({
                 onChange={field.onChange}
                 id={`chapter-status-${chapter.id}`}
                 disabled={isSubmitting}
+                defaultOpen={activation.statusOpen}
               />
             )}
           />
         </TableCell>
-        <TableCell>
-          <Controller
-            name="narratorId"
-            control={control}
-            render={({ field }) => (
-              <Select
-                value={field.value ?? nullValue}
-                onValueChange={(value) => field.onChange(value === nullValue ? null : value)}
-                disabled={isSubmitting}
-              >
-                <SelectTrigger data-testid={`chapter-narrator-${chapter.id}`} className="w-full">
-                  <span
-                    className={cn("truncate", field.value ? undefined : "text-muted-foreground")}
-                  >
-                    {field.value
-                      ? (narratorNameById.get(field.value) ?? "—")
-                      : "Selecionar narrador"}
-                  </span>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={nullValue}>—</SelectItem>
-                  {narrators.map((narrator) => (
-                    <SelectItem key={narrator.id} value={narrator.id}>
-                      {narrator.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
-        </TableCell>
-        <TableCell>
-          <Controller
-            name="editorId"
-            control={control}
-            render={({ field }) => (
-              <Select
-                value={field.value ?? nullValue}
-                onValueChange={(value) => field.onChange(value === nullValue ? null : value)}
-                disabled={isSubmitting}
-              >
-                <SelectTrigger data-testid={`chapter-editor-${chapter.id}`} className="w-full">
-                  <span
-                    className={cn("truncate", field.value ? undefined : "text-muted-foreground")}
-                  >
-                    {field.value ? (editorNameById.get(field.value) ?? "—") : "Selecionar editor"}
-                  </span>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={nullValue}>—</SelectItem>
-                  {editors.map((editor) => (
-                    <SelectItem key={editor.id} value={editor.id}>
-                      {editor.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
-        </TableCell>
+        <ChapterAssigneeSelectCell
+          control={control}
+          name="narratorId"
+          options={narrators}
+          nameById={narratorNameById}
+          nullValue={nullValue}
+          disabled={isSubmitting}
+          defaultOpen={activation.narratorOpen}
+          testId={`chapter-narrator-${chapter.id}`}
+          placeholder="Selecionar narrador"
+        />
+        <ChapterAssigneeSelectCell
+          control={control}
+          name="editorId"
+          options={editors}
+          nameById={editorNameById}
+          nullValue={nullValue}
+          disabled={isSubmitting}
+          defaultOpen={activation.editorOpen}
+          testId={`chapter-editor-${chapter.id}`}
+          placeholder="Selecionar editor"
+        />
         <TableCell>
           <Controller
             name="deadline"
@@ -191,6 +154,7 @@ export function ChapterRowEditMode({
                 value={field.value}
                 onChange={field.onChange}
                 disabled={isSubmitting || chapter.status === "paid"}
+                defaultOpen={activation.deadlineOpen}
               />
             )}
           />
@@ -209,42 +173,19 @@ export function ChapterRowEditMode({
                 onBlur={field.onBlur}
                 max={EDITED_SECONDS_MAX}
                 disabled={isSubmitting}
+                autoFocus={activation.editedSecondsAutoFocus}
                 className="text-right"
               />
             )}
           />
         </TableCell>
-        <TableCell className="text-right">
-          <div className="inline-flex items-center gap-1">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              aria-label={`Cancelar edição do ${chapter.title}`}
-              data-testid={`chapter-cancel-${chapter.id}`}
-              onClick={onCancel}
-              disabled={isSubmitting}
-            >
-              <X aria-hidden="true" className="size-4" />
-            </Button>
-            <Button
-              type="submit"
-              form={formId}
-              variant="ghost"
-              size="icon"
-              aria-label={`Confirmar edição do ${chapter.title}`}
-              data-testid={`chapter-confirm-${chapter.id}`}
-              disabled={isSubmitting}
-              className="text-primary"
-            >
-              {isSubmitting ? (
-                <Loader2 aria-hidden="true" className="size-4 animate-spin" />
-              ) : (
-                <Check aria-hidden="true" className="size-4" />
-              )}
-            </Button>
-          </div>
-        </TableCell>
+        <ChapterRowEditActions
+          chapterId={chapter.id}
+          chapterTitle={chapter.title}
+          formId={formId}
+          isSubmitting={isSubmitting}
+          onCancel={onCancel}
+        />
       </TableRow>
       <ChapterPaidReversionDialog
         open={reversionPending !== null}

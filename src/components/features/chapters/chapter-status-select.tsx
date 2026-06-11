@@ -11,6 +11,8 @@ interface ChapterStatusSelectProps {
   readonly onChange: (next: ChapterStatus) => void;
   readonly id?: string;
   readonly disabled?: boolean;
+  /** Opens the dropdown on mount — used by double-click-to-edit activation. */
+  readonly defaultOpen?: boolean;
 }
 
 const ALL_STATUSES: ReadonlyArray<ChapterStatus> = [
@@ -49,6 +51,7 @@ export function ChapterStatusSelect({
   onChange,
   id,
   disabled,
+  defaultOpen,
 }: ChapterStatusSelectProps) {
   const targets = useMemo(() => reachableTargets(currentStatus), [currentStatus]);
 
@@ -57,6 +60,7 @@ export function ChapterStatusSelect({
       value={value}
       onValueChange={(next) => onChange(next as ChapterStatus)}
       disabled={disabled}
+      defaultOpen={defaultOpen}
     >
       <SelectTrigger id={id} className="w-full" data-testid={id ?? "chapter-status-select"}>
         <span>{STATUS_LABELS[value]}</span>
