@@ -71,4 +71,34 @@ test.describe("Books detail", () => {
     await page.goto(`/books/${crypto.randomUUID()}`);
     await expect(page.getByTestId("not-found-message")).toBeVisible();
   });
+
+  test("double-clicking the status cell enters edit mode and opens the status dropdown", async ({
+    page,
+    appServer,
+  }) => {
+    const studio = await seedStudio(page, "Sonora", 75);
+    const { id: bookId } = await seedBook({
+      schema: appServer.schemaName,
+      title: "Iracema",
+      studioId: studio.id,
+      pricePerHourCents: 7500,
+    });
+    const { id: chapterId } = await seedChapter({
+      schema: appServer.schemaName,
+      bookId,
+      number: 1,
+      status: "editing",
+      editedSeconds: 0,
+    });
+
+    await page.goto(`/books/${bookId}`);
+    const row = page.getByTestId(`chapter-row-${chapterId}`);
+    await expect(row).toHaveAttribute("data-mode", "view");
+
+    // SC-001: a single double-click both enters edit mode AND opens the dropdown.
+    await page.getByTestId(`chapter-cell-status-${chapterId}`).dblclick();
+
+    await expect(row).toHaveAttribute("data-mode", "edit");
+    await expect(page.getByRole("option", { name: "Em revisão" })).toBeVisible();
+  });
 });

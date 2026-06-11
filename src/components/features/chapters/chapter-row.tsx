@@ -81,7 +81,9 @@ export function ChapterRow({
     transition,
     opacity: isDragging ? 0.5 : undefined,
   } as React.CSSProperties;
-  const { mode, enterEditMode, exitEditMode } = useChapterRow({ isSelectionMode });
+  const { mode, activateField, enterEditMode, exitEditMode, getEditTriggerProps } = useChapterRow({
+    isSelectionMode,
+  });
   const { deleteOpen, deleting, openDelete, cancelDelete, handleDelete } = useDeleteChapter({
     chapterId: chapter.id,
     onDeleted,
@@ -97,6 +99,7 @@ export function ChapterRow({
         narratorNameById={narratorNameById}
         editorNameById={editorNameById}
         canReorder={canReorder}
+        activateField={activateField}
         onCancel={exitEditMode}
         onSaved={(updated, bookStatus) => {
           exitEditMode();
@@ -145,7 +148,10 @@ export function ChapterRow({
         <TableCell className="max-w-[56ch] truncate font-medium" title={chapter.title}>
           {chapter.title}
         </TableCell>
-        <TableCell>
+        <TableCell
+          data-testid={`chapter-cell-status-${chapter.id}`}
+          {...getEditTriggerProps("status")}
+        >
           <StatusBadge status={chapter.status} />
         </TableCell>
         <TableCell className="truncate text-muted-foreground">

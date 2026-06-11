@@ -10,10 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/u
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { ChapterStatus } from "@/lib/domain/chapter";
 import { cn } from "@/lib/utils";
-
 import { ChapterDeadlinePicker } from "./chapter-deadline-picker";
 import { ChapterPaidReversionDialog } from "./chapter-paid-reversion-dialog";
 import type { ChapterRowEntity, ChapterRowOption } from "./chapter-row";
+import { type ChapterEditField, resolveActivation } from "./chapter-row-activation";
 import { ChapterStatusSelect } from "./chapter-status-select";
 import {
   buildChapterDraft,
@@ -39,6 +39,8 @@ interface ChapterRowEditModeProps {
   readonly onCancel: () => void;
   readonly onSaved: (updated: ChapterRowEntity, bookStatus: ChapterStatus) => void;
   readonly onChaptersVersionChange?: (newVersion: number) => void;
+  /** Which control to auto-open/focus when entering edit via double-click. */
+  readonly activateField: ChapterEditField | null;
 }
 
 export function ChapterRowEditMode({
@@ -51,6 +53,7 @@ export function ChapterRowEditMode({
   onCancel,
   onSaved,
   onChaptersVersionChange,
+  activateField,
 }: ChapterRowEditModeProps) {
   const formId = `chapter-edit-row-form-${chapter.id}`;
   const form = useForm<ChapterEditDraftValues>({ defaultValues: buildChapterDraft(chapter) });
@@ -71,6 +74,8 @@ export function ChapterRowEditMode({
       onSaved,
       onVersionChange: onChaptersVersionChange,
     });
+
+  const activation = resolveActivation(activateField, chapter);
 
   return (
     <>
@@ -117,6 +122,7 @@ export function ChapterRowEditMode({
                 onChange={field.onChange}
                 id={`chapter-status-${chapter.id}`}
                 disabled={isSubmitting}
+                defaultOpen={activation.statusOpen}
               />
             )}
           />

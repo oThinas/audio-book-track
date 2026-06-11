@@ -55,14 +55,14 @@ Single project Next.js. Código em `src/components/features/chapters/`; testes e
 
 ### Tests for User Story 1 ⚠️ (escrever primeiro, garantir que falham)
 
-- [ ] T006 [P] [US1] RED: criar `__tests__/unit/components/features/chapters/chapter-row.spec.tsx` — renderizar `ChapterRow` em view, disparar `doubleClick` na célula de Status e asserir `data-mode="edit"` + que o `ChapterStatusSelect` recebe a abertura ativa (assertar via prop/estado observável em jsdom). Garantir que falha.
+- [X] T006 [P] [US1] RED: criar `__tests__/unit/components/features/chapters/chapter-row.spec.tsx` — renderizar `ChapterRow` em view, disparar `doubleClick` na célula de Status e asserir `data-mode="edit"` + que o `ChapterStatusSelect` recebe a abertura ativa (assertar via prop/estado observável em jsdom). Garantir que falha.
 
 ### Implementation for User Story 1
 
-- [ ] T007 [P] [US1] Adicionar prop opcional `defaultOpen?: boolean` a `src/components/features/chapters/chapter-status-select.tsx`, repassada ao `<Select defaultOpen={...}>`.
-- [ ] T008 [US1] Em `src/components/features/chapters/chapter-row-edit-mode.tsx`: aceitar a prop `activateField: ChapterEditField | null`, chamar `const activation = resolveActivation(activateField, chapter)` e passar `defaultOpen={activation.statusOpen}` ao `<ChapterStatusSelect>`. (depende de T003, T007)
-- [ ] T009 [US1] Em `src/components/features/chapters/chapter-row.tsx`: aplicar `{...getEditTriggerProps("status")}` na célula de Status (N1 — handlers vêm do hook) e repassar `activateField` ao `<ChapterRowEditMode>`. (depende de T005, T008)
-- [ ] T010 [US1] E2E: em `__tests__/e2e/books-detail.spec.ts`, adicionar cenário — duplo-clique no badge de status → linha em `data-mode="edit"` + listbox de status visível; escolher um status válido salva pelo fluxo existente. Documentar a contagem de interações (≤ 2) para SC-001. (depende de T009)
+- [X] T007 [P] [US1] Adicionar prop opcional `defaultOpen?: boolean` a `src/components/features/chapters/chapter-status-select.tsx`, repassada ao `<Select defaultOpen={...}>`.
+- [X] T008 [US1] Em `src/components/features/chapters/chapter-row-edit-mode.tsx`: aceitar a prop `activateField: ChapterEditField | null`, chamar `const activation = resolveActivation(activateField, chapter)` e passar `defaultOpen={activation.statusOpen}` ao `<ChapterStatusSelect>`. (depende de T003, T007)
+- [X] T009 [US1] Em `src/components/features/chapters/chapter-row.tsx`: aplicar `{...getEditTriggerProps("status")}` na célula de Status (N1 — handlers vêm do hook) e repassar `activateField` ao `<ChapterRowEditMode>`. (depende de T005, T008)
+- [X] T010 [US1] E2E: em `__tests__/e2e/books-detail.spec.ts`, adicionar cenário — duplo-clique no badge de status → linha em `data-mode="edit"` + listbox de status visível; escolher um status válido salva pelo fluxo existente. Documentar a contagem de interações (≤ 2) para SC-001. (depende de T009)
 
 **Checkpoint**: US1 funcional e testável de forma independente (MVP).
 
