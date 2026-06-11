@@ -110,11 +110,11 @@ Single project Next.js. Código em `src/components/features/chapters/`; testes e
 
 **Purpose**: Conformidade de tamanho de componente (remediação **N1**), revisão e verificação final (Princípio XVI).
 
-- [ ] T020 [US-none] Remediação **N1**: extrair sub-componentes apresentacionais de `src/components/features/chapters/chapter-row.tsx` (hoje 235 LOC, > limite de 200 — Princípio XII) — ex.: mover a coluna de Ações (botões mover/editar/excluir) para um `chapter-row-actions.tsx` — até o arquivo ficar ≤ 200 LOC. Sem mudança de comportamento; manter todos os testes verdes. (depende de T014)
-- [ ] T021 Remediação **N1**: extrair sub-componentes apresentacionais de `src/components/features/chapters/chapter-row-edit-mode.tsx` (hoje 257 LOC, > 200) — ex.: extrair as células de Narrador/Editor (`<Select>` inline) para um `chapter-assignee-select-cell.tsx` compartilhado — até o arquivo ficar ≤ 200 LOC. Sem mudança de comportamento; manter testes verdes. (depende de T013)
-- [ ] T022 [P] Rodar `/code-review` e `/simplify` sobre o diff da feature (aderência aos Princípios VII e XII; ausência de `useEffect` imperativo de foco; componentes ≤ 200 LOC após T020/T021).
-- [ ] T023 Verificação final (nesta ordem): `bun run lint` (zero erros/warnings) → `bun run test:unit` → `bun run test:integration` → `bun run test:e2e` → `bun run build`. Corrigir antes de avançar.
-- [ ] T024 Rodar a validação manual de [quickstart.md](./quickstart.md) (passos 1–9) em modo claro e escuro.
+- [X] T020 [US-none] Remediação **N1**: extrair sub-componentes apresentacionais de `src/components/features/chapters/chapter-row.tsx` (hoje 235 LOC, > limite de 200 — Princípio XII) — ex.: mover a coluna de Ações (botões mover/editar/excluir) para um `chapter-row-actions.tsx` — até o arquivo ficar ≤ 200 LOC. Sem mudança de comportamento; manter todos os testes verdes. (depende de T014)
+- [X] T021 Remediação **N1**: extrair sub-componentes apresentacionais de `src/components/features/chapters/chapter-row-edit-mode.tsx` (hoje 257 LOC, > 200) — ex.: extrair as células de Narrador/Editor (`<Select>` inline) para um `chapter-assignee-select-cell.tsx` compartilhado — até o arquivo ficar ≤ 200 LOC. Sem mudança de comportamento; manter testes verdes. (depende de T013)
+- [X] T022 [P] Rodar `/code-review` e `/simplify` sobre o diff da feature (aderência aos Princípios VII e XII; ausência de `useEffect` imperativo de foco; componentes ≤ 200 LOC após T020/T021).
+- [X] T023 Verificação final (nesta ordem): `bun run lint` (zero erros/warnings) → `bun run test:unit` → `bun run test:integration` → `bun run test:e2e` → `bun run build`. Corrigir antes de avançar.
+- [X] T024 Rodar a validação manual de [quickstart.md](./quickstart.md) (passos 1–9) em modo claro e escuro.
 
 ---
 

@@ -2,10 +2,9 @@
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ArrowDown, ArrowUp, GripVertical, Loader2, Pencil, Trash2 } from "lucide-react";
+import { GripVertical } from "lucide-react";
 
 import { StatusBadge } from "@/components/features/books/status-badge";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { ChapterStatus } from "@/lib/domain/chapter";
@@ -13,26 +12,12 @@ import type { FocusWeekContext } from "@/lib/domain/chapter-deadline";
 import { formatSecondsAsHHMMSS } from "@/lib/utils";
 
 import { ChapterDeadlineCell } from "./chapter-deadline-cell";
-import { ChapterDeleteDialog } from "./chapter-delete-dialog";
+import { ChapterRowActions } from "./chapter-row-actions";
 import { ChapterRowEditMode } from "./chapter-row-edit-mode";
+import type { ChapterRowEntity, ChapterRowOption } from "./chapter-row-types";
 import { useChapterRow } from "./hooks/use-chapter-row";
-import { useDeleteChapter } from "./hooks/use-delete-chapter";
 
-export interface ChapterRowEntity {
-  readonly id: string;
-  readonly title: string;
-  readonly position: number;
-  readonly status: ChapterStatus;
-  readonly narrator: { readonly id: string; readonly name: string } | null;
-  readonly editor: { readonly id: string; readonly name: string } | null;
-  readonly editedSeconds: number;
-  readonly deadline: string | null;
-}
-
-export interface ChapterRowOption {
-  readonly id: string;
-  readonly name: string;
-}
+export type { ChapterRowEntity, ChapterRowOption } from "./chapter-row-types";
 
 interface ChapterRowProps {
   readonly chapter: ChapterRowEntity;
@@ -84,11 +69,6 @@ export function ChapterRow({
   const { mode, activateField, enterEditMode, exitEditMode, getEditTriggerProps } = useChapterRow({
     isSelectionMode,
   });
-  const { deleteOpen, deleting, openDelete, cancelDelete, handleDelete } = useDeleteChapter({
-    chapterId: chapter.id,
-    onDeleted,
-    onVersionChange: onChaptersVersionChange,
-  });
 
   if (mode === "edit") {
     return (
@@ -113,149 +93,97 @@ export function ChapterRow({
   const isPaid = chapter.status === "paid";
 
   return (
-    <>
-      <TableRow
-        ref={setNodeRef}
-        style={dragStyle}
-        data-testid={`chapter-row-${chapter.id}`}
-        data-mode="view"
-      >
-        {isSelectionMode && (
-          <TableCell>
-            <Checkbox
-              checked={isSelected}
-              disabled={isPaid}
-              onCheckedChange={(value) => onToggleSelected(chapter.id, value === true)}
-              aria-label={`Selecionar ${chapter.title}`}
-              data-testid={`chapter-select-${chapter.id}`}
-            />
-          </TableCell>
-        )}
-        {!isSelectionMode && canReorder && (
-          <TableCell className="w-8 p-0">
-            <button
-              type="button"
-              {...attributes}
-              {...listeners}
-              aria-label={`Reordenar ${chapter.title}`}
-              data-testid={`chapter-drag-${chapter.id}`}
-              className="flex h-9 w-8 cursor-grab items-center justify-center text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:cursor-grabbing"
-            >
-              <GripVertical aria-hidden="true" className="size-4" />
-            </button>
-          </TableCell>
-        )}
-        <TableCell
-          className="max-w-[56ch] truncate font-medium"
-          title={chapter.title}
-          data-testid={`chapter-cell-title-${chapter.id}`}
-          {...getEditTriggerProps("title")}
-        >
-          {chapter.title}
-        </TableCell>
-        <TableCell
-          data-testid={`chapter-cell-status-${chapter.id}`}
-          {...getEditTriggerProps("status")}
-        >
-          <StatusBadge status={chapter.status} />
-        </TableCell>
-        <TableCell
-          className="truncate text-muted-foreground"
-          data-testid={`chapter-cell-narrator-${chapter.id}`}
-          {...getEditTriggerProps("narrator")}
-        >
-          {chapter.narrator ? chapter.narrator.name : "—"}
-        </TableCell>
-        <TableCell
-          className="truncate text-muted-foreground"
-          data-testid={`chapter-cell-editor-${chapter.id}`}
-          {...getEditTriggerProps("editor")}
-        >
-          {chapter.editor ? chapter.editor.name : "—"}
-        </TableCell>
-        <TableCell
-          data-testid={`chapter-cell-deadline-${chapter.id}`}
-          {...getEditTriggerProps("deadline")}
-        >
-          <ChapterDeadlineCell
-            deadline={chapter.deadline}
-            status={chapter.status}
-            focusContext={focusContext}
+    <TableRow
+      ref={setNodeRef}
+      style={dragStyle}
+      data-testid={`chapter-row-${chapter.id}`}
+      data-mode="view"
+    >
+      {isSelectionMode && (
+        <TableCell>
+          <Checkbox
+            checked={isSelected}
+            disabled={isPaid}
+            onCheckedChange={(value) => onToggleSelected(chapter.id, value === true)}
+            aria-label={`Selecionar ${chapter.title}`}
+            data-testid={`chapter-select-${chapter.id}`}
           />
         </TableCell>
-        <TableCell
-          className="text-right tabular-nums"
-          data-testid={`chapter-cell-editedSeconds-${chapter.id}`}
-          {...getEditTriggerProps("editedSeconds")}
-        >
-          {formatSecondsAsHHMMSS(chapter.editedSeconds)}
+      )}
+      {!isSelectionMode && canReorder && (
+        <TableCell className="w-8 p-0">
+          <button
+            type="button"
+            {...attributes}
+            {...listeners}
+            aria-label={`Reordenar ${chapter.title}`}
+            data-testid={`chapter-drag-${chapter.id}`}
+            className="flex h-9 w-8 cursor-grab items-center justify-center text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:cursor-grabbing"
+          >
+            <GripVertical aria-hidden="true" className="size-4" />
+          </button>
         </TableCell>
-        {!isSelectionMode && (
-          <TableCell className="text-right">
-            <div className="inline-flex items-center gap-1">
-              {canReorder && (
-                <span className="inline-flex items-center gap-1 md:hidden">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`Mover ${chapter.title} para cima`}
-                    data-testid={`chapter-move-up-${chapter.id}`}
-                    onClick={() => onMoveBy(chapter.id, -1)}
-                    disabled={isFirst}
-                  >
-                    <ArrowUp aria-hidden="true" className="size-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`Mover ${chapter.title} para baixo`}
-                    data-testid={`chapter-move-down-${chapter.id}`}
-                    onClick={() => onMoveBy(chapter.id, 1)}
-                    disabled={isLast}
-                  >
-                    <ArrowDown aria-hidden="true" className="size-4" />
-                  </Button>
-                </span>
-              )}
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label={`Editar ${chapter.title}`}
-                data-testid={`chapter-edit-${chapter.id}`}
-                onClick={enterEditMode}
-              >
-                <Pencil aria-hidden="true" className="size-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label={`Excluir ${chapter.title}`}
-                data-testid={`chapter-delete-${chapter.id}`}
-                onClick={openDelete}
-                disabled={isPaid || deleting}
-                className="text-destructive hover:text-destructive"
-              >
-                {deleting ? (
-                  <Loader2 aria-hidden="true" className="size-4 animate-spin" />
-                ) : (
-                  <Trash2 aria-hidden="true" className="size-4" />
-                )}
-              </Button>
-            </div>
-          </TableCell>
-        )}
-      </TableRow>
-      <ChapterDeleteDialog
-        open={deleteOpen}
-        chapterTitle={chapter.title}
-        isLastNonPaid={isLastNonPaid}
-        onCancel={cancelDelete}
-        onConfirm={handleDelete}
-      />
-    </>
+      )}
+      <TableCell
+        className="max-w-[56ch] truncate font-medium"
+        title={chapter.title}
+        data-testid={`chapter-cell-title-${chapter.id}`}
+        {...getEditTriggerProps("title")}
+      >
+        {chapter.title}
+      </TableCell>
+      <TableCell
+        data-testid={`chapter-cell-status-${chapter.id}`}
+        {...getEditTriggerProps("status")}
+      >
+        <StatusBadge status={chapter.status} />
+      </TableCell>
+      <TableCell
+        className="truncate text-muted-foreground"
+        data-testid={`chapter-cell-narrator-${chapter.id}`}
+        {...getEditTriggerProps("narrator")}
+      >
+        {chapter.narrator ? chapter.narrator.name : "—"}
+      </TableCell>
+      <TableCell
+        className="truncate text-muted-foreground"
+        data-testid={`chapter-cell-editor-${chapter.id}`}
+        {...getEditTriggerProps("editor")}
+      >
+        {chapter.editor ? chapter.editor.name : "—"}
+      </TableCell>
+      <TableCell
+        data-testid={`chapter-cell-deadline-${chapter.id}`}
+        {...getEditTriggerProps("deadline")}
+      >
+        <ChapterDeadlineCell
+          deadline={chapter.deadline}
+          status={chapter.status}
+          focusContext={focusContext}
+        />
+      </TableCell>
+      <TableCell
+        className="text-right tabular-nums"
+        data-testid={`chapter-cell-editedSeconds-${chapter.id}`}
+        {...getEditTriggerProps("editedSeconds")}
+      >
+        {formatSecondsAsHHMMSS(chapter.editedSeconds)}
+      </TableCell>
+      {!isSelectionMode && (
+        <ChapterRowActions
+          chapterId={chapter.id}
+          chapterTitle={chapter.title}
+          isPaid={isPaid}
+          isLastNonPaid={isLastNonPaid}
+          isFirst={isFirst}
+          isLast={isLast}
+          canReorder={canReorder}
+          onEdit={() => enterEditMode()}
+          onMoveBy={onMoveBy}
+          onDeleted={onDeleted}
+          onChaptersVersionChange={onChaptersVersionChange}
+        />
+      )}
+    </TableRow>
   );
 }

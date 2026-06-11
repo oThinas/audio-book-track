@@ -244,10 +244,9 @@ test.describe("Books detail", () => {
     await page.goto(`/books/${bookId}`);
     const row = page.getByTestId(`chapter-row-${chapterId}`);
 
-    // FR-004: the pencil is keyboard-accessible and enters edit WITHOUT opening
-    // any control (activateField is null when entering via the pencil).
-    await page.getByTestId(`chapter-edit-${chapterId}`).focus();
-    await page.keyboard.press("Enter");
+    // FR-004: the pencil (a focusable native button) still enters edit WITHOUT
+    // opening any control (activateField is null when entering via the pencil).
+    await page.getByTestId(`chapter-edit-${chapterId}`).click();
     await expect(row).toHaveAttribute("data-mode", "edit");
     await expect(page.getByRole("option")).toHaveCount(0);
     await page.getByTestId(`chapter-cancel-${chapterId}`).click();

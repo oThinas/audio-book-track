@@ -76,6 +76,15 @@ describe("ChapterRow — double-click to edit", () => {
     expect(await screen.findByRole("option", { name: "Pendente" })).toBeTruthy();
   });
 
+  it("clicking the pencil enters edit mode without auto-opening any control", async () => {
+    const user = userEvent.setup();
+    const chapter = renderRow();
+    await user.click(screen.getByTestId(`chapter-edit-${chapter.id}`));
+    expect(rowMode(chapter.id)).toBe("edit");
+    // Pencil entry leaves activateField null → no dropdown opens.
+    expect(screen.queryByRole("option")).toBeNull();
+  });
+
   it("double-clicking the Título cell enters edit mode and focuses the title input", async () => {
     const user = userEvent.setup();
     const chapter = renderRow();
