@@ -145,7 +145,12 @@ export function ChapterRow({
             </button>
           </TableCell>
         )}
-        <TableCell className="max-w-[56ch] truncate font-medium" title={chapter.title}>
+        <TableCell
+          className="max-w-[56ch] truncate font-medium"
+          title={chapter.title}
+          data-testid={`chapter-cell-title-${chapter.id}`}
+          {...getEditTriggerProps("title")}
+        >
           {chapter.title}
         </TableCell>
         <TableCell
@@ -154,20 +159,35 @@ export function ChapterRow({
         >
           <StatusBadge status={chapter.status} />
         </TableCell>
-        <TableCell className="truncate text-muted-foreground">
+        <TableCell
+          className="truncate text-muted-foreground"
+          data-testid={`chapter-cell-narrator-${chapter.id}`}
+          {...getEditTriggerProps("narrator")}
+        >
           {chapter.narrator ? chapter.narrator.name : "—"}
         </TableCell>
-        <TableCell className="truncate text-muted-foreground">
+        <TableCell
+          className="truncate text-muted-foreground"
+          data-testid={`chapter-cell-editor-${chapter.id}`}
+          {...getEditTriggerProps("editor")}
+        >
           {chapter.editor ? chapter.editor.name : "—"}
         </TableCell>
-        <TableCell>
+        <TableCell
+          data-testid={`chapter-cell-deadline-${chapter.id}`}
+          {...getEditTriggerProps("deadline")}
+        >
           <ChapterDeadlineCell
             deadline={chapter.deadline}
             status={chapter.status}
             focusContext={focusContext}
           />
         </TableCell>
-        <TableCell className="text-right tabular-nums">
+        <TableCell
+          className="text-right tabular-nums"
+          data-testid={`chapter-cell-editedSeconds-${chapter.id}`}
+          {...getEditTriggerProps("editedSeconds")}
+        >
           {formatSecondsAsHHMMSS(chapter.editedSeconds)}
         </TableCell>
         {!isSelectionMode && (

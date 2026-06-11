@@ -76,15 +76,15 @@ Single project Next.js. Código em `src/components/features/chapters/`; testes e
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T011 [P] [US2] RED: estender `__tests__/unit/components/features/chapters/chapter-row.spec.tsx` — duplo-clique em Título/Narrador/Editor/Prazo/Horas leva a `data-mode="edit"` e à ativação correta por célula (flag/estado observável). Garantir que falha para as células ainda não ligadas.
+- [X] T011 [P] [US2] RED: estender `__tests__/unit/components/features/chapters/chapter-row.spec.tsx` — duplo-clique em Título/Narrador/Editor/Prazo/Horas leva a `data-mode="edit"` e à ativação correta por célula (flag/estado observável). Garantir que falha para as células ainda não ligadas.
 
 ### Implementation for User Story 2
 
-- [ ] T012 [P] [US2] Adicionar prop opcional `defaultOpen?: boolean` a `src/components/features/chapters/chapter-deadline-picker.tsx`, repassada ao `<Popover defaultOpen={...}>`.
-- [ ] T013 [US2] Em `src/components/features/chapters/chapter-row-edit-mode.tsx`: aplicar as flags restantes de `activation` — `autoFocus={activation.titleAutoFocus}` no `<Input>` de título; `defaultOpen={activation.narratorOpen}` e `defaultOpen={activation.editorOpen}` nos `<Select>` de narrador/editor; `defaultOpen={activation.deadlineOpen}` no `<ChapterDeadlinePicker>`; `autoFocus={activation.editedSecondsAutoFocus}` no `<SecondsInput>`. (depende de T012, T008)
-- [ ] T014 [US2] Em `src/components/features/chapters/chapter-row.tsx`: aplicar `{...getEditTriggerProps(<field>)}` nas células de Título, Narrador, Editor, Prazo e Horas (N1 — handlers vêm do hook). (depende de T009, T013)
-- [ ] T015 [US2] E2E: estender `__tests__/e2e/books-detail.spec.ts` — duplo-clique em cada uma das 5 células abre o dropdown/popover correto ou foca o input correto, conforme [contracts/double-click-row-edit-interaction.md](./contracts/double-click-row-edit-interaction.md). (depende de T013, T014; sequencial após T010 — mesmo arquivo)
-- [ ] T016 [US2] E2E (remediação **G1** — FR-007): em `__tests__/e2e/books-detail.spec.ts`, após um duplo-clique em uma célula de dado, asserir que não há resíduo de seleção de texto nativa (`window.getSelection()?.toString()` vazio). (depende de T014; sequencial após T015 — mesmo arquivo)
+- [X] T012 [P] [US2] Adicionar prop opcional `defaultOpen?: boolean` a `src/components/features/chapters/chapter-deadline-picker.tsx`, repassada ao `<Popover defaultOpen={...}>`.
+- [X] T013 [US2] Em `src/components/features/chapters/chapter-row-edit-mode.tsx`: aplicar as flags restantes de `activation` — `autoFocus={activation.titleAutoFocus}` no `<Input>` de título; `defaultOpen={activation.narratorOpen}` e `defaultOpen={activation.editorOpen}` nos `<Select>` de narrador/editor; `defaultOpen={activation.deadlineOpen}` no `<ChapterDeadlinePicker>`; `autoFocus={activation.editedSecondsAutoFocus}` no `<SecondsInput>`. (depende de T012, T008)
+- [X] T014 [US2] Em `src/components/features/chapters/chapter-row.tsx`: aplicar `{...getEditTriggerProps(<field>)}` nas células de Título, Narrador, Editor, Prazo e Horas (N1 — handlers vêm do hook). (depende de T009, T013)
+- [X] T015 [US2] E2E: estender `__tests__/e2e/books-detail.spec.ts` — duplo-clique em cada uma das 5 células abre o dropdown/popover correto ou foca o input correto, conforme [contracts/double-click-row-edit-interaction.md](./contracts/double-click-row-edit-interaction.md). (depende de T013, T014; sequencial após T010 — mesmo arquivo)
+- [X] T016 [US2] E2E (remediação **G1** — FR-007): em `__tests__/e2e/books-detail.spec.ts`, após um duplo-clique em uma célula de dado, asserir que não há resíduo de seleção de texto nativa (`window.getSelection()?.toString()` vazio). (depende de T014; sequencial após T015 — mesmo arquivo)
 
 **Checkpoint**: US1 + US2 funcionais — todas as 6 células ativam o controle correto, sem resíduo de seleção.
 

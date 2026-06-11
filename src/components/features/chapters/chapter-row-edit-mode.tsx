@@ -89,6 +89,7 @@ export function ChapterRowEditMode({
               data-testid={`chapter-title-${chapter.id}`}
               aria-label={`Título do ${chapter.title}`}
               disabled={isSubmitting || chapter.status === "paid"}
+              autoFocus={activation.titleAutoFocus}
               maxLength={100}
               {...register("title", {
                 validate: (value) => {
@@ -136,6 +137,7 @@ export function ChapterRowEditMode({
                 value={field.value ?? nullValue}
                 onValueChange={(value) => field.onChange(value === nullValue ? null : value)}
                 disabled={isSubmitting}
+                defaultOpen={activation.narratorOpen}
               >
                 <SelectTrigger data-testid={`chapter-narrator-${chapter.id}`} className="w-full">
                   <span
@@ -167,6 +169,7 @@ export function ChapterRowEditMode({
                 value={field.value ?? nullValue}
                 onValueChange={(value) => field.onChange(value === nullValue ? null : value)}
                 disabled={isSubmitting}
+                defaultOpen={activation.editorOpen}
               >
                 <SelectTrigger data-testid={`chapter-editor-${chapter.id}`} className="w-full">
                   <span
@@ -197,6 +200,7 @@ export function ChapterRowEditMode({
                 value={field.value}
                 onChange={field.onChange}
                 disabled={isSubmitting || chapter.status === "paid"}
+                defaultOpen={activation.deadlineOpen}
               />
             )}
           />
@@ -215,6 +219,7 @@ export function ChapterRowEditMode({
                 onBlur={field.onBlur}
                 max={EDITED_SECONDS_MAX}
                 disabled={isSubmitting}
+                autoFocus={activation.editedSecondsAutoFocus}
                 className="text-right"
               />
             )}

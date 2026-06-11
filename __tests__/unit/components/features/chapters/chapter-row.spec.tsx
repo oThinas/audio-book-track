@@ -75,4 +75,44 @@ describe("ChapterRow — double-click to edit", () => {
     // The status Select opens on mount (defaultOpen) → its options render.
     expect(await screen.findByRole("option", { name: "Pendente" })).toBeTruthy();
   });
+
+  it("double-clicking the Título cell enters edit mode and focuses the title input", async () => {
+    const user = userEvent.setup();
+    const chapter = renderRow();
+    await user.dblClick(screen.getByTestId(`chapter-cell-title-${chapter.id}`));
+    expect(rowMode(chapter.id)).toBe("edit");
+    expect(screen.getByTestId(`chapter-title-${chapter.id}`)).toBe(document.activeElement);
+  });
+
+  it("double-clicking the Narrador cell enters edit mode and opens the narrator dropdown", async () => {
+    const user = userEvent.setup();
+    const chapter = renderRow();
+    await user.dblClick(screen.getByTestId(`chapter-cell-narrator-${chapter.id}`));
+    expect(rowMode(chapter.id)).toBe("edit");
+    expect(await screen.findByRole("option", { name: "Ana" })).toBeTruthy();
+  });
+
+  it("double-clicking the Editor cell enters edit mode and opens the editor dropdown", async () => {
+    const user = userEvent.setup();
+    const chapter = renderRow();
+    await user.dblClick(screen.getByTestId(`chapter-cell-editor-${chapter.id}`));
+    expect(rowMode(chapter.id)).toBe("edit");
+    expect(await screen.findByRole("option", { name: "Bia" })).toBeTruthy();
+  });
+
+  it("double-clicking the Prazo cell enters edit mode and opens the deadline popover", async () => {
+    const user = userEvent.setup();
+    const chapter = renderRow();
+    await user.dblClick(screen.getByTestId(`chapter-cell-deadline-${chapter.id}`));
+    expect(rowMode(chapter.id)).toBe("edit");
+    expect(await screen.findByRole("button", { name: "Limpar" })).toBeTruthy();
+  });
+
+  it("double-clicking the Horas cell enters edit mode and focuses the hours input", async () => {
+    const user = userEvent.setup();
+    const chapter = renderRow();
+    await user.dblClick(screen.getByTestId(`chapter-cell-editedSeconds-${chapter.id}`));
+    expect(rowMode(chapter.id)).toBe("edit");
+    expect(screen.getByTestId(`chapter-hours-${chapter.id}`)).toBe(document.activeElement);
+  });
 });

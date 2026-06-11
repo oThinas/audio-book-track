@@ -15,6 +15,8 @@ interface ChapterDeadlinePickerProps {
   readonly onChange: (next: string | null) => void;
   readonly disabled?: boolean;
   readonly id?: string;
+  /** Opens the calendar popover on mount — used by double-click-to-edit activation. */
+  readonly defaultOpen?: boolean;
 }
 
 function toIsoDate(date: Date): string {
@@ -26,11 +28,12 @@ export function ChapterDeadlinePicker({
   onChange,
   disabled,
   id,
+  defaultOpen,
 }: ChapterDeadlinePickerProps) {
   const selectedDate = value ? parseISO(value) : undefined;
 
   return (
-    <Popover>
+    <Popover defaultOpen={defaultOpen}>
       <PopoverTrigger
         render={
           <Button

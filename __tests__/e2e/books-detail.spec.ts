@@ -101,4 +101,82 @@ test.describe("Books detail", () => {
     await expect(row).toHaveAttribute("data-mode", "edit");
     await expect(page.getByRole("option", { name: "Em revisão" })).toBeVisible();
   });
+
+  test("double-clicking each data cell activates that cell's control", async ({
+    page,
+    appServer,
+  }) => {
+    const studio = await seedStudio(page, "Sonora", 75);
+    const { id: bookId } = await seedBook({
+      schema: appServer.schemaName,
+      title: "Senhora",
+      studioId: studio.id,
+      pricePerHourCents: 7500,
+    });
+    // One chapter per cell, each fresh in view mode — avoids exiting edit between cells.
+    const chapters: Record<string, string> = {};
+    for (let i = 1; i <= 5; i += 1) {
+      const { id } = await seedChapter({
+        schema: appServer.schemaName,
+        bookId,
+        number: i,
+        status: "editing",
+        editedSeconds: 0,
+      });
+      chapters[["title", "narrator", "editor", "deadline", "editedSeconds"][i - 1]] = id;
+    }
+
+    await page.goto(`/books/${bookId}`);
+
+    // Título → focuses the title input.
+    await page.getByTestId(`chapter-cell-title-${chapters.title}`).dblclick();
+    await expect(page.getByTestId(`chapter-title-${chapters.title}`)).toBeFocused();
+
+    // Narrador → opens the narrator dropdown ("—" null option is always present).
+    await page.getByTestId(`chapter-cell-narrator-${chapters.narrator}`).dblclick();
+    await expect(page.getByTestId(`chapter-cell-narrator-${chapters.narrator}`)).not.toBeVisible();
+    await expect(page.getByRole("option", { name: "—" }).first()).toBeVisible();
+    await page.keyboard.press("Escape");
+
+    // Editor → opens the editor dropdown.
+    await page.getByTestId(`chapter-cell-editor-${chapters.editor}`).dblclick();
+    await expect(page.getByRole("option", { name: "—" }).first()).toBeVisible();
+    await page.keyboard.press("Escape");
+
+    // Prazo → opens the calendar popover (its "Limpar" button is unique to it).
+    await page.getByTestId(`chapter-cell-deadline-${chapters.deadline}`).dblclick();
+    await expect(page.getByRole("button", { name: "Limpar" })).toBeVisible();
+    await page.keyboard.press("Escape");
+
+    // Horas → focuses the hours input.
+    await page.getByTestId(`chapter-cell-editedSeconds-${chapters.editedSeconds}`).dblclick();
+    await expect(page.getByTestId(`chapter-hours-${chapters.editedSeconds}`)).toBeFocused();
+  });
+
+  test("double-clicking a data cell leaves no native text-selection residue", async ({
+    page,
+    appServer,
+  }) => {
+    const studio = await seedStudio(page, "Sonora", 75);
+    const { id: bookId } = await seedBook({
+      schema: appServer.schemaName,
+      title: "Lucíola",
+      studioId: studio.id,
+      pricePerHourCents: 7500,
+    });
+    const { id: chapterId } = await seedChapter({
+      schema: appServer.schemaName,
+      bookId,
+      number: 1,
+      title: "Capítulo Primeiro",
+      status: "editing",
+    });
+
+    await page.goto(`/books/${bookId}`);
+    await page.getByTestId(`chapter-cell-title-${chapterId}`).dblclick();
+
+    // FR-007: the dblclick must not select the word under the cursor.
+    const selection = await page.evaluate(() => window.getSelection()?.toString() ?? "");
+    expect(selection).toBe("");
+  });
 });
