@@ -43,10 +43,16 @@ export function useChapterRow({ isSelectionMode }: UseChapterRowArgs): UseChapte
     }
   }, [isSelectionMode]);
 
-  const enterEditMode = useCallback((field?: ChapterEditField) => {
-    setActivateField(field ?? null);
-    setMode("edit");
-  }, []);
+  const enterEditMode = useCallback(
+    (field?: ChapterEditField) => {
+      // Editing is disabled while bulk-selecting: a double-click on a data cell
+      // (handlers stay attached in selection mode) must not enter edit mode.
+      if (isSelectionMode) return;
+      setActivateField(field ?? null);
+      setMode("edit");
+    },
+    [isSelectionMode],
+  );
 
   const exitEditMode = useCallback(() => {
     setMode("view");

@@ -179,4 +179,85 @@ test.describe("Books detail", () => {
     const selection = await page.evaluate(() => window.getSelection()?.toString() ?? "");
     expect(selection).toBe("");
   });
+
+  test("on a paid chapter only the status dropdown activates (PAID_LOCKED_FIELDS skipped)", async ({
+    page,
+    appServer,
+  }) => {
+    const studio = await seedStudio(page, "Sonora", 75);
+    const { id: bookId } = await seedBook({
+      schema: appServer.schemaName,
+      title: "Ubirajara",
+      studioId: studio.id,
+      pricePerHourCents: 7500,
+    });
+    const { id: chapterId } = await seedChapter({
+      schema: appServer.schemaName,
+      bookId,
+      number: 1,
+      status: "paid",
+      editedSeconds: 3600,
+    });
+
+    await page.goto(`/books/${bookId}`);
+    const row = page.getByTestId(`chapter-row-${chapterId}`);
+
+    // Título is locked on paid → enters edit but the input stays disabled/unfocused.
+    await page.getByTestId(`chapter-cell-title-${chapterId}`).dblclick();
+    await expect(row).toHaveAttribute("data-mode", "edit");
+    await expect(page.getByTestId(`chapter-title-${chapterId}`)).toBeDisabled();
+    await expect(page.getByTestId(`chapter-title-${chapterId}`)).not.toBeFocused();
+    await page.getByTestId(`chapter-cancel-${chapterId}`).click();
+    await expect(row).toHaveAttribute("data-mode", "view");
+
+    // Narrador is locked on paid → enters edit but the dropdown does NOT open.
+    await page.getByTestId(`chapter-cell-narrator-${chapterId}`).dblclick();
+    await expect(row).toHaveAttribute("data-mode", "edit");
+    await expect(page.getByRole("option")).toHaveCount(0);
+    await page.getByTestId(`chapter-cancel-${chapterId}`).click();
+    await expect(row).toHaveAttribute("data-mode", "view");
+
+    // Status remains editable on paid (reversion) → the dropdown opens.
+    await page.getByTestId(`chapter-cell-status-${chapterId}`).dblclick();
+    await expect(row).toHaveAttribute("data-mode", "edit");
+    await expect(page.getByRole("option", { name: "Concluído" })).toBeVisible();
+  });
+
+  test("the pencil still enters edit without auto-activation; selection mode is a no-op", async ({
+    page,
+    appServer,
+  }) => {
+    const studio = await seedStudio(page, "Sonora", 75);
+    const { id: bookId } = await seedBook({
+      schema: appServer.schemaName,
+      title: "Til",
+      studioId: studio.id,
+      pricePerHourCents: 7500,
+    });
+    const { id: chapterId } = await seedChapter({
+      schema: appServer.schemaName,
+      bookId,
+      number: 1,
+      status: "editing",
+    });
+
+    await page.goto(`/books/${bookId}`);
+    const row = page.getByTestId(`chapter-row-${chapterId}`);
+
+    // FR-004: the pencil is keyboard-accessible and enters edit WITHOUT opening
+    // any control (activateField is null when entering via the pencil).
+    await page.getByTestId(`chapter-edit-${chapterId}`).focus();
+    await page.keyboard.press("Enter");
+    await expect(row).toHaveAttribute("data-mode", "edit");
+    await expect(page.getByRole("option")).toHaveCount(0);
+    await page.getByTestId(`chapter-cancel-${chapterId}`).click();
+    await expect(row).toHaveAttribute("data-mode", "view");
+
+    // FR-006: double-click is a no-op while bulk-selecting.
+    await page.getByTestId("book-detail-enter-selection-mode").click();
+    await expect(page.getByTestId("chapters-bulk-delete-bar")).toBeVisible();
+    await page.getByTestId(`chapter-cell-status-${chapterId}`).dblclick();
+    await expect(row).toHaveAttribute("data-mode", "view");
+    await expect(page.getByTestId(`chapter-select-${chapterId}`)).toBeVisible();
+  });
 });

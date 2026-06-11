@@ -98,9 +98,9 @@ Single project Next.js. Código em `src/components/features/chapters/`; testes e
 
 ### Tests / Verification for User Story 3 ⚠️
 
-- [ ] T017 [US3] Estender `__tests__/unit/components/features/chapters/chapter-row.spec.tsx` — duplo-clique nas células de alça de arrastar, checkbox de seleção e coluna de Ações NÃO leva a `data-mode="edit"` (confirma que apenas as 6 células de dado recebem `getEditTriggerProps`). (sequencial — mesmo arquivo de T006/T011)
-- [ ] T018 [P] [US3] E2E em `__tests__/e2e/books-detail.spec.ts` (remediação **C1**) — capítulo `paid`: duplo-clique em Título, Narrador, Editor, Prazo e Horas entra em edição mas **não** ativa o controle (sem foco/abertura); duplo-clique em **Status** abre o dropdown (reversão). (sequencial após T016 — mesmo arquivo)
-- [ ] T019 [US3] E2E em `__tests__/e2e/books-detail.spec.ts` — em modo de seleção em massa, duplo-clique em qualquer célula é no-op; o botão de lápis continua entrando em edição (sem ativação automática) e permanece acessível por Tab + Enter. (sequencial após T018 — mesmo arquivo)
+- [X] T017 [US3] Estender `__tests__/unit/components/features/chapters/chapter-row.spec.tsx` — duplo-clique nas células de alça de arrastar, checkbox de seleção e coluna de Ações NÃO leva a `data-mode="edit"` (confirma que apenas as 6 células de dado recebem `getEditTriggerProps`). (sequencial — mesmo arquivo de T006/T011)
+- [X] T018 [P] [US3] E2E em `__tests__/e2e/books-detail.spec.ts` (remediação **C1**) — capítulo `paid`: duplo-clique em Título, Narrador, Editor, Prazo e Horas entra em edição mas **não** ativa o controle (sem foco/abertura); duplo-clique em **Status** abre o dropdown (reversão). (sequencial após T016 — mesmo arquivo)
+- [X] T019 [US3] E2E em `__tests__/e2e/books-detail.spec.ts` — em modo de seleção em massa, duplo-clique em qualquer célula é no-op; o botão de lápis continua entrando em edição (sem ativação automática) e permanece acessível por Tab + Enter. (sequencial após T018 — mesmo arquivo)
 
 **Checkpoint**: Todos os guarda-corpos verificados; imutabilidade de `paid` (`PAID_LOCKED_FIELDS`) e acessibilidade preservadas.
 

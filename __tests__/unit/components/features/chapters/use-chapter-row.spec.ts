@@ -62,7 +62,22 @@ describe("useChapterRow", () => {
     expect(result.current.activateField).toBeNull();
   });
 
+  it("enterEditMode is a no-op while in selection mode (FR-006)", () => {
+    const { result } = renderHook(() => useChapterRow({ isSelectionMode: true }));
+
+    act(() => result.current.enterEditMode("status"));
+    expect(result.current.mode).toBe("view");
+    expect(result.current.activateField).toBeNull();
+  });
+
   describe("getEditTriggerProps", () => {
+    it("onDoubleClick is a no-op while in selection mode (FR-006)", () => {
+      const { result } = renderHook(() => useChapterRow({ isSelectionMode: true }));
+
+      act(() => result.current.getEditTriggerProps("status").onDoubleClick());
+      expect(result.current.mode).toBe("view");
+    });
+
     it("onDoubleClick enters edit mode targeting the given field", () => {
       const { result } = renderHook(() => useChapterRow({ isSelectionMode: false }));
 

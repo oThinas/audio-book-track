@@ -116,3 +116,19 @@ describe("ChapterRow — double-click to edit", () => {
     expect(screen.getByTestId(`chapter-hours-${chapter.id}`)).toBe(document.activeElement);
   });
 });
+
+describe("ChapterRow — cells that must not trigger edit", () => {
+  it("double-clicking the drag handle does not enter edit mode", async () => {
+    const user = userEvent.setup();
+    const chapter = renderRow();
+    await user.dblClick(screen.getByTestId(`chapter-drag-${chapter.id}`));
+    expect(rowMode(chapter.id)).toBe("view");
+  });
+
+  it("double-clicking a data cell is a no-op in selection mode (FR-006)", async () => {
+    const user = userEvent.setup();
+    const chapter = renderRow(undefined, { isSelectionMode: true });
+    await user.dblClick(screen.getByTestId(`chapter-cell-status-${chapter.id}`));
+    expect(rowMode(chapter.id)).toBe("view");
+  });
+});
