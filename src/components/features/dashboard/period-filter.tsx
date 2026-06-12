@@ -6,9 +6,9 @@ import { CalendarIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
 
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { PeriodPreset } from "@/lib/domain/dashboard-period";
 
 import { usePeriodFilter } from "./hooks/use-period-filter";
@@ -30,7 +30,6 @@ export function PeriodFilter({ todayIso }: PeriodFilterProps) {
   const [popoverOpen, setPopoverOpen] = useState(false);
 
   const isCustom = period.preset === "custom";
-  const activeTab = isCustom ? "" : period.preset;
 
   const selectedRange: DateRange | undefined = useMemo(() => {
     if (!isCustom) return undefined;
@@ -46,25 +45,30 @@ export function PeriodFilter({ todayIso }: PeriodFilterProps) {
     : "Personalizado";
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <Tabs
-        value={activeTab}
-        onValueChange={(value) => {
-          if (value) setPreset(value as PeriodPreset);
-        }}
-      >
-        <TabsList className="flex-wrap">
-          {PRESET_LABELS.map((option) => (
-            <TabsTrigger key={option.value} value={option.value}>
-              {option.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
+    <div className="flex flex-wrap items-center justify-end gap-2">
+      {PRESET_LABELS.map((option) => {
+        const isActive = !isCustom && period.preset === option.value;
+        return (
+          <Button
+            key={option.value}
+            type="button"
+            variant={isActive ? "secondary" : "ghost"}
+            size="sm"
+            aria-pressed={isActive}
+            onClick={() => setPreset(option.value)}
+          >
+            {option.label}
+          </Button>
+        );
+      })}
 
       <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
         <PopoverTrigger
-          className="inline-flex h-8 items-center gap-2 rounded-md border border-input bg-background px-3 text-sm font-medium text-foreground hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:bg-accent"
+          className={buttonVariants({
+            variant: isCustom ? "secondary" : "outline",
+            size: "sm",
+            className: "gap-2",
+          })}
           aria-label="Selecionar período customizado"
         >
           <CalendarIcon className="size-4" aria-hidden="true" />

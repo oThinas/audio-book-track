@@ -10,7 +10,7 @@ test.describe("Dashboard — US2 — Period filter", () => {
 
     await expect(page.getByText("A receber agora")).toBeVisible();
 
-    const yearTab = page.getByRole("tab", { name: "Este ano" });
+    const yearTab = page.getByRole("button", { name: "Este ano" });
     await yearTab.click();
 
     await page.waitForURL(/preset=this-year/, { timeout: 4000 });
