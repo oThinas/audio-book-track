@@ -60,33 +60,25 @@ describe("isValidTransition", () => {
   });
 
   describe("editing → *", () => {
-    it("editing → reviewing is valid when editorId and editedSeconds > 0 are set", () => {
+    it("editing → reviewing is valid when editorId is set", () => {
       const result = isValidTransition("editing", "reviewing", FULL_CTX);
       expect(result).toEqual({ valid: true });
     });
 
-    it("editing → reviewing rejects when editorId is null (EDITOR_OR_SECONDS_REQUIRED)", () => {
-      const result = isValidTransition("editing", "reviewing", {
-        ...FULL_CTX,
-        editorId: null,
-      });
-      expect(result).toEqual({ valid: false, reason: "EDITOR_OR_SECONDS_REQUIRED" });
-    });
-
-    it("editing → reviewing rejects when editedSeconds is 0 (EDITOR_OR_SECONDS_REQUIRED)", () => {
+    it("editing → reviewing is valid when editor is set even if editedSeconds is 0 (minutagem opcional)", () => {
       const result = isValidTransition("editing", "reviewing", {
         ...FULL_CTX,
         editedSeconds: 0,
       });
-      expect(result).toEqual({ valid: false, reason: "EDITOR_OR_SECONDS_REQUIRED" });
+      expect(result).toEqual({ valid: true });
     });
 
-    it("editing → reviewing rejects when editedSeconds is negative", () => {
+    it("editing → reviewing rejects when editorId is null (EDITOR_REQUIRED)", () => {
       const result = isValidTransition("editing", "reviewing", {
         ...FULL_CTX,
-        editedSeconds: -1,
+        editorId: null,
       });
-      expect(result).toEqual({ valid: false, reason: "EDITOR_OR_SECONDS_REQUIRED" });
+      expect(result).toEqual({ valid: false, reason: "EDITOR_REQUIRED" });
     });
 
     it("editing → pending is valid (reversion)", () => {
@@ -108,9 +100,22 @@ describe("isValidTransition", () => {
       expect(result).toEqual({ valid: true });
     });
 
-    it("reviewing → completed is valid", () => {
-      const result = isValidTransition("reviewing", "completed", EMPTY_CTX);
+    it("reviewing → completed is valid when editedSeconds > 0", () => {
+      const result = isValidTransition("reviewing", "completed", FULL_CTX);
       expect(result).toEqual({ valid: true });
+    });
+
+    it("reviewing → completed rejects when editedSeconds is 0 (EDITED_SECONDS_REQUIRED)", () => {
+      const result = isValidTransition("reviewing", "completed", EMPTY_CTX);
+      expect(result).toEqual({ valid: false, reason: "EDITED_SECONDS_REQUIRED" });
+    });
+
+    it("reviewing → completed rejects when editedSeconds is negative (EDITED_SECONDS_REQUIRED)", () => {
+      const result = isValidTransition("reviewing", "completed", {
+        ...EMPTY_CTX,
+        editedSeconds: -1,
+      });
+      expect(result).toEqual({ valid: false, reason: "EDITED_SECONDS_REQUIRED" });
     });
 
     it("reviewing → editing is valid (reversion)", () => {

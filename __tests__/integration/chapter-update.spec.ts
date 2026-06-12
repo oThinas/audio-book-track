@@ -138,7 +138,7 @@ describe("PATCH /api/v1/chapters/:id (handleChapterUpdate)", () => {
     expect(body.error.code).toBe("CHAPTER_NARRATOR_REQUIRED");
   });
 
-  it("returns 422 EDITOR_OR_SECONDS_REQUIRED for editing → reviewing without editor/seconds", async () => {
+  it("returns 422 CHAPTER_EDITOR_REQUIRED for editing → reviewing without editor", async () => {
     const db = getTestDb();
     const { book } = await createTestBook(db);
     const { narrator } = await createTestNarrator(db);
@@ -155,7 +155,50 @@ describe("PATCH /api/v1/chapters/:id (handleChapterUpdate)", () => {
     });
     expect(response.status).toBe(422);
     const body = await response.json();
-    expect(body.error.code).toBe("CHAPTER_EDITOR_OR_SECONDS_REQUIRED");
+    expect(body.error.code).toBe("CHAPTER_EDITOR_REQUIRED");
+  });
+
+  it("allows editing → reviewing with editor and no minutagem (minutagem opcional)", async () => {
+    const db = getTestDb();
+    const { book } = await createTestBook(db);
+    const { narrator } = await createTestNarrator(db);
+    const { editor } = await createTestEditor(db);
+    const { chapter } = await createTestChapter(db, {
+      bookId: book.id,
+      number: 1,
+      status: "editing",
+      narratorId: narrator.id,
+    });
+
+    const PATCH = buildPatch(session);
+    const response = await PATCH(makeRequest({ status: "reviewing", editorId: editor.id }), {
+      params: Promise.resolve({ id: chapter.id }),
+    });
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as { data: { status: string; editedSeconds: number } };
+    expect(body.data.status).toBe("reviewing");
+    expect(body.data.editedSeconds).toBe(0);
+  });
+
+  it("returns 422 CHAPTER_EDITED_SECONDS_REQUIRED for reviewing → completed without minutagem", async () => {
+    const db = getTestDb();
+    const { book } = await createTestBook(db);
+    const { editor } = await createTestEditor(db);
+    const { chapter } = await createTestChapter(db, {
+      bookId: book.id,
+      number: 1,
+      status: "reviewing",
+      editorId: editor.id,
+      editedSeconds: 0,
+    });
+
+    const PATCH = buildPatch(session);
+    const response = await PATCH(makeRequest({ status: "completed" }), {
+      params: Promise.resolve({ id: chapter.id }),
+    });
+    expect(response.status).toBe(422);
+    const body = await response.json();
+    expect(body.error.code).toBe("CHAPTER_EDITED_SECONDS_REQUIRED");
   });
 
   it("returns 409 CHAPTER_PAID_LOCKED when mutating narrator on a paid chapter", async () => {

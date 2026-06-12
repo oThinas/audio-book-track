@@ -71,29 +71,24 @@ describe("validateChapterTransition", () => {
       expect(validateChapterTransition("editing", "pending", FULL_CTX)).toEqual({ valid: true });
     });
 
-    it("editing → reviewing is valid when editor + edited_seconds are set", () => {
+    it("editing → reviewing is valid when editor is set", () => {
       expect(validateChapterTransition("editing", "reviewing", FULL_CTX)).toEqual({ valid: true });
     });
 
-    it("editing → reviewing returns EDITOR_OR_SECONDS_REQUIRED PT-BR reason when editor is null", () => {
+    it("editing → reviewing is valid when edited_seconds is 0 (minutagem opcional, editor set)", () => {
+      expect(
+        validateChapterTransition("editing", "reviewing", { ...FULL_CTX, editedSeconds: 0 }),
+      ).toEqual({ valid: true });
+    });
+
+    it("editing → reviewing returns EDITOR_REQUIRED PT-BR reason when editor is null", () => {
       const result = validateChapterTransition("editing", "reviewing", {
         ...FULL_CTX,
         editorId: null,
       });
       expect(result).toEqual({
         valid: false,
-        reason: "Atribua um editor e registre as horas editadas antes de enviar para revisão.",
-      });
-    });
-
-    it("editing → reviewing returns EDITOR_OR_SECONDS_REQUIRED PT-BR reason when edited_seconds is 0", () => {
-      const result = validateChapterTransition("editing", "reviewing", {
-        ...FULL_CTX,
-        editedSeconds: 0,
-      });
-      expect(result).toEqual({
-        valid: false,
-        reason: "Atribua um editor e registre as horas editadas antes de enviar para revisão.",
+        reason: "Atribua um editor antes de enviar para revisão.",
       });
     });
 
@@ -119,6 +114,17 @@ describe("validateChapterTransition", () => {
     it.each(["pending", "paid"] as ChapterStatus[])("reviewing → %s is invalid", (target) => {
       const result = validateChapterTransition("reviewing", target, FULL_CTX);
       expect(result).toEqual({ valid: false, reason: "Transição de status não permitida." });
+    });
+
+    it("reviewing → completed returns EDITED_SECONDS_REQUIRED PT-BR reason when edited_seconds is 0", () => {
+      const result = validateChapterTransition("reviewing", "completed", {
+        ...FULL_CTX,
+        editedSeconds: 0,
+      });
+      expect(result).toEqual({
+        valid: false,
+        reason: "Registre a minutagem (tempo editado) antes de concluir o capítulo.",
+      });
     });
   });
 

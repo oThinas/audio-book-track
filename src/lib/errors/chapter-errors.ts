@@ -59,11 +59,19 @@ export class ChapterNarratorRequiredError extends DomainError {
   }
 }
 
-export class ChapterEditorOrSecondsRequiredError extends DomainError {
-  readonly code = "CHAPTER_EDITOR_OR_SECONDS_REQUIRED";
+export class ChapterEditorRequiredError extends DomainError {
+  readonly code = "CHAPTER_EDITOR_REQUIRED";
   constructor() {
-    super("Chapter editor or seconds required");
-    this.name = "ChapterEditorOrSecondsRequiredError";
+    super("Chapter editor required");
+    this.name = "ChapterEditorRequiredError";
+  }
+}
+
+export class ChapterEditedSecondsRequiredError extends DomainError {
+  readonly code = "CHAPTER_EDITED_SECONDS_REQUIRED";
+  constructor() {
+    super("Chapter edited seconds required");
+    this.name = "ChapterEditedSecondsRequiredError";
   }
 }
 

@@ -10,7 +10,8 @@ export interface TransitionContext {
 export type TransitionRejection =
   | "INVALID_STATUS_TRANSITION"
   | "NARRATOR_REQUIRED"
-  | "EDITOR_OR_SECONDS_REQUIRED"
+  | "EDITOR_REQUIRED"
+  | "EDITED_SECONDS_REQUIRED"
   | "REVERSION_CONFIRMATION_REQUIRED";
 
 export type TransitionResult =
@@ -41,13 +42,19 @@ export function isValidTransition(
     case "editing":
       if (to === "pending") return VALID;
       if (to !== "reviewing") return reject("INVALID_STATUS_TRANSITION");
-      if (ctx.editorId === null || ctx.editedSeconds <= 0) {
-        return reject("EDITOR_OR_SECONDS_REQUIRED");
-      }
+      // A minutagem (editedSeconds) é opcional em revisão — serve apenas de prévia.
+      // Só o editor é obrigatório para enviar para revisão.
+      if (ctx.editorId === null) return reject("EDITOR_REQUIRED");
       return VALID;
 
     case "reviewing":
-      if (to === "editing" || to === "retake" || to === "completed") return VALID;
+      if (to === "editing" || to === "retake") return VALID;
+      if (to === "completed") {
+        // A minutagem passa a ser obrigatória apenas ao concluir — quando o número
+        // é final (revisão aprovada), evitando dado financeiro defasado após retake.
+        if (ctx.editedSeconds <= 0) return reject("EDITED_SECONDS_REQUIRED");
+        return VALID;
+      }
       return reject("INVALID_STATUS_TRANSITION");
 
     case "retake":

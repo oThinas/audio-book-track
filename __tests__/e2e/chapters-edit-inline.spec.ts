@@ -115,7 +115,7 @@ test.describe("Chapter inline edit", () => {
 
     expect(response.status()).toBe(422);
     const body = (await response.json()) as { error: { code: string } };
-    expect(body.error.code).toBe("CHAPTER_EDITOR_OR_SECONDS_REQUIRED");
+    expect(body.error.code).toBe("CHAPTER_EDITOR_REQUIRED");
 
     // Row stays in edit mode after server rejection
     await expect(page.getByTestId(`chapter-row-${chapterId}`)).toHaveAttribute("data-mode", "edit");
