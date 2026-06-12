@@ -120,9 +120,9 @@ pendente → em edição → em revisão → concluído → pago
 |---|---|---|
 | `pendente` | Gravação não iniciada | — |
 | `em edição` | Gravação finalizada, edição pendente | narrador atribuído |
-| `em revisão` | Edição finalizada, revisão pendente | editor + `edited_seconds > 0` registrados |
+| `em revisão` | Edição finalizada, revisão pendente | editor atribuído (minutagem opcional, apenas prévia) |
 | `edição retake` | Revisão reprovada, nova edição necessária | revisão explicitamente reprovada |
-| `concluído` | Revisão aprovada, aguarda decisão do estúdio | revisão aprovada (de `em revisão`) |
+| `concluído` | Revisão aprovada, aguarda decisão do estúdio | revisão aprovada (de `em revisão`) + `edited_seconds > 0` registrados |
 | `pago` | Histórico imutável, edição do livro desabilitada | aprovação do estúdio |
 
 **Transições válidas:**
@@ -134,6 +134,11 @@ pendente → em edição → em revisão → concluído → pago
 - `concluído` → `pago`
 
 - Toda transição DEVE registrar data e responsável no momento da mudança.
+- A **minutagem** (`edited_seconds`) é **opcional em `em revisão`** — registrá-la ali
+  serve apenas de prévia do ganho. Torna-se **obrigatória (`> 0`) para entrar em
+  `concluído`**, quando o número é final (revisão aprovada). Isso evita dado financeiro
+  defasado quando um capítulo passa por `edição retake` e tem a duração alterada antes
+  da aprovação. Entrar em `em revisão` exige apenas o **editor atribuído**.
 - `edição retake` é um estado opcional: somente ativado se a revisão for
   explicitamente reprovada a partir de `em revisão`.
 - Um capítulo marcado como `pago` NÃO PODE ter seus dados financeiros
@@ -859,8 +864,10 @@ apoiar decisões do estúdio. Todos os dados DEVEM ser calculados no servidor.
 - KPI 4: capítulos com `edited_seconds = 0` DEVEM ser excluídos do cálculo
   para evitar viés (representam capítulos ainda não cronometrados) e para
   prevenir divisão por zero em agregações relacionadas. Capítulos em status
-  `pending` ou `editing` também não contam — a minutagem só é confiável a
-  partir de `reviewing`.
+  `pending` ou `editing` também não contam. A minutagem em `reviewing`/`retake`
+  é **opcional/provisória** (prévia) — só se torna **definitiva a partir de
+  `completed`**; o filtro `edited_seconds > 0` já descarta naturalmente as
+  prévias ainda não preenchidas.
 - KPI 5: exclui capítulos `paid` e `pending`; considera apenas capítulos
   com editor atribuído e `edited_seconds > 0`.
 

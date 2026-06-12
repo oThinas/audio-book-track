@@ -26,6 +26,7 @@ describe("recomputeBookStatus integration", () => {
       bookId: book.id,
       number: 1,
       status: "reviewing",
+      editedSeconds: 3600,
     });
     await createTestChapter(db, {
       bookId: book.id,

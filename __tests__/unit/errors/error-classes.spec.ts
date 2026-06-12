@@ -11,7 +11,8 @@ import {
   BookTitleAlreadyInUseError,
 } from "@/lib/errors/book-errors";
 import {
-  ChapterEditorOrSecondsRequiredError,
+  ChapterEditedSecondsRequiredError,
+  ChapterEditorRequiredError,
   ChapterInvalidTransitionError,
   ChapterNarratorRequiredError,
   ChapterNotFoundError,
@@ -68,7 +69,8 @@ describe("domain Error classes — static messages (FR-018)", () => {
       new ChapterPaidLockedError("11111111-1111-4111-8111-111111111111"),
       new ChapterInvalidTransitionError("pending", "paid"),
       new ChapterNarratorRequiredError(),
-      new ChapterEditorOrSecondsRequiredError(),
+      new ChapterEditorRequiredError(),
+      new ChapterEditedSecondsRequiredError(),
       new ChapterReversionConfirmationRequiredError(),
       new ChaptersNotInBookError("11111111-1111-4111-8111-111111111111", [
         "22222222-2222-4222-8222-222222222222",
@@ -150,7 +152,8 @@ describe("DomainError contract", () => {
     new ChapterPaidLockedError("id"),
     new ChapterInvalidTransitionError("pending", "paid"),
     new ChapterNarratorRequiredError(),
-    new ChapterEditorOrSecondsRequiredError(),
+    new ChapterEditorRequiredError(),
+    new ChapterEditedSecondsRequiredError(),
     new ChapterReversionConfirmationRequiredError(),
     new ChaptersNotInBookError("book-id", ["chapter-id"]),
     new StudioNotFoundError("id"),

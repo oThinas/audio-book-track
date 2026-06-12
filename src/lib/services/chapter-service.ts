@@ -7,7 +7,8 @@ import { chapterTitleKey } from "@/lib/domain/chapter-title";
 import { densifyPositions } from "@/lib/domain/normalize-positions";
 import { BookChaptersVersionConflictError, BookNotFoundError } from "@/lib/errors/book-errors";
 import {
-  ChapterEditorOrSecondsRequiredError,
+  ChapterEditedSecondsRequiredError,
+  ChapterEditorRequiredError,
   ChapterInvalidTransitionError,
   ChapterNarratorRequiredError,
   ChapterNotFoundError,
@@ -454,8 +455,10 @@ export class ChapterService {
     switch (result.reason) {
       case "NARRATOR_REQUIRED":
         throw new ChapterNarratorRequiredError();
-      case "EDITOR_OR_SECONDS_REQUIRED":
-        throw new ChapterEditorOrSecondsRequiredError();
+      case "EDITOR_REQUIRED":
+        throw new ChapterEditorRequiredError();
+      case "EDITED_SECONDS_REQUIRED":
+        throw new ChapterEditedSecondsRequiredError();
       case "REVERSION_CONFIRMATION_REQUIRED":
         throw new ChapterReversionConfirmationRequiredError();
       case "INVALID_STATUS_TRANSITION":

@@ -30,9 +30,14 @@ export const chapterCodes = {
     status: 422,
     message: "É preciso atribuir um narrador antes de iniciar a edição.",
   },
-  CHAPTER_EDITOR_OR_SECONDS_REQUIRED: {
+  CHAPTER_EDITOR_REQUIRED: {
     status: 422,
-    message: "Editor e duração editada (acima de zero) são necessários para enviar para revisão.",
+    message: "É preciso atribuir um editor antes de enviar para revisão.",
+  },
+  CHAPTER_EDITED_SECONDS_REQUIRED: {
+    status: 422,
+    message:
+      "É preciso registrar a minutagem (tempo editado, acima de zero) antes de concluir o capítulo.",
   },
   CHAPTER_REVERSION_CONFIRMATION_REQUIRED: {
     status: 422,

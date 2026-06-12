@@ -86,7 +86,8 @@ Estado atual do capítulo determina validações:
 | `NOT_FOUND` | 404 | Capítulo não existe. |
 | `INVALID_STATUS_TRANSITION` | 422 | Transição não permitida pela FSM. |
 | `NARRATOR_REQUIRED` | 422 | `pending → editing` sem narrador. |
-| `EDITOR_OR_SECONDS_REQUIRED` | 422 | `editing → reviewing` sem editor ou `editedSeconds = 0`. |
+| `EDITOR_REQUIRED` | 422 | `editing → reviewing` sem editor (minutagem opcional). |
+| `EDITED_SECONDS_REQUIRED` | 422 | `reviewing → completed` com `editedSeconds = 0` (minutagem obrigatória ao concluir). |
 | `REVERSION_CONFIRMATION_REQUIRED` | 422 | `paid → completed` sem `confirmReversion: true`. |
 | `CHAPTER_PAID_LOCKED` | 409 | Tentou alterar narrador/editor/`editedSeconds` em capítulo `paid`. |
 | `NARRATOR_NOT_FOUND` | 422 | `narratorId` inexistente ou soft-deleted. |

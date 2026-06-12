@@ -18,9 +18,9 @@
 - **Fórmula de ganho**: `round(chapter.edited_seconds × book.price_per_hour_cents / 3600)` → **valor em centavos**. Determinística, auditável, sem derivação dinâmica. Arredondamento half-away-from-zero; conversão para reais (÷ 100) e formatação BRL ficam na camada de apresentação. Nomes de campos/colunas/enum em **inglês** no código; labels de UI em português.
 - **Ciclo de vida do capítulo** (valor no DB / rótulo em UI): `pending` (Pendente) → `editing` (Em edição) → `reviewing` (Em revisão) → [`retake` (Retake)] → `completed` (Concluído) → `paid` (Pago). Nenhuma etapa obrigatória pode ser pulada.
   - `editing` exige narrador atribuído.
-  - `reviewing` exige editor + `edited_seconds > 0` registrados.
+  - `reviewing` exige editor atribuído. A minutagem (`edited_seconds`) é **opcional** aqui — apenas prévia do ganho.
   - `retake` é opcional — ativado somente por reprovação em `reviewing`; retorna a `reviewing`.
-  - `completed` exige revisão aprovada.
+  - `completed` exige revisão aprovada + `edited_seconds > 0` (minutagem) registrados — é o ponto em que a minutagem se torna obrigatória, evitando dado defasado após retake.
   - `paid` torna os dados financeiros imutáveis e desabilita edição do livro.
 - **Capítulo marcado como `paid` não pode ter dados financeiros alterados.**
 
