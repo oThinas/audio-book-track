@@ -114,10 +114,10 @@ Na tela de detalhes do livro, cada linha de capítulo segue o padrão de `/studi
 
 1. **Given** um capítulo em status `pending` sem narrador atribuído, **When** o produtor clica em "Editar" e seleciona narrador X e status = `em edição`, **Then** a confirmação é aceita — o capítulo passa a `em edição` com narrador X atribuído e `book.status` é recomputado.
 2. **Given** um capítulo em status `pending` sem narrador atribuído, **When** o produtor tenta mover o status diretamente para `em edição` **sem** selecionar um narrador na mesma edição, **Then** a validação impede a confirmação e exibe "Selecione um narrador para iniciar a edição".
-3. **Given** um capítulo em status `em edição`, **When** o produtor edita e tenta mover para `em revisão` **sem** preencher editor e horas editadas, **Then** a validação impede a confirmação e exibe "Editor e horas editadas são obrigatórios para enviar para revisão".
+3. **Given** um capítulo em status `em edição`, **When** o produtor edita e tenta mover para `em revisão` **sem** atribuir um editor, **Then** a validação impede a confirmação e exibe "É preciso atribuir um editor antes de enviar para revisão". As horas editadas (minutagem) são **opcionais** nesta etapa — servem apenas de prévia do ganho.
 4. **Given** um capítulo em status `em revisão`, **When** o produtor edita e altera o status para `edição retake`, **Then** a transição é aceita (equivale a reprovação na revisão).
 5. **Given** um capítulo em status `edição retake`, **When** o produtor altera o status para `em revisão`, **Then** a transição é aceita (retorna à revisão).
-6. **Given** um capítulo em status `em revisão`, **When** o produtor altera o status para `concluído`, **Then** a transição é aceita (revisão aprovada).
+6. **Given** um capítulo em status `em revisão` com horas editadas registradas (`> 0`), **When** o produtor altera o status para `concluído`, **Then** a transição é aceita (revisão aprovada). **Se** as horas editadas forem `0`, a validação impede a confirmação e exibe "É preciso registrar a minutagem (tempo editado, acima de zero) antes de concluir o capítulo".
 7. **Given** um capítulo em status `paid`, **When** o produtor clica em "Editar", **Then** os campos **Narrador**, **Editor** e **Horas editadas** estão desabilitados/somente leitura; o campo **Status** permite apenas a transição `paid → completed` (demais opções ficam desabilitadas); um indicador visual "Pago — dados bloqueados (apenas reversão de status permitida)" é exibido.
 8. **Given** um capítulo em status `paid`, **When** o produtor altera o status para `concluído` e clica em "Confirmar", **Then** um **modal de alerta** é exibido com mensagem "⚠ Reverter status de 'Pago' para 'Concluído'. Essa ação afeta a auditoria financeira. Deseja continuar?" e botões "Cancelar" e "Confirmar reversão". Ao confirmar, o status do capítulo passa a `concluído`, `book.status` é recomputado (pode destravar a edição de `price_per_hour_cents` do livro se nenhum outro capítulo estiver `paid`) e a linha volta a ser totalmente editável.
 9. **Given** um capítulo em status `concluído`, **When** o produtor altera o status para `paid`, **Then** a transição é aceita e, a partir desse momento, a linha fica parcialmente imutável (exceto a reversão via cenário 8).
@@ -318,10 +318,10 @@ Após o CRUD de Livros e Capítulos existir:
 - **FR-024**: Em modo de edição, os campos editáveis são exatamente quatro: "Status" (select limitado às transições válidas a partir do status atual, conforme FR-025), "Narrador" (select), "Editor" (select), "Horas editadas" (input decimal em horas na UI; convertido via `Math.round(hours × 3600)` para `edited_seconds` integer, faixa `[0, 3_600_000]` — até 1000 horas). O número do capítulo é imutável. Não existe campo "Páginas" no modelo — ver FR-054.
 - **FR-025**: O sistema DEVE aplicar a máquina de estados do capítulo. Valores do enum são persistidos em snake_case sem acentuação (`pending`, `editing`, `reviewing`, `retake`, `completed`, `paid`); labels em pt-BR com acentuação são aplicados apenas na camada de apresentação (A15). Transições válidas:
   - `pending → editing` exige narrador atribuído.
-  - `editing → reviewing` exige editor + `edited_seconds > 0`.
+  - `editing → reviewing` exige editor atribuído. A minutagem (`edited_seconds`) é **opcional** nesta etapa — apenas prévia do ganho.
   - `reviewing → retake` é permitido (reprovação opcional).
   - `retake → reviewing` é permitido.
-  - `reviewing → completed` é permitido.
+  - `reviewing → completed` exige `edited_seconds > 0` (minutagem registrada) — rejeitado com `422 CHAPTER_EDITED_SECONDS_REQUIRED` caso contrário.
   - `completed → paid` é permitido.
   - `paid → completed` é permitido **somente mediante confirmação dupla** (ver FR-026). Nenhuma outra transição a partir de `paid` é permitida.
   - Qualquer outra transição DEVE ser rejeitada com `422 INVALID_STATUS_TRANSITION`.
