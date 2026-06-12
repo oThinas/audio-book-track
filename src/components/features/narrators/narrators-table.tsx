@@ -89,7 +89,7 @@ export function NarratorsTable({
       data-testid="narrators-scroll-area"
       className="max-h-[70vh] w-full rounded-lg border"
     >
-      <Table className="table-fixed">
+      <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>

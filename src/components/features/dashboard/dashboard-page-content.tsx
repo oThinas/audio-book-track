@@ -42,7 +42,7 @@ export function DashboardPageContent({
             <PageTitle>Dashboard</PageTitle>
             <PageDescription>Visão geral da operação</PageDescription>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
             <Suspense fallback={null}>
               <OverdueBadge enabledWidgets={enabledWidgets} />
             </Suspense>

@@ -108,7 +108,7 @@ export function BookDetailClient({ book, narrators, editors, studios }: BookDeta
         onEdit={() => setEditOpen(true)}
       />
       {!isSelectionMode && (
-        <div className="mt-4 flex items-center justify-end gap-2">
+        <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
           <ChapterFocusWeekToggle enabled={focusEnabled} onToggle={toggleFocus} />
           <ChapterGroupingControl grouping={grouping} onGroupingChange={setGrouping} />
           <Button

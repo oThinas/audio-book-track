@@ -16,7 +16,7 @@ test.describe("Dashboard — US4 — Retrospective chart", () => {
     await page.goto("/dashboard");
     await expect(page.getByText("Receita ao longo do período")).toBeVisible();
 
-    await page.getByRole("tab", { name: "Este ano" }).click();
+    await page.getByRole("button", { name: "Este ano" }).click();
     await page.waitForURL(/preset=this-year/, { timeout: 8000 });
     await expect(page.getByText("Receita ao longo do período")).toBeVisible({ timeout: 8000 });
   });
