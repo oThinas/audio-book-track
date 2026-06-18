@@ -3,13 +3,16 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
+import { useCallback } from "react";
 
 import { StatusBadge } from "@/components/features/books/status-badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TableCell, TableRow } from "@/components/ui/table";
+import { ROW_ENTER_CLASS, type RowState } from "@/hooks/row-animation";
+import { useScrollIntoViewOnEnter } from "@/hooks/use-scroll-into-view-on-enter";
 import type { ChapterStatus } from "@/lib/domain/chapter";
 import type { FocusWeekContext } from "@/lib/domain/chapter-deadline";
-import { formatSecondsAsHHMMSS } from "@/lib/utils";
+import { cn, formatSecondsAsHHMMSS } from "@/lib/utils";
 
 import { ChapterDeadlineCell } from "./chapter-deadline-cell";
 import { ChapterRowActions } from "./chapter-row-actions";
@@ -32,6 +35,8 @@ interface ChapterRowProps {
   readonly isLast: boolean;
   readonly canReorder: boolean;
   readonly focusContext: FocusWeekContext;
+  readonly rowState?: RowState;
+  readonly onRowAnimationEnd?: () => void;
   readonly onSaved: (updated: ChapterRowEntity, bookStatus: ChapterStatus) => void;
   readonly onDeleted: (chapterId: string, bookDeleted: boolean) => void;
   readonly onChaptersVersionChange?: (newVersion: number) => void;
@@ -52,6 +57,8 @@ export function ChapterRow({
   isLast,
   canReorder,
   focusContext,
+  rowState = "idle",
+  onRowAnimationEnd,
   onSaved,
   onDeleted,
   onChaptersVersionChange,
@@ -69,6 +76,14 @@ export function ChapterRow({
   const { mode, activateField, enterEditMode, exitEditMode, getEditTriggerProps } = useChapterRow({
     isSelectionMode,
   });
+  const setScrollRef = useScrollIntoViewOnEnter(rowState === "entering");
+  const setRowRef = useCallback(
+    (node: HTMLTableRowElement | null) => {
+      setNodeRef(node);
+      setScrollRef(node);
+    },
+    [setNodeRef, setScrollRef],
+  );
 
   if (mode === "edit") {
     return (
@@ -94,10 +109,17 @@ export function ChapterRow({
 
   return (
     <TableRow
-      ref={setNodeRef}
+      ref={setRowRef}
       style={dragStyle}
       data-testid={`chapter-row-${chapter.id}`}
       data-mode="view"
+      data-row-state={rowState}
+      className={cn(rowState === "entering" && ROW_ENTER_CLASS)}
+      onAnimationEnd={(event) => {
+        // Only the row's own enter/exit animation should clear its state, not a
+        // bubbled animation from a descendant.
+        if (event.target === event.currentTarget) onRowAnimationEnd?.();
+      }}
     >
       {isSelectionMode && (
         <TableCell>

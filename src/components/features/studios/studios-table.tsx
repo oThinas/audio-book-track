@@ -22,6 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import type { RowState } from "@/hooks/row-animation";
 import type { Studio } from "@/lib/domain/studio";
 import type { StudioListItem } from "@/lib/repositories/studio-repository";
 
@@ -30,6 +31,8 @@ import { StudioRow } from "./studio-row";
 interface StudiosTableProps {
   readonly studios: readonly StudioListItem[];
   readonly topRow?: ReactNode;
+  readonly rowState?: (id: string) => RowState;
+  readonly onRowAnimationEnd?: (id: string) => void;
   readonly onStudioUpdated?: (studio: Studio) => void;
   readonly onRequestDelete?: (studio: Studio) => void;
 }
@@ -43,6 +46,8 @@ function SortIcon({ direction }: { direction: false | "asc" | "desc" }) {
 export function StudiosTable({
   studios,
   topRow,
+  rowState,
+  onRowAnimationEnd,
   onStudioUpdated,
   onRequestDelete,
 }: StudiosTableProps) {
@@ -149,6 +154,10 @@ export function StudiosTable({
             <StudioRow
               key={row.original.id}
               studio={row.original}
+              rowState={rowState?.(row.original.id)}
+              onRowAnimationEnd={
+                onRowAnimationEnd ? () => onRowAnimationEnd(row.original.id) : undefined
+              }
               onUpdated={onStudioUpdated}
               onRequestDelete={onRequestDelete}
             />

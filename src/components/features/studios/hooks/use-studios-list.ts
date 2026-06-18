@@ -2,14 +2,21 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import type { RowState } from "@/hooks/row-animation";
+import { useRowPresence } from "@/hooks/use-row-presence";
 import type { Studio } from "@/lib/domain/studio";
 import type { StudioListItem } from "@/lib/repositories/studio-repository";
 
 const NEW_ROW_NAME_INPUT_ID = "studio-new-name";
 
+const getStudioId = (studio: StudioListItem): string => studio.id;
+
 export interface UseStudiosListReturn {
   readonly studios: readonly StudioListItem[];
   readonly sortedStudios: readonly StudioListItem[];
+  readonly renderItems: readonly StudioListItem[];
+  readonly rowState: (id: string) => RowState;
+  readonly onRowAnimationEnd: (id: string) => void;
   readonly isCreating: boolean;
   readonly studioToDelete: Studio | null;
   readonly isDeleteDialogOpen: boolean;
@@ -35,6 +42,11 @@ export function useStudiosList(initial: readonly StudioListItem[]): UseStudiosLi
       ),
     [studios],
   );
+
+  const { renderItems, rowState, onRowAnimationEnd } = useRowPresence({
+    items: sortedStudios,
+    getId: getStudioId,
+  });
 
   function handleNewClick() {
     if (isCreating) {
@@ -79,6 +91,9 @@ export function useStudiosList(initial: readonly StudioListItem[]): UseStudiosLi
   return {
     studios,
     sortedStudios,
+    renderItems,
+    rowState,
+    onRowAnimationEnd,
     isCreating,
     studioToDelete,
     isDeleteDialogOpen: studioToDelete !== null,

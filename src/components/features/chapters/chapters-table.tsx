@@ -27,6 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import type { RowState } from "@/hooks/row-animation";
 import type { ChapterStatus } from "@/lib/domain/chapter";
 import type { FocusWeekContext } from "@/lib/domain/chapter-deadline";
 import { currentWeekRangeInAppTimezone, todayInAppTimezone } from "@/lib/domain/timezone";
@@ -48,6 +49,8 @@ interface ChaptersTableProps {
   readonly pricePerHourCents: number;
   readonly isSelectionMode: boolean;
   readonly selectedIds: ReadonlySet<string>;
+  readonly rowState?: (id: string) => RowState;
+  readonly onRowAnimationEnd?: (id: string) => void;
   readonly onChapterSaved: (updated: ChapterRowEntity, bookStatus: ChapterStatus) => void;
   readonly onChapterDeleted: (chapterId: string, bookDeleted: boolean) => void;
   readonly onToggleSelected: (chapterId: string, selected: boolean) => void;
@@ -72,6 +75,8 @@ export function ChaptersTable({
   pricePerHourCents,
   isSelectionMode,
   selectedIds,
+  rowState,
+  onRowAnimationEnd,
   onChapterSaved,
   onChapterDeleted,
   onToggleSelected,
@@ -232,6 +237,10 @@ export function ChaptersTable({
                     isLast={orderedIndex === reorder.orderedChapters.length - 1}
                     canReorder={canReorder}
                     focusContext={focusContext}
+                    rowState={rowState?.(chapter.id)}
+                    onRowAnimationEnd={
+                      onRowAnimationEnd ? () => onRowAnimationEnd(chapter.id) : undefined
+                    }
                     onSaved={onChapterSaved}
                     onDeleted={onChapterDeleted}
                     onChaptersVersionChange={onChaptersVersionChange}

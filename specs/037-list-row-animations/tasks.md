@@ -57,20 +57,20 @@ Web app single-project (Next.js App Router): código em `src/`, testes em `__tes
 
 ### Tests for User Story 1 (RED first) ⚠️
 
-- [ ] T007 [P] [US1] Teste unit RED: `narrator-row` aplica `ROW_ENTER_CLASS` + `data-row-state="entering"` quando `isEntering`, e chama `onAnimationEnd` — em `__tests__/unit/components/features/narrators/narrator-row.spec.tsx`.
-- [ ] T008 [P] [US1] Teste unit RED: `editor-row` idem em `__tests__/unit/components/features/editors/editor-row.spec.tsx`.
-- [ ] T009 [P] [US1] Teste unit RED: `studio-row` idem em `__tests__/unit/components/features/studios/studio-row.spec.tsx`.
-- [ ] T010 [P] [US1] Teste unit RED: `chapter-row` idem em `__tests__/unit/components/features/chapters/chapter-row.spec.tsx` (group rows não animam).
+- [X] T007 [P] [US1] Teste unit RED: `narrator-row` aplica `ROW_ENTER_CLASS` + `data-row-state="entering"` quando `isEntering`, e chama `onAnimationEnd` — em `__tests__/unit/components/features/narrators/narrator-row.spec.tsx`.
+- [X] T008 [P] [US1] Teste unit RED: `editor-row` idem em `__tests__/unit/components/features/editors/editor-row.spec.tsx`.
+- [X] T009 [P] [US1] Teste unit RED: `studio-row` idem em `__tests__/unit/components/features/studios/studio-row.spec.tsx`.
+- [X] T010 [P] [US1] Teste unit RED: `chapter-row` idem em `__tests__/unit/components/features/chapters/chapter-row.spec.tsx` (group rows não animam).
 
 ### Implementation for User Story 1
 
-- [ ] T011 [US1] Integrar `useRowPresence` (entrada) em `src/components/features/narrators/hooks/use-narrators-list.ts`, expondo `renderItems`, `rowState`, `onRowAnimationEnd`.
-- [ ] T012 [US1] `src/components/features/narrators/narrators-table.tsx`: renderizar `renderItems` e passar `rowState`/`onRowAnimationEnd` por linha.
-- [ ] T013 [US1] `src/components/features/narrators/narrator-row.tsx`: aplicar `ROW_ENTER_CLASS` + `data-row-state` + `onAnimationEnd` (presentacional, via prop) → passa T007.
-- [ ] T014 [US1] Editores: integrar entrada em `src/components/features/editors/hooks/use-editors-list.ts`, `editors-table.tsx` e `editor-row.tsx` → passa T008.
-- [ ] T015 [US1] Estúdios: integrar entrada em `src/components/features/studios/hooks/use-studios-list.ts`, `studios-table.tsx` e `studio-row.tsx` → passa T009.
-- [ ] T016 [US1] Capítulos: integrar entrada em `src/components/features/books/hooks/use-book-detail.ts`, `src/components/features/chapters/chapters-table.tsx` e `chapter-row.tsx` (sem animar `chapter-group-row.tsx`) → passa T010.
-- [ ] T017 [P] [US1] E2E: criar item em cada lista mostra a linha com `data-row-state` ciclando entering→idle; carga inicial não anima — em `__tests__/e2e/list-row-animations.spec.ts`.
+- [X] T011 [US1] Integrar `useRowPresence` (entrada) em `src/components/features/narrators/hooks/use-narrators-list.ts`, expondo `renderItems`, `rowState`, `onRowAnimationEnd`.
+- [X] T012 [US1] `src/components/features/narrators/narrators-table.tsx`: renderizar `renderItems` e passar `rowState`/`onRowAnimationEnd` por linha.
+- [X] T013 [US1] `src/components/features/narrators/narrator-row.tsx`: aplicar `ROW_ENTER_CLASS` + `data-row-state` + `onAnimationEnd` (presentacional, via prop) → passa T007.
+- [X] T014 [US1] Editores: integrar entrada em `src/components/features/editors/hooks/use-editors-list.ts`, `editors-table.tsx` e `editor-row.tsx` → passa T008.
+- [X] T015 [US1] Estúdios: integrar entrada em `src/components/features/studios/hooks/use-studios-list.ts`, `studios-table.tsx` e `studio-row.tsx` → passa T009.
+- [X] T016 [US1] Capítulos: integrar entrada em `src/components/features/books/hooks/use-book-detail.ts`, `src/components/features/chapters/chapters-table.tsx` e `chapter-row.tsx` (sem animar `chapter-group-row.tsx`) → passa T010.
+- [X] T017 [P] [US1] E2E: criar item em cada lista mostra a linha com `data-row-state` ciclando entering→idle; carga inicial não anima — em `__tests__/e2e/list-row-animations.spec.ts`.
 
 **Checkpoint**: Entrada animada funcional nas 4 listas (MVP entregável).
 

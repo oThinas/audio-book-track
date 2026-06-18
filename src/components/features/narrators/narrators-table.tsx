@@ -22,6 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import type { RowState } from "@/hooks/row-animation";
 import type { Narrator } from "@/lib/domain/narrator";
 import type { NarratorListItem } from "@/lib/repositories/narrator-repository";
 
@@ -30,6 +31,8 @@ import { NarratorRow } from "./narrator-row";
 interface NarratorsTableProps {
   readonly narrators: readonly NarratorListItem[];
   readonly topRow?: ReactNode;
+  readonly rowState?: (id: string) => RowState;
+  readonly onRowAnimationEnd?: (id: string) => void;
   readonly onNarratorUpdated?: (narrator: Narrator) => void;
   readonly onRequestDelete?: (narrator: Narrator) => void;
 }
@@ -43,6 +46,8 @@ function SortIcon({ direction }: { direction: false | "asc" | "desc" }) {
 export function NarratorsTable({
   narrators,
   topRow,
+  rowState,
+  onRowAnimationEnd,
   onNarratorUpdated,
   onRequestDelete,
 }: NarratorsTableProps) {
@@ -141,6 +146,10 @@ export function NarratorsTable({
             <NarratorRow
               key={row.original.id}
               narrator={row.original}
+              rowState={rowState?.(row.original.id)}
+              onRowAnimationEnd={
+                onRowAnimationEnd ? () => onRowAnimationEnd(row.original.id) : undefined
+              }
               onUpdated={onNarratorUpdated}
               onRequestDelete={onRequestDelete}
             />

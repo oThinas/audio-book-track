@@ -1,3 +1,7 @@
+// Must run before React loads so React registers the standard (unprefixed)
+// animation/transition event listeners (see the file for details).
+import "./jsdom-animation-event";
+
 import { cleanup } from "@testing-library/react";
 import { afterEach, vi } from "vitest";
 

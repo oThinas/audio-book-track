@@ -78,6 +78,8 @@ export function BookDetailClient({ book, narrators, editors, studios }: BookDeta
     handleChapterCreated,
     handleChaptersVersionBump,
     handleChaptersConflict,
+    chapterRowState,
+    onChapterRowAnimationEnd,
   } = useBookDetail(book);
   const { grouping, setGrouping } = useChaptersGroupingState();
   const { enabled: focusEnabled, toggle: toggleFocus } = useFocusWeekFilter();
@@ -133,6 +135,8 @@ export function BookDetailClient({ book, narrators, editors, studios }: BookDeta
         pricePerHourCents={book.pricePerHourCents}
         isSelectionMode={isSelectionMode}
         selectedIds={selectedIds}
+        rowState={chapterRowState}
+        onRowAnimationEnd={onChapterRowAnimationEnd}
         onChapterSaved={handleChapterSaved}
         onChapterDeleted={handleChapterDeleted}
         onToggleSelected={handleToggleSelected}

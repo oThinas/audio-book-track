@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { ChapterRowData } from "@/components/features/chapters/chapters-table";
 import type { ChapterCreatedResult } from "@/components/features/chapters/hooks/use-add-chapter";
+import type { RowState } from "@/hooks/row-animation";
+import { useRowPresence } from "@/hooks/use-row-presence";
 import { apiFetch } from "@/lib/api/api-fetch";
 import type { BookStatus } from "@/lib/domain/book";
 import { computeBookStatus } from "@/lib/domain/book-status";
@@ -14,6 +16,8 @@ import type { BookDetailData } from "../book-detail-client";
 import type { UpdatedBookDetail } from "../book-edit-dialog";
 
 const COMPLETED_STATUSES: ReadonlyArray<ChapterStatus> = ["completed", "paid"];
+
+const getChapterId = (chapter: ChapterRowData): string => chapter.id;
 
 interface DetailState {
   readonly status: BookStatus;
@@ -54,6 +58,8 @@ export interface UseBookDetailReturn {
   readonly handleChapterCreated: (result: ChapterCreatedResult) => void;
   readonly handleChaptersVersionBump: (newVersion: number) => void;
   readonly handleChaptersConflict: () => Promise<void>;
+  readonly chapterRowState: (id: string) => RowState;
+  readonly onChapterRowAnimationEnd: (id: string) => void;
 }
 
 function recomputeAggregates(
@@ -106,6 +112,10 @@ export function useBookDetail(book: BookDetailData): UseBookDetailReturn {
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [addChapterOpen, setAddChapterOpen] = useState(false);
+
+  const { rowState: chapterRowState, onRowAnimationEnd: onChapterRowAnimationEnd } = useRowPresence(
+    { items: state.chapters, getId: getChapterId },
+  );
 
   const nonPaidChapters = state.chapters.filter((c) => c.status !== "paid");
   const paidCount = state.chapters.length - nonPaidChapters.length;
@@ -294,5 +304,7 @@ export function useBookDetail(book: BookDetailData): UseBookDetailReturn {
     handleChapterCreated,
     handleChaptersVersionBump,
     handleChaptersConflict,
+    chapterRowState,
+    onChapterRowAnimationEnd,
   };
 }

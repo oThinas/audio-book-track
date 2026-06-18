@@ -17,7 +17,9 @@ interface NarratorsClientProps {
 
 export function NarratorsClient({ initialNarrators }: NarratorsClientProps) {
   const {
-    sortedNarrators,
+    renderItems,
+    rowState,
+    onRowAnimationEnd,
     isCreating,
     narratorToDelete,
     isDeleteDialogOpen,
@@ -43,7 +45,9 @@ export function NarratorsClient({ initialNarrators }: NarratorsClientProps) {
         </Button>
       </PageHeader>
       <NarratorsTable
-        narrators={sortedNarrators}
+        narrators={renderItems}
+        rowState={rowState}
+        onRowAnimationEnd={onRowAnimationEnd}
         topRow={
           isCreating ? (
             <NarratorNewRow onCreated={handleCreated} onCancelled={handleCancelled} />

@@ -4,20 +4,30 @@ import { Pencil, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
+import { ROW_ENTER_CLASS, type RowState } from "@/hooks/row-animation";
+import { useScrollIntoViewOnEnter } from "@/hooks/use-scroll-into-view-on-enter";
 import type { Studio } from "@/lib/domain/studio";
 import type { StudioListItem } from "@/lib/repositories/studio-repository";
-import { formatCentsBRL } from "@/lib/utils";
+import { cn, formatCentsBRL } from "@/lib/utils";
 
 import { useStudioRow } from "./hooks/use-studio-row";
 import { StudioRowEditMode } from "./studio-row-edit-mode";
 
 interface StudioRowProps {
   readonly studio: StudioListItem;
+  readonly rowState?: RowState;
+  readonly onRowAnimationEnd?: () => void;
   readonly onUpdated?: (studio: Studio) => void;
   readonly onRequestDelete?: (studio: Studio) => void;
 }
 
-export function StudioRow({ studio, onUpdated, onRequestDelete }: StudioRowProps) {
+export function StudioRow({
+  studio,
+  rowState = "idle",
+  onRowAnimationEnd,
+  onUpdated,
+  onRequestDelete,
+}: StudioRowProps) {
   const {
     isEditing,
     handleStartEdit,
@@ -26,6 +36,7 @@ export function StudioRow({ studio, onUpdated, onRequestDelete }: StudioRowProps
     handleRequestDelete,
     canDelete,
   } = useStudioRow({ studio, onUpdated, onRequestDelete });
+  const setRowRef = useScrollIntoViewOnEnter(rowState === "entering");
 
   if (isEditing) {
     return (
@@ -38,7 +49,17 @@ export function StudioRow({ studio, onUpdated, onRequestDelete }: StudioRowProps
   }
 
   return (
-    <TableRow data-testid="studio-row">
+    <TableRow
+      ref={setRowRef}
+      data-testid="studio-row"
+      data-row-state={rowState}
+      className={cn(rowState === "entering" && ROW_ENTER_CLASS)}
+      onAnimationEnd={(event) => {
+        // Only the row's own enter/exit animation should clear its state, not a
+        // bubbled animation from a descendant.
+        if (event.target === event.currentTarget) onRowAnimationEnd?.();
+      }}
+    >
       <TableCell data-testid="studio-name" className="text-foreground">
         {studio.name}
       </TableCell>

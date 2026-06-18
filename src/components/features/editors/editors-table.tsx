@@ -22,6 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import type { RowState } from "@/hooks/row-animation";
 import type { Editor } from "@/lib/domain/editor";
 import type { EditorListItem } from "@/lib/repositories/editor-repository";
 
@@ -30,6 +31,8 @@ import { EditorRow } from "./editor-row";
 interface EditorsTableProps {
   readonly editors: readonly EditorListItem[];
   readonly topRow?: ReactNode;
+  readonly rowState?: (id: string) => RowState;
+  readonly onRowAnimationEnd?: (id: string) => void;
   readonly onEditorUpdated?: (editor: Editor) => void;
   readonly onRequestDelete?: (editor: Editor) => void;
 }
@@ -43,6 +46,8 @@ function SortIcon({ direction }: { direction: false | "asc" | "desc" }) {
 export function EditorsTable({
   editors,
   topRow,
+  rowState,
+  onRowAnimationEnd,
   onEditorUpdated,
   onRequestDelete,
 }: EditorsTableProps) {
@@ -144,6 +149,10 @@ export function EditorsTable({
             <EditorRow
               key={row.original.id}
               editor={row.original}
+              rowState={rowState?.(row.original.id)}
+              onRowAnimationEnd={
+                onRowAnimationEnd ? () => onRowAnimationEnd(row.original.id) : undefined
+              }
               onUpdated={onEditorUpdated}
               onRequestDelete={onRequestDelete}
             />
