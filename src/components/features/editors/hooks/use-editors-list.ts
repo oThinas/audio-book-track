@@ -43,7 +43,7 @@ export function useEditorsList(initial: readonly EditorListItem[]): UseEditorsLi
     [editors],
   );
 
-  const { renderItems, rowState, onRowAnimationEnd } = useRowPresence({
+  const { renderItems, rowState, remove, onRowAnimationEnd } = useRowPresence({
     items: sortedEditors,
     getId: getEditorId,
   });
@@ -86,7 +86,12 @@ export function useEditorsList(initial: readonly EditorListItem[]): UseEditorsLi
   }
 
   function handleDeleted(id: string) {
-    setEditors((current) => current.filter((e) => e.id !== id));
+    // Retain the row through its exit animation, then drop it from the source on
+    // animationend. The DELETE already succeeded upstream (dialog), so commit is
+    // just the optimistic removal; failures never reach here.
+    remove(id, () => {
+      setEditors((current) => current.filter((e) => e.id !== id));
+    });
     router.refresh();
   }
 

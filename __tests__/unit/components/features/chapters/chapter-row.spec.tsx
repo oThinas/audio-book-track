@@ -157,6 +157,15 @@ describe("ChapterRow — enter animation", () => {
 
     expect(onRowAnimationEnd).toHaveBeenCalledTimes(1);
   });
+
+  it("applies the exit animation class and data-row-state when exiting", () => {
+    const chapter = renderRow(undefined, { rowState: "exiting" });
+    const row = screen.getByTestId(`chapter-row-${chapter.id}`);
+
+    expect(row.getAttribute("data-row-state")).toBe("exiting");
+    expect(row.className).toContain("animate-out");
+    expect(row.className).not.toContain("animate-in");
+  });
 });
 
 describe("ChapterRow — cells that must not trigger edit", () => {

@@ -43,7 +43,7 @@ export function useNarratorsList(initial: readonly NarratorListItem[]): UseNarra
     [narrators],
   );
 
-  const { renderItems, rowState, onRowAnimationEnd } = useRowPresence({
+  const { renderItems, rowState, remove, onRowAnimationEnd } = useRowPresence({
     items: sortedNarrators,
     getId: getNarratorId,
   });
@@ -86,7 +86,12 @@ export function useNarratorsList(initial: readonly NarratorListItem[]): UseNarra
   }
 
   function handleDeleted(id: string) {
-    setNarrators((current) => current.filter((n) => n.id !== id));
+    // Retain the row through its exit animation, then drop it from the source on
+    // animationend. The DELETE already succeeded upstream (dialog), so commit is
+    // just the optimistic removal; failures never reach here.
+    remove(id, () => {
+      setNarrators((current) => current.filter((n) => n.id !== id));
+    });
     router.refresh();
   }
 

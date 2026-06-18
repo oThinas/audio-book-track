@@ -43,7 +43,7 @@ export function useStudiosList(initial: readonly StudioListItem[]): UseStudiosLi
     [studios],
   );
 
-  const { renderItems, rowState, onRowAnimationEnd } = useRowPresence({
+  const { renderItems, rowState, remove, onRowAnimationEnd } = useRowPresence({
     items: sortedStudios,
     getId: getStudioId,
   });
@@ -84,7 +84,12 @@ export function useStudiosList(initial: readonly StudioListItem[]): UseStudiosLi
   }
 
   function handleDeleted(id: string) {
-    setStudios((current) => current.filter((s) => s.id !== id));
+    // Retain the row through its exit animation, then drop it from the source on
+    // animationend. The DELETE already succeeded upstream (dialog), so commit is
+    // just the optimistic removal; failures never reach here.
+    remove(id, () => {
+      setStudios((current) => current.filter((s) => s.id !== id));
+    });
     router.refresh();
   }
 

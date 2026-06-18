@@ -84,17 +84,17 @@ Web app single-project (Next.js App Router): código em `src/`, testes em `__tes
 
 ### Tests for User Story 2 (RED first) ⚠️
 
-- [ ] T018 [P] [US2] Adicionar casos unit RED de SAÍDA (`ROW_EXIT_CLASS` + `data-row-state="exiting"`) aos specs de linha: `__tests__/unit/components/features/narrators/narrator-row.spec.tsx`, `.../editors/editor-row.spec.tsx`, `.../studios/studio-row.spec.tsx`, `.../chapters/chapter-row.spec.tsx`.
+- [X] T018 [P] [US2] Adicionar casos unit RED de SAÍDA (`ROW_EXIT_CLASS` + `data-row-state="exiting"`) aos specs de linha: `__tests__/unit/components/features/narrators/narrator-row.spec.tsx`, `.../editors/editor-row.spec.tsx`, `.../studios/studio-row.spec.tsx`, `.../chapters/chapter-row.spec.tsx`.
 
 ### Implementation for User Story 2
 
-- [ ] T019 [US2] Converter remoção para reter-e-adiar via `useRowPresence.remove(id, commit)` em `src/components/features/narrators/hooks/use-narrators-list.ts` (DELETE dispara imediato; remoção do array no `animationend`; rollback em erro).
-- [ ] T020 [US2] `narrators-table.tsx` + `narrator-row.tsx`: renderizar linhas `exiting` e aplicar `ROW_EXIT_CLASS` → passa o caso narrador de T018.
-- [ ] T021 [US2] Editores: reter-e-adiar em `use-editors-list.ts` + `editors-table.tsx` + `editor-row.tsx` → passa o caso editor de T018.
-- [ ] T022 [US2] Estúdios: reter-e-adiar em `use-studios-list.ts` + `studios-table.tsx` + `studio-row.tsx` → passa o caso estúdio de T018.
-- [ ] T023 [US2] Capítulos (remoção individual): reter-e-adiar em `use-book-detail.ts` (`handleChapterDeleted`) + `chapters-table.tsx` + `chapter-row.tsx` → passa o caso capítulo de T018.
-- [ ] T024 [US2] Capítulos (bulk-delete): em `use-book-detail.ts` (`handleBulkDeleteConfirm`), animar a saída de todas as linhas selecionadas antes de removê-las do render.
-- [ ] T025 [P] [US2] E2E: remover item em cada lista (linha sai e some); bulk-delete de capítulos anima todas; falha de remoção reinsere a linha — em `__tests__/e2e/list-row-animations.spec.ts`.
+- [X] T019 [US2] Converter remoção para reter-e-adiar via `useRowPresence.remove(id, commit)` em `src/components/features/narrators/hooks/use-narrators-list.ts` (DELETE dispara imediato; remoção do array no `animationend`; rollback em erro).
+- [X] T020 [US2] `narrators-table.tsx` + `narrator-row.tsx`: renderizar linhas `exiting` e aplicar `ROW_EXIT_CLASS` → passa o caso narrador de T018.
+- [X] T021 [US2] Editores: reter-e-adiar em `use-editors-list.ts` + `editors-table.tsx` + `editor-row.tsx` → passa o caso editor de T018.
+- [X] T022 [US2] Estúdios: reter-e-adiar em `use-studios-list.ts` + `studios-table.tsx` + `studio-row.tsx` → passa o caso estúdio de T018.
+- [X] T023 [US2] Capítulos (remoção individual): reter-e-adiar em `use-book-detail.ts` (`handleChapterDeleted`) + `chapters-table.tsx` + `chapter-row.tsx` → passa o caso capítulo de T018.
+- [X] T024 [US2] Capítulos (bulk-delete): em `use-book-detail.ts` (`handleBulkDeleteConfirm`), animar a saída de todas as linhas selecionadas antes de removê-las do render.
+- [X] T025 [P] [US2] E2E: remover item em cada lista (linha sai e some); bulk-delete de capítulos anima todas; falha de remoção reinsere a linha — em `__tests__/e2e/list-row-animations.spec.ts`.
 
 **Checkpoint**: Saída animada funcional nas 4 listas + bulk-delete.
 

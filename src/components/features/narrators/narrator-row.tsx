@@ -4,7 +4,7 @@ import { Pencil, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { ROW_ENTER_CLASS, type RowState } from "@/hooks/row-animation";
+import { ROW_ENTER_CLASS, ROW_EXIT_CLASS, type RowState } from "@/hooks/row-animation";
 import { useScrollIntoViewOnEnter } from "@/hooks/use-scroll-into-view-on-enter";
 import type { Narrator } from "@/lib/domain/narrator";
 import type { NarratorListItem } from "@/lib/repositories/narrator-repository";
@@ -53,7 +53,10 @@ export function NarratorRow({
       ref={setRowRef}
       data-testid="narrator-row"
       data-row-state={rowState}
-      className={cn(rowState === "entering" && ROW_ENTER_CLASS)}
+      className={cn(
+        rowState === "entering" && ROW_ENTER_CLASS,
+        rowState === "exiting" && ROW_EXIT_CLASS,
+      )}
       onAnimationEnd={(event) => {
         // Only the row's own enter/exit animation should clear its state, not a
         // bubbled animation from a descendant.

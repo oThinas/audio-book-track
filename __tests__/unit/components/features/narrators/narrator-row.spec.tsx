@@ -59,4 +59,12 @@ describe("NarratorRow — enter animation", () => {
 
     expect(onRowAnimationEnd).toHaveBeenCalledTimes(1);
   });
+
+  it("applies the exit animation class and data-row-state when exiting", () => {
+    const row = renderRow({ rowState: "exiting" });
+
+    expect(row.getAttribute("data-row-state")).toBe("exiting");
+    expect(row.className).toContain("animate-out");
+    expect(row.className).not.toContain("animate-in");
+  });
 });

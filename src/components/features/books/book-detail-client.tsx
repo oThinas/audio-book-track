@@ -53,6 +53,7 @@ export function BookDetailClient({ book, narrators, editors, studios }: BookDeta
   const {
     state,
     chaptersVersion,
+    chapterRenderItems,
     nonPaidChapters,
     paidCount,
     willDeleteBook,
@@ -128,7 +129,7 @@ export function BookDetailClient({ book, narrators, editors, studios }: BookDeta
       <ChaptersTable
         bookId={book.id}
         chaptersVersion={chaptersVersion}
-        chapters={state.chapters}
+        chapters={chapterRenderItems}
         narrators={narrators}
         editors={editors}
         grouping={grouping}

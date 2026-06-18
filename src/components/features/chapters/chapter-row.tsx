@@ -8,7 +8,7 @@ import { useCallback } from "react";
 import { StatusBadge } from "@/components/features/books/status-badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { ROW_ENTER_CLASS, type RowState } from "@/hooks/row-animation";
+import { ROW_ENTER_CLASS, ROW_EXIT_CLASS, type RowState } from "@/hooks/row-animation";
 import { useScrollIntoViewOnEnter } from "@/hooks/use-scroll-into-view-on-enter";
 import type { ChapterStatus } from "@/lib/domain/chapter";
 import type { FocusWeekContext } from "@/lib/domain/chapter-deadline";
@@ -114,7 +114,10 @@ export function ChapterRow({
       data-testid={`chapter-row-${chapter.id}`}
       data-mode="view"
       data-row-state={rowState}
-      className={cn(rowState === "entering" && ROW_ENTER_CLASS)}
+      className={cn(
+        rowState === "entering" && ROW_ENTER_CLASS,
+        rowState === "exiting" && ROW_EXIT_CLASS,
+      )}
       onAnimationEnd={(event) => {
         // Only the row's own enter/exit animation should clear its state, not a
         // bubbled animation from a descendant.
