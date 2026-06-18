@@ -79,6 +79,21 @@ describe("ChapterService — audit trail", () => {
     expect(rows.some((r) => r.action === AUDIT_ACTIONS.CHAPTER_STATUS_TRANSITION)).toBe(true);
   });
 
+  it("a newly-allowed free transition (pending → reviewing) still emits chapter.status.transitioned (FR-016)", async () => {
+    const { service, auditRepo, db } = build();
+    const { book } = await createTestBook(db);
+    const { chapter } = await createTestChapter(db, {
+      bookId: book.id,
+      position: 0,
+      status: "pending",
+    });
+
+    await inRequest("u1", () => service.update(chapter.id, { status: "reviewing" }));
+
+    const rows = await auditRepo.findByEntity("chapter", chapter.id, 10);
+    expect(rows.some((r) => r.action === AUDIT_ACTIONS.CHAPTER_STATUS_TRANSITION)).toBe(true);
+  });
+
   it("bulkDelete emits one chapter.bulk_delete row on entity_type=book", async () => {
     const { service, auditRepo, db } = build();
     const { book } = await createTestBook(db);

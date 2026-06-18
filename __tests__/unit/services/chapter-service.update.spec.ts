@@ -83,15 +83,14 @@ describe("ChapterService.update", () => {
       expect(result.bookStatus).toBe("editing");
     });
 
-    it("rejects pending → editing without narrator (NARRATOR_REQUIRED)", async () => {
+    it("allows pending → editing without any fields (free non-paid movement)", async () => {
       const book = await seedBook(setup);
       const [chapter] = await setup.chapterRepo.insertMany([
         { bookId: book.id, number: 1, status: "pending" },
       ]);
 
-      await expect(setup.service.update(chapter.id, { status: "editing" })).rejects.toBeInstanceOf(
-        ChapterNarratorRequiredError,
-      );
+      const result = await setup.service.update(chapter.id, { status: "editing" });
+      expect(result.chapter.status).toBe("editing");
     });
 
     it("transitions editing → reviewing when editor and editedSeconds > 0 are provided", async () => {
@@ -119,7 +118,7 @@ describe("ChapterService.update", () => {
       expect(result.bookStatus).toBe("reviewing");
     });
 
-    it("rejects editing → reviewing without editor (EDITOR_REQUIRED)", async () => {
+    it("allows editing → reviewing without editor (free non-paid movement)", async () => {
       const book = await seedBook(setup);
       const narrator = await setup.narratorRepo.create({ name: "Ana" });
       const [chapter] = await setup.chapterRepo.insertMany([
@@ -132,32 +131,21 @@ describe("ChapterService.update", () => {
         },
       ]);
 
-      await expect(
-        setup.service.update(chapter.id, { status: "reviewing" }),
-      ).rejects.toBeInstanceOf(ChapterEditorRequiredError);
+      const result = await setup.service.update(chapter.id, { status: "reviewing" });
+      expect(result.chapter.status).toBe("reviewing");
     });
 
-    it("allows editing → reviewing with editor even when editedSeconds is 0 (minutagem opcional)", async () => {
+    it("allows reviewing → editing → pending freely with no fields (free non-paid movement)", async () => {
       const book = await seedBook(setup);
-      const narrator = await setup.narratorRepo.create({ name: "Ana" });
-      const editor = await setup.editorRepo.create({ name: "Bruno", email: "b@x.com" });
       const [chapter] = await setup.chapterRepo.insertMany([
-        {
-          bookId: book.id,
-          number: 1,
-          status: "editing",
-          narratorId: narrator.id,
-        },
+        { bookId: book.id, number: 1, status: "reviewing" },
       ]);
 
-      const result = await setup.service.update(chapter.id, {
-        status: "reviewing",
-        editorId: editor.id,
-        editedSeconds: 0,
-      });
+      const editing = await setup.service.update(chapter.id, { status: "editing" });
+      expect(editing.chapter.status).toBe("editing");
 
-      expect(result.chapter.status).toBe("reviewing");
-      expect(result.chapter.editedSeconds).toBe(0);
+      const pending = await setup.service.update(chapter.id, { status: "pending" });
+      expect(pending.chapter.status).toBe("pending");
     });
 
     it("allows reviewing → retake and retake → reviewing", async () => {
@@ -173,10 +161,19 @@ describe("ChapterService.update", () => {
       expect(back.chapter.status).toBe("reviewing");
     });
 
-    it("allows reviewing → completed and completed → paid when editedSeconds > 0", async () => {
+    it("allows reviewing → completed and completed → paid with narrator + editor + editedSeconds > 0", async () => {
       const book = await seedBook(setup);
+      const narrator = await setup.narratorRepo.create({ name: "Ana" });
+      const editor = await setup.editorRepo.create({ name: "Bruno", email: "b@x.com" });
       const [chapter] = await setup.chapterRepo.insertMany([
-        { bookId: book.id, number: 1, status: "reviewing", editedSeconds: 3600 },
+        {
+          bookId: book.id,
+          number: 1,
+          status: "reviewing",
+          narratorId: narrator.id,
+          editorId: editor.id,
+          editedSeconds: 3600,
+        },
       ]);
 
       const completed = await setup.service.update(chapter.id, { status: "completed" });
@@ -186,10 +183,48 @@ describe("ChapterService.update", () => {
       expect(paid.chapter.status).toBe("paid");
     });
 
-    it("rejects reviewing → completed when editedSeconds is 0 (EDITED_SECONDS_REQUIRED)", async () => {
+    it("rejects → completed without narrator (NARRATOR_REQUIRED, checked first)", async () => {
       const book = await seedBook(setup);
       const [chapter] = await setup.chapterRepo.insertMany([
-        { bookId: book.id, number: 1, status: "reviewing", editedSeconds: 0 },
+        { bookId: book.id, number: 1, status: "reviewing", editedSeconds: 3600 },
+      ]);
+
+      await expect(
+        setup.service.update(chapter.id, { status: "completed" }),
+      ).rejects.toBeInstanceOf(ChapterNarratorRequiredError);
+    });
+
+    it("rejects → completed without editor (EDITOR_REQUIRED) once narrator is set", async () => {
+      const book = await seedBook(setup);
+      const narrator = await setup.narratorRepo.create({ name: "Ana" });
+      const [chapter] = await setup.chapterRepo.insertMany([
+        {
+          bookId: book.id,
+          number: 1,
+          status: "reviewing",
+          narratorId: narrator.id,
+          editedSeconds: 3600,
+        },
+      ]);
+
+      await expect(
+        setup.service.update(chapter.id, { status: "completed" }),
+      ).rejects.toBeInstanceOf(ChapterEditorRequiredError);
+    });
+
+    it("rejects → completed when editedSeconds is 0 (EDITED_SECONDS_REQUIRED) with narrator + editor set", async () => {
+      const book = await seedBook(setup);
+      const narrator = await setup.narratorRepo.create({ name: "Ana" });
+      const editor = await setup.editorRepo.create({ name: "Bruno", email: "b@x.com" });
+      const [chapter] = await setup.chapterRepo.insertMany([
+        {
+          bookId: book.id,
+          number: 1,
+          status: "reviewing",
+          narratorId: narrator.id,
+          editorId: editor.id,
+          editedSeconds: 0,
+        },
       ]);
 
       await expect(
@@ -197,14 +232,18 @@ describe("ChapterService.update", () => {
       ).rejects.toBeInstanceOf(ChapterEditedSecondsRequiredError);
     });
 
-    it("allows reviewing → completed when editedSeconds is supplied in the same patch", async () => {
+    it("allows → completed when the missing fields are supplied in the same patch", async () => {
       const book = await seedBook(setup);
+      const narrator = await setup.narratorRepo.create({ name: "Ana" });
+      const editor = await setup.editorRepo.create({ name: "Bruno", email: "b@x.com" });
       const [chapter] = await setup.chapterRepo.insertMany([
         { bookId: book.id, number: 1, status: "reviewing", editedSeconds: 0 },
       ]);
 
       const result = await setup.service.update(chapter.id, {
         status: "completed",
+        narratorId: narrator.id,
+        editorId: editor.id,
         editedSeconds: 4200,
       });
 
@@ -212,15 +251,24 @@ describe("ChapterService.update", () => {
       expect(result.chapter.editedSeconds).toBe(4200);
     });
 
-    it("rejects invalid transitions (e.g. pending → completed)", async () => {
+    it("rejects topologically invalid transitions (e.g. pending → paid)", async () => {
       const book = await seedBook(setup);
+      const narrator = await setup.narratorRepo.create({ name: "Ana" });
+      const editor = await setup.editorRepo.create({ name: "Bruno", email: "b@x.com" });
       const [chapter] = await setup.chapterRepo.insertMany([
-        { bookId: book.id, number: 1, status: "pending" },
+        {
+          bookId: book.id,
+          number: 1,
+          status: "pending",
+          narratorId: narrator.id,
+          editorId: editor.id,
+          editedSeconds: 3600,
+        },
       ]);
 
-      await expect(
-        setup.service.update(chapter.id, { status: "completed" }),
-      ).rejects.toBeInstanceOf(ChapterInvalidTransitionError);
+      await expect(setup.service.update(chapter.id, { status: "paid" })).rejects.toBeInstanceOf(
+        ChapterInvalidTransitionError,
+      );
     });
 
     it("updates narratorId/editorId/editedSeconds without status change", async () => {
@@ -334,8 +382,17 @@ describe("ChapterService.update", () => {
   describe("recomputes book.status after every update", () => {
     it("reviewing chapter advanced to completed promotes book.status to completed", async () => {
       const book = await seedBook(setup);
+      const narrator = await setup.narratorRepo.create({ name: "Ana" });
+      const editor = await setup.editorRepo.create({ name: "Bruno", email: "b@x.com" });
       const [reviewing, paid] = await setup.chapterRepo.insertMany([
-        { bookId: book.id, number: 1, status: "reviewing", editedSeconds: 3600 },
+        {
+          bookId: book.id,
+          number: 1,
+          status: "reviewing",
+          narratorId: narrator.id,
+          editorId: editor.id,
+          editedSeconds: 3600,
+        },
         { bookId: book.id, number: 2, status: "paid" },
       ]);
       void paid;

@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { act, renderHook } from "@testing-library/react";
+import type { KeyboardEvent } from "react";
 import { useForm } from "react-hook-form";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -33,7 +34,7 @@ function setup() {
   const onVersionChange = vi.fn();
   const { result } = renderHook(() => {
     const form = useForm<ChapterEditDraftValues>({ defaultValues: buildChapterDraft(CHAPTER) });
-    return useChapterRowEdit({
+    const hook = useChapterRowEdit({
       chapter: CHAPTER,
       narratorNameById: new Map(),
       editorNameById: new Map(),
@@ -42,8 +43,32 @@ function setup() {
       onSaved,
       onVersionChange,
     });
+    return { form, hook };
   });
-  return { result, onSaved, onVersionChange };
+  return { result, onSaved, onCancel, onVersionChange };
+}
+
+function makeKeyEvent(
+  key: string,
+  target: HTMLElement = document.createElement("input"),
+): KeyboardEvent<HTMLTableRowElement> {
+  return {
+    key,
+    preventDefault: vi.fn(),
+    target,
+  } as unknown as KeyboardEvent<HTMLTableRowElement>;
+}
+
+function elementWithAttr(tag: string, attr: string, value = ""): HTMLElement {
+  const el = document.createElement(tag);
+  el.setAttribute(attr, value);
+  return el;
+}
+
+function childOf(parent: HTMLElement, tag = "div"): HTMLElement {
+  const child = document.createElement(tag);
+  parent.appendChild(child);
+  return child;
 }
 
 describe("useChapterRowEdit", () => {
@@ -72,7 +97,7 @@ describe("useChapterRowEdit", () => {
 
     const { result, onSaved, onVersionChange } = setup();
     await act(async () => {
-      await result.current.onSubmit({ ...buildChapterDraft(CHAPTER), title: "Novo título" });
+      await result.current.hook.onSubmit({ ...buildChapterDraft(CHAPTER), title: "Novo título" });
     });
 
     expect(onSaved).toHaveBeenCalledWith(
@@ -80,5 +105,115 @@ describe("useChapterRowEdit", () => {
       "editing",
     );
     expect(onVersionChange).toHaveBeenCalledWith(7);
+  });
+
+  describe("handleRowKeyDown — open-aware Enter/Escape", () => {
+    it("Enter with nothing open prevents default and submits the form", async () => {
+      const { result } = setup();
+      const event = makeKeyEvent("Enter");
+      await act(async () => {
+        result.current.hook.handleRowKeyDown(event);
+      });
+      expect(event.preventDefault).toHaveBeenCalled();
+    });
+
+    it("Escape with nothing open prevents default and cancels", () => {
+      const { result, onCancel } = setup();
+      const event = makeKeyEvent("Escape");
+      act(() => {
+        result.current.hook.handleRowKeyDown(event);
+      });
+      expect(event.preventDefault).toHaveBeenCalled();
+      expect(onCancel).toHaveBeenCalled();
+    });
+
+    it("Enter returns early when the target trigger is open (aria-expanded=true)", () => {
+      const { result } = setup();
+      const event = makeKeyEvent("Enter", elementWithAttr("button", "aria-expanded", "true"));
+      act(() => {
+        result.current.hook.handleRowKeyDown(event);
+      });
+      expect(event.preventDefault).not.toHaveBeenCalled();
+    });
+
+    it("Enter returns early when focus is inside an open select popup", () => {
+      const { result } = setup();
+      const content = elementWithAttr("div", "data-slot", "select-content");
+      const event = makeKeyEvent("Enter", childOf(content));
+      act(() => {
+        result.current.hook.handleRowKeyDown(event);
+      });
+      expect(event.preventDefault).not.toHaveBeenCalled();
+    });
+
+    it("Enter returns early when focus is inside an open popover popup", () => {
+      const { result } = setup();
+      const content = elementWithAttr("div", "data-slot", "popover-content");
+      const event = makeKeyEvent("Enter", childOf(content));
+      act(() => {
+        result.current.hook.handleRowKeyDown(event);
+      });
+      expect(event.preventDefault).not.toHaveBeenCalled();
+    });
+
+    it("Escape returns early (no cancel) when a popup is open", () => {
+      const { result, onCancel } = setup();
+      const event = makeKeyEvent("Escape", elementWithAttr("button", "aria-expanded", "true"));
+      act(() => {
+        result.current.hook.handleRowKeyDown(event);
+      });
+      expect(event.preventDefault).not.toHaveBeenCalled();
+      expect(onCancel).not.toHaveBeenCalled();
+    });
+
+    it("Enter on the action buttons cell keeps native behavior (no preventDefault)", () => {
+      const { result } = setup();
+      const cell = elementWithAttr("td", "data-row-actions");
+      const event = makeKeyEvent("Enter", childOf(cell, "button"));
+      act(() => {
+        result.current.hook.handleRowKeyDown(event);
+      });
+      expect(event.preventDefault).not.toHaveBeenCalled();
+    });
+
+    it("ignores keys other than Enter and Escape", () => {
+      const { result, onCancel } = setup();
+      const event = makeKeyEvent("a");
+      act(() => {
+        result.current.hook.handleRowKeyDown(event);
+      });
+      expect(event.preventDefault).not.toHaveBeenCalled();
+      expect(onCancel).not.toHaveBeenCalled();
+    });
+
+    it("does not submit again while a submit is already in flight (no double submit)", async () => {
+      let release: (() => void) | undefined;
+      vi.mocked(apiFetch).mockReturnValueOnce(
+        new Promise((resolve) => {
+          release = () => resolve({ ok: false, kind: "api-error", code: "X" });
+        }),
+      );
+
+      const { result } = setup();
+      // Start a submit with a real diff so apiFetch is invoked and stays pending.
+      act(() => {
+        result.current.form.setValue("title", "Mudou");
+      });
+      await act(async () => {
+        result.current.hook.handleRowKeyDown(makeKeyEvent("Enter"));
+        await Promise.resolve();
+      });
+
+      const second = makeKeyEvent("Enter");
+      act(() => {
+        result.current.hook.handleRowKeyDown(second);
+      });
+      expect(second.preventDefault).not.toHaveBeenCalled();
+      expect(apiFetch).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
+        release?.();
+      });
+    });
   });
 });

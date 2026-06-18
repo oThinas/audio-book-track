@@ -58,22 +58,32 @@ export function ChapterRowEditMode({
     formState: { isSubmitting, errors },
   } = form;
 
-  const { nullValue, reversionPending, cancelReversion, confirmReversion, onSubmit } =
-    useChapterRowEdit({
-      chapter,
-      narratorNameById,
-      editorNameById,
-      form,
-      onCancel,
-      onSaved,
-      onVersionChange: onChaptersVersionChange,
-    });
+  const {
+    nullValue,
+    reversionPending,
+    cancelReversion,
+    confirmReversion,
+    onSubmit,
+    handleRowKeyDown,
+  } = useChapterRowEdit({
+    chapter,
+    narratorNameById,
+    editorNameById,
+    form,
+    onCancel,
+    onSaved,
+    onVersionChange: onChaptersVersionChange,
+  });
 
   const activation = resolveActivation(activateField, chapter);
 
   return (
     <>
-      <TableRow data-testid={`chapter-row-${chapter.id}`} data-mode="edit">
+      <TableRow
+        data-testid={`chapter-row-${chapter.id}`}
+        data-mode="edit"
+        onKeyDown={handleRowKeyDown}
+      >
         {canReorder && <TableCell className="w-8 p-0" aria-hidden="true" />}
         <TableCell className="font-medium">
           <form id={formId} onSubmit={handleSubmit(onSubmit)} className="contents" noValidate />

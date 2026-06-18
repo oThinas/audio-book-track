@@ -22,7 +22,7 @@ export function ChapterRowEditActions({
   onCancel,
 }: ChapterRowEditActionsProps) {
   return (
-    <TableCell className="text-right">
+    <TableCell className="text-right" data-row-actions>
       <div className="inline-flex items-center gap-1">
         <Button
           type="button"

@@ -27,191 +27,139 @@ const ALL_STATUSES: ReadonlyArray<ChapterStatus> = [
   "paid",
 ];
 
-describe("isValidTransition", () => {
+const NON_PAID: ReadonlyArray<ChapterStatus> = ["pending", "editing", "reviewing", "retake"];
+
+describe("isValidTransition (flexible non-paid graph, guarded paid edges)", () => {
   describe("idempotent transitions (from === to)", () => {
     for (const status of ALL_STATUSES) {
-      it(`${status} → ${status} is valid (noop)`, () => {
-        const result = isValidTransition(status, status, EMPTY_CTX);
-        expect(result.valid).toBe(true);
+      it(`${status} → ${status} is valid (noop), even with an empty context`, () => {
+        expect(isValidTransition(status, status, EMPTY_CTX)).toEqual({ valid: true });
       });
     }
   });
 
-  describe("pending → *", () => {
-    it("pending → editing is valid when narratorId is set", () => {
-      const result = isValidTransition("pending", "editing", {
-        ...EMPTY_CTX,
-        narratorId: NARRATOR_ID,
-      });
-      expect(result).toEqual({ valid: true });
-    });
-
-    it("pending → editing rejects when narratorId is null (NARRATOR_REQUIRED)", () => {
-      const result = isValidTransition("pending", "editing", EMPTY_CTX);
-      expect(result).toEqual({ valid: false, reason: "NARRATOR_REQUIRED" });
-    });
-
-    for (const to of ["reviewing", "retake", "completed", "paid"] as const) {
-      it(`pending → ${to} is invalid (INVALID_STATUS_TRANSITION)`, () => {
-        const result = isValidTransition("pending", to, FULL_CTX);
-        expect(result).toEqual({ valid: false, reason: "INVALID_STATUS_TRANSITION" });
-      });
-    }
-  });
-
-  describe("editing → *", () => {
-    it("editing → reviewing is valid when editorId is set", () => {
-      const result = isValidTransition("editing", "reviewing", FULL_CTX);
-      expect(result).toEqual({ valid: true });
-    });
-
-    it("editing → reviewing is valid when editor is set even if editedSeconds is 0 (minutagem opcional)", () => {
-      const result = isValidTransition("editing", "reviewing", {
-        ...FULL_CTX,
-        editedSeconds: 0,
-      });
-      expect(result).toEqual({ valid: true });
-    });
-
-    it("editing → reviewing rejects when editorId is null (EDITOR_REQUIRED)", () => {
-      const result = isValidTransition("editing", "reviewing", {
-        ...FULL_CTX,
-        editorId: null,
-      });
-      expect(result).toEqual({ valid: false, reason: "EDITOR_REQUIRED" });
-    });
-
-    it("editing → pending is valid (reversion)", () => {
-      const result = isValidTransition("editing", "pending", EMPTY_CTX);
-      expect(result).toEqual({ valid: true });
-    });
-
-    for (const to of ["retake", "completed", "paid"] as const) {
-      it(`editing → ${to} is invalid (INVALID_STATUS_TRANSITION)`, () => {
-        const result = isValidTransition("editing", to, FULL_CTX);
-        expect(result).toEqual({ valid: false, reason: "INVALID_STATUS_TRANSITION" });
-      });
-    }
-  });
-
-  describe("reviewing → *", () => {
-    it("reviewing → retake is valid", () => {
-      const result = isValidTransition("reviewing", "retake", EMPTY_CTX);
-      expect(result).toEqual({ valid: true });
-    });
-
-    it("reviewing → completed is valid when editedSeconds > 0", () => {
-      const result = isValidTransition("reviewing", "completed", FULL_CTX);
-      expect(result).toEqual({ valid: true });
-    });
-
-    it("reviewing → completed rejects when editedSeconds is 0 (EDITED_SECONDS_REQUIRED)", () => {
-      const result = isValidTransition("reviewing", "completed", EMPTY_CTX);
-      expect(result).toEqual({ valid: false, reason: "EDITED_SECONDS_REQUIRED" });
-    });
-
-    it("reviewing → completed rejects when editedSeconds is negative (EDITED_SECONDS_REQUIRED)", () => {
-      const result = isValidTransition("reviewing", "completed", {
-        ...EMPTY_CTX,
-        editedSeconds: -1,
-      });
-      expect(result).toEqual({ valid: false, reason: "EDITED_SECONDS_REQUIRED" });
-    });
-
-    it("reviewing → editing is valid (reversion)", () => {
-      const result = isValidTransition("reviewing", "editing", EMPTY_CTX);
-      expect(result).toEqual({ valid: true });
-    });
-
-    for (const to of ["pending", "paid"] as const) {
-      it(`reviewing → ${to} is invalid (INVALID_STATUS_TRANSITION)`, () => {
-        const result = isValidTransition("reviewing", to, FULL_CTX);
-        expect(result).toEqual({ valid: false, reason: "INVALID_STATUS_TRANSITION" });
-      });
-    }
-  });
-
-  describe("retake → *", () => {
-    it("retake → reviewing is valid", () => {
-      const result = isValidTransition("retake", "reviewing", EMPTY_CTX);
-      expect(result).toEqual({ valid: true });
-    });
-
-    it("retake → editing is valid (reversion)", () => {
-      const result = isValidTransition("retake", "editing", EMPTY_CTX);
-      expect(result).toEqual({ valid: true });
-    });
-
-    for (const to of ["pending", "completed", "paid"] as const) {
-      it(`retake → ${to} is invalid (INVALID_STATUS_TRANSITION)`, () => {
-        const result = isValidTransition("retake", to, FULL_CTX);
-        expect(result).toEqual({ valid: false, reason: "INVALID_STATUS_TRANSITION" });
-      });
-    }
-  });
-
-  describe("completed → *", () => {
-    it("completed → paid is valid", () => {
-      const result = isValidTransition("completed", "paid", EMPTY_CTX);
-      expect(result).toEqual({ valid: true });
-    });
-
-    it("completed → reviewing is valid (reversion without confirmation)", () => {
-      const result = isValidTransition("completed", "reviewing", EMPTY_CTX);
-      expect(result).toEqual({ valid: true });
-    });
-
-    for (const to of ["pending", "editing", "retake"] as const) {
-      it(`completed → ${to} is invalid (INVALID_STATUS_TRANSITION)`, () => {
-        const result = isValidTransition("completed", to, FULL_CTX);
-        expect(result).toEqual({ valid: false, reason: "INVALID_STATUS_TRANSITION" });
-      });
-    }
-  });
-
-  describe("paid → * (reversion)", () => {
-    it("paid → completed is valid when confirmReversion is true", () => {
-      const result = isValidTransition("paid", "completed", {
-        ...EMPTY_CTX,
-        confirmReversion: true,
-      });
-      expect(result).toEqual({ valid: true });
-    });
-
-    it("paid → completed rejects when confirmReversion is omitted (REVERSION_CONFIRMATION_REQUIRED)", () => {
-      const result = isValidTransition("paid", "completed", EMPTY_CTX);
-      expect(result).toEqual({
-        valid: false,
-        reason: "REVERSION_CONFIRMATION_REQUIRED",
-      });
-    });
-
-    it("paid → completed rejects when confirmReversion is false", () => {
-      const result = isValidTransition("paid", "completed", {
-        ...EMPTY_CTX,
-        confirmReversion: false,
-      });
-      expect(result).toEqual({
-        valid: false,
-        reason: "REVERSION_CONFIRMATION_REQUIRED",
-      });
-    });
-
-    for (const to of ["pending", "editing", "reviewing", "retake"] as const) {
-      it(`paid → ${to} is invalid (INVALID_STATUS_TRANSITION)`, () => {
-        const result = isValidTransition("paid", to, {
-          ...FULL_CTX,
-          confirmReversion: true,
+  describe("free movement between non-paid statuses (no field requirements)", () => {
+    for (const from of NON_PAID) {
+      for (const to of NON_PAID) {
+        if (from === to) continue;
+        it(`${from} → ${to} is valid with an empty context`, () => {
+          expect(isValidTransition(from, to, EMPTY_CTX)).toEqual({ valid: true });
         });
-        expect(result).toEqual({ valid: false, reason: "INVALID_STATUS_TRANSITION" });
-      });
+      }
     }
 
-    it("throws on unknown source status (exhaustiveness guard)", () => {
-      expect(() =>
-        // biome-ignore lint/suspicious/noExplicitAny: testando o branch `never` que existe apenas como rede de segurança em runtime
-        isValidTransition("unknown" as any, "pending", FULL_CTX),
-      ).toThrow(/status inesperado/);
+    it("completed → pending/editing/reviewing/retake is valid (free, no fields)", () => {
+      for (const to of NON_PAID) {
+        expect(isValidTransition("completed", to, EMPTY_CTX)).toEqual({ valid: true });
+      }
     });
+  });
+
+  describe("entering completed requires narrator + editor + editedSeconds > 0", () => {
+    const SOURCES: ReadonlyArray<ChapterStatus> = ["pending", "editing", "reviewing", "retake"];
+
+    for (const from of SOURCES) {
+      it(`${from} → completed is valid with full context`, () => {
+        expect(isValidTransition(from, "completed", FULL_CTX)).toEqual({ valid: true });
+      });
+
+      it(`${from} → completed rejects NARRATOR_REQUIRED first when all fields are missing`, () => {
+        expect(isValidTransition(from, "completed", EMPTY_CTX)).toEqual({
+          valid: false,
+          reason: "NARRATOR_REQUIRED",
+        });
+      });
+
+      it(`${from} → completed rejects EDITOR_REQUIRED when only narrator is set`, () => {
+        expect(
+          isValidTransition(from, "completed", { ...EMPTY_CTX, narratorId: NARRATOR_ID }),
+        ).toEqual({ valid: false, reason: "EDITOR_REQUIRED" });
+      });
+
+      it(`${from} → completed rejects EDITED_SECONDS_REQUIRED when only seconds are missing`, () => {
+        expect(isValidTransition(from, "completed", { ...FULL_CTX, editedSeconds: 0 })).toEqual({
+          valid: false,
+          reason: "EDITED_SECONDS_REQUIRED",
+        });
+      });
+
+      it(`${from} → completed rejects EDITED_SECONDS_REQUIRED when seconds are negative`, () => {
+        expect(isValidTransition(from, "completed", { ...FULL_CTX, editedSeconds: -1 })).toEqual({
+          valid: false,
+          reason: "EDITED_SECONDS_REQUIRED",
+        });
+      });
+    }
+  });
+
+  describe("entering paid is restricted to completed and requires the same fields", () => {
+    it("completed → paid is valid with full context", () => {
+      expect(isValidTransition("completed", "paid", FULL_CTX)).toEqual({ valid: true });
+    });
+
+    it("completed → paid rejects NARRATOR_REQUIRED first when all fields are missing", () => {
+      expect(isValidTransition("completed", "paid", EMPTY_CTX)).toEqual({
+        valid: false,
+        reason: "NARRATOR_REQUIRED",
+      });
+    });
+
+    it("completed → paid rejects EDITOR_REQUIRED when only narrator is set", () => {
+      expect(
+        isValidTransition("completed", "paid", { ...EMPTY_CTX, narratorId: NARRATOR_ID }),
+      ).toEqual({ valid: false, reason: "EDITOR_REQUIRED" });
+    });
+
+    it("completed → paid rejects EDITED_SECONDS_REQUIRED when only seconds are missing", () => {
+      expect(isValidTransition("completed", "paid", { ...FULL_CTX, editedSeconds: 0 })).toEqual({
+        valid: false,
+        reason: "EDITED_SECONDS_REQUIRED",
+      });
+    });
+
+    for (const from of NON_PAID) {
+      it(`${from} → paid is invalid (paid only reachable from completed)`, () => {
+        expect(isValidTransition(from, "paid", FULL_CTX)).toEqual({
+          valid: false,
+          reason: "INVALID_STATUS_TRANSITION",
+        });
+      });
+    }
+  });
+
+  describe("leaving paid is restricted to completed and requires reversion confirmation", () => {
+    it("paid → completed is valid when confirmReversion is true", () => {
+      expect(
+        isValidTransition("paid", "completed", { ...EMPTY_CTX, confirmReversion: true }),
+      ).toEqual({ valid: true });
+    });
+
+    it("paid → completed does not re-check narrator/editor/seconds (only confirmation)", () => {
+      expect(
+        isValidTransition("paid", "completed", { ...EMPTY_CTX, confirmReversion: true }),
+      ).toEqual({ valid: true });
+    });
+
+    it("paid → completed rejects REVERSION_CONFIRMATION_REQUIRED when the flag is omitted", () => {
+      expect(isValidTransition("paid", "completed", FULL_CTX)).toEqual({
+        valid: false,
+        reason: "REVERSION_CONFIRMATION_REQUIRED",
+      });
+    });
+
+    it("paid → completed rejects REVERSION_CONFIRMATION_REQUIRED when the flag is false", () => {
+      expect(
+        isValidTransition("paid", "completed", { ...FULL_CTX, confirmReversion: false }),
+      ).toEqual({ valid: false, reason: "REVERSION_CONFIRMATION_REQUIRED" });
+    });
+
+    for (const to of NON_PAID) {
+      it(`paid → ${to} is invalid (only completed is reachable from paid)`, () => {
+        expect(isValidTransition("paid", to, { ...FULL_CTX, confirmReversion: true })).toEqual({
+          valid: false,
+          reason: "INVALID_STATUS_TRANSITION",
+        });
+      });
+    }
   });
 });

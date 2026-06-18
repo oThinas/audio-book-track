@@ -1,5 +1,6 @@
 "use client";
 
+import type { KeyboardEvent } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { apiFetch } from "@/lib/api/api-fetch";
 import type { ChapterStatus } from "@/lib/domain/chapter";
@@ -38,6 +39,13 @@ export interface UseChapterRowEditReturn {
   readonly cancelReversion: () => void;
   readonly confirmReversion: () => Promise<void>;
   readonly onSubmit: (values: ChapterEditDraftValues) => Promise<void>;
+  /**
+   * Row-level key handler: Enter saves and Escape cancels the inline edit from
+   * any control, but only when no Select/Popover/calendar is open (open-aware)
+   * and the key did not originate on the action buttons. See FR-001..FR-007 and
+   * the edit-row keyboard contract.
+   */
+  readonly handleRowKeyDown: (event: KeyboardEvent<HTMLTableRowElement>) => void;
 }
 
 export function buildChapterDraft(chapter: ChapterRowEntity): ChapterEditDraftValues {
@@ -73,6 +81,7 @@ export function useChapterRowEdit({
   chapter,
   narratorNameById,
   editorNameById,
+  form,
   onCancel,
   onSaved,
   onVersionChange,
@@ -138,12 +147,40 @@ export function useChapterRowEdit({
     await persist({ ...patch, confirmReversion: true });
   }
 
+  function handleRowKeyDown(event: KeyboardEvent<HTMLTableRowElement>): void {
+    if (event.key !== "Enter" && event.key !== "Escape") return;
+
+    // React synthetic events bubble through the React tree, not the DOM, so a
+    // keydown inside a portaled, open Base UI popup still reaches this row
+    // handler. Detect the open popup explicitly and let Base UI act first.
+    const el = event.target as HTMLElement;
+    const popupOpen =
+      el.closest('[aria-expanded="true"]') !== null ||
+      el.closest('[data-slot="select-content"], [data-slot="popover-content"]') !== null;
+    if (popupOpen) return;
+
+    // Keep native button behavior for the Save (submit) / Cancel buttons.
+    if (el.closest("[data-row-actions]")) return;
+
+    if (event.key === "Escape") {
+      event.preventDefault();
+      onCancel();
+      return;
+    }
+
+    // Enter: programmatic submit from any control, guarded against double submit.
+    if (form.formState.isSubmitting) return;
+    event.preventDefault();
+    void form.handleSubmit(onSubmit)();
+  }
+
   return {
     nullValue: NULL_VALUE,
     reversionPending: reversion.pending,
     cancelReversion: reversion.cancel,
     confirmReversion,
     onSubmit,
+    handleRowKeyDown,
   };
 }
 

@@ -24,25 +24,29 @@ const ALL_STATUSES: ReadonlyArray<ChapterStatus> = [
   "paid",
 ] as const;
 
+const ALL_EXCEPT_PAID: ReadonlyArray<ChapterStatus> = [
+  "pending",
+  "editing",
+  "reviewing",
+  "retake",
+  "completed",
+] as const;
+
+/**
+ * Mirrors only the TOPOLOGY of the state machine (which options are selectable),
+ * not field presence — narrator/editor/editedSeconds are enforced on Save
+ * (FR-014). `paid` is the only guarded status: offered only from `completed`;
+ * from `paid` only `paid` (current) and `completed` are reachable. Free movement
+ * between the other non-paid statuses. See Constitution Principle III.
+ */
 function reachableTargets(current: ChapterStatus): ReadonlyArray<ChapterStatus> {
-  switch (current) {
-    case "pending":
-      return ["pending", "editing"];
-    case "editing":
-      return ["editing", "pending", "reviewing"];
-    case "reviewing":
-      return ["reviewing", "editing", "retake", "completed"];
-    case "retake":
-      return ["retake", "editing", "reviewing"];
-    case "completed":
-      return ["completed", "reviewing", "paid"];
-    case "paid":
-      return ["paid", "completed"];
-    default: {
-      const exhaustive: never = current;
-      throw new Error(`Unknown chapter status: ${String(exhaustive)}`);
-    }
+  if (current === "paid") {
+    return ["paid", "completed"];
   }
+  if (current === "completed") {
+    return [...ALL_EXCEPT_PAID, "paid"];
+  }
+  return ALL_EXCEPT_PAID;
 }
 
 export function ChapterStatusSelect({

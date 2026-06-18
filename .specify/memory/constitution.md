@@ -1,50 +1,52 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 2.16.0 → 2.17.0 (MINOR: critério objetivo adicionado
-ao Princípio VII para distinguir componente "apenas de renderização"
-de componente com lógica, e dois anti-padrões frontend novos
-formalizados no Princípio XII — `fetch`/`useEffect` de side-effect/
-`router.refresh` em componente client e `useState` de estado de
-domínio em componente client. Nenhum princípio removido ou redefinido.)
+Version change: 2.17.0 → 2.18.0 (MINOR: Princípio III flexibilizado —
+movimento livre entre os status NÃO-PAGOS do capítulo, em qualquer ordem
+e sem campo obrigatório; requisitos de campo (narrador + editor +
+`edited_seconds > 0`) consolidados nas bordas de entrada de `completed` E
+`paid`; `retake` não mais restrito a vir de `reviewing`; `paid` torna-se o
+ÚNICO status guardado — entra só de `completed`, sai só para `completed`
+com confirmação, imutabilidade financeira inalterada. A disciplina de
+validação/auditoria (transições explícitas, data + responsável)
+permanece; apenas o GRAFO permitido mudou. Nenhum princípio removido ou
+redefinido. Emenda da feature 036-chapter-edit-flow — requer REVISÃO
+DUPLA pela regra do modelo financeiro.)
 
 Modified principles:
-  - VII. Frontend: Composição, Atomicidade e Mobile First:
-    - Adicionado: subseção "Componentes apresentacionais — critérios
-      objetivos" — componentes em `src/components/features/**` DEVEM
-      ser puramente apresentacionais (JSX + chamada de hook). Toda
-      lógica (state machine, mutações, derivações de servidor,
-      side-effects, navegação) DEVE residir em hooks customizados
-      co-localizados em `src/components/features/<feature>/hooks/`.
-      Tabela "Estado de domínio vs. estado visual local" define o
-      critério objetivo para distinguir o que vai para o hook do
-      que fica no componente.
-  - XII. Anti-Padrões Proibidos:
-    - Adicionado em "Frontend": (a) `fetch`, `useEffect` de
-      side-effect ou `router.refresh()` em componente client —
-      DEVEM residir em hook customizado co-localizado;
-      (b) `useState` de estado de domínio (lista de entidades,
-      alvo de dialog, status de mutação) em componente client —
-      somente estado puramente visual (open/close de Popover,
-      hover, foco) é permitido inline.
+  - III. Integridade do Ciclo de Vida do Capítulo:
+    - Removida a sequência obrigatória `pendente → em edição → em revisão
+      → concluído → pago`. Status não-pagos (`pending`, `editing`,
+      `reviewing`, `retake`) passam a ter movimento livre, sem pré-condição
+      de campo.
+    - Guards de narrador/editor (antes ancorados em `editing`/`reviewing`)
+      e de minutagem (antes em `completed`) consolidados nas bordas de
+      entrada de `completed` E `paid` (ordem narrador → editor → minutagem).
+    - `paid` formalizado como único estado guardado: arestas estreitas
+      (entra só de `completed`; sai só p/ `completed` com confirmação de
+      reversão) + imutabilidade financeira (`PAID_LOCKED_FIELDS`).
+    - `retake` deixa de exigir origem em `reviewing` (livremente alcançável).
 
 Added sections: N/A
 
 Removed sections: N/A
 
 Templates requiring updates:
-  ✅ .specify/memory/constitution.md — este arquivo (atualizado agora)
-  ⚠ CLAUDE.md — adicionar a regra na seção "Arquitetura" e
-     anti-padrões correspondentes em "Anti-padrões proibidos"
-     → tracked em tasks.md T132/T133
-  ⚠ Self-Review Checklist (CLAUDE.md) — adicionar item dedicado para
-     componentes-apenas-de-renderização → tracked em tasks.md T134
+  ✅ .specify/memory/constitution.md — Princípio III + Self-Review checklist (item III) atualizados
+  ✅ CLAUDE.md — "Regras Não-Negociáveis" → Domínio → "Ciclo de vida do capítulo" (mirrored nesta emenda)
+  ✅ .specify/templates/{plan,spec,tasks}-template.md — genéricos; não referenciam o grafo de status; nenhuma mudança necessária
+  ✅ docs/ — nenhum runbook referencia o grafo estrito (docs/hooks-pattern.md não cita o ciclo); nada a atualizar
 
-Follow-up TODOs: N/A.
+Follow-up TODOs: REVISÃO DUPLA do modelo financeiro antes do merge (rastreada em specs/036-chapter-edit-flow/tasks.md T002/T020).
 
 ---
 HISTÓRICO PRÉVIO
 ================
+Version 2.16.0 → 2.17.0 (MINOR: critério objetivo no Princípio VII para
+distinguir componente "apenas de renderização" de componente com lógica;
+dois anti-padrões frontend novos no Princípio XII — fetch/useEffect de
+side-effect/router.refresh em componente client, e useState de estado de
+domínio em componente client).
 Version 2.15.0 → 2.16.0 (MINOR: toasts de sucesso proibidos no
 Princípio VII; anti-padrão refletido no XII).
 -->
@@ -105,48 +107,77 @@ Imutabilidade do preço histórico é obrigatória para confiabilidade do sistem
 
 ### III. Integridade do Ciclo de Vida do Capítulo
 
-Transições de status de capítulo DEVEM ser explícitas e validadas.
-Não é permitido pular etapas obrigatórias do ciclo de vida.
+Transições de status de capítulo DEVEM ser explícitas, validadas e
+auditadas (registrando data e responsável). O grafo de transições é
+**livre entre os status não-pagos** e **estritamente guardado apenas em
+torno de `pago`** — o único status que trava dados financeiros por
+auditoria e histórico.
 
-**Estados válidos e transições permitidas:**
+**Estados válidos** (valor no DB / rótulo em UI): `pending` (Pendente),
+`editing` (Em edição), `reviewing` (Em revisão), `retake` (Retake),
+`completed` (Concluído), `paid` (Pago).
 
 ```
-pendente → em edição → em revisão → concluído → pago
-                            ↕
-                      edição retake   (opcional: revisão reprovada → nova edição → em revisão)
+pending ⇄ editing ⇄ reviewing ⇄ retake        (movimento livre, qualquer ordem, sem campo)
+        ↘    ↓    ↙
+          completed   ⇄  paid
+   (narrador+editor+edited_seconds>0)   (entra só de completed; sai só p/ completed c/ confirmação)
 ```
+
+**Regras de transição:**
+
+- **Movimento livre entre status não-pagos**: a partir de qualquer status
+  não-pago (`pending`, `editing`, `reviewing`, `retake`) é permitido ir para
+  qualquer outro status não-pago, em qualquer ordem, **sem campo
+  obrigatório**. Não há mais sequência obrigatória entre esses estados — a
+  antiga regra "não é permitido pular etapas" NÃO se aplica aos status
+  não-pagos. `retake` é livremente alcançável (não mais restrito a vir de
+  `reviewing`).
+- **Entrar em `completed` ou `paid` exige dados completos**: narrador
+  atribuído + editor atribuído + `edited_seconds > 0`. A verificação ocorre
+  na borda de entrada de `completed` **e** na borda de entrada de `paid`
+  (ordem de checagem: narrador → editor → minutagem; o primeiro campo
+  faltante é reportado). Garante que nenhum capítulo seja concluído ou pago
+  com ganho indefinido ou zerado.
+- **`paid` é o único status guardado (arestas estreitas)**:
+  - Entrar em `paid` é permitido **somente a partir de `completed`** (sem
+    confirmação adicional).
+  - Sair de `paid` é permitido **somente para `completed`** e **exige
+    confirmação explícita de reversão**.
+  - Qualquer outra transição de/para `paid` é inválida.
+- **Imutabilidade financeira do `paid`**: um capítulo `pago` NÃO PODE ter
+  seus dados financeiros alterados (`title`, `narrator_id`, `editor_id`,
+  `edited_seconds`, `deadline` — `PAID_LOCKED_FIELDS`); a edição do livro
+  associado permanece desabilitada.
 
 | Status | Descrição | Pré-condição para entrar |
 |---|---|---|
-| `pendente` | Gravação não iniciada | — |
-| `em edição` | Gravação finalizada, edição pendente | narrador atribuído |
-| `em revisão` | Edição finalizada, revisão pendente | editor atribuído (minutagem opcional, apenas prévia) |
-| `edição retake` | Revisão reprovada, nova edição necessária | revisão explicitamente reprovada |
-| `concluído` | Revisão aprovada, aguarda decisão do estúdio | revisão aprovada (de `em revisão`) + `edited_seconds > 0` registrados |
-| `pago` | Histórico imutável, edição do livro desabilitada | aprovação do estúdio |
-
-**Transições válidas:**
-
-- `pendente` → `em edição`
-- `em edição` → `em revisão`
-- `em revisão` → `edição retake` (reprovação) ou `concluído` (aprovação)
-- `edição retake` → `em revisão` (após nova edição concluída)
-- `concluído` → `pago`
+| `pending` | Gravação não iniciada | — (livre) |
+| `editing` | Gravação finalizada, edição pendente | — (livre) |
+| `reviewing` | Edição finalizada, revisão pendente | — (livre; minutagem opcional, só prévia) |
+| `retake` | Nova edição necessária | — (livre) |
+| `completed` | Aprovado, aguarda decisão do estúdio | narrador + editor + `edited_seconds > 0` |
+| `paid` | Histórico imutável, edição do livro desabilitada | vir de `completed` + narrador + editor + `edited_seconds > 0` |
 
 - Toda transição DEVE registrar data e responsável no momento da mudança.
-- A **minutagem** (`edited_seconds`) é **opcional em `em revisão`** — registrá-la ali
-  serve apenas de prévia do ganho. Torna-se **obrigatória (`> 0`) para entrar em
-  `concluído`**, quando o número é final (revisão aprovada). Isso evita dado financeiro
-  defasado quando um capítulo passa por `edição retake` e tem a duração alterada antes
-  da aprovação. Entrar em `em revisão` exige apenas o **editor atribuído**.
-- `edição retake` é um estado opcional: somente ativado se a revisão for
-  explicitamente reprovada a partir de `em revisão`.
-- Um capítulo marcado como `pago` NÃO PODE ter seus dados financeiros
-  alterados retroativamente — edição do livro associado DEVE ser desabilitada.
+- A **minutagem** (`edited_seconds`) é **opcional nos status não-pagos** (em
+  `reviewing`/`retake` serve apenas de prévia do ganho) e torna-se
+  **obrigatória (`> 0`) ao entrar em `completed` ou `paid`** — quando o número
+  é final e prestes a ser travado. Ancorar a verificação nessas bordas (em
+  vez de uma etapa fixa do meio do fluxo) evita dado financeiro defasado após
+  `retake` e garante o número mais fresco antes do bloqueio.
 
 **Rationale**: O status do capítulo é a fonte de verdade do progresso de
-produção e do fluxo de pagamento. Transições inválidas corrompem relatórios
-e cálculos de ganho.
+produção. A sequência estrita anterior bloqueava o fluxo real do operador —
+o status só era efetivamente ajustável perto de `concluído`. Liberar o
+movimento entre status não-pagos remove esse atrito sem comprometer a
+integridade financeira: as garantias que importam — dados completos antes de
+concluir/pagar e imutabilidade do `pago` — passam a ser ancoradas nas bordas
+de `completed`/`paid`, tornando `pago` o único estado guardado. Transições
+continuam explícitas, validadas e auditadas; o que mudou é o **grafo
+permitido**, não a disciplina de validação. (Emenda da feature
+`036-chapter-edit-flow`; requer revisão dupla pela regra do modelo
+financeiro.)
 
 ### IV. Simplicidade Primeiro (YAGNI)
 
@@ -1116,7 +1147,7 @@ submeter para review ou merge:
 - [ ] I.   Operações ocorrem no nível do capítulo (não livro/estúdio)?
 - [ ] II.  Cálculos financeiros são determinísticos e auditáveis?
 - [ ] III. Transições de status são validadas e registram data/responsável?
-- [ ] III. Transições inválidas (pular estado, retroceder sem reprovação) são bloqueadas?
+- [ ] III. Movimento livre entre status não-pagos; `completed`/`paid` exigem narrador+editor+`edited_seconds>0`; `paid` entra só de `completed` e sai só p/ `completed` com confirmação?
 - [ ] IV.  Existe complexidade que não é exigida pelo requisito atual?
 - [ ] V.   Testes foram escritos ANTES da implementação e a cobertura é ≥ 80%?
 - [ ] V.   Testes estão classificados corretamente (unit/integration/e2e por critério definido)?
@@ -1177,4 +1208,4 @@ submeter para review ou merge:
 revisar por outros e cria responsabilidade pessoal com os padrões
 definidos nesta constituição.
 
-**Version**: 2.16.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-04-30
+**Version**: 2.18.0 | **Ratified**: 2026-03-29 | **Last Amended**: 2026-06-18

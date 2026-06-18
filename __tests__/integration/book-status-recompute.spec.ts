@@ -1,5 +1,10 @@
 import { getTestDb } from "@tests/helpers/db";
-import { createTestBook, createTestChapter, createTestNarrator } from "@tests/helpers/factories";
+import {
+  createTestBook,
+  createTestChapter,
+  createTestEditor,
+  createTestNarrator,
+} from "@tests/helpers/factories";
 import { describe, expect, it } from "vitest";
 
 import { DrizzleBookRepository } from "@/lib/repositories/drizzle/drizzle-book-repository";
@@ -22,10 +27,14 @@ describe("recomputeBookStatus integration", () => {
   it("dvancing the only non-paid chapter to completed promotes book.status to completed", async () => {
     const db = getTestDb();
     const { book } = await createTestBook(db);
+    const { narrator } = await createTestNarrator(db);
+    const { editor } = await createTestEditor(db);
     const { chapter: reviewing } = await createTestChapter(db, {
       bookId: book.id,
       number: 1,
       status: "reviewing",
+      narratorId: narrator.id,
+      editorId: editor.id,
       editedSeconds: 3600,
     });
     await createTestChapter(db, {

@@ -88,6 +88,10 @@ export interface CreateChapterResult {
   readonly chaptersVersion: number;
 }
 
+// `status` is intentionally absent: a paid chapter must still be revertible to
+// completed. That edge is not unguarded — `assertTransition` always runs after
+// `assertPaidLocked` and `isValidTransition` rejects every `paid → *` target
+// except `completed` (with confirmReversion). Keep both guards in `update()`.
 const PAID_LOCKED_FIELDS = [
   "title",
   "narratorId",
@@ -122,8 +126,8 @@ export class ChapterService {
 
     if (current.status === "paid") {
       this.assertPaidLocked(input);
-      this.assertReversion(current.status, input);
-    } else if (input.status !== undefined && input.status !== current.status) {
+    }
+    if (input.status !== undefined && input.status !== current.status) {
       this.assertTransition(current, input);
     }
 
@@ -425,18 +429,6 @@ export class ChapterService {
       if (input[field] !== undefined) {
         throw new ChapterPaidLockedError(field);
       }
-    }
-  }
-
-  private assertReversion(currentStatus: ChapterStatus, input: UpdateChapterServiceInput): void {
-    if (input.status === undefined || input.status === currentStatus) {
-      return;
-    }
-    if (input.status !== "completed") {
-      throw new ChapterInvalidTransitionError(currentStatus, input.status);
-    }
-    if (input.confirmReversion !== true) {
-      throw new ChapterReversionConfirmationRequiredError();
     }
   }
 

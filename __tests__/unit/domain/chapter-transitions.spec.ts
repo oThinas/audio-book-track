@@ -31,156 +31,94 @@ const ALL_STATUSES: ReadonlyArray<ChapterStatus> = [
   "paid",
 ];
 
-describe("validateChapterTransition", () => {
+const NON_PAID: ReadonlyArray<ChapterStatus> = ["pending", "editing", "reviewing", "retake"];
+
+describe("validateChapterTransition (PT-BR reasons)", () => {
   describe("identity transitions (from === to)", () => {
     it("returns valid for every status when from === to", () => {
       for (const status of ALL_STATUSES) {
-        expect(validateChapterTransition(status, status, FULL_CTX)).toEqual({ valid: true });
+        expect(validateChapterTransition(status, status, EMPTY_CTX)).toEqual({ valid: true });
       }
     });
   });
 
-  describe("from pending", () => {
-    it("pending → editing is valid when narrator is set", () => {
+  describe("free movement between non-paid statuses", () => {
+    for (const from of NON_PAID) {
+      for (const to of NON_PAID) {
+        if (from === to) continue;
+        it(`${from} → ${to} is valid with an empty context`, () => {
+          expect(validateChapterTransition(from, to, EMPTY_CTX)).toEqual({ valid: true });
+        });
+      }
+    }
+  });
+
+  describe("entering completed", () => {
+    it.each(NON_PAID)("%s → completed is valid with full context", (from) => {
+      expect(validateChapterTransition(from, "completed", FULL_CTX)).toEqual({ valid: true });
+    });
+
+    it("returns the reworded NARRATOR_REQUIRED reason when narrator is missing", () => {
+      expect(validateChapterTransition("editing", "completed", EMPTY_CTX)).toEqual({
+        valid: false,
+        reason: "Atribua um narrador antes de concluir ou pagar o capítulo.",
+      });
+    });
+
+    it("returns the reworded EDITOR_REQUIRED reason when only narrator is set", () => {
       expect(
-        validateChapterTransition("pending", "editing", { ...EMPTY_CTX, narratorId: NARRATOR_ID }),
-      ).toEqual({ valid: true });
-    });
-
-    it("pending → editing returns NARRATOR_REQUIRED PT-BR reason when narrator is null", () => {
-      const result = validateChapterTransition("pending", "editing", EMPTY_CTX);
-      expect(result).toEqual({
+        validateChapterTransition("editing", "completed", {
+          ...EMPTY_CTX,
+          narratorId: NARRATOR_ID,
+        }),
+      ).toEqual({
         valid: false,
-        reason: "Atribua um narrador antes de iniciar a edição.",
+        reason: "Atribua um editor antes de concluir ou pagar o capítulo.",
       });
     });
 
-    it.each([
-      "reviewing",
-      "retake",
-      "completed",
-      "paid",
-    ] as ChapterStatus[])("pending → %s is invalid (skipping editing step)", (target) => {
-      const result = validateChapterTransition("pending", target, FULL_CTX);
-      expect(result).toEqual({ valid: false, reason: "Transição de status não permitida." });
-    });
-  });
-
-  describe("from editing", () => {
-    it("editing → pending is valid (rollback)", () => {
-      expect(validateChapterTransition("editing", "pending", FULL_CTX)).toEqual({ valid: true });
-    });
-
-    it("editing → reviewing is valid when editor is set", () => {
-      expect(validateChapterTransition("editing", "reviewing", FULL_CTX)).toEqual({ valid: true });
-    });
-
-    it("editing → reviewing is valid when edited_seconds is 0 (minutagem opcional, editor set)", () => {
+    it("returns the reworded EDITED_SECONDS_REQUIRED reason when only seconds are missing", () => {
       expect(
-        validateChapterTransition("editing", "reviewing", { ...FULL_CTX, editedSeconds: 0 }),
-      ).toEqual({ valid: true });
-    });
-
-    it("editing → reviewing returns EDITOR_REQUIRED PT-BR reason when editor is null", () => {
-      const result = validateChapterTransition("editing", "reviewing", {
-        ...FULL_CTX,
-        editorId: null,
-      });
-      expect(result).toEqual({
+        validateChapterTransition("reviewing", "completed", { ...FULL_CTX, editedSeconds: 0 }),
+      ).toEqual({
         valid: false,
-        reason: "Atribua um editor antes de enviar para revisão.",
+        reason: "Registre a minutagem (tempo editado) antes de concluir ou pagar o capítulo.",
       });
-    });
-
-    it.each([
-      "retake",
-      "completed",
-      "paid",
-    ] as ChapterStatus[])("editing → %s is invalid", (target) => {
-      const result = validateChapterTransition("editing", target, FULL_CTX);
-      expect(result).toEqual({ valid: false, reason: "Transição de status não permitida." });
     });
   });
 
-  describe("from reviewing", () => {
-    it.each([
-      "editing",
-      "retake",
-      "completed",
-    ] as ChapterStatus[])("reviewing → %s is valid", (target) => {
-      expect(validateChapterTransition("reviewing", target, FULL_CTX)).toEqual({ valid: true });
+  describe("entering paid", () => {
+    it("completed → paid is valid with full context", () => {
+      expect(validateChapterTransition("completed", "paid", FULL_CTX)).toEqual({ valid: true });
     });
 
-    it.each(["pending", "paid"] as ChapterStatus[])("reviewing → %s is invalid", (target) => {
-      const result = validateChapterTransition("reviewing", target, FULL_CTX);
-      expect(result).toEqual({ valid: false, reason: "Transição de status não permitida." });
-    });
-
-    it("reviewing → completed returns EDITED_SECONDS_REQUIRED PT-BR reason when edited_seconds is 0", () => {
-      const result = validateChapterTransition("reviewing", "completed", {
-        ...FULL_CTX,
-        editedSeconds: 0,
-      });
-      expect(result).toEqual({
+    it.each(NON_PAID)("%s → paid is invalid (only reachable from completed)", (from) => {
+      expect(validateChapterTransition(from, "paid", FULL_CTX)).toEqual({
         valid: false,
-        reason: "Registre a minutagem (tempo editado) antes de concluir o capítulo.",
+        reason: "Transição de status não permitida.",
       });
     });
   });
 
-  describe("from retake", () => {
-    it.each(["editing", "reviewing"] as ChapterStatus[])("retake → %s is valid", (target) => {
-      expect(validateChapterTransition("retake", target, FULL_CTX)).toEqual({ valid: true });
-    });
-
-    it.each([
-      "pending",
-      "completed",
-      "paid",
-    ] as ChapterStatus[])("retake → %s is invalid", (target) => {
-      const result = validateChapterTransition("retake", target, FULL_CTX);
-      expect(result).toEqual({ valid: false, reason: "Transição de status não permitida." });
-    });
-  });
-
-  describe("from completed", () => {
-    it.each(["paid", "reviewing"] as ChapterStatus[])("completed → %s is valid", (target) => {
-      expect(validateChapterTransition("completed", target, FULL_CTX)).toEqual({ valid: true });
-    });
-
-    it.each([
-      "pending",
-      "editing",
-      "retake",
-    ] as ChapterStatus[])("completed → %s is invalid", (target) => {
-      const result = validateChapterTransition("completed", target, FULL_CTX);
-      expect(result).toEqual({ valid: false, reason: "Transição de status não permitida." });
-    });
-  });
-
-  describe("from paid", () => {
+  describe("leaving paid", () => {
     it("paid → completed is valid when confirmReversion=true", () => {
       expect(
         validateChapterTransition("paid", "completed", { ...FULL_CTX, confirmReversion: true }),
       ).toEqual({ valid: true });
     });
 
-    it("paid → completed returns REVERSION_CONFIRMATION_REQUIRED PT-BR reason when confirmReversion is missing", () => {
-      const result = validateChapterTransition("paid", "completed", FULL_CTX);
-      expect(result).toEqual({
+    it("returns REVERSION_CONFIRMATION_REQUIRED reason when confirmReversion is missing", () => {
+      expect(validateChapterTransition("paid", "completed", FULL_CTX)).toEqual({
         valid: false,
         reason: "Confirme a reversão antes de retornar um capítulo pago para concluído.",
       });
     });
 
-    it.each([
-      "pending",
-      "editing",
-      "reviewing",
-      "retake",
-    ] as ChapterStatus[])("paid → %s is invalid (only completed is allowed)", (target) => {
-      const result = validateChapterTransition("paid", target, FULL_CTX);
-      expect(result).toEqual({ valid: false, reason: "Transição de status não permitida." });
+    it.each(NON_PAID)("paid → %s is invalid (only completed is allowed)", (target) => {
+      expect(validateChapterTransition("paid", target, FULL_CTX)).toEqual({
+        valid: false,
+        reason: "Transição de status não permitida.",
+      });
     });
   });
 });

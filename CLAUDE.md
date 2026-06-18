@@ -16,12 +16,13 @@
   - Monetário: **`integer` em centavos** com sufixo `_cents` — `book.price_per_hour_cents`, `studio.default_hourly_rate_cents`. `numeric(10,2)` é legado; `float`/`double` são proibidos.
   - Duração que alimenta cálculo de ganho: **`integer` em segundos** com sufixo `_seconds` — `chapter.edited_seconds`. Conversão para horas/minutos ocorre apenas na UI.
 - **Fórmula de ganho**: `round(chapter.edited_seconds × book.price_per_hour_cents / 3600)` → **valor em centavos**. Determinística, auditável, sem derivação dinâmica. Arredondamento half-away-from-zero; conversão para reais (÷ 100) e formatação BRL ficam na camada de apresentação. Nomes de campos/colunas/enum em **inglês** no código; labels de UI em português.
-- **Ciclo de vida do capítulo** (valor no DB / rótulo em UI): `pending` (Pendente) → `editing` (Em edição) → `reviewing` (Em revisão) → [`retake` (Retake)] → `completed` (Concluído) → `paid` (Pago). Nenhuma etapa obrigatória pode ser pulada.
-  - `editing` exige narrador atribuído.
-  - `reviewing` exige editor atribuído. A minutagem (`edited_seconds`) é **opcional** aqui — apenas prévia do ganho.
-  - `retake` é opcional — ativado somente por reprovação em `reviewing`; retorna a `reviewing`.
-  - `completed` exige revisão aprovada + `edited_seconds > 0` (minutagem) registrados — é o ponto em que a minutagem se torna obrigatória, evitando dado defasado após retake.
+- **Ciclo de vida do capítulo** (valor no DB / rótulo em UI): `pending` (Pendente), `editing` (Em edição), `reviewing` (Em revisão), `retake` (Retake), `completed` (Concluído), `paid` (Pago). **Movimento livre entre os status NÃO-PAGOS**, em qualquer ordem e sem campo obrigatório — não há mais sequência obrigatória entre eles. `paid` é o **único status guardado** (auditoria/histórico).
+  - Status não-pagos (`pending`/`editing`/`reviewing`/`retake`): **nenhum campo obrigatório**; `retake` é livremente alcançável (não mais restrito a vir de `reviewing`). A minutagem em `reviewing`/`retake` é **opcional** (apenas prévia do ganho).
+  - Entrar em **`completed`** exige narrador + editor + `edited_seconds > 0` (minutagem definitiva, verificada na borda de entrada).
+  - Entrar em **`paid`** exige narrador + editor + `edited_seconds > 0` E só é permitido **a partir de `completed`** (sem confirmação adicional).
+  - Sair de **`paid`** só é permitido **para `completed`** e **exige confirmação explícita de reversão**. Qualquer outra transição de/para `paid` é inválida.
   - `paid` torna os dados financeiros imutáveis e desabilita edição do livro.
+  - A verificação de transição é a mesma na UI e no servidor (servidor é a fonte da verdade); toda transição registra data + responsável (auditoria).
 - **Capítulo marcado como `paid` não pode ter dados financeiros alterados.**
 
 ### Arquitetura
@@ -337,5 +338,5 @@ Qualquer mudança no modelo financeiro (preço, horas, responsáveis) requer **r
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan
-at specs/033-double-click-row-edit/plan.md
+at specs/036-chapter-edit-flow/plan.md
 <!-- SPECKIT END -->
