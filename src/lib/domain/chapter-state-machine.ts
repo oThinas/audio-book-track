@@ -68,5 +68,14 @@ export function isValidTransition(
     return requireCompletionFields(ctx);
   }
 
+  // Free movement: both statuses are non-paid (paid handled above) and `to` is
+  // neither completed nor paid. These annotations are a compile-time
+  // exhaustiveness guard — adding a new ChapterStatus breaks the assignment,
+  // forcing the new status to be classified here instead of silently falling
+  // through to VALID (which would bypass the completion/paid field guards).
+  const _exhaustiveFrom: Exclude<ChapterStatus, "paid"> = from;
+  const _exhaustiveTo: Exclude<ChapterStatus, "completed" | "paid"> = to;
+  void _exhaustiveFrom;
+  void _exhaustiveTo;
   return VALID;
 }

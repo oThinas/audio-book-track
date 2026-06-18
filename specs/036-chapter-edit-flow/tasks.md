@@ -97,9 +97,9 @@ description: "Task list for Chapter Edit Flow — Keyboard Save & Flexible Statu
 
 ## Phase 5: Polish & Cross-Cutting Concerns
 
-- [ ] T019 [P] Run `specs/036-chapter-edit-flow/quickstart.md` sections A & B manually (status + keyboard, light + dark mode).
-- [ ] T020 Run `/code-review` focused on Principles II (precisão financeira) and III (ciclo de vida) for the domain/service diff — part of the required REVISÃO DUPLA before merge.
-- [ ] T021 Final verification gate (Principle XVI), in order: `bun run lint` (zero warnings) → `bun run test:unit` → `bun run test:integration` → `bun run test:e2e` → `bun run build`. All green before PR / `/finish-task`.
+- [x] T019 [P] Run `specs/036-chapter-edit-flow/quickstart.md` sections A & B manually (status + keyboard, light + dark mode).
+- [x] T020 Run `/code-review` focused on Principles II (precisão financeira) and III (ciclo de vida) for the domain/service diff — part of the required REVISÃO DUPLA before merge.
+- [x] T021 Final verification gate (Principle XVI), in order: `bun run lint` (zero warnings) → `bun run test:unit` → `bun run test:integration` → `bun run test:e2e` → `bun run build`. All green before PR / `/finish-task`.
 
 ---
 

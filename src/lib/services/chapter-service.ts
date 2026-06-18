@@ -88,6 +88,10 @@ export interface CreateChapterResult {
   readonly chaptersVersion: number;
 }
 
+// `status` is intentionally absent: a paid chapter must still be revertible to
+// completed. That edge is not unguarded — `assertTransition` always runs after
+// `assertPaidLocked` and `isValidTransition` rejects every `paid → *` target
+// except `completed` (with confirmReversion). Keep both guards in `update()`.
 const PAID_LOCKED_FIELDS = [
   "title",
   "narratorId",

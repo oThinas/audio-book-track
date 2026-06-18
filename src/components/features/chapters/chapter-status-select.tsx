@@ -24,7 +24,7 @@ const ALL_STATUSES: ReadonlyArray<ChapterStatus> = [
   "paid",
 ] as const;
 
-const NON_PAID_STATUSES: ReadonlyArray<ChapterStatus> = [
+const ALL_EXCEPT_PAID: ReadonlyArray<ChapterStatus> = [
   "pending",
   "editing",
   "reviewing",
@@ -44,9 +44,9 @@ function reachableTargets(current: ChapterStatus): ReadonlyArray<ChapterStatus> 
     return ["paid", "completed"];
   }
   if (current === "completed") {
-    return [...NON_PAID_STATUSES, "paid"];
+    return [...ALL_EXCEPT_PAID, "paid"];
   }
-  return NON_PAID_STATUSES;
+  return ALL_EXCEPT_PAID;
 }
 
 export function ChapterStatusSelect({
