@@ -1,4 +1,8 @@
 "use client";
+// Opt out of React Compiler: this hook seeds a ref lazily during render
+// (prevIdsRef) and memoizes everything explicitly with useMemo/useCallback, so
+// it does not need — and should not be reshaped by — automatic memoization.
+"use no memo";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 

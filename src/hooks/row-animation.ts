@@ -15,9 +15,14 @@
 export const ROW_ENTER_CLASS =
   "animate-in fade-in-0 slide-in-from-top-2 duration-200 motion-reduce:animate-none";
 
-/** Applied to a row leaving the list (removed) while it is retained for the exit animation. */
+/**
+ * Applied to a row leaving the list (removed) while it is retained for the exit
+ * animation. `pointer-events-none` makes the departing row non-interactive for
+ * the ~200ms it lingers, so a stray click/drag (e.g. a chapter reorder gesture)
+ * can't act on an already-removed row.
+ */
 export const ROW_EXIT_CLASS =
-  "animate-out fade-out-0 slide-out-to-top-2 duration-200 motion-reduce:animate-none";
+  "animate-out fade-out-0 slide-out-to-top-2 duration-200 motion-reduce:animate-none pointer-events-none";
 
 /** Duration of the enter/exit animation in milliseconds (matches `duration-200`). */
 export const ROW_ANIMATION_DURATION_MS = 200;

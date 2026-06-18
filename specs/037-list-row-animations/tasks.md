@@ -122,10 +122,10 @@ Web app single-project (Next.js App Router): código em `src/`, testes em `__tes
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T030 [P] Revisar consistência de duração/estilo entre as 4 listas (FR-009) e eliminar duplicação residual (tudo via `src/hooks/row-animation.ts`).
-- [ ] T031 Code review de conformidade (Princípios IV/VII/VIII/IX/XII) + self-review checklist do CLAUDE.md.
-- [ ] T032 Rodar `quickstart.md` ponta a ponta (validação manual das 4 listas).
-- [ ] T033 Verificação final (antes do PR): `bun run lint`, `bun run test:unit`, `bun run test:integration`, `bun run test:e2e`, `bun run build`.
+- [X] T030 [P] Revisar consistência de duração/estilo entre as 4 listas (FR-009) e eliminar duplicação residual (tudo via `src/hooks/row-animation.ts`).
+- [X] T031 Code review de conformidade (Princípios IV/VII/VIII/IX/XII) + self-review checklist do CLAUDE.md.
+- [X] T032 Rodar `quickstart.md` ponta a ponta (validação manual das 4 listas).
+- [X] T033 Verificação final (antes do PR): `bun run lint`, `bun run test:unit`, `bun run test:integration`, `bun run test:e2e`, `bun run build`.
 
 ---
 

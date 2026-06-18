@@ -66,5 +66,7 @@ describe("NarratorRow — enter animation", () => {
     expect(row.getAttribute("data-row-state")).toBe("exiting");
     expect(row.className).toContain("animate-out");
     expect(row.className).not.toContain("animate-in");
+    // A departing row is non-interactive while it lingers for the animation.
+    expect(row.className).toContain("pointer-events-none");
   });
 });
