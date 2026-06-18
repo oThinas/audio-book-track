@@ -29,7 +29,7 @@ Web app single-project (Next.js App Router): código em `src/`, testes em `__tes
 
 **Purpose**: Estrutura compartilhada e constantes de animação consistentes (FR-009, Princípio IX).
 
-- [ ] T001 [P] Criar diretório `src/hooks/` e o módulo de constantes `src/hooks/row-animation.ts` exportando `ROW_ENTER_CLASS` (`animate-in fade-in-0 slide-in-from-top-2 duration-200 motion-reduce:animate-none`), `ROW_EXIT_CLASS` (`animate-out fade-out-0 slide-out-to-top-2 duration-200 motion-reduce:animate-none`), `ROW_ANIMATION_DURATION_MS = 200` e o tipo `RowState = "entering" | "exiting" | "idle"`.
+- [X] T001 [P] Criar diretório `src/hooks/` e o módulo de constantes `src/hooks/row-animation.ts` exportando `ROW_ENTER_CLASS` (`animate-in fade-in-0 slide-in-from-top-2 duration-200 motion-reduce:animate-none`), `ROW_EXIT_CLASS` (`animate-out fade-out-0 slide-out-to-top-2 duration-200 motion-reduce:animate-none`), `ROW_ANIMATION_DURATION_MS = 200` e o tipo `RowState = "entering" | "exiting" | "idle"`.
 
 ---
 
@@ -39,11 +39,11 @@ Web app single-project (Next.js App Router): código em `src/`, testes em `__tes
 
 **⚠️ CRITICAL**: Nenhuma user story pode começar antes desta fase.
 
-- [ ] T002 [P] Escrever teste unit RED de ENTRADA + reduced-motion de `useRowPresence` em `__tests__/unit/hooks/use-row-presence.spec.tsx`: (a) ids do primeiro render NÃO entram em "entering"; (b) id novo em `items` → `rowState==="entering"`; (c) `onRowAnimationEnd(id)` zera para "idle"; (d) com `matchMedia('(prefers-reduced-motion: reduce)')` → entrada é no-op. Mockar `matchMedia`.
-- [ ] T003 Implementar `useRowPresence` (entrada + detecção de reduced-motion via `matchMedia` em `useEffect`) em `src/hooks/use-row-presence.ts` até passar T002. Retornos imutáveis; `getId` parametrizável (contrato em `contracts/use-row-presence.md`).
-- [ ] T004 [P] Escrever teste unit RED de SAÍDA (reter-e-adiar) em `__tests__/unit/hooks/use-row-presence.spec.tsx`: (a) após `remove(id, commit)` a linha permanece em `renderItems` com `rowState==="exiting"` e `commit` é chamado; (b) sai de `renderItems` só no `onRowAnimationEnd`; (c) sob reduced-motion a remoção é imediata; (d) posição preservada durante a saída.
-- [ ] T005 Implementar SAÍDA (reter-e-adiar: `exitingRows`, merge `live + exiting` em `renderItems` preservando posição, drop no `onRowAnimationEnd`, caminho instantâneo sob reduced-motion) em `src/hooks/use-row-presence.ts` até passar T004.
-- [ ] T006 Refatorar e validar `useRowPresence` (imutabilidade, estabilidade de handlers com `useCallback`, compatibilidade React Compiler) e rodar `bun run test:unit __tests__/unit/hooks/use-row-presence.spec.tsx`.
+- [X] T002 [P] Escrever teste unit RED de ENTRADA + reduced-motion de `useRowPresence` em `__tests__/unit/hooks/use-row-presence.spec.tsx`: (a) ids do primeiro render NÃO entram em "entering"; (b) id novo em `items` → `rowState==="entering"`; (c) `onRowAnimationEnd(id)` zera para "idle"; (d) com `matchMedia('(prefers-reduced-motion: reduce)')` → entrada é no-op. Mockar `matchMedia`.
+- [X] T003 Implementar `useRowPresence` (entrada + detecção de reduced-motion via `matchMedia` em `useEffect`) em `src/hooks/use-row-presence.ts` até passar T002. Retornos imutáveis; `getId` parametrizável (contrato em `contracts/use-row-presence.md`).
+- [X] T004 [P] Escrever teste unit RED de SAÍDA (reter-e-adiar) em `__tests__/unit/hooks/use-row-presence.spec.tsx`: (a) após `remove(id, commit)` a linha permanece em `renderItems` com `rowState==="exiting"` e `commit` é chamado; (b) sai de `renderItems` só no `onRowAnimationEnd`; (c) sob reduced-motion a remoção é imediata; (d) posição preservada durante a saída.
+- [X] T005 Implementar SAÍDA (reter-e-adiar: `exitingRows`, merge `live + exiting` em `renderItems` preservando posição, drop no `onRowAnimationEnd`, caminho instantâneo sob reduced-motion) em `src/hooks/use-row-presence.ts` até passar T004.
+- [X] T006 Refatorar e validar `useRowPresence` (imutabilidade, estabilidade de handlers com `useCallback`, compatibilidade React Compiler) e rodar `bun run test:unit __tests__/unit/hooks/use-row-presence.spec.tsx`.
 
 **Checkpoint**: Hook completo, testado e isolado. US1/US2 podem começar.
 
