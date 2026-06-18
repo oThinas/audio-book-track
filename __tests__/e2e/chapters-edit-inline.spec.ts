@@ -121,6 +121,91 @@ test.describe("Chapter inline edit", () => {
     await expect(page.getByTestId(`chapter-row-${chapterId}`)).toHaveAttribute("data-mode", "edit");
   });
 
+  test("allows a free status change (pending → reviewing) in a single save", async ({
+    page,
+    appServer,
+  }) => {
+    const studio = await seedStudio(page, "Sonora", 75);
+    const { id: bookId } = await seedBook({
+      schema: appServer.schemaName,
+      title: "Iracema",
+      studioId: studio.id,
+      pricePerHourCents: 7500,
+    });
+    const { id: chapterId } = await seedChapter({
+      schema: appServer.schemaName,
+      bookId,
+      number: 1,
+      status: "pending",
+    });
+
+    await page.goto(`/books/${bookId}`);
+    await page.getByTestId(`chapter-edit-${chapterId}`).click();
+
+    // pending → reviewing directly, with no narrator/editor/minutagem required.
+    await page.getByTestId(`chapter-status-${chapterId}`).click();
+    await page.getByRole("option", { name: /em revisão/i }).click();
+
+    const [response] = await Promise.all([
+      page.waitForResponse(
+        (res) =>
+          res.url().includes(`/api/v1/chapters/${chapterId}`) && res.request().method() === "PATCH",
+      ),
+      page.getByTestId(`chapter-confirm-${chapterId}`).click(),
+    ]);
+
+    expect(response.status()).toBe(200);
+    const body = (await response.json()) as { data: { status: string } };
+    expect(body.data.status).toBe("reviewing");
+    await expect(page.getByTestId(`chapter-row-${chapterId}`)).toHaveAttribute("data-mode", "view");
+  });
+
+  test("offers Pago only from completed (disabled on a non-completed chapter)", async ({
+    page,
+    appServer,
+  }) => {
+    const studio = await seedStudio(page, "Sonora", 75);
+    const { id: bookId } = await seedBook({
+      schema: appServer.schemaName,
+      title: "Senhora",
+      studioId: studio.id,
+      pricePerHourCents: 7500,
+    });
+    const { id: pendingId } = await seedChapter({
+      schema: appServer.schemaName,
+      bookId,
+      number: 1,
+      status: "pending",
+    });
+    const { id: completedId } = await seedChapter({
+      schema: appServer.schemaName,
+      bookId,
+      number: 2,
+      status: "completed",
+      editedSeconds: 3600,
+    });
+
+    await page.goto(`/books/${bookId}`);
+
+    // On a pending chapter, Pago is disabled (paid only reachable from completed).
+    await page.getByTestId(`chapter-edit-${pendingId}`).click();
+    await page.getByTestId(`chapter-status-${pendingId}`).click();
+    await expect(page.getByRole("option", { name: /^pago$/i })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+    await page.keyboard.press("Escape");
+    await page.getByTestId(`chapter-cancel-${pendingId}`).click();
+
+    // On a completed chapter, Pago is enabled.
+    await page.getByTestId(`chapter-edit-${completedId}`).click();
+    await page.getByTestId(`chapter-status-${completedId}`).click();
+    await expect(page.getByRole("option", { name: /^pago$/i })).not.toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+  });
+
   test("paid → completed requires confirmation dialog", async ({ page, appServer }) => {
     const studio = await seedStudio(page, "Sonora", 75);
     const editor = await seedEditor(page, `Bruno ${Date.now()}`, `bruno-${Date.now()}@x.com`);

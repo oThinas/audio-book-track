@@ -23,7 +23,7 @@ description: "Task list for Chapter Edit Flow — Keyboard Save & Flexible Statu
 
 **Purpose**: Confirm working state. No project init — existing repo, no new dependencies.
 
-- [ ] T001 Confirm branch `036-chapter-edit-flow` is checked out and `package.json` is unchanged (no new dependencies per plan Technical Context); skim `spec.md`, `data-model.md`, and both `contracts/*.md`.
+- [x] T001 Confirm branch `036-chapter-edit-flow` is checked out and `package.json` is unchanged (no new dependencies per plan Technical Context); skim `spec.md`, `data-model.md`, and both `contracts/*.md`.
 
 ---
 
@@ -48,22 +48,22 @@ description: "Task list for Chapter Edit Flow — Keyboard Save & Flexible Statu
 
 ### Tests for User Story 1 (write FIRST — must FAIL) ⚠️
 
-- [ ] T004 [P] [US1] Rewrite the transition-matrix unit tests in `__tests__/unit/domain/chapter-state-machine.spec.ts` to cover the full new matrix (every from→to pair): free non-paid moves VALID; `→ completed`/`→ paid` require narrator→editor→editedSeconds (first-missing wins); `→ paid` only from `completed`; `paid → completed` needs `confirmReversion`; `paid → {≠completed}` INVALID. Run `bun run test:unit` on this file → FAIL.
-- [ ] T005 [P] [US1] Update `__tests__/unit/domain/chapter-transitions.spec.ts` for the new matrix + reworded PT-BR `REASON_MESSAGES`. → FAIL.
-- [ ] T006 [P] [US1] Add `__tests__/unit/components/features/chapters/chapter-status-select.spec.tsx` asserting `reachableTargets` topology via rendered options: non-paid (non-completed) current → `paid` disabled; `completed` current → `paid` enabled; `paid` current → only `paid` + `completed` enabled. → FAIL.
-- [ ] T007 [US1] Extend integration tests in `__tests__/integration/chapter-update.spec.ts` (real DB): free non-paid transitions succeed; `→ completed`/`→ paid` with each missing field returns its specific error code; `pending → paid` → `CHAPTER_INVALID_TRANSITION`; `completed → paid` with all fields → 200; `paid → completed` without/with `confirmReversion`; `paid → reviewing` → invalid; mutating a financial field while `paid` → `CHAPTER_PAID_LOCKED`; **and a successful status transition still writes a `CHAPTER_STATUS_TRANSITION` audit row (FR-016 regression guard)**. → FAIL.
+- [x] T004 [P] [US1] Rewrite the transition-matrix unit tests in `__tests__/unit/domain/chapter-state-machine.spec.ts` to cover the full new matrix (every from→to pair): free non-paid moves VALID; `→ completed`/`→ paid` require narrator→editor→editedSeconds (first-missing wins); `→ paid` only from `completed`; `paid → completed` needs `confirmReversion`; `paid → {≠completed}` INVALID. Run `bun run test:unit` on this file → FAIL.
+- [x] T005 [P] [US1] Update `__tests__/unit/domain/chapter-transitions.spec.ts` for the new matrix + reworded PT-BR `REASON_MESSAGES`. → FAIL.
+- [x] T006 [P] [US1] Add `__tests__/unit/components/features/chapters/chapter-status-select.spec.tsx` asserting `reachableTargets` topology via rendered options: non-paid (non-completed) current → `paid` disabled; `completed` current → `paid` enabled; `paid` current → only `paid` + `completed` enabled. → FAIL.
+- [x] T007 [US1] Extend integration tests in `__tests__/integration/chapter-update.spec.ts` (real DB): free non-paid transitions succeed; `→ completed`/`→ paid` with each missing field returns its specific error code; `pending → paid` → `CHAPTER_INVALID_TRANSITION`; `completed → paid` with all fields → 200; `paid → completed` without/with `confirmReversion`; `paid → reviewing` → invalid; mutating a financial field while `paid` → `CHAPTER_PAID_LOCKED`; **and a successful status transition still writes a `CHAPTER_STATUS_TRANSITION` audit row (FR-016 regression guard)**. → FAIL.
 
 ### Implementation for User Story 1 (make GREEN)
 
-- [ ] T008 [US1] Rewrite `isValidTransition` in `src/lib/domain/chapter-state-machine.ts` per the matrix in `data-model.md` (pure function; field-check order narrator→editor→editedSeconds). Makes T004 green.
-- [ ] T009 [US1] Refactor `ChapterService.update` in `src/lib/services/chapter-service.ts`: keep `assertPaidLocked` (runs whenever `current.status === "paid"`); route every status change through `assertTransition` (now also handles `from === "paid"`); **delete `assertReversion`**. Makes T007 green. (Depends on T008.)
-- [ ] T010 [P] [US1] Reword PT-BR messages `CHAPTER_NARRATOR_REQUIRED`, `CHAPTER_EDITOR_REQUIRED`, **and** `CHAPTER_EDITED_SECONDS_REQUIRED` in `src/lib/api/error-codes/chapter.ts` to the "concluir ou pagar" context (research R6 — A1 resolved: the seconds message IS extended, not optional).
-- [ ] T011 [P] [US1] Reword `REASON_MESSAGES` in `src/lib/domain/chapter-transitions.ts` consistently with T010. Makes T005 green.
-- [ ] T012 [US1] Rewrite `reachableTargets` in `src/components/features/chapters/chapter-status-select.tsx` to the topology-only table (paid disabled unless current is `completed`; paid current → `paid` + `completed`). Makes T006 green.
+- [x] T008 [US1] Rewrite `isValidTransition` in `src/lib/domain/chapter-state-machine.ts` per the matrix in `data-model.md` (pure function; field-check order narrator→editor→editedSeconds). Makes T004 green.
+- [x] T009 [US1] Refactor `ChapterService.update` in `src/lib/services/chapter-service.ts`: keep `assertPaidLocked` (runs whenever `current.status === "paid"`); route every status change through `assertTransition` (now also handles `from === "paid"`); **delete `assertReversion`**. Makes T007 green. (Depends on T008.)
+- [x] T010 [P] [US1] Reword PT-BR messages `CHAPTER_NARRATOR_REQUIRED`, `CHAPTER_EDITOR_REQUIRED`, **and** `CHAPTER_EDITED_SECONDS_REQUIRED` in `src/lib/api/error-codes/chapter.ts` to the "concluir ou pagar" context (research R6 — A1 resolved: the seconds message IS extended, not optional).
+- [x] T011 [P] [US1] Reword `REASON_MESSAGES` in `src/lib/domain/chapter-transitions.ts` consistently with T010. Makes T005 green.
+- [x] T012 [US1] Rewrite `reachableTargets` in `src/components/features/chapters/chapter-status-select.tsx` to the topology-only table (paid disabled unless current is `completed`; paid current → `paid` + `completed`). Makes T006 green.
 
 ### E2E for User Story 1
 
-- [ ] T013 [US1] Extend `__tests__/e2e/chapters-edit-inline.spec.ts`: a free status change (e.g. `pending → reviewing` in a single save) and paid-guard visibility (paid option disabled until `completed`). (Shares the E2E file with T018 — sequence, do not run in parallel with T018.)
+- [x] T013 [US1] Extend `__tests__/e2e/chapters-edit-inline.spec.ts`: a free status change (e.g. `pending → reviewing` in a single save) and paid-guard visibility (paid option disabled until `completed`). (Shares the E2E file with T018 — sequence, do not run in parallel with T018.)
 
 **Checkpoint**: Flexible status fully functional end-to-end; `paid` still guarded; money never lockable at R$0.
 

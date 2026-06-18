@@ -24,6 +24,25 @@ function reject(reason: TransitionRejection): TransitionResult {
   return { valid: false, reason };
 }
 
+/**
+ * Narrator + editor + editedSeconds (> 0) are required only at the entry edges
+ * of `completed` and `paid`. The check order is deterministic
+ * (narrator → editor → editedSeconds): the first missing field is reported.
+ */
+function requireCompletionFields(ctx: TransitionContext): TransitionResult {
+  if (ctx.narratorId === null) return reject("NARRATOR_REQUIRED");
+  if (ctx.editorId === null) return reject("EDITOR_REQUIRED");
+  if (ctx.editedSeconds <= 0) return reject("EDITED_SECONDS_REQUIRED");
+  return VALID;
+}
+
+/**
+ * Free movement between the NON-PAID statuses (pending/editing/reviewing/retake),
+ * in any order and with no required field. `paid` is the only guarded status:
+ * it can only be entered from `completed` (with the completion fields) and left
+ * only towards `completed` (with reversion confirmation). Completing requires the
+ * same fields from any non-paid status. See Constitution Principle III.
+ */
 export function isValidTransition(
   from: ChapterStatus,
   to: ChapterStatus,
@@ -33,46 +52,21 @@ export function isValidTransition(
     return VALID;
   }
 
-  switch (from) {
-    case "pending":
-      if (to !== "editing") return reject("INVALID_STATUS_TRANSITION");
-      if (ctx.narratorId === null) return reject("NARRATOR_REQUIRED");
-      return VALID;
-
-    case "editing":
-      if (to === "pending") return VALID;
-      if (to !== "reviewing") return reject("INVALID_STATUS_TRANSITION");
-      // A minutagem (editedSeconds) é opcional em revisão — serve apenas de prévia.
-      // Só o editor é obrigatório para enviar para revisão.
-      if (ctx.editorId === null) return reject("EDITOR_REQUIRED");
-      return VALID;
-
-    case "reviewing":
-      if (to === "editing" || to === "retake") return VALID;
-      if (to === "completed") {
-        // A minutagem passa a ser obrigatória apenas ao concluir — quando o número
-        // é final (revisão aprovada), evitando dado financeiro defasado após retake.
-        if (ctx.editedSeconds <= 0) return reject("EDITED_SECONDS_REQUIRED");
-        return VALID;
-      }
-      return reject("INVALID_STATUS_TRANSITION");
-
-    case "retake":
-      if (to === "editing" || to === "reviewing") return VALID;
-      return reject("INVALID_STATUS_TRANSITION");
-
-    case "completed":
-      if (to === "paid" || to === "reviewing") return VALID;
-      return reject("INVALID_STATUS_TRANSITION");
-
-    case "paid":
-      if (to !== "completed") return reject("INVALID_STATUS_TRANSITION");
-      if (ctx.confirmReversion !== true) return reject("REVERSION_CONFIRMATION_REQUIRED");
-      return VALID;
-
-    default: {
-      const exhaustive: never = from;
-      throw new Error(`isValidTransition: status inesperado ${String(exhaustive)}`);
-    }
+  if (from === "paid") {
+    if (to !== "completed") return reject("INVALID_STATUS_TRANSITION");
+    // Reversion does not re-check fields: the chapter already had them to be paid.
+    if (ctx.confirmReversion !== true) return reject("REVERSION_CONFIRMATION_REQUIRED");
+    return VALID;
   }
+
+  if (to === "paid") {
+    if (from !== "completed") return reject("INVALID_STATUS_TRANSITION");
+    return requireCompletionFields(ctx);
+  }
+
+  if (to === "completed") {
+    return requireCompletionFields(ctx);
+  }
+
+  return VALID;
 }

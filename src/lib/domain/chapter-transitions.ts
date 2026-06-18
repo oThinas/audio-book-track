@@ -14,9 +14,10 @@ export type ChapterTransitionResult =
 
 const REASON_MESSAGES: Record<TransitionRejection, string> = {
   INVALID_STATUS_TRANSITION: "Transição de status não permitida.",
-  NARRATOR_REQUIRED: "Atribua um narrador antes de iniciar a edição.",
-  EDITOR_REQUIRED: "Atribua um editor antes de enviar para revisão.",
-  EDITED_SECONDS_REQUIRED: "Registre a minutagem (tempo editado) antes de concluir o capítulo.",
+  NARRATOR_REQUIRED: "Atribua um narrador antes de concluir ou pagar o capítulo.",
+  EDITOR_REQUIRED: "Atribua um editor antes de concluir ou pagar o capítulo.",
+  EDITED_SECONDS_REQUIRED:
+    "Registre a minutagem (tempo editado) antes de concluir ou pagar o capítulo.",
   REVERSION_CONFIRMATION_REQUIRED:
     "Confirme a reversão antes de retornar um capítulo pago para concluído.",
 };

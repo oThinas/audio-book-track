@@ -1,5 +1,10 @@
 import { getTestDb } from "@tests/helpers/db";
-import { createTestBook, createTestChapter } from "@tests/helpers/factories";
+import {
+  createTestBook,
+  createTestChapter,
+  createTestEditor,
+  createTestNarrator,
+} from "@tests/helpers/factories";
 import { describe, expect, it } from "vitest";
 
 import { DrizzleBookRepository } from "@/lib/repositories/drizzle/drizzle-book-repository";
@@ -11,13 +16,13 @@ import { ChapterService } from "@/lib/services/chapter-service";
 async function createReviewingChapter() {
   const db = getTestDb();
   const { book } = await createTestBook(db);
-  const narrator = await db.query.narrator.findMany().then((r) => r[0]);
-  const editor = await db.query.editor.findMany().then((r) => r[0]);
+  const { narrator } = await createTestNarrator(db);
+  const { editor } = await createTestEditor(db);
   const { chapter } = await createTestChapter(db, {
     bookId: book.id,
     status: "reviewing",
-    narratorId: narrator?.id ?? null,
-    editorId: editor?.id ?? null,
+    narratorId: narrator.id,
+    editorId: editor.id,
     editedSeconds: 1800,
   });
   return chapter;
