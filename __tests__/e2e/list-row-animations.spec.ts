@@ -238,3 +238,98 @@ test.describe("List row exit animations (US2)", () => {
     ).toHaveCount(0);
   });
 });
+
+// US3 — under prefers-reduced-motion nothing animates: create/remove are instant
+// and no row ever sits in a persistent entering/exiting state.
+test.describe("Reduced motion (US3)", () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+    await page.emulateMedia({ reducedMotion: "reduce" });
+  });
+
+  test("narrators: create and remove are instant with no entering/exiting state", async ({
+    page,
+  }) => {
+    await page.goto("/narrators");
+
+    await page.getByRole("button", { name: "Novo narrador", exact: true }).click();
+    const newRow = page.getByTestId("narrator-new-row");
+    await newRow.getByLabel(/nome/i).fill("RM Animado");
+    await newRow.getByRole("button", { name: /confirmar/i }).click();
+    await expect(newRow).toBeHidden({ timeout: 10000 });
+
+    const created = page.getByTestId("narrator-row").filter({ hasText: "RM Animado" });
+    await expect(created).toBeVisible();
+    await expect(created).toHaveAttribute("data-row-state", "idle");
+    await expect(
+      page.locator('[data-testid="narrator-row"][data-row-state="entering"]'),
+    ).toHaveCount(0);
+
+    await created.getByRole("button", { name: /excluir rm animado/i }).click();
+    const dialog = page.getByRole("alertdialog");
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole("button", { name: /excluir/i }).click();
+
+    await expect(page.getByTestId("narrator-row").filter({ hasText: "RM Animado" })).toHaveCount(0);
+    await expect(
+      page.locator('[data-testid="narrator-row"][data-row-state="exiting"]'),
+    ).toHaveCount(0);
+  });
+});
+
+// US3 — reordering chapters is animation-neutral: rows keep their identity, so
+// none of them flip into the entering/exiting state (FR-006).
+test.describe("Chapter reorder is animation-neutral (US3)", () => {
+  test.beforeEach(async ({ page }) => {
+    // Mobile viewport so the per-row move-up/move-down arrows are visible.
+    await page.setViewportSize({ width: 375, height: 667 });
+    await login(page);
+  });
+
+  test("moving a chapter does not mark any row entering or exiting", async ({
+    page,
+    appServer,
+  }) => {
+    const studio = await seedStudio(page, "Reorder Neutral Studio", 75);
+    const { id: bookId } = await seedBook({
+      schema: appServer.schemaName,
+      title: "Reorder Neutral Book",
+      studioId: studio.id,
+      pricePerHourCents: 7500,
+    });
+    const { id: c1 } = await seedChapter({
+      schema: appServer.schemaName,
+      bookId,
+      number: 1,
+      status: "pending",
+    });
+    const { id: c2 } = await seedChapter({
+      schema: appServer.schemaName,
+      bookId,
+      number: 2,
+      status: "pending",
+    });
+
+    await page.goto(`/books/${bookId}`);
+    await expect(page.getByTestId(`chapter-row-${c1}`)).toBeVisible();
+
+    const [response] = await Promise.all([
+      page.waitForResponse(
+        (res) =>
+          res.url().includes(`/api/v1/books/${bookId}/chapters/order`) &&
+          res.request().method() === "PUT",
+      ),
+      page.getByTestId(`chapter-move-down-${c1}`).click(),
+    ]);
+    expect(response.status()).toBe(200);
+
+    await expect(
+      page.locator('[data-testid^="chapter-row-"][data-row-state="entering"]'),
+    ).toHaveCount(0);
+    await expect(
+      page.locator('[data-testid^="chapter-row-"][data-row-state="exiting"]'),
+    ).toHaveCount(0);
+    await expect(page.getByTestId(`chapter-row-${c1}`)).toHaveAttribute("data-row-state", "idle");
+    await expect(page.getByTestId(`chapter-row-${c2}`)).toHaveAttribute("data-row-state", "idle");
+  });
+});

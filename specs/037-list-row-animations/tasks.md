@@ -108,13 +108,13 @@ Web app single-project (Next.js App Router): código em `src/`, testes em `__tes
 
 ### Tests for User Story 3 (RED first) ⚠️
 
-- [ ] T026 [P] [US3] E2E: com `page.emulateMedia({ reducedMotion: 'reduce' })`, criar e remover é instantâneo (linha aparece/some sem estado "entering"/"exiting" persistente) — em `__tests__/e2e/list-row-animations.spec.ts`.
-- [ ] T027 [P] [US3] E2E: reordenar capítulos (botões ↑/↓) NÃO marca linhas como entering/exiting — em `__tests__/e2e/list-row-animations.spec.ts`.
+- [X] T026 [P] [US3] E2E: com `page.emulateMedia({ reducedMotion: 'reduce' })`, criar e remover é instantâneo (linha aparece/some sem estado "entering"/"exiting" persistente) — em `__tests__/e2e/list-row-animations.spec.ts`.
+- [X] T027 [P] [US3] E2E: reordenar capítulos (botões ↑/↓) NÃO marca linhas como entering/exiting — em `__tests__/e2e/list-row-animations.spec.ts`.
 
 ### Implementation for User Story 3
 
-- [ ] T028 [US3] Confirmar `motion-reduce:animate-none` presente nas 4 linhas (via `ROW_ENTER_CLASS`/`ROW_EXIT_CLASS`) e o curto-circuito do hook sob reduced-motion (T003/T005); ajustar se algum caminho animar.
-- [ ] T029 [US3] Verificação visual de tema claro/escuro nas 4 listas (quickstart passos 9–10); corrigir qualquer flash de cor (deve usar só opacity/transform, sem cor hardcoded).
+- [X] T028 [US3] Confirmar `motion-reduce:animate-none` presente nas 4 linhas (via `ROW_ENTER_CLASS`/`ROW_EXIT_CLASS`) e o curto-circuito do hook sob reduced-motion (T003/T005); ajustar se algum caminho animar.
+- [X] T029 [US3] Verificação visual de tema claro/escuro nas 4 listas (quickstart passos 9–10); corrigir qualquer flash de cor (deve usar só opacity/transform, sem cor hardcoded).
 
 **Checkpoint**: Acessibilidade e consistência de tema garantidas.
 
