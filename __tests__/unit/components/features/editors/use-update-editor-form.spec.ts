@@ -30,7 +30,11 @@ describe("useUpdateEditorForm", () => {
   it("on success, calls onUpdated with the response data", async () => {
     const onUpdated = vi.fn();
     const updated = buildEditor({ id: "e-1", name: "Updated", email: "u@studio.com" });
-    vi.mocked(apiFetch).mockResolvedValueOnce({ ok: true, data: { data: updated } });
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: true,
+      data: { data: updated },
+      headers: new Headers(),
+    });
 
     const { result } = renderUpdateHook("e-1", onUpdated);
 

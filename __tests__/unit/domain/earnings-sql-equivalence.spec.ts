@@ -28,11 +28,12 @@ describe("earnings: SQL ↔ JS equivalence (property-based)", () => {
       // Reference SQL formula in pure JS using exact numeric arithmetic.
       // We avoid floating-point drift by computing via bigint when possible.
       const numerator = BigInt(editedSeconds) * BigInt(pricePerHourCents);
-      const denominator = 3600n;
+      const denominator = BigInt(3600);
       const quotient = numerator / denominator;
       const remainder = numerator % denominator;
       // Half-up rounding on a non-negative dividend.
-      const rounded = remainder * 2n >= denominator ? Number(quotient + 1n) : Number(quotient);
+      const rounded =
+        remainder * BigInt(2) >= denominator ? Number(quotient + BigInt(1)) : Number(quotient);
 
       expect(js).toBe(rounded);
     },

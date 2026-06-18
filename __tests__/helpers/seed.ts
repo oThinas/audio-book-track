@@ -74,6 +74,7 @@ export function buildBookSummaryRow(overrides: Partial<BookSummaryRow> = {}): Bo
     totalChapters: 1,
     completedChapters: 0,
     totalEarningsCents: 0,
+    focusThisWeekCount: 0,
     ...overrides,
   };
 }
@@ -81,7 +82,8 @@ export function buildBookSummaryRow(overrides: Partial<BookSummaryRow> = {}): Bo
 export function buildChapterRowData(overrides: Partial<ChapterRowData> = {}): ChapterRowData {
   return {
     id: "c-1",
-    number: 1,
+    title: "Capítulo 1",
+    position: 0,
     status: "pending",
     narrator: null,
     editor: null,

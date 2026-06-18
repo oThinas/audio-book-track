@@ -28,7 +28,11 @@ describe("useCreateEditorForm", () => {
   it("on success, calls onCreated with the response data", async () => {
     const onCreated = vi.fn();
     const created = buildEditor({ id: "new", name: "Brand New", email: "new@studio.com" });
-    vi.mocked(apiFetch).mockResolvedValueOnce({ ok: true, data: { data: created } });
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: true,
+      data: { data: created },
+      headers: new Headers(),
+    });
 
     const { result } = renderCreateHook(onCreated);
 

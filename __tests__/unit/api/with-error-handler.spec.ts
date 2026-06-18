@@ -6,7 +6,6 @@ import { withApiErrorHandler } from "@/lib/api/with-error-handler";
 import type { Session } from "@/lib/auth/session";
 import { BookNotFoundError } from "@/lib/errors/book-errors";
 import { StudioHasActiveBooksError } from "@/lib/errors/studio-errors";
-import type { ServerLogger } from "@/lib/logger/server-logger";
 
 const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const VALID_REQUEST_ID = "11111111-1111-4111-8111-111111111111";
@@ -19,14 +18,18 @@ const LEAK_PATTERNS = [
   /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/i,
 ];
 
+type LoggerMethod = (message: string, context?: Record<string, unknown>) => void;
+type GetSessionFn = (args: { headers: Headers }) => Promise<Session | null>;
+type HeadersFn = () => Promise<Headers>;
+
 interface Fakes {
   readonly logger: {
-    error: ReturnType<typeof vi.fn>;
-    warn: ReturnType<typeof vi.fn>;
-    info: ReturnType<typeof vi.fn>;
+    error: ReturnType<typeof vi.fn<LoggerMethod>>;
+    warn: ReturnType<typeof vi.fn<LoggerMethod>>;
+    info: ReturnType<typeof vi.fn<LoggerMethod>>;
   };
-  readonly getSession: ReturnType<typeof vi.fn>;
-  readonly headersFn: ReturnType<typeof vi.fn>;
+  readonly getSession: ReturnType<typeof vi.fn<GetSessionFn>>;
+  readonly headersFn: ReturnType<typeof vi.fn<HeadersFn>>;
 }
 
 function createFakes(
@@ -38,12 +41,12 @@ function createFakes(
   if (incoming !== null) headers.set("X-Request-Id", incoming);
   return {
     logger: {
-      error: vi.fn(),
-      warn: vi.fn(),
-      info: vi.fn(),
-    } satisfies ServerLogger as unknown as Fakes["logger"],
-    getSession: vi.fn().mockResolvedValue(session),
-    headersFn: vi.fn().mockResolvedValue(headers),
+      error: vi.fn<LoggerMethod>(),
+      warn: vi.fn<LoggerMethod>(),
+      info: vi.fn<LoggerMethod>(),
+    },
+    getSession: vi.fn<GetSessionFn>().mockResolvedValue(session),
+    headersFn: vi.fn<HeadersFn>().mockResolvedValue(headers),
   };
 }
 
@@ -232,9 +235,11 @@ describe("withApiErrorHandler", () => {
 
     expect(fakes.logger.error).toHaveBeenCalledTimes(1);
     const [, ctx] = fakes.logger.error.mock.calls[0];
-    expect(ctx).toMatchObject({ requestId: VALID_REQUEST_ID });
-    expect(ctx.error).toBeInstanceOf(Error);
-    expect((ctx.error as Error).message).toBe(leakyError.message);
+    expect(ctx).toBeDefined();
+    const context = ctx as Record<string, unknown>;
+    expect(context).toMatchObject({ requestId: VALID_REQUEST_ID });
+    expect(context.error).toBeInstanceOf(Error);
+    expect((context.error as Error).message).toBe(leakyError.message);
   });
 
   it("X-Request-Id is present on all error responses", async () => {

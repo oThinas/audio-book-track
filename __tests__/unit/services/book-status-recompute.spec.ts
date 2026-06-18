@@ -28,8 +28,8 @@ describe("recomputeBookStatusAndBumpVersion", () => {
 
   it("sets status to paid when every chapter is paid", async () => {
     await chapterRepo.insertMany([
-      { bookId: book.id, number: 1, status: "paid" },
-      { bookId: book.id, number: 2, status: "paid" },
+      { bookId: book.id, title: "Capítulo 1", position: 0, status: "paid" },
+      { bookId: book.id, title: "Capítulo 2", position: 1, status: "paid" },
     ]);
 
     const updated = await recomputeBookStatusAndBumpVersion(book.id, { bookRepo, chapterRepo });
@@ -41,8 +41,8 @@ describe("recomputeBookStatusAndBumpVersion", () => {
 
   it("sets status to completed when every chapter is completed or paid with at least one completed", async () => {
     await chapterRepo.insertMany([
-      { bookId: book.id, number: 1, status: "completed" },
-      { bookId: book.id, number: 2, status: "paid" },
+      { bookId: book.id, title: "Capítulo 1", position: 0, status: "completed" },
+      { bookId: book.id, title: "Capítulo 2", position: 1, status: "paid" },
     ]);
 
     const updated = await recomputeBookStatusAndBumpVersion(book.id, { bookRepo, chapterRepo });
@@ -52,8 +52,8 @@ describe("recomputeBookStatusAndBumpVersion", () => {
 
   it("sets status to reviewing when any chapter is reviewing", async () => {
     await chapterRepo.insertMany([
-      { bookId: book.id, number: 1, status: "pending" },
-      { bookId: book.id, number: 2, status: "reviewing" },
+      { bookId: book.id, title: "Capítulo 1", position: 0, status: "pending" },
+      { bookId: book.id, title: "Capítulo 2", position: 1, status: "reviewing" },
     ]);
 
     const updated = await recomputeBookStatusAndBumpVersion(book.id, { bookRepo, chapterRepo });
@@ -63,8 +63,8 @@ describe("recomputeBookStatusAndBumpVersion", () => {
 
   it("sets status to editing when there is editing but no reviewing/retake", async () => {
     await chapterRepo.insertMany([
-      { bookId: book.id, number: 1, status: "pending" },
-      { bookId: book.id, number: 2, status: "editing" },
+      { bookId: book.id, title: "Capítulo 1", position: 0, status: "pending" },
+      { bookId: book.id, title: "Capítulo 2", position: 1, status: "editing" },
     ]);
 
     const updated = await recomputeBookStatusAndBumpVersion(book.id, { bookRepo, chapterRepo });
@@ -74,8 +74,8 @@ describe("recomputeBookStatusAndBumpVersion", () => {
 
   it("defaults to pending when only pending chapters exist", async () => {
     await chapterRepo.insertMany([
-      { bookId: book.id, number: 1, status: "pending" },
-      { bookId: book.id, number: 2, status: "pending" },
+      { bookId: book.id, title: "Capítulo 1", position: 0, status: "pending" },
+      { bookId: book.id, title: "Capítulo 2", position: 1, status: "pending" },
     ]);
 
     const updated = await recomputeBookStatusAndBumpVersion(book.id, { bookRepo, chapterRepo });
@@ -86,8 +86,8 @@ describe("recomputeBookStatusAndBumpVersion", () => {
   it("US5.13 — after deleting a pending chapter, only paid remains → paid", async () => {
     // Before: [pending, paid] → pending
     const chapters = await chapterRepo.insertMany([
-      { bookId: book.id, number: 1, status: "pending" },
-      { bookId: book.id, number: 2, status: "paid" },
+      { bookId: book.id, title: "Capítulo 1", position: 0, status: "pending" },
+      { bookId: book.id, title: "Capítulo 2", position: 1, status: "paid" },
     ]);
     await recomputeBookStatusAndBumpVersion(book.id, { bookRepo, chapterRepo });
     const beforeDelete = await bookRepo.findById(book.id);
@@ -103,13 +103,17 @@ describe("recomputeBookStatusAndBumpVersion", () => {
 
   it("US5.14 — after adding a pending chapter to a book with one paid, result is pending", async () => {
     // Before: [paid] → paid
-    await chapterRepo.insertMany([{ bookId: book.id, number: 1, status: "paid" }]);
+    await chapterRepo.insertMany([
+      { bookId: book.id, title: "Capítulo 1", position: 0, status: "paid" },
+    ]);
     await recomputeBookStatusAndBumpVersion(book.id, { bookRepo, chapterRepo });
     const beforeAdd = await bookRepo.findById(book.id);
     expect(beforeAdd?.status).toBe("paid");
 
     // User increases numChapters by 1 (new pending chapter)
-    await chapterRepo.insertMany([{ bookId: book.id, number: 2, status: "pending" }]);
+    await chapterRepo.insertMany([
+      { bookId: book.id, title: "Capítulo 2", position: 1, status: "pending" },
+    ]);
 
     // After: [paid, pending] → pending
     const updated = await recomputeBookStatusAndBumpVersion(book.id, { bookRepo, chapterRepo });

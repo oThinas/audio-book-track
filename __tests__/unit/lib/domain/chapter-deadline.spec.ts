@@ -13,12 +13,15 @@ function buildChapter(overrides: { status: ChapterStatus; deadline: string | nul
   return {
     id: "00000000-0000-0000-0000-000000000001",
     bookId: "00000000-0000-0000-0000-000000000010",
-    number: 1,
+    title: "Capítulo 1",
+    position: 0,
     status: overrides.status,
     narratorId: null,
     editorId: null,
     editedSeconds: 0,
     deadline: overrides.deadline,
+    completedAt: null,
+    paidAt: null,
     createdAt: new Date("2026-04-01T00:00:00.000Z"),
     updatedAt: new Date("2026-04-01T00:00:00.000Z"),
   };

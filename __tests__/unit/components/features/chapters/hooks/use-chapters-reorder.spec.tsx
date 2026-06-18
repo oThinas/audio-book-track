@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ChapterRowEntity } from "@/components/features/chapters/chapter-row";
 import { useChaptersReorder } from "@/components/features/chapters/hooks/use-chapters-reorder";
+import type { ApiResult } from "@/lib/api/api-fetch";
 
 vi.mock("@/lib/api/api-fetch", () => ({
   apiFetch: vi.fn(),
@@ -30,11 +31,11 @@ describe("useChaptersReorder", () => {
   });
 
   it("aplica nova ordem otimisticamente e propaga novo token via onVersionChange", async () => {
-    let resolveFetch: ((value: unknown) => void) | undefined;
+    let resolveFetch: ((value: ApiResult<unknown>) => void) | undefined;
     vi.mocked(apiFetch).mockReturnValueOnce(
-      new Promise((resolve) => {
+      new Promise<ApiResult<unknown>>((resolve) => {
         resolveFetch = resolve;
-      }) as ReturnType<typeof apiFetch>,
+      }),
     );
 
     const onVersionChange = vi.fn();

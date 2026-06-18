@@ -47,9 +47,15 @@ describe("BookService.list", () => {
       pricePerHourCents: 7500,
     });
     await chapterRepo.insertMany([
-      { bookId: book.id, number: 1, status: "completed", editedSeconds: 3600 }, // 7500 cents
-      { bookId: book.id, number: 2, status: "paid", editedSeconds: 7200 }, // 15000 cents
-      { bookId: book.id, number: 3, status: "pending", editedSeconds: 0 }, // 0 cents
+      {
+        bookId: book.id,
+        title: "Capítulo 1",
+        position: 0,
+        status: "completed",
+        editedSeconds: 3600,
+      }, // 7500 cents
+      { bookId: book.id, title: "Capítulo 2", position: 1, status: "paid", editedSeconds: 7200 }, // 15000 cents
+      { bookId: book.id, title: "Capítulo 3", position: 2, status: "pending", editedSeconds: 0 }, // 0 cents
     ]);
 
     const [summary] = await service.list();
@@ -72,8 +78,8 @@ describe("BookService.list", () => {
       pricePerHourCents: 7500,
     });
     await chapterRepo.insertMany([
-      { bookId: book.id, number: 1, status: "paid", editedSeconds: 3600 },
-      { bookId: book.id, number: 2, status: "paid", editedSeconds: 3600 },
+      { bookId: book.id, title: "Capítulo 1", position: 0, status: "paid", editedSeconds: 3600 },
+      { bookId: book.id, title: "Capítulo 2", position: 1, status: "paid", editedSeconds: 3600 },
     ]);
 
     const [summary] = await service.list();
@@ -90,7 +96,7 @@ describe("BookService.list", () => {
       pricePerHourCents: 7500,
     });
     await chapterRepo.insertMany([
-      { bookId: book.id, number: 1, status: "paid", editedSeconds: 3600 },
+      { bookId: book.id, title: "Capítulo 1", position: 0, status: "paid", editedSeconds: 3600 },
     ]);
 
     await studioRepo.softDelete(studio.id);
@@ -107,7 +113,9 @@ describe("BookService.list", () => {
       studioId: studio.id,
       pricePerHourCents: 7500,
     });
-    await chapterRepo.insertMany([{ bookId: older.id, number: 1, status: "pending" }]);
+    await chapterRepo.insertMany([
+      { bookId: older.id, title: "Capítulo 1", position: 0, status: "pending" },
+    ]);
 
     await new Promise((r) => setTimeout(r, 5));
 
@@ -116,7 +124,9 @@ describe("BookService.list", () => {
       studioId: studio.id,
       pricePerHourCents: 7500,
     });
-    await chapterRepo.insertMany([{ bookId: newer.id, number: 1, status: "pending" }]);
+    await chapterRepo.insertMany([
+      { bookId: newer.id, title: "Capítulo 1", position: 0, status: "pending" },
+    ]);
 
     const result = await service.list();
 

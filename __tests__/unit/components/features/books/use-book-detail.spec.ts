@@ -39,8 +39,8 @@ const BASE_BOOK: BookDetailData = {
   completedChapters: 0,
   totalEarningsCents: 0,
   chapters: [
-    buildChapterRowData({ id: "c-1", number: 1, status: "pending" }),
-    buildChapterRowData({ id: "c-2", number: 2, status: "paid" }),
+    buildChapterRowData({ id: "c-1", title: "Capítulo 1", position: 0, status: "pending" }),
+    buildChapterRowData({ id: "c-2", title: "Capítulo 2", position: 1, status: "paid" }),
   ],
 };
 
@@ -177,8 +177,8 @@ describe("useBookDetail", () => {
     const all_non_paid: BookDetailData = {
       ...BASE_BOOK,
       chapters: [
-        buildChapterRowData({ id: "c-1", number: 1, status: "pending" }),
-        buildChapterRowData({ id: "c-2", number: 2, status: "pending" }),
+        buildChapterRowData({ id: "c-1", title: "Capítulo 1", position: 0, status: "pending" }),
+        buildChapterRowData({ id: "c-2", title: "Capítulo 2", position: 1, status: "pending" }),
       ],
     };
     const { result } = renderHook(() => useBookDetail(all_non_paid));
