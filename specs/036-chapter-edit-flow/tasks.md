@@ -79,17 +79,17 @@ description: "Task list for Chapter Edit Flow — Keyboard Save & Flexible Statu
 
 ### Tests for User Story 2 (write FIRST — must FAIL) ⚠️
 
-- [ ] T014 [P] [US2] Add `handleRowKeyDown` cases to the hook test `__tests__/unit/components/features/chapters/hooks/use-chapter-row-edit.spec.tsx` (`renderHook`): Enter (nothing open) → `onSubmit` called; Enter with target carrying `aria-expanded="true"` or inside `[data-slot="select-content"]`/`[data-slot="popover-content"]` → no submit; Enter on target inside `[data-row-actions]` → no submit; Enter while `isSubmitting` → no submit; Escape (nothing open) → `onCancel`; Escape with popup open → no cancel. → FAIL.
+- [x] T014 [P] [US2] Add `handleRowKeyDown` cases to the hook test `__tests__/unit/components/features/chapters/hooks/use-chapter-row-edit.spec.tsx` (`renderHook`): Enter (nothing open) → `onSubmit` called; Enter with target carrying `aria-expanded="true"` or inside `[data-slot="select-content"]`/`[data-slot="popover-content"]` → no submit; Enter on target inside `[data-row-actions]` → no submit; Enter while `isSubmitting` → no submit; Escape (nothing open) → `onCancel`; Escape with popup open → no cancel. → FAIL.
 
 ### Implementation for User Story 2 (make GREEN)
 
-- [ ] T015 [US2] Add `handleRowKeyDown(event)` to `src/components/features/chapters/hooks/use-chapter-row-edit.ts` and expose it in the return object/type: on `Enter` → `preventDefault()` + `form.handleSubmit(onSubmit)()`; on `Escape` → `preventDefault()` + `onCancel()`; early-return when a popup is open (`aria-expanded="true"` / content `data-slot`), when target is inside `[data-row-actions]`, or when `form.formState.isSubmitting`. Makes T014 green. (Depends on T014.)
-- [ ] T016 [US2] Wire `onKeyDown={handleRowKeyDown}` on the edit-mode `<TableRow data-mode="edit">` in `src/components/features/chapters/chapter-row-edit-mode.tsx`.
-- [ ] T017 [P] [US2] Add `data-row-actions` to the actions `<TableCell>` in `src/components/features/chapters/chapter-row-edit-actions.tsx` so Enter/Esc on Save/Cancel keep native behavior.
+- [x] T015 [US2] Add `handleRowKeyDown(event)` to `src/components/features/chapters/hooks/use-chapter-row-edit.ts` and expose it in the return object/type: on `Enter` → `preventDefault()` + `form.handleSubmit(onSubmit)()`; on `Escape` → `preventDefault()` + `onCancel()`; early-return when a popup is open (`aria-expanded="true"` / content `data-slot`), when target is inside `[data-row-actions]`, or when `form.formState.isSubmitting`. Makes T014 green. (Depends on T014.)
+- [x] T016 [US2] Wire `onKeyDown={handleRowKeyDown}` on the edit-mode `<TableRow data-mode="edit">` in `src/components/features/chapters/chapter-row-edit-mode.tsx`.
+- [x] T017 [P] [US2] Add `data-row-actions` to the actions `<TableCell>` in `src/components/features/chapters/chapter-row-edit-actions.tsx` so Enter/Esc on Save/Cancel keep native behavior.
 
 ### E2E for User Story 2
 
-- [ ] T018 [US2] Add keyboard scenarios to `__tests__/e2e/chapters-edit-inline.spec.ts`: Enter from title saves; Enter from closed status trigger saves; open status dropdown + Enter selects (2nd Enter saves); Esc cancels; Esc closes open dropdown first, 2nd Esc cancels; Enter on Cancel cancels; **Enter with an empty title → validation error shown, not saved (FR-005)**. (Shares the E2E file with T013 — sequence after T013.)
+- [x] T018 [US2] Add keyboard scenarios to `__tests__/e2e/chapters-edit-inline.spec.ts`: Enter from title saves; Enter from closed status trigger saves; open status dropdown + Enter selects (2nd Enter saves); Esc cancels; Esc closes open dropdown first, 2nd Esc cancels; Enter on Cancel cancels; **Enter with an empty title → validation error shown, not saved (FR-005)**. (Shares the E2E file with T013 — sequence after T013.)
 
 **Checkpoint**: Both stories independently functional.
 
