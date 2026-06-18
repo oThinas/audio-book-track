@@ -17,7 +17,9 @@ interface EditorsClientProps {
 
 export function EditorsClient({ initialEditors }: EditorsClientProps) {
   const {
-    sortedEditors,
+    renderItems,
+    rowState,
+    onRowAnimationEnd,
     isCreating,
     editorToDelete,
     isDeleteDialogOpen,
@@ -43,7 +45,9 @@ export function EditorsClient({ initialEditors }: EditorsClientProps) {
         </Button>
       </PageHeader>
       <EditorsTable
-        editors={sortedEditors}
+        editors={renderItems}
+        rowState={rowState}
+        onRowAnimationEnd={onRowAnimationEnd}
         topRow={
           isCreating ? (
             <EditorNewRow onCreated={handleCreated} onCancelled={handleCancelled} />

@@ -4,7 +4,7 @@ import { getCurrentRequestId, requestContext } from "@/lib/api/request-context";
 
 describe("requestContext (AsyncLocalStorage)", () => {
   it("getCurrentRequestId returns the stored value when run inside requestContext.run", () => {
-    requestContext.run({ requestId: "abc" }, () => {
+    requestContext.run({ requestId: "abc", userId: null }, () => {
       expect(getCurrentRequestId()).toBe("abc");
     });
   });
@@ -14,7 +14,7 @@ describe("requestContext (AsyncLocalStorage)", () => {
   });
 
   it("propagates the request id across async boundaries inside the same run", async () => {
-    await requestContext.run({ requestId: "deep" }, async () => {
+    await requestContext.run({ requestId: "deep", userId: null }, async () => {
       await Promise.resolve();
       expect(getCurrentRequestId()).toBe("deep");
     });
@@ -23,11 +23,11 @@ describe("requestContext (AsyncLocalStorage)", () => {
   it("isolates concurrent runs", async () => {
     const seen: Array<string | null> = [];
     await Promise.all([
-      requestContext.run({ requestId: "a" }, async () => {
+      requestContext.run({ requestId: "a", userId: null }, async () => {
         await Promise.resolve();
         seen.push(getCurrentRequestId());
       }),
-      requestContext.run({ requestId: "b" }, async () => {
+      requestContext.run({ requestId: "b", userId: null }, async () => {
         await Promise.resolve();
         seen.push(getCurrentRequestId());
       }),

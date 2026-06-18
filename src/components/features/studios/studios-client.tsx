@@ -17,7 +17,9 @@ interface StudiosClientProps {
 
 export function StudiosClient({ initialStudios }: StudiosClientProps) {
   const {
-    sortedStudios,
+    renderItems,
+    rowState,
+    onRowAnimationEnd,
     isCreating,
     studioToDelete,
     isDeleteDialogOpen,
@@ -43,7 +45,9 @@ export function StudiosClient({ initialStudios }: StudiosClientProps) {
         </Button>
       </PageHeader>
       <StudiosTable
-        studios={sortedStudios}
+        studios={renderItems}
+        rowState={rowState}
+        onRowAnimationEnd={onRowAnimationEnd}
         topRow={
           isCreating ? (
             <StudioNewRow onCreated={handleCreated} onCancelled={handleCancelled} />

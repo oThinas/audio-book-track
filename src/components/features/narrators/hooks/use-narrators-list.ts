@@ -2,14 +2,21 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import type { RowState } from "@/hooks/row-animation";
+import { useRowPresence } from "@/hooks/use-row-presence";
 import type { Narrator } from "@/lib/domain/narrator";
 import type { NarratorListItem } from "@/lib/repositories/narrator-repository";
 
 const NEW_ROW_NAME_INPUT_ID = "narrator-new-name";
 
+const getNarratorId = (narrator: NarratorListItem): string => narrator.id;
+
 export interface UseNarratorsListReturn {
   readonly narrators: readonly NarratorListItem[];
   readonly sortedNarrators: readonly NarratorListItem[];
+  readonly renderItems: readonly NarratorListItem[];
+  readonly rowState: (id: string) => RowState;
+  readonly onRowAnimationEnd: (id: string) => void;
   readonly isCreating: boolean;
   readonly narratorToDelete: Narrator | null;
   readonly isDeleteDialogOpen: boolean;
@@ -35,6 +42,11 @@ export function useNarratorsList(initial: readonly NarratorListItem[]): UseNarra
       ),
     [narrators],
   );
+
+  const { renderItems, rowState, remove, onRowAnimationEnd } = useRowPresence({
+    items: sortedNarrators,
+    getId: getNarratorId,
+  });
 
   function handleNewClick() {
     if (isCreating) {
@@ -74,13 +86,21 @@ export function useNarratorsList(initial: readonly NarratorListItem[]): UseNarra
   }
 
   function handleDeleted(id: string) {
-    setNarrators((current) => current.filter((n) => n.id !== id));
+    // Retain the row through its exit animation, then drop it from the source on
+    // animationend. The DELETE already succeeded upstream (dialog), so commit is
+    // just the optimistic removal; failures never reach here.
+    remove(id, () => {
+      setNarrators((current) => current.filter((n) => n.id !== id));
+    });
     router.refresh();
   }
 
   return {
     narrators,
     sortedNarrators,
+    renderItems,
+    rowState,
+    onRowAnimationEnd,
     isCreating,
     narratorToDelete,
     isDeleteDialogOpen: narratorToDelete !== null,

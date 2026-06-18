@@ -36,7 +36,11 @@ describe("useCreateStudioForm", () => {
   it("on success, calls onCreated with the response data", async () => {
     const onCreated = vi.fn();
     const created = buildStudio({ id: "new", name: "Brand New" });
-    vi.mocked(apiFetch).mockResolvedValueOnce({ ok: true, data: { data: created } });
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: true,
+      data: { data: created },
+      headers: new Headers(),
+    });
 
     const { result } = renderCreateHook(onCreated);
 

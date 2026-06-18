@@ -61,7 +61,7 @@ describe("useBooksList", () => {
       title: "Brand New",
       studio: { id: "s-1", name: "Studio" },
       pricePerHourCents: 8000,
-      chapters: [{ id: "c-1", number: 1 }],
+      chapters: [{ id: "c-1", title: "Capítulo 1", position: 0 }],
     };
 
     act(() => result.current.openCreateDialog());

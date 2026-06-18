@@ -70,7 +70,7 @@ describe("ChapterService.update", () => {
       const book = await seedBook(setup);
       const narrator = await setup.narratorRepo.create({ name: "Ana" });
       const [chapter] = await setup.chapterRepo.insertMany([
-        { bookId: book.id, number: 1, status: "pending" },
+        { bookId: book.id, title: "Capítulo 1", position: 0, status: "pending" },
       ]);
 
       const result = await setup.service.update(chapter.id, {
@@ -86,7 +86,7 @@ describe("ChapterService.update", () => {
     it("allows pending → editing without any fields (free non-paid movement)", async () => {
       const book = await seedBook(setup);
       const [chapter] = await setup.chapterRepo.insertMany([
-        { bookId: book.id, number: 1, status: "pending" },
+        { bookId: book.id, title: "Capítulo 1", position: 0, status: "pending" },
       ]);
 
       const result = await setup.service.update(chapter.id, { status: "editing" });
@@ -100,7 +100,8 @@ describe("ChapterService.update", () => {
       const [chapter] = await setup.chapterRepo.insertMany([
         {
           bookId: book.id,
-          number: 1,
+          title: "Capítulo 1",
+          position: 0,
           status: "editing",
           narratorId: narrator.id,
         },
@@ -124,7 +125,8 @@ describe("ChapterService.update", () => {
       const [chapter] = await setup.chapterRepo.insertMany([
         {
           bookId: book.id,
-          number: 1,
+          title: "Capítulo 1",
+          position: 0,
           status: "editing",
           narratorId: narrator.id,
           editedSeconds: 3600,
@@ -138,7 +140,7 @@ describe("ChapterService.update", () => {
     it("allows reviewing → editing → pending freely with no fields (free non-paid movement)", async () => {
       const book = await seedBook(setup);
       const [chapter] = await setup.chapterRepo.insertMany([
-        { bookId: book.id, number: 1, status: "reviewing" },
+        { bookId: book.id, title: "Capítulo 1", position: 0, status: "reviewing" },
       ]);
 
       const editing = await setup.service.update(chapter.id, { status: "editing" });
@@ -151,7 +153,7 @@ describe("ChapterService.update", () => {
     it("allows reviewing → retake and retake → reviewing", async () => {
       const book = await seedBook(setup);
       const [chapter] = await setup.chapterRepo.insertMany([
-        { bookId: book.id, number: 1, status: "reviewing" },
+        { bookId: book.id, title: "Capítulo 1", position: 0, status: "reviewing" },
       ]);
 
       const retake = await setup.service.update(chapter.id, { status: "retake" });
@@ -168,7 +170,8 @@ describe("ChapterService.update", () => {
       const [chapter] = await setup.chapterRepo.insertMany([
         {
           bookId: book.id,
-          number: 1,
+          title: "Capítulo 1",
+          position: 0,
           status: "reviewing",
           narratorId: narrator.id,
           editorId: editor.id,
@@ -186,7 +189,13 @@ describe("ChapterService.update", () => {
     it("rejects → completed without narrator (NARRATOR_REQUIRED, checked first)", async () => {
       const book = await seedBook(setup);
       const [chapter] = await setup.chapterRepo.insertMany([
-        { bookId: book.id, number: 1, status: "reviewing", editedSeconds: 3600 },
+        {
+          bookId: book.id,
+          title: "Capítulo 1",
+          position: 0,
+          status: "reviewing",
+          editedSeconds: 3600,
+        },
       ]);
 
       await expect(
@@ -200,7 +209,8 @@ describe("ChapterService.update", () => {
       const [chapter] = await setup.chapterRepo.insertMany([
         {
           bookId: book.id,
-          number: 1,
+          title: "Capítulo 1",
+          position: 0,
           status: "reviewing",
           narratorId: narrator.id,
           editedSeconds: 3600,
@@ -219,7 +229,8 @@ describe("ChapterService.update", () => {
       const [chapter] = await setup.chapterRepo.insertMany([
         {
           bookId: book.id,
-          number: 1,
+          title: "Capítulo 1",
+          position: 0,
           status: "reviewing",
           narratorId: narrator.id,
           editorId: editor.id,
@@ -237,7 +248,13 @@ describe("ChapterService.update", () => {
       const narrator = await setup.narratorRepo.create({ name: "Ana" });
       const editor = await setup.editorRepo.create({ name: "Bruno", email: "b@x.com" });
       const [chapter] = await setup.chapterRepo.insertMany([
-        { bookId: book.id, number: 1, status: "reviewing", editedSeconds: 0 },
+        {
+          bookId: book.id,
+          title: "Capítulo 1",
+          position: 0,
+          status: "reviewing",
+          editedSeconds: 0,
+        },
       ]);
 
       const result = await setup.service.update(chapter.id, {
@@ -258,7 +275,8 @@ describe("ChapterService.update", () => {
       const [chapter] = await setup.chapterRepo.insertMany([
         {
           bookId: book.id,
-          number: 1,
+          title: "Capítulo 1",
+          position: 0,
           status: "pending",
           narratorId: narrator.id,
           editorId: editor.id,
@@ -276,7 +294,13 @@ describe("ChapterService.update", () => {
       const narrator = await setup.narratorRepo.create({ name: "Ana" });
       const editor = await setup.editorRepo.create({ name: "Bruno", email: "b@x.com" });
       const [chapter] = await setup.chapterRepo.insertMany([
-        { bookId: book.id, number: 1, status: "editing", narratorId: narrator.id },
+        {
+          bookId: book.id,
+          title: "Capítulo 1",
+          position: 0,
+          status: "editing",
+          narratorId: narrator.id,
+        },
       ]);
 
       const result = await setup.service.update(chapter.id, {
@@ -292,7 +316,7 @@ describe("ChapterService.update", () => {
     it("rejects narratorId pointing to a non-existent narrator", async () => {
       const book = await seedBook(setup);
       const [chapter] = await setup.chapterRepo.insertMany([
-        { bookId: book.id, number: 1, status: "pending" },
+        { bookId: book.id, title: "Capítulo 1", position: 0, status: "pending" },
       ]);
 
       await expect(
@@ -306,7 +330,7 @@ describe("ChapterService.update", () => {
     it("rejects editorId pointing to a non-existent editor", async () => {
       const book = await seedBook(setup);
       const [chapter] = await setup.chapterRepo.insertMany([
-        { bookId: book.id, number: 1, status: "editing" },
+        { bookId: book.id, title: "Capítulo 1", position: 0, status: "editing" },
       ]);
 
       await expect(
@@ -322,7 +346,7 @@ describe("ChapterService.update", () => {
       const book = await seedBook(setup);
       const narrator = await setup.narratorRepo.create({ name: "Ana" });
       const [chapter] = await setup.chapterRepo.insertMany([
-        { bookId: book.id, number: 1, status: "paid" },
+        { bookId: book.id, title: "Capítulo 1", position: 0, status: "paid" },
       ]);
 
       await expect(
@@ -333,7 +357,7 @@ describe("ChapterService.update", () => {
     it("rejects editedSeconds mutation on a paid chapter", async () => {
       const book = await seedBook(setup);
       const [chapter] = await setup.chapterRepo.insertMany([
-        { bookId: book.id, number: 1, status: "paid" },
+        { bookId: book.id, title: "Capítulo 1", position: 0, status: "paid" },
       ]);
 
       await expect(
@@ -344,7 +368,7 @@ describe("ChapterService.update", () => {
     it("rejects paid → completed without confirmReversion (REVERSION_CONFIRMATION_REQUIRED)", async () => {
       const book = await seedBook(setup);
       const [chapter] = await setup.chapterRepo.insertMany([
-        { bookId: book.id, number: 1, status: "paid" },
+        { bookId: book.id, title: "Capítulo 1", position: 0, status: "paid" },
       ]);
 
       await expect(
@@ -355,7 +379,7 @@ describe("ChapterService.update", () => {
     it("accepts paid → completed when confirmReversion is true", async () => {
       const book = await seedBook(setup);
       const [chapter] = await setup.chapterRepo.insertMany([
-        { bookId: book.id, number: 1, status: "paid" },
+        { bookId: book.id, title: "Capítulo 1", position: 0, status: "paid" },
       ]);
 
       const result = await setup.service.update(chapter.id, {
@@ -370,7 +394,7 @@ describe("ChapterService.update", () => {
     it("rejects paid → any status other than completed", async () => {
       const book = await seedBook(setup);
       const [chapter] = await setup.chapterRepo.insertMany([
-        { bookId: book.id, number: 1, status: "paid" },
+        { bookId: book.id, title: "Capítulo 1", position: 0, status: "paid" },
       ]);
 
       await expect(
@@ -387,13 +411,14 @@ describe("ChapterService.update", () => {
       const [reviewing, paid] = await setup.chapterRepo.insertMany([
         {
           bookId: book.id,
-          number: 1,
+          title: "Capítulo 1",
+          position: 0,
           status: "reviewing",
           narratorId: narrator.id,
           editorId: editor.id,
           editedSeconds: 3600,
         },
-        { bookId: book.id, number: 2, status: "paid" },
+        { bookId: book.id, title: "Capítulo 2", position: 1, status: "paid" },
       ]);
       void paid;
 
@@ -408,8 +433,8 @@ describe("ChapterService.update", () => {
       const book = await seedBook(setup);
       const narrator = await setup.narratorRepo.create({ name: "Ana" });
       const [pending, paid] = await setup.chapterRepo.insertMany([
-        { bookId: book.id, number: 1, status: "pending" },
-        { bookId: book.id, number: 2, status: "paid" },
+        { bookId: book.id, title: "Capítulo 1", position: 0, status: "pending" },
+        { bookId: book.id, title: "Capítulo 2", position: 1, status: "paid" },
       ]);
       void paid;
 

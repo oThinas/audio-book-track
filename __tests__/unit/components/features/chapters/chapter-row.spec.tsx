@@ -1,12 +1,13 @@
 // @vitest-environment jsdom
 import { DndContext } from "@dnd-kit/core";
 import { SortableContext } from "@dnd-kit/sortable";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import { ChapterRow, type ChapterRowEntity } from "@/components/features/chapters/chapter-row";
 import { Table, TableBody } from "@/components/ui/table";
+import type { RowState } from "@/hooks/row-animation";
 import type { FocusWeekContext } from "@/lib/domain/chapter-deadline";
 
 const CHAPTER: ChapterRowEntity = {
@@ -26,7 +27,10 @@ const FOCUS: FocusWeekContext = {
   sundayIso: "2026-06-14",
 };
 
-function renderRow(overrides?: Partial<ChapterRowEntity>, props?: { isSelectionMode?: boolean }) {
+function renderRow(
+  overrides?: Partial<ChapterRowEntity>,
+  props?: { isSelectionMode?: boolean; rowState?: RowState; onRowAnimationEnd?: () => void },
+) {
   const chapter: ChapterRowEntity = { ...CHAPTER, ...overrides };
   render(
     <DndContext>
@@ -46,6 +50,8 @@ function renderRow(overrides?: Partial<ChapterRowEntity>, props?: { isSelectionM
               isLast
               canReorder
               focusContext={FOCUS}
+              rowState={props?.rowState}
+              onRowAnimationEnd={props?.onRowAnimationEnd}
               onSaved={vi.fn()}
               onDeleted={vi.fn()}
               onToggleSelected={vi.fn()}
@@ -123,6 +129,42 @@ describe("ChapterRow — double-click to edit", () => {
     await user.dblClick(screen.getByTestId(`chapter-cell-editedSeconds-${chapter.id}`));
     expect(rowMode(chapter.id)).toBe("edit");
     expect(screen.getByTestId(`chapter-hours-${chapter.id}`)).toBe(document.activeElement);
+  });
+});
+
+describe("ChapterRow — enter animation", () => {
+  it("applies the enter animation class and data-row-state when entering", () => {
+    const chapter = renderRow(undefined, { rowState: "entering" });
+    const row = screen.getByTestId(`chapter-row-${chapter.id}`);
+
+    expect(row.getAttribute("data-row-state")).toBe("entering");
+    expect(row.className).toContain("animate-in");
+  });
+
+  it("does not apply the enter animation class when idle", () => {
+    const chapter = renderRow(undefined, { rowState: "idle" });
+    const row = screen.getByTestId(`chapter-row-${chapter.id}`);
+
+    expect(row.getAttribute("data-row-state")).toBe("idle");
+    expect(row.className).not.toContain("animate-in");
+  });
+
+  it("calls onRowAnimationEnd when the row's own animation ends", () => {
+    const onRowAnimationEnd = vi.fn();
+    const chapter = renderRow(undefined, { rowState: "entering", onRowAnimationEnd });
+
+    fireEvent.animationEnd(screen.getByTestId(`chapter-row-${chapter.id}`));
+
+    expect(onRowAnimationEnd).toHaveBeenCalledTimes(1);
+  });
+
+  it("applies the exit animation class and data-row-state when exiting", () => {
+    const chapter = renderRow(undefined, { rowState: "exiting" });
+    const row = screen.getByTestId(`chapter-row-${chapter.id}`);
+
+    expect(row.getAttribute("data-row-state")).toBe("exiting");
+    expect(row.className).toContain("animate-out");
+    expect(row.className).not.toContain("animate-in");
   });
 });
 

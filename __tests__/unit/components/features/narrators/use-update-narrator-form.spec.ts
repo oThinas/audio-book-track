@@ -28,7 +28,11 @@ describe("useUpdateNarratorForm", () => {
   it("on success, calls onUpdated with the response data", async () => {
     const onUpdated = vi.fn();
     const updated = buildNarrator({ id: "n-1", name: "Updated" });
-    vi.mocked(apiFetch).mockResolvedValueOnce({ ok: true, data: { data: updated } });
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: true,
+      data: { data: updated },
+      headers: new Headers(),
+    });
 
     const { result } = renderUpdateHook("n-1", onUpdated);
 

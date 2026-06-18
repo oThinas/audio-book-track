@@ -4,19 +4,30 @@ import { Pencil, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
+import { ROW_ENTER_CLASS, ROW_EXIT_CLASS, type RowState } from "@/hooks/row-animation";
+import { useScrollIntoViewOnEnter } from "@/hooks/use-scroll-into-view-on-enter";
 import type { Narrator } from "@/lib/domain/narrator";
 import type { NarratorListItem } from "@/lib/repositories/narrator-repository";
+import { cn } from "@/lib/utils";
 
 import { useNarratorRow } from "./hooks/use-narrator-row";
 import { NarratorRowEditMode } from "./narrator-row-edit-mode";
 
 interface NarratorRowProps {
   readonly narrator: NarratorListItem;
+  readonly rowState?: RowState;
+  readonly onRowAnimationEnd?: () => void;
   readonly onUpdated?: (narrator: Narrator) => void;
   readonly onRequestDelete?: (narrator: Narrator) => void;
 }
 
-export function NarratorRow({ narrator, onUpdated, onRequestDelete }: NarratorRowProps) {
+export function NarratorRow({
+  narrator,
+  rowState = "idle",
+  onRowAnimationEnd,
+  onUpdated,
+  onRequestDelete,
+}: NarratorRowProps) {
   const {
     isEditing,
     handleStartEdit,
@@ -25,6 +36,7 @@ export function NarratorRow({ narrator, onUpdated, onRequestDelete }: NarratorRo
     handleRequestDelete,
     canDelete,
   } = useNarratorRow({ narrator, onUpdated, onRequestDelete });
+  const setRowRef = useScrollIntoViewOnEnter(rowState === "entering");
 
   if (isEditing) {
     return (
@@ -37,7 +49,20 @@ export function NarratorRow({ narrator, onUpdated, onRequestDelete }: NarratorRo
   }
 
   return (
-    <TableRow data-testid="narrator-row">
+    <TableRow
+      ref={setRowRef}
+      data-testid="narrator-row"
+      data-row-state={rowState}
+      className={cn(
+        rowState === "entering" && ROW_ENTER_CLASS,
+        rowState === "exiting" && ROW_EXIT_CLASS,
+      )}
+      onAnimationEnd={(event) => {
+        // Only the row's own enter/exit animation should clear its state, not a
+        // bubbled animation from a descendant.
+        if (event.target === event.currentTarget) onRowAnimationEnd?.();
+      }}
+    >
       <TableCell data-testid="narrator-name" className="text-foreground">
         {narrator.name}
       </TableCell>

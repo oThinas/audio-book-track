@@ -23,11 +23,13 @@ function makeRequest(token?: string): NextRequest {
   });
 }
 
+type PurgeFn = (cutoff: Date) => Promise<number>;
+
 describe("handleCronPurge", () => {
-  let purgeMock: ReturnType<typeof vi.fn>;
+  let purgeMock: ReturnType<typeof vi.fn<PurgeFn>>;
 
   beforeEach(() => {
-    purgeMock = vi.fn().mockResolvedValue(42);
+    purgeMock = vi.fn<PurgeFn>().mockResolvedValue(42);
   });
 
   afterEach(() => {

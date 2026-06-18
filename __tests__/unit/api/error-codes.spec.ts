@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { type ErrorCode, errorCodes } from "@/lib/api/error-codes";
+import { type ErrorCatalogEntry, type ErrorCode, errorCodes } from "@/lib/api/error-codes";
 
 const ALLOWED_STATUSES = new Set([0, 401, 404, 409, 422, 500]);
 const ALLOWED_VARIANTS = new Set(["error", "warning"]);
@@ -52,7 +52,8 @@ describe("error-codes catalog", () => {
   });
 
   it("variant is undefined or one of error/warning", () => {
-    for (const [code, entry] of Object.entries(errorCodes)) {
+    const entries = Object.entries(errorCodes) as ReadonlyArray<[string, ErrorCatalogEntry]>;
+    for (const [code, entry] of entries) {
       if (entry.variant !== undefined) {
         expect(
           ALLOWED_VARIANTS.has(entry.variant),

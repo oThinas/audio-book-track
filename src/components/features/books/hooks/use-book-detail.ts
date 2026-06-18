@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { ChapterRowData } from "@/components/features/chapters/chapters-table";
 import type { ChapterCreatedResult } from "@/components/features/chapters/hooks/use-add-chapter";
+import type { RowState } from "@/hooks/row-animation";
+import { useRowPresence } from "@/hooks/use-row-presence";
 import { apiFetch } from "@/lib/api/api-fetch";
 import type { BookStatus } from "@/lib/domain/book";
 import { computeBookStatus } from "@/lib/domain/book-status";
@@ -15,6 +17,8 @@ import type { UpdatedBookDetail } from "../book-edit-dialog";
 
 const COMPLETED_STATUSES: ReadonlyArray<ChapterStatus> = ["completed", "paid"];
 
+const getChapterId = (chapter: ChapterRowData): string => chapter.id;
+
 interface DetailState {
   readonly status: BookStatus;
   readonly chapters: ReadonlyArray<ChapterRowData>;
@@ -24,6 +28,8 @@ interface DetailState {
 export interface UseBookDetailReturn {
   readonly state: DetailState;
   readonly chaptersVersion: number;
+  /** Chapters to render = live chapters plus rows still animating their exit. */
+  readonly chapterRenderItems: ReadonlyArray<ChapterRowData>;
   readonly nonPaidChapters: ReadonlyArray<ChapterRowData>;
   readonly paidCount: number;
   readonly willDeleteBook: boolean;
@@ -54,6 +60,8 @@ export interface UseBookDetailReturn {
   readonly handleChapterCreated: (result: ChapterCreatedResult) => void;
   readonly handleChaptersVersionBump: (newVersion: number) => void;
   readonly handleChaptersConflict: () => Promise<void>;
+  readonly chapterRowState: (id: string) => RowState;
+  readonly onChapterRowAnimationEnd: (id: string) => void;
 }
 
 function recomputeAggregates(
@@ -107,6 +115,13 @@ export function useBookDetail(book: BookDetailData): UseBookDetailReturn {
   const [editOpen, setEditOpen] = useState(false);
   const [addChapterOpen, setAddChapterOpen] = useState(false);
 
+  const {
+    renderItems: chapterRenderItems,
+    rowState: chapterRowState,
+    remove: removeChapterRow,
+    onRowAnimationEnd: onChapterRowAnimationEnd,
+  } = useRowPresence({ items: state.chapters, getId: getChapterId });
+
   const nonPaidChapters = state.chapters.filter((c) => c.status !== "paid");
   const paidCount = state.chapters.length - nonPaidChapters.length;
   const willDeleteBook =
@@ -147,13 +162,18 @@ export function useBookDetail(book: BookDetailData): UseBookDetailReturn {
       router.push("/books");
       return;
     }
-    setState((prev) => {
-      const remaining = prev.chapters.filter((chapter) => chapter.id !== chapterId);
-      return {
-        ...prev,
-        status: remaining.length === 0 ? prev.status : computeBookStatus(remaining),
-        chapters: remaining,
-      };
+    // Retain the row through its exit animation, then drop it from the live
+    // chapters on animationend. Aggregates/status update immediately via commit;
+    // chapterRenderItems keeps the row visible until the animation finishes.
+    removeChapterRow(chapterId, () => {
+      setState((prev) => {
+        const remaining = prev.chapters.filter((chapter) => chapter.id !== chapterId);
+        return {
+          ...prev,
+          status: remaining.length === 0 ? prev.status : computeBookStatus(remaining),
+          chapters: remaining,
+        };
+      });
     });
     // Delete bumps `book.chapters_version` on the server. The 204 response
     // can't carry it, so refresh and let the sync effect catch up.
@@ -244,6 +264,12 @@ export function useBookDetail(book: BookDetailData): UseBookDetailReturn {
         router.push("/books");
         return;
       }
+      // Animate every selected row out (positions captured from the current
+      // render) before dropping them from the live chapters in a single commit.
+      const removedIds = Array.from(selectedIds);
+      for (const id of removedIds) {
+        removeChapterRow(id, () => {});
+      }
       setState((prev) => {
         const remaining = prev.chapters.filter((c) => !selectedIds.has(c.id));
         return {
@@ -268,6 +294,7 @@ export function useBookDetail(book: BookDetailData): UseBookDetailReturn {
   return {
     state,
     chaptersVersion,
+    chapterRenderItems,
     nonPaidChapters,
     paidCount,
     willDeleteBook,
@@ -294,5 +321,7 @@ export function useBookDetail(book: BookDetailData): UseBookDetailReturn {
     handleChapterCreated,
     handleChaptersVersionBump,
     handleChaptersConflict,
+    chapterRowState,
+    onChapterRowAnimationEnd,
   };
 }

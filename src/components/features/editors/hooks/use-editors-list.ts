@@ -2,14 +2,21 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import type { RowState } from "@/hooks/row-animation";
+import { useRowPresence } from "@/hooks/use-row-presence";
 import type { Editor } from "@/lib/domain/editor";
 import type { EditorListItem } from "@/lib/repositories/editor-repository";
 
 const NEW_ROW_NAME_INPUT_ID = "editor-new-name";
 
+const getEditorId = (editor: EditorListItem): string => editor.id;
+
 export interface UseEditorsListReturn {
   readonly editors: readonly EditorListItem[];
   readonly sortedEditors: readonly EditorListItem[];
+  readonly renderItems: readonly EditorListItem[];
+  readonly rowState: (id: string) => RowState;
+  readonly onRowAnimationEnd: (id: string) => void;
   readonly isCreating: boolean;
   readonly editorToDelete: Editor | null;
   readonly isDeleteDialogOpen: boolean;
@@ -35,6 +42,11 @@ export function useEditorsList(initial: readonly EditorListItem[]): UseEditorsLi
       ),
     [editors],
   );
+
+  const { renderItems, rowState, remove, onRowAnimationEnd } = useRowPresence({
+    items: sortedEditors,
+    getId: getEditorId,
+  });
 
   function handleNewClick() {
     if (isCreating) {
@@ -74,13 +86,21 @@ export function useEditorsList(initial: readonly EditorListItem[]): UseEditorsLi
   }
 
   function handleDeleted(id: string) {
-    setEditors((current) => current.filter((e) => e.id !== id));
+    // Retain the row through its exit animation, then drop it from the source on
+    // animationend. The DELETE already succeeded upstream (dialog), so commit is
+    // just the optimistic removal; failures never reach here.
+    remove(id, () => {
+      setEditors((current) => current.filter((e) => e.id !== id));
+    });
     router.refresh();
   }
 
   return {
     editors,
     sortedEditors,
+    renderItems,
+    rowState,
+    onRowAnimationEnd,
     isCreating,
     editorToDelete,
     isDeleteDialogOpen: editorToDelete !== null,

@@ -36,7 +36,11 @@ describe("useUpdateStudioForm", () => {
   it("on success, calls onUpdated with the response data", async () => {
     const onUpdated = vi.fn();
     const updated = buildStudio({ id: "s-1", name: "Updated Name" });
-    vi.mocked(apiFetch).mockResolvedValueOnce({ ok: true, data: { data: updated } });
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: true,
+      data: { data: updated },
+      headers: new Headers(),
+    });
 
     const { result } = renderUpdateHook("s-1", onUpdated);
 

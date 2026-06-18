@@ -40,7 +40,12 @@ function renderCreateBookHook(
     studios,
     ...renderHook(() => {
       const form = useForm<CreateBookInput>({
-        defaultValues: { title: "", studioId: "", pricePerHourCents: 0, numChapters: 1 },
+        defaultValues: {
+          title: "",
+          studioId: "",
+          pricePerHourCents: 0,
+          chapters: { numbered: 1, extras: [] },
+        },
       });
       const result = useCreateBookForm({ studios, form, onCreated, onOpenChange });
       return { form, ...result };
@@ -99,7 +104,7 @@ describe("useCreateBookForm", () => {
         title: "Test",
         studioId: "s-A",
         pricePerHourCents: 8000,
-        numChapters: 1,
+        chapters: { numbered: 1, extras: [] },
       });
     });
 
@@ -107,7 +112,12 @@ describe("useCreateBookForm", () => {
       "/api/v1/books",
       expect.objectContaining({
         method: "POST",
-        body: { title: "Test", studioId: "s-A", pricePerHourCents: 8000, numChapters: 1 },
+        body: {
+          title: "Test",
+          studioId: "s-A",
+          pricePerHourCents: 8000,
+          chapters: { numbered: 1, extras: [] },
+        },
       }),
     );
     expect(onCreated).toHaveBeenCalledTimes(1);
@@ -135,7 +145,7 @@ describe("useCreateBookForm", () => {
         title: "T",
         studioId: "s-inline",
         pricePerHourCents: 1,
-        numChapters: 1,
+        chapters: { numbered: 1, extras: [] },
       });
     });
 
@@ -156,7 +166,7 @@ describe("useCreateBookForm", () => {
         title: "T",
         studioId: "missing",
         pricePerHourCents: 1,
-        numChapters: 1,
+        chapters: { numbered: 1, extras: [] },
       });
     });
 
@@ -178,7 +188,7 @@ describe("useCreateBookForm", () => {
         title: "T",
         studioId: "x",
         pricePerHourCents: 1,
-        numChapters: 1,
+        chapters: { numbered: 1, extras: [] },
       });
     });
 
@@ -200,7 +210,7 @@ describe("useCreateBookForm", () => {
         title: "",
         studioId: "s-A",
         pricePerHourCents: 1,
-        numChapters: 1,
+        chapters: { numbered: 1, extras: [] },
       });
     });
 
@@ -220,7 +230,7 @@ describe("useCreateBookForm", () => {
         title: "Dup",
         studioId: "s-A",
         pricePerHourCents: 1,
-        numChapters: 1,
+        chapters: { numbered: 1, extras: [] },
       });
     });
 

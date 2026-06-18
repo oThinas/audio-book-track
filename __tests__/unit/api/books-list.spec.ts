@@ -62,7 +62,7 @@ describe("handleBooksList", () => {
       pricePerHourCents: 7500,
     });
     await chapterRepo.insertMany([
-      { bookId: book.id, number: 1, status: "paid", editedSeconds: 3600 },
+      { bookId: book.id, title: "Capítulo 1", position: 0, status: "paid", editedSeconds: 3600 },
     ]);
 
     const response = await handleBooksList(
