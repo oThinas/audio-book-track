@@ -78,9 +78,9 @@ export function useChaptersReorder<T extends ChapterRowEntity>({
       setIsSaving(false);
 
       if (!result.ok) {
-        startTransition(() => {
-          setOrderedChapters(previous);
-        });
+        // Rollback is urgent feedback that the reorder failed — restore the
+        // previous order immediately, not deferred inside a transition.
+        setOrderedChapters(previous);
         if (
           result.kind === "api-error" &&
           result.code === "BOOK_CHAPTERS_VERSION_CONFLICT" &&

@@ -120,7 +120,9 @@ export function MobileSidebar({ isOpen, onClose, menuButtonRef }: MobileSidebarP
         })}
       </nav>
 
-      {/* Bottom section: settings + logout */}
+      {/* Bottom section: settings + logout. No transitionTypes here: /settings
+          opens as an intercepted modal (US4), so the content boundary doesn't
+          change and there's no page transition to type. */}
       <div className="flex flex-col gap-1 px-3">
         {BOTTOM_ITEMS.map((item) => {
           const active = pathname === item.href;

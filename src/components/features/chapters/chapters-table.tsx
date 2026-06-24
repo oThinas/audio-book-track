@@ -222,34 +222,39 @@ export function ChaptersTable({
                 }
                 const chapter = row.original;
                 const orderedIndex = reorder.orderedChapters.findIndex((c) => c.id === chapter.id);
-                return (
-                  // Per-row ViewTransition: each row morphs to its new position
-                  // on reorder (US5, D6). Stable key preserves row identity.
-                  <ViewTransition key={chapter.id}>
-                    <ChapterRow
-                      chapter={chapter}
-                      narrators={narrators}
-                      editors={editors}
-                      narratorNameById={narratorNameById}
-                      editorNameById={editorNameById}
-                      isLastNonPaid={chapter.status !== "paid" && nonPaidCount === 1}
-                      isSelectionMode={isSelectionMode}
-                      isSelected={selectedIds.has(chapter.id)}
-                      isFirst={orderedIndex === 0}
-                      isLast={orderedIndex === reorder.orderedChapters.length - 1}
-                      canReorder={canReorder}
-                      focusContext={focusContext}
-                      rowState={rowState?.(chapter.id)}
-                      onRowAnimationEnd={
-                        onRowAnimationEnd ? () => onRowAnimationEnd(chapter.id) : undefined
-                      }
-                      onSaved={onChapterSaved}
-                      onDeleted={onChapterDeleted}
-                      onChaptersVersionChange={onChaptersVersionChange}
-                      onToggleSelected={onToggleSelected}
-                      onMoveBy={(id, delta) => void reorder.moveBy(id, delta)}
-                    />
-                  </ViewTransition>
+                const chapterRow = (
+                  <ChapterRow
+                    key={chapter.id}
+                    chapter={chapter}
+                    narrators={narrators}
+                    editors={editors}
+                    narratorNameById={narratorNameById}
+                    editorNameById={editorNameById}
+                    isLastNonPaid={chapter.status !== "paid" && nonPaidCount === 1}
+                    isSelectionMode={isSelectionMode}
+                    isSelected={selectedIds.has(chapter.id)}
+                    isFirst={orderedIndex === 0}
+                    isLast={orderedIndex === reorder.orderedChapters.length - 1}
+                    canReorder={canReorder}
+                    focusContext={focusContext}
+                    rowState={rowState?.(chapter.id)}
+                    onRowAnimationEnd={
+                      onRowAnimationEnd ? () => onRowAnimationEnd(chapter.id) : undefined
+                    }
+                    onSaved={onChapterSaved}
+                    onDeleted={onChapterDeleted}
+                    onChaptersVersionChange={onChaptersVersionChange}
+                    onToggleSelected={onToggleSelected}
+                    onMoveBy={(id, delta) => void reorder.moveBy(id, delta)}
+                  />
+                );
+                // Per-row ViewTransition only when reordering is active (US5, D6):
+                // each row then morphs to its new position. Grouped views don't
+                // reorder, so wrapping there would add a needless crossfade.
+                return canReorder ? (
+                  <ViewTransition key={chapter.id}>{chapterRow}</ViewTransition>
+                ) : (
+                  chapterRow
                 );
               })}
               {chapters.length === 0 && (
