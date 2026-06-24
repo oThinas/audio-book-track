@@ -70,8 +70,8 @@ Projeto único Next.js: `src/`, `__tests__/`, `scripts/`, `docs/` na raiz do rep
 
 **Independent Test**: Em produção, navegar (incl. transições soft) e ver page views por rota no painel de Analytics; em teste, nenhum evento de Analytics é disparado.
 
-- [ ] T012 [US2] Renderizar `<Analytics />` (de `@vercel/analytics/next`) dentro de `VercelTelemetry` no ramo habilitado, em `src/components/layout/vercel-telemetry.tsx` (depende de T010 — mesmo arquivo)
-- [ ] T013 [US2] [TDD] Estender `__tests__/e2e/telemetry-gating.spec.ts`: asserir que no run E2E **não** há requisição a `/_vercel/insights` (Analytics) nem `<script>` de Analytics no DOM (prova SC-003 para US2)
+- [X] T012 [US2] Renderizar `<Analytics />` (de `@vercel/analytics/next`) dentro de `VercelTelemetry` no ramo habilitado, em `src/components/layout/vercel-telemetry.tsx` (depende de T010 — mesmo arquivo)
+- [X] T013 [US2] [TDD] Estender `__tests__/e2e/telemetry-gating.spec.ts`: asserir que no run E2E **não** há requisição a `/_vercel/insights` (Analytics) nem `<script>` de Analytics no DOM (prova SC-003 para US2)
 
 **Checkpoint**: US1 e US2 funcionais e independentes. Telemetria completa, gateada por ambiente.
 

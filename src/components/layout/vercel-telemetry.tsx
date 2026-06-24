@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
 import { isTelemetryEnabled } from "@/lib/telemetry/is-telemetry-enabled";
@@ -8,7 +9,8 @@ import { isTelemetryEnabled } from "@/lib/telemetry/is-telemetry-enabled";
  * (no "use client") just reads the environment and renders nothing on the
  * client when disabled — zero client weight in dev/test/E2E/preview.
  *
- * US2 (Analytics) mounts <Analytics /> alongside Speed Insights in Phase 4.
+ * When enabled it mounts Speed Insights (Web Vitals) and Analytics (cookieless
+ * page views); both attribute routes automatically in the App Router.
  */
 export function VercelTelemetry(): React.ReactNode {
   const enabled = isTelemetryEnabled({
@@ -20,5 +22,10 @@ export function VercelTelemetry(): React.ReactNode {
     return null;
   }
 
-  return <SpeedInsights />;
+  return (
+    <>
+      <SpeedInsights />
+      <Analytics />
+    </>
+  );
 }
