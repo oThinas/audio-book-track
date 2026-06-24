@@ -287,3 +287,36 @@ html[data-primary-color="amber"] .dark {
     font-size: var(--font-size-base);
   }
 }
+
+/* === View Transitions (feature 038) === */
+/* Animation tokens — compositor-friendly only (transform/opacity). */
+:root {
+  --vt-duration: 300ms;
+  --vt-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --vt-slide-offset: 48px;
+}
+
+/* Neutral crossfade — default for any navigation without a directional type. */
+::view-transition-old(.vt-crossfade) {
+  animation: vt-fade-out var(--vt-duration) var(--vt-ease) both;
+}
+::view-transition-new(.vt-crossfade) {
+  animation: vt-fade-in var(--vt-duration) var(--vt-ease) both;
+}
+
+@keyframes vt-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes vt-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

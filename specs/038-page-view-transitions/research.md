@@ -22,6 +22,8 @@
 - *Wrap no root layout*: rejeitado — capturaria a sidebar e exigiria `view-transition-name` extra para isolá-la; o wrap no slot de conteúdo é mais simples (Princípio IV).
 - *Lib de animação (Framer Motion/`AnimatePresence`)*: rejeitado — adicionaria dependência de cliente (Princípio VIII proíbe sem justificativa) e não dá o handoff nativo skeleton→conteúdo do Suspense.
 
+**Nota de implementação (T004)**: a doc oficial do React ("Customizing navigation animations") usa a prop **`default={{ type: classe, default: classe-neutra }}`** para navegação de rota — o boundary persiste e seu conteúdo é **atualizado** (kind "update"), não montado/desmontado, então `enter`/`exit` não disparam. O contrato C2 mencionava `enter`/`exit` como aproximação; a implementação usa `default`, que é o caminho documentado e cobre o update + fallback `vt-crossfade` para tipos não mapeados (`none`).
+
 ---
 
 ## D2. Vocabulário de transition types e resolução de direção

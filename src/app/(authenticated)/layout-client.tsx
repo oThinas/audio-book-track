@@ -1,12 +1,27 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { type PropsWithChildren, useEffect, useRef } from "react";
+import { type PropsWithChildren, useEffect, useRef, ViewTransition } from "react";
 import { useMobileMenu } from "@/components/layout/hooks/use-mobile-menu";
 import { useSidebar } from "@/components/layout/hooks/use-sidebar";
 import { MobileHeader } from "@/components/layout/mobile-header";
 import { MobileSidebar } from "@/components/layout/mobile-sidebar";
 import { Sidebar } from "@/components/layout/sidebar";
+
+/**
+ * Maps navigation transition types (from resolveNavTransition, applied via
+ * Link `transitionTypes` -> React.addTransitionType) to view-transition CSS
+ * classes. Route navigation updates the persistent content boundary, so the
+ * `default` prop drives it. Any unmapped type (e.g. "none") falls back to the
+ * neutral crossfade. Directional classes are defined in globals.css.
+ */
+const CONTENT_TRANSITION_CLASSES = {
+  "nav-up": "nav-up",
+  "nav-down": "nav-down",
+  "depth-forward": "depth-forward",
+  "depth-back": "depth-back",
+  default: "vt-crossfade",
+} as const;
 
 interface AuthenticatedLayoutClientProps {
   readonly initialCollapsed: boolean;
@@ -46,7 +61,9 @@ export function AuthenticatedLayoutClient({
         menuButtonRef={menuButtonRef}
       />
       <Sidebar collapsed={collapsed} onToggle={toggleSidebar} />
-      <div className="flex-1 overflow-auto bg-background">{children}</div>
+      <div className="flex-1 overflow-auto bg-background">
+        <ViewTransition default={CONTENT_TRANSITION_CLASSES}>{children}</ViewTransition>
+      </div>
     </div>
   );
 }

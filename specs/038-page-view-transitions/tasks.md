@@ -37,8 +37,8 @@ Web app Next.js App Router, estrutura `src/` existente. Testes em `__tests__/uni
 
 **⚠️ CRITICAL**: Nenhuma user story começa antes desta fase.
 
-- [ ] T003 [P] Adicionar design tokens de transição (`--vt-duration` ≤ 400ms, `--vt-ease`, `--vt-slide-offset`) e os keyframes do crossfade neutro default (`vt-crossfade`, só `transform`/`opacity`) em `src/app/globals.css` (D8, contrato C2)
-- [ ] T004 Envolver `{children}` em `<ViewTransition>` (import de `react`) em `src/app/(authenticated)/layout-client.tsx`, com o mapeamento `enter`/`exit` de tipos→classes e `default: "vt-crossfade"` (D1, contrato C2). Sidebar permanece fora do wrapper. Depende de T001
+- [X] T003 [P] Adicionar design tokens de transição (`--vt-duration` ≤ 400ms, `--vt-ease`, `--vt-slide-offset`) e os keyframes do crossfade neutro default (`vt-crossfade`, só `transform`/`opacity`) em `src/app/globals.css` (D8, contrato C2)
+- [X] T004 Envolver `{children}` em `<ViewTransition>` (import de `react`) em `src/app/(authenticated)/layout-client.tsx`, com o mapeamento de tipos→classes via prop `default` e `default: "vt-crossfade"` (D1, contrato C2; nota de implementação em research.md). Sidebar permanece fora do wrapper. Depende de T001
 
 **Checkpoint**: Toda navegação já faz crossfade neutro; sidebar estável. Base pronta para direção, handoff e reduced-motion.
 
