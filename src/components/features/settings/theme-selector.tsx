@@ -44,7 +44,7 @@ export function ThemeSelector({ initialValue }: ThemeSelectorProps) {
           )}
         >
           <span className="sr-only">
-            <RadioGroupItem value={option.value} />
+            <RadioGroupItem value={option.value} aria-label={option.label} />
           </span>
           <option.icon className="size-4" />
           {option.label}

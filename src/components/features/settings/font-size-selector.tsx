@@ -45,7 +45,7 @@ export function FontSizeSelector({ initialValue }: FontSizeSelectorProps) {
           )}
         >
           <span className="sr-only">
-            <RadioGroupItem value={option.value} />
+            <RadioGroupItem value={option.value} aria-label={option.label} />
           </span>
           {option.label}
         </Label>
