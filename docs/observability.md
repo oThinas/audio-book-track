@@ -139,11 +139,35 @@ Playbook curto para os incidents mais comuns.
 
 ---
 
+## 5. Métricas de campo — Web Vitals & Analytics (Vercel)
+
+Divisão de responsabilidades das métricas (FR-009): **toda métrica de produto e de performance é centralizada na Vercel**; o Sentry permanece **só-erros**.
+
+| Sinal | Ferramenta | Onde olhar |
+|---|---|---|
+| Web Vitals de campo (LCP, INP, CLS, FCP, TTFB) por rota | Vercel **Speed Insights** | Vercel Dashboard → Speed Insights |
+| Page views por rota (inclui navegação client-side) | Vercel **Analytics** | Vercel Dashboard → Analytics |
+| Erros (500, exceptions) | **Sentry** (`tracesSampleRate=0` — sem tracing/métricas) | Sentry → Issues |
+
+- Montagem: `<SpeedInsights />` + `<Analytics />` no layout raiz, via o Server Component `VercelTelemetry` ([src/components/layout/vercel-telemetry.tsx](../src/components/layout/vercel-telemetry.tsx)).
+- **Gating**: ativa **apenas em produção real** (`VERCEL_ENV === "production"` **e** `E2E_TEST_MODE !== "1"`). Desligada em dev, test, E2E e **preview deploys** — peso zero no cliente nesses ambientes (o wrapper renderiza `null`).
+- O Sentry **não** recebe métricas de performance (`tracesSampleRate=0`): Web Vitals e uso vivem só nos painéis da Vercel. Confirmação pós-deploy: navegar em produção e ver as métricas por rota aparecerem (até ~24h para Speed Insights).
+
+### Postura de privacidade (FR-018)
+
+- **Speed Insights**: Web Vitals anonimizados por rota + contexto de dispositivo/conexão agregado pela Vercel. Sem identificação de usuário.
+- **Analytics**: page views **cookieless** e **sem PII**; respeita **Do Not Track** (DNT). Atribuição por rota do App Router; nenhuma rota auditada carrega PII em query string.
+- **Sem banner de consentimento**: a coleta é cookieless e sem PII, logo não recai em consentimento de cookies. `beforeSend` permanece disponível como camada de redação futura (não usado nesta entrega).
+- Nada disso é persistido no banco do app — os dados vivem exclusivamente nos painéis da Vercel.
+
+---
+
 ## Quotas do free tier (revisar trimestralmente)
 
 | Serviço | Limite gratuito | Como monitorar |
 |---|---|---|
 | Vercel | 100 GB-h compute/mês, 100k invocations/dia | Vercel Dashboard → Usage |
+| Vercel Analytics / Speed Insights | eventos/data points conforme o plano | Vercel Dashboard → Usage |
 | Sentry | 5k erros/mês | Sentry Dashboard → Quota |
 | UptimeRobot | 50 monitors, 5 min interval | UptimeRobot Account |
 | Supabase | 500 MB DB, 2 GB transfer | Project → Settings → Usage |

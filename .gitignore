@@ -41,6 +41,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# diagnostics (raw Lighthouse artifacts — only the curated report in docs/ is versioned)
+.lighthouse/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
