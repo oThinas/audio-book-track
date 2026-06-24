@@ -107,7 +107,9 @@ export function ChaptersTable({
       const next = [...currentIds];
       const [removed] = next.splice(fromIndex, 1);
       next.splice(toIndex, 0, removed);
-      void reorder.apply(next);
+      // Drag-and-drop keeps dnd-kit's own drop animation — opt out of the
+      // view-transition morph so the two don't compete (US5 review feedback).
+      void reorder.apply(next, { animate: false });
     },
     [reorder],
   );
@@ -200,7 +202,11 @@ export function ChaptersTable({
                 <TableHead className="w-56">Editor</TableHead>
                 <TableHead className="w-44">Prazo</TableHead>
                 <TableHead className="w-40 text-right">Horas editadas</TableHead>
-                {!isSelectionMode && <TableHead className="w-28 text-right">Ações</TableHead>}
+                {!isSelectionMode && (
+                  // Mobile shows 4 actions (↑ ↓ ✏ 🗑); w-28 clipped them past the
+                  // table edge. Desktop hides ↑/↓, so it stays compact (md:w-28).
+                  <TableHead className="w-40 text-right md:w-28">Ações</TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>

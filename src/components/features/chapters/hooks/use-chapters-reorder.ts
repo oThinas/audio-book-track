@@ -17,7 +17,10 @@ export interface UseChaptersReorderArgs<T extends ChapterRowEntity> {
 export interface UseChaptersReorderReturn<T extends ChapterRowEntity> {
   readonly orderedChapters: ReadonlyArray<T>;
   readonly chaptersVersion: number;
-  readonly apply: (newOrderedIds: ReadonlyArray<string>) => Promise<void>;
+  readonly apply: (
+    newOrderedIds: ReadonlyArray<string>,
+    options?: { readonly animate?: boolean },
+  ) => Promise<void>;
   readonly moveBy: (chapterId: string, delta: number) => Promise<void>;
   readonly isSaving: boolean;
 }
@@ -56,15 +59,25 @@ export function useChaptersReorder<T extends ChapterRowEntity>({
   }, [chapters]);
 
   const apply = useCallback(
-    async (newOrderedIds: ReadonlyArray<string>): Promise<void> => {
+    async (
+      newOrderedIds: ReadonlyArray<string>,
+      options?: { readonly animate?: boolean },
+    ): Promise<void> => {
       const previous = orderedChapters;
       const optimistic = reorderArray(previous, newOrderedIds);
-      // startTransition lets the per-row <ViewTransition> morph each row to its
-      // new position (US5). The browser's default group animation handles the
-      // reposition; reduced-motion collapses it (globals.css).
-      startTransition(() => {
+      // The ↑/↓ buttons morph each row to its new position via the per-row
+      // <ViewTransition> inside a startTransition (US5). The page content
+      // boundary stays visually still because it's the viewport-sized scroll
+      // container (layout-client), so its crossfade is between near-identical
+      // snapshots — no book-title flash. Drag-and-drop keeps dnd-kit's own drop
+      // animation, so it opts out of the view transition with an urgent update.
+      if (options?.animate ?? true) {
+        startTransition(() => {
+          setOrderedChapters(optimistic);
+        });
+      } else {
         setOrderedChapters(optimistic);
-      });
+      }
       setIsSaving(true);
 
       const result = await apiFetch<{ data: { chaptersVersion: number } }>(

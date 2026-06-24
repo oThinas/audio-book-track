@@ -81,4 +81,45 @@ test.describe("Page transitions — US5 — chapter reorder morph", () => {
     expect(reorderResponse.status()).toBe(200);
     await expect(page.locator('[data-testid^="chapter-row-"]').first()).toContainText("Capítulo 2");
   });
+
+  test("captures a viewport-sized content boundary on reorder (no title flash)", async ({
+    page,
+    appServer,
+  }) => {
+    const { bookId, c1 } = await seedThreeChapterBook(appServer.schemaName, page);
+
+    await page.goto(`/books/${bookId}`);
+    await expect(page.getByTestId(`chapter-row-${c1}`)).toBeVisible();
+
+    // The page content boundary crossfades on an in-page reorder. If the boundary
+    // wraps the *tall* content, its top-anchored snapshot flashes the book title
+    // over the scrolled content. The boundary must instead be the viewport-sized
+    // scroll container, so its snapshot is bounded and the crossfade invisible.
+    // Poll, from inside the page, for the height of whichever element receives a
+    // view-transition-name during the reorder (the captured content boundary).
+    const collectBoundary = page.evaluate(async () => {
+      let boundaryHeight = -1;
+      const viewportHeight = window.innerHeight;
+      const start = performance.now();
+      while (performance.now() - start < 1200) {
+        const el = document.querySelector("[data-vt-type]") as HTMLElement | null;
+        if (el && getComputedStyle(el).viewTransitionName !== "none") {
+          boundaryHeight = el.clientHeight;
+        }
+        await new Promise((resolve) => {
+          requestAnimationFrame(() => resolve(undefined));
+        });
+      }
+      return { boundaryHeight, viewportHeight };
+    });
+
+    // Move a row while the poller runs (↑/↓ path → morph).
+    await page.getByTestId(`chapter-move-down-${c1}`).click();
+    const { boundaryHeight, viewportHeight } = await collectBoundary;
+
+    // The scroll container was the captured boundary (named), and it is bounded to
+    // the viewport — never a tall snapshot that could flash the title.
+    expect(boundaryHeight).toBeGreaterThan(0);
+    expect(boundaryHeight).toBeLessThanOrEqual(viewportHeight);
+  });
 });

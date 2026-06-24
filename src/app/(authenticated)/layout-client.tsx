@@ -68,9 +68,15 @@ export function AuthenticatedLayoutClient({
         menuButtonRef={menuButtonRef}
       />
       <Sidebar collapsed={collapsed} onToggle={toggleSidebar} />
-      <div className="flex-1 overflow-auto bg-background" data-vt-type={navTransitionType}>
-        <ViewTransition default={CONTENT_TRANSITION_CLASSES}>{children}</ViewTransition>
-      </div>
+      {/* The boundary wraps the scroll container (not the tall content inside it)
+          so its view-transition snapshot is viewport-sized. Otherwise a tall
+          snapshot, captured top-anchored, flashes the page top (book title) over
+          the scrolled content on in-page updates like chapter reorder (US5). */}
+      <ViewTransition default={CONTENT_TRANSITION_CLASSES}>
+        <div className="flex-1 overflow-auto bg-background" data-vt-type={navTransitionType}>
+          {children}
+        </div>
+      </ViewTransition>
     </div>
   );
 }

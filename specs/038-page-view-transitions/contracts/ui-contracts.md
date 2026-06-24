@@ -116,7 +116,9 @@ const pathname = usePathname();
 
 ## C4. Contrato do morph de reordenação (US5)
 
-- Corpo da lista de capítulos (`chapters-table.tsx`) envolto em `<ViewTransition>`; `key={chapter.id}` estável.
-- `use-chapters-reorder.ts`: `apply`/`moveBy` executam a atualização otimista de ordem dentro de `startTransition` → React anima o reposicionamento.
+- Cada linha de capítulo (`chapters-table.tsx`) é envolta em um `<ViewTransition>` por linha quando `canReorder`; `key={chapter.id}` estável.
+- **Botões ↑/↓** (`moveBy` → `apply` com `animate` default `true`): a atualização otimista roda em `startTransition` → cada linha morfa para a nova posição via seu grupo próprio.
+- **Boundary de conteúdo viewport-sized** (`layout-client.tsx`): o `<ViewTransition default={...}>` envolve o **scroll container** (`flex-1 overflow-auto`), não o conteúdo alto dentro dele. Em um reorder in-page, o boundary faz crossfade do seu snapshot — mas como o snapshot é do tamanho da viewport (linhas extraídas em grupos próprios), ele é entre imagens quase idênticas → **invisível**, sem flash do título. Se o boundary envolvesse o conteúdo alto, o snapshot ancorado no topo mostraria o título do livro sobre o conteúdo rolado (bug corrigido na revisão da US5).
+- **Drag-and-drop** (`handleDragEnd` → `apply` com `{ animate: false }`): atualização urgente (fora de `startTransition`) → mantém a animação de soltar nativa do dnd-kit; **nenhuma** view-transition concorrente.
 - Sob reduced-motion: reposiciona instantâneo (via bloco C2).
 - Contrato de não-regressão: persistência (`expectedVersion`/409) inalterada; classes de presença da feature 037 (`ROW_ENTER_CLASS`/`ROW_EXIT_CLASS`) coexistem (gatilhos distintos: presença ≠ reposicionamento).
