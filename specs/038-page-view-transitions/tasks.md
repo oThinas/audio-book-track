@@ -114,17 +114,17 @@ Web app Next.js App Router, estrutura `src/` existente. Testes em `__tests__/uni
 
 ### Tests for User Story 4 ⚠️ (escrever PRIMEIRO, devem FALHAR)
 
-- [ ] T019 [P] [US4] E2E do modal em `__tests__/e2e/settings-modal.spec.ts`: abre sobre a página com URL `/settings`; overlay cobre a sidebar (não clicável); fecha por botão/Esc/overlay e restaura; back fecha; deep-link/refresh em `/settings` renderiza standalone (contrato C3)
+- [X] T019 [P] [US4] E2E do modal em `__tests__/e2e/settings-modal.spec.ts`: abre sobre a página com URL `/settings`; overlay (`[data-slot="dialog-overlay"]`) cobre a app; fecha por Esc/overlay/back e restaura; deep-link/refresh renderiza standalone (contrato C3). _Execução em T036._
 
 ### Implementation for User Story 4
 
-- [ ] T020 [US4] Consultar `design.pen` via Pencil MCP para o layout do modal de configurações (Princípio VII/XV) antes de montar a tela
-- [ ] T021 [P] [US4] Confirmar/adicionar o primitivo `Dialog` do shadcn (`bunx --bun shadcn@latest add dialog`) em `src/components/ui/dialog.tsx` (D4)
-- [ ] T022 [US4] Extrair as seções de configuração para `src/components/features/settings/settings-content.tsx` (Theme/FontSize/FavoritePage/PrimaryColor/DashboardWidgets), recebendo `preferences` por prop (reuso página+modal, D4)
-- [ ] T023 [US4] Refatorar `src/app/(authenticated)/settings/page.tsx` para renderizar `<SettingsContent>` mantendo `PageContainer`/`PageHeader` (standalone preservado, FR-011). Depende de T022
-- [ ] T024 [P] [US4] Criar `src/app/(authenticated)/@modal/default.tsx` retornando `null` (slot vazio, contrato C3)
-- [ ] T025 [US4] Criar `src/app/(authenticated)/@modal/(.)settings/page.tsx` renderizando `<SettingsContent>` dentro de `<Dialog>` (overlay cobre a app), buscando preferências no Server Component (FR-009/FR-010/FR-016). Depende de T021, T022
-- [ ] T026 [US4] Atualizar `src/app/(authenticated)/layout.tsx` para aceitar a prop `modal` (parallel route) e renderizá-la ao lado de `children` (contrato C3)
+- [~] T020 [US4] Pencil MCP não conectado nesta sessão (editor VS Code inativo) → consulta a `design.pen` adiada para revisão. Risco de design nulo: o modal reutiliza o conteúdo de settings já aprovado dentro do primitivo `Dialog` existente
+- [X] T021 [P] [US4] Primitivo `Dialog` já existe em `src/components/ui/dialog.tsx` (Base UI) — confirmado, sem adição (D4)
+- [X] T022 [US4] Extrair as seções de configuração para `src/components/features/settings/settings-content.tsx` (Theme/FontSize/FavoritePage/PrimaryColor/DashboardWidgets), recebendo `preferences` por prop (reuso página+modal, D4). Busca server extraída para `load-preferences.ts`
+- [X] T023 [US4] Refatorar `src/app/(authenticated)/settings/page.tsx` para renderizar `<SettingsContent>` mantendo `PageContainer`/`PageHeader` (standalone preservado, FR-011). Depende de T022
+- [X] T024 [P] [US4] Criar `src/app/(authenticated)/@modal/default.tsx` retornando `null` (slot vazio, contrato C3)
+- [X] T025 [US4] Criar `src/app/(authenticated)/@modal/(.)settings/page.tsx` renderizando `<SettingsContent>` dentro de `<Dialog>` (via `settings-modal.tsx` + hook `use-settings-modal.ts`), buscando preferências no Server Component (FR-009/FR-010/FR-016). Depende de T021, T022
+- [X] T026 [US4] Atualizar `src/app/(authenticated)/layout.tsx` para aceitar a prop `modal` (parallel route) e renderizá-la fora do boundary de conteúdo, ao lado de `children` (contrato C3)
 
 **Checkpoint**: US1–US4 funcionam independentemente.
 

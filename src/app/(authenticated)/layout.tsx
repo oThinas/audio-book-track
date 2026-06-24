@@ -8,8 +8,10 @@ import { AuthenticatedLayoutClient } from "./layout-client";
 
 export default async function AuthenticatedLayout({
   children,
+  modal,
 }: Readonly<{
   children: React.ReactNode;
+  modal: React.ReactNode;
 }>) {
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -27,12 +29,18 @@ export default async function AuthenticatedLayout({
   const preferences = await service.getOrDefault(session.user.id);
 
   return (
-    <AuthenticatedLayoutClient initialCollapsed={initialCollapsed}>
-      <PreferenceInitializer
-        fontSize={preferences.fontSize}
-        primaryColor={preferences.primaryColor}
-      />
-      {children}
-    </AuthenticatedLayoutClient>
+    <>
+      <AuthenticatedLayoutClient initialCollapsed={initialCollapsed}>
+        <PreferenceInitializer
+          fontSize={preferences.fontSize}
+          primaryColor={preferences.primaryColor}
+        />
+        {children}
+      </AuthenticatedLayoutClient>
+      {/* Parallel @modal slot — intercepted routes (e.g. /settings) render here,
+          outside the content view-transition boundary; the Dialog portals over
+          the whole app. Empty (null) otherwise. */}
+      {modal}
+    </>
   );
 }
