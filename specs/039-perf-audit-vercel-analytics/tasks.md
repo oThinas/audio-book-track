@@ -57,8 +57,8 @@ Projeto único Next.js: `src/`, `__tests__/`, `scripts/`, `docs/` na raiz do rep
 
 **Independent Test**: Em produção, navegar e ver Web Vitals por rota no painel de Speed Insights; em ambiente de teste, nenhum beacon de Speed Insights é disparado.
 
-- [ ] T010 [US1] Renderizar `<SpeedInsights />` (de `@vercel/speed-insights/next`) dentro de `VercelTelemetry` no ramo habilitado, em `src/components/layout/vercel-telemetry.tsx`
-- [ ] T011 [US1] [TDD] Teste E2E em `__tests__/e2e/telemetry-gating.spec.ts`: reusando `login()`, asserir que no run E2E (sem `VERCEL_ENV=production`) **não** há requisição a `/_vercel/speed-insights` nem `<script>` de Speed Insights no DOM (prova SC-003 para US1)
+- [X] T010 [US1] Renderizar `<SpeedInsights />` (de `@vercel/speed-insights/next`) dentro de `VercelTelemetry` no ramo habilitado, em `src/components/layout/vercel-telemetry.tsx`
+- [X] T011 [US1] [TDD] Teste E2E em `__tests__/e2e/telemetry-gating.spec.ts`: reusando `login()`, asserir que no run E2E (sem `VERCEL_ENV=production`) **não** há requisição a `/_vercel/speed-insights` nem `<script>` de Speed Insights no DOM (prova SC-003 para US1)
 
 **Checkpoint**: US1 funcional e independentemente verificável. **MVP entregável.**
 

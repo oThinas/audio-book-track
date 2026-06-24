@@ -1,3 +1,5 @@
+import { SpeedInsights } from "@vercel/speed-insights/next";
+
 import { isTelemetryEnabled } from "@/lib/telemetry/is-telemetry-enabled";
 
 /**
@@ -6,9 +8,7 @@ import { isTelemetryEnabled } from "@/lib/telemetry/is-telemetry-enabled";
  * (no "use client") just reads the environment and renders nothing on the
  * client when disabled — zero client weight in dev/test/E2E/preview.
  *
- * The enabled branch is filled incrementally by later phases: US1 mounts
- * <SpeedInsights /> and US2 mounts <Analytics />. Until then it renders null in
- * every environment.
+ * US2 (Analytics) mounts <Analytics /> alongside Speed Insights in Phase 4.
  */
 export function VercelTelemetry(): React.ReactNode {
   const enabled = isTelemetryEnabled({
@@ -20,6 +20,5 @@ export function VercelTelemetry(): React.ReactNode {
     return null;
   }
 
-  // US1 (Speed Insights) and US2 (Analytics) mount here in Phases 3 and 4.
-  return null;
+  return <SpeedInsights />;
 }
