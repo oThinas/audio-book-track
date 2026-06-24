@@ -152,11 +152,11 @@ Helper puro `resolveNavTransition(fromPath, toPath)` (em `src/lib/navigation/nav
 
 ---
 
-## D8. Tokens de animação (durações/curvas/offsets)
+## D8. Tokens de animação e modelo de slide
 
-**Decision**: Definir duração, curva e offsets de slide como **CSS custom properties** (design tokens) em `globals.css` (ex.: `--vt-duration: 300ms; --vt-ease: ease-in-out; --vt-slide-offset: 48px;`), referenciadas pelos keyframes. Alvo ≤ 400 ms (NFR-001/SC-003). Animar somente `transform`/`opacity` (FR-013, Princípio VIII/IX).
+**Decision**: Duração e curva como **CSS custom properties** (`--vt-duration: 350ms; --vt-ease`) em `globals.css`, alvo ≤ 400 ms (NFR-001/SC-003). As transições direcionais são **slides de viewport inteiro** (push estilo mobile): cada lado translada `100%` no eixo (vertical para irmãos de topo, horizontal para profundidade), entrando e saindo borda a borda **sem fade** — uma "rolagem" entre páginas. Apenas `transform` (FR-013, Princípio VIII/IX). O crossfade neutro (`vt-crossfade`, só `opacity`) fica reservado ao `default` (back/forward e reveal de skeleton da US2). `::view-transition-group(*) { overflow: clip }` contém o slide na área de conteúdo para não vazar sobre a sidebar.
 
-**Rationale**: Princípio IX proíbe valores visuais hardcoded; tokens permitem ajuste fino sem varrer keyframes. Mantém consistência com as transições já existentes (durações 150–200ms na sidebar/rows).
+**Rationale**: a primeira iteração usava translate de 48px + fade, que num slide de página inteira lê como **crossfade** (a opacidade domina o deslocamento pequeno) — não era o efeito desejado. O usuário pediu explicitamente um scroll vertical/horizontal estilo dispositivo móvel; translate de 100% sem opacidade entrega exatamente isso. Sem `--vt-slide-offset` (o offset agora é sempre 100%). Duração subiu para 350ms para um slide completo mais natural.
 
 ---
 

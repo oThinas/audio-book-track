@@ -86,4 +86,40 @@ test.describe("Page transitions — US1 — directional navigation", () => {
     );
     expect(pageErrors).toEqual([]);
   });
+
+  test("runs the directional slide animation, not a crossfade", async ({ page }) => {
+    await login(page);
+    await page.goto("/dashboard");
+
+    // Poll, from inside the page, for the view-transition keyframe names that
+    // actually run during the navigation window.
+    const collectNames = page.evaluate(async () => {
+      const seen = new Set<string>();
+      const start = performance.now();
+      while (performance.now() - start < 1500) {
+        for (const animation of document.getAnimations()) {
+          const name = (animation as CSSAnimation).animationName;
+          if (name?.startsWith("vt-")) {
+            seen.add(name);
+          }
+        }
+        await new Promise((resolve) => {
+          requestAnimationFrame(() => resolve(undefined));
+        });
+      }
+      return [...seen];
+    });
+
+    // Navigate while the poller runs (dashboard -> books = nav-down).
+    await page.getByTestId("sidebar").getByRole("link", { name: "Livros" }).click();
+    const names = await collectNames;
+
+    // The directional full-viewport slide ran for the content boundary: nav-down
+    // moves content up, so a vt-slide-*-up keyframe is present (the out/in pair
+    // runs simultaneously — asserting either is enough and avoids poller-timing
+    // flake). A vt-fade may also appear: the books loading.tsx -> content reveal
+    // is an untyped crossfade by design (US2/D5 skeleton handoff), not the page
+    // transition.
+    expect(names.some((name) => name.startsWith("vt-slide-") && name.endsWith("-up"))).toBe(true);
+  });
 });

@@ -51,24 +51,23 @@ export function resolveNavTransition(fromPath: string, toPath: string): NavTrans
 
 ## C2. Contrato CSS — view-transition classes
 
-Mapeamento `transition type → view-transition-class → keyframes`. Definido em `src/app/globals.css`. Apenas `transform`/`opacity` (FR-013). Tokens em custom properties (D8).
+Mapeamento `transition type → view-transition-class → keyframes`. Definido em `src/app/globals.css`. Direcionais: **slide de viewport inteiro (100%), apenas `transform`, sem fade** (push estilo mobile). Neutro: `opacity` (FR-013). Tokens em custom properties (D8).
 
 | Type | `::view-transition-old` (saindo) | `::view-transition-new` (entrando) |
 |------|----------------------------------|-------------------------------------|
-| `nav-down` | desliza para cima + fade out | entra de baixo + fade in |
-| `nav-up` | desliza para baixo + fade out | entra de cima + fade in |
-| `depth-forward` | desliza para a esquerda + fade out | entra pela direita + fade in |
-| `depth-back` | desliza para a direita + fade out | entra pela esquerda + fade in |
-| `none` (default) | fade out | fade in (crossfade neutro) |
+| `nav-down` | desliza 100% para cima | entra de baixo (100% → 0) |
+| `nav-up` | desliza 100% para baixo | entra de cima (-100% → 0) |
+| `depth-forward` | desliza 100% para a esquerda | entra pela direita (100% → 0) |
+| `depth-back` | desliza 100% para a direita | entra pela esquerda (-100% → 0) |
+| `none` (default) | fade out (opacity) | fade in (crossfade neutro) |
 
-Tokens (exemplo, ajustáveis): `--vt-duration` (≤ 400ms), `--vt-ease`, `--vt-slide-offset`.
+Tokens: `--vt-duration` (350ms, ≤ 400ms), `--vt-ease`. Sem `--vt-slide-offset` (offset é sempre 100%). `::view-transition-group(*) { overflow: clip }` contém o slide na área de conteúdo (sidebar estável).
 
-**Contrato de aplicação no `<ViewTransition>`** (slot de conteúdo em `layout-client.tsx`):
+**Contrato de aplicação no `<ViewTransition>`** (slot de conteúdo em `layout-client.tsx`) — prop `default` (navegação de rota = "update" do boundary persistente; ver nota D1):
 
 ```tsx
 <ViewTransition
-  enter={{ "nav-down": "nav-down", "nav-up": "nav-up", "depth-forward": "depth-forward", "depth-back": "depth-back", default: "vt-crossfade" }}
-  exit={{ "nav-down": "nav-down", "nav-up": "nav-up", "depth-forward": "depth-forward", "depth-back": "depth-back", default: "vt-crossfade" }}
+  default={{ "nav-up": "nav-up", "nav-down": "nav-down", "depth-forward": "depth-forward", "depth-back": "depth-back", default: "vt-crossfade" }}
 >
   {children}
 </ViewTransition>
