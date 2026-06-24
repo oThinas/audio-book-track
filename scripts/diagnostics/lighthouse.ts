@@ -13,7 +13,6 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { chromium, type Page } from "@playwright/test";
-import { launch } from "chrome-launcher";
 import lighthouse, { desktopConfig } from "lighthouse";
 
 type FormFactor = "mobile" | "desktop";
@@ -45,6 +44,21 @@ async function login(page: Page, baseURL: string): Promise<void> {
   await page.locator("#password").fill("admin123");
   await page.locator("#login-submit").click();
   await page.waitForURL((url) => !url.pathname.startsWith("/login"), { timeout: 10_000 });
+}
+
+async function discoverBookDetailPath(page: Page): Promise<string | null> {
+  // Book rows navigate via onClick (not <a href>), exposing the id through a
+  // data-testid="book-row-<id>" attribute. Short timeout so the run still
+  // completes the other audits when the list is empty.
+  const firstRow = page.locator('[data-testid^="book-row-"]').first();
+  try {
+    await firstRow.waitFor({ state: "visible", timeout: 10_000 });
+    const testId = await firstRow.getAttribute("data-testid");
+    const bookId = testId?.replace(/^book-row-/, "");
+    return bookId ? `/books/${bookId}` : null;
+  } catch {
+    return null;
+  }
 }
 
 async function audit(
@@ -86,17 +100,23 @@ async function main(): Promise<void> {
   const outDir = join(process.cwd(), ".lighthouse");
   mkdirSync(outDir, { recursive: true });
 
-  const chrome = await launch({ chromeFlags: ["--headless=new", "--no-sandbox"] });
-  const browser = await chromium.connectOverCDP(`http://localhost:${chrome.port}`);
+  // Playwright launches the browser and exposes a CDP port that Lighthouse
+  // attaches to (the documented Playwright + Lighthouse pattern). Lighthouse
+  // opens its own tab in the same browser, so the Playwright-established session
+  // cookie is shared (kept across audits via disableStorageReset).
+  const debugPort = Number(process.env.DIAGNOSE_DEBUG_PORT ?? 9222);
+  const browser = await chromium.launch({
+    headless: true,
+    args: [`--remote-debugging-port=${debugPort}`],
+  });
 
   try {
-    const context = browser.contexts()[0] ?? (await browser.newContext());
-    const page = context.pages()[0] ?? (await context.newPage());
+    const page = await browser.newPage();
 
     // Public routes first, before a session exists.
     for (const formFactor of FORM_FACTORS) {
       for (const route of PUBLIC_ROUTES) {
-        await audit(`${baseURL}${route.path}`, route.slug, formFactor, chrome.port, outDir);
+        await audit(`${baseURL}${route.path}`, route.slug, formFactor, debugPort, outDir);
       }
     }
 
@@ -104,19 +124,17 @@ async function main(): Promise<void> {
 
     // Discover a real /books/:id from the list for the detail audit.
     await page.goto(`${baseURL}/books`);
-    const detailHref = await page.locator('a[href^="/books/"]').first().getAttribute("href");
+    const detailHref = await discoverBookDetailPath(page);
     const authRoutes: Route[] = detailHref
       ? [...AUTH_ROUTES, { slug: "books-detail", path: detailHref }]
       : [...AUTH_ROUTES];
     if (!detailHref) {
-      console.warn(
-        "No book link found on /books — skipping detail audit. Run diagnose:seed first.",
-      );
+      console.warn("No book row found on /books — skipping detail audit. Run diagnose:seed first.");
     }
 
     for (const formFactor of FORM_FACTORS) {
       for (const route of authRoutes) {
-        await audit(`${baseURL}${route.path}`, route.slug, formFactor, chrome.port, outDir);
+        await audit(`${baseURL}${route.path}`, route.slug, formFactor, debugPort, outDir);
       }
     }
 
@@ -124,7 +142,7 @@ async function main(): Promise<void> {
     // modes are only exposed through the Puppeteer-based user-flow API (startFlow).
     // This project standardizes on Playwright and does not install puppeteer-core,
     // so the modal capture is left to the operational baseline run. To enable it,
-    // add puppeteer-core, connect it to this same chrome-launcher port, open the
+    // add puppeteer-core, connect it to this same --remote-debugging-port, open the
     // modal via getByTestId("sidebar").getByRole("link", { name: "Configurações" }),
     // then call flow.snapshot().
     console.warn(
@@ -135,7 +153,6 @@ async function main(): Promise<void> {
     console.info(`Lighthouse reports written to ${outDir}`);
   } finally {
     await browser.close();
-    await chrome.kill();
   }
 }
 
