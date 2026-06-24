@@ -1,8 +1,11 @@
 // Lighthouse diagnostics driver (diagnostics contract §C1).
 //
-// Launches a standalone headless Chrome via chrome-launcher, connects Playwright
-// over CDP to establish the admin session, then runs Lighthouse navigation
-// audits (4 categories) for the key routes in both mobile and desktop profiles.
+// Playwright launches a headless Chromium exposing a CDP port; Lighthouse
+// attaches to that port and runs navigation audits (4 categories) for the key
+// routes in both mobile and desktop profiles. Authenticated routes are audited
+// by forwarding the Playwright-established session cookie via the Cookie header
+// — Lighthouse opens its own tab outside the Playwright context, so without the
+// explicit header the proxy redirects every authenticated route to /login.
 // Raw reports land in .lighthouse/ (gitignored); the curated summary is written
 // by hand into docs/diagnostics/.
 //
@@ -24,13 +27,11 @@ interface Route {
 
 const FORM_FACTORS: ReadonlyArray<FormFactor> = ["mobile", "desktop"];
 
-// Audited unauthenticated (before login) — /login redirects once a session exists.
-const PUBLIC_ROUTES: ReadonlyArray<Route> = [
-  { slug: "home", path: "/" },
-  { slug: "login", path: "/login" },
-];
+// Audited unauthenticated. `/` is only a redirect gate (→ /login or the
+// favorite page), not a distinct content page, so it is intentionally excluded.
+const PUBLIC_ROUTES: ReadonlyArray<Route> = [{ slug: "login", path: "/login" }];
 
-// Audited with the admin session active.
+// Audited with the admin session (Cookie header). `/books/:id` is appended at runtime.
 const AUTH_ROUTES: ReadonlyArray<Route> = [
   { slug: "dashboard", path: "/dashboard" },
   { slug: "books", path: "/books" },
@@ -67,6 +68,7 @@ async function audit(
   formFactor: FormFactor,
   port: number,
   outDir: string,
+  extraHeaders?: Record<string, string>,
 ): Promise<void> {
   const result = await lighthouse(
     url,
@@ -74,8 +76,8 @@ async function audit(
       port,
       output: ["html", "json"],
       logLevel: "error",
-      // Keep the Playwright-established session cookie across the audit.
       disableStorageReset: true,
+      ...(extraHeaders ? { extraHeaders } : {}),
     },
     formFactor === "desktop" ? desktopConfig : undefined,
   );
@@ -89,10 +91,17 @@ async function audit(
   writeFileSync(join(outDir, `${formFactor}-${slug}.html`), reports[0] ?? "");
   writeFileSync(join(outDir, `${formFactor}-${slug}.json`), reports[1] ?? "");
 
+  // Surface auth redirects: an authenticated route landing on /login means the
+  // session cookie was not honored and the scores would be meaningless.
+  const finalUrl = result.lhr.finalDisplayedUrl ?? "";
+  if (slug !== "login" && /\/login(\?|$)/.test(finalUrl)) {
+    console.warn(`[${formFactor}] ${slug}: REDIRECTED to /login — scores are NOT for this route.`);
+  }
+
   const scores = Object.values(result.lhr.categories).map(
     (category) => `${category.id}=${Math.round((category.score ?? 0) * 100)}`,
   );
-  console.info(`[${formFactor}] ${slug}: ${scores.join(" ")}`);
+  console.info(`[${formFactor}] ${slug}: ${scores.join(" ")}  (final=${finalUrl})`);
 }
 
 async function main(): Promise<void> {
@@ -100,10 +109,6 @@ async function main(): Promise<void> {
   const outDir = join(process.cwd(), ".lighthouse");
   mkdirSync(outDir, { recursive: true });
 
-  // Playwright launches the browser and exposes a CDP port that Lighthouse
-  // attaches to (the documented Playwright + Lighthouse pattern). Lighthouse
-  // opens its own tab in the same browser, so the Playwright-established session
-  // cookie is shared (kept across audits via disableStorageReset).
   const debugPort = Number(process.env.DIAGNOSE_DEBUG_PORT ?? 9222);
   const browser = await chromium.launch({
     headless: true,
@@ -122,6 +127,12 @@ async function main(): Promise<void> {
 
     await login(page, baseURL);
 
+    // Forward the session cookie to Lighthouse. It opens its own tab outside the
+    // Playwright context, so the cookie must be passed explicitly via the Cookie
+    // header — otherwise the proxy redirects every authenticated route to /login.
+    const cookies = await page.context().cookies();
+    const authHeaders = { Cookie: cookies.map((c) => `${c.name}=${c.value}`).join("; ") };
+
     // Discover a real /books/:id from the list for the detail audit.
     await page.goto(`${baseURL}/books`);
     const detailHref = await discoverBookDetailPath(page);
@@ -134,7 +145,14 @@ async function main(): Promise<void> {
 
     for (const formFactor of FORM_FACTORS) {
       for (const route of authRoutes) {
-        await audit(`${baseURL}${route.path}`, route.slug, formFactor, debugPort, outDir);
+        await audit(
+          `${baseURL}${route.path}`,
+          route.slug,
+          formFactor,
+          debugPort,
+          outDir,
+          authHeaders,
+        );
       }
     }
 
