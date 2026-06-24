@@ -99,9 +99,9 @@ Projeto único Next.js: `src/`, `__tests__/`, `scripts/`, `docs/` na raiz do rep
 
 **Purpose**: Validação final e documentação transversal.
 
-- [ ] T021 [P] Atualizar `docs/observability.md`: (a) divisão de métricas — Web Vitals (Speed Insights) + page views (Analytics) centralizados na Vercel, Sentry só-erros com `tracesSampleRate=0` (FR-009); (b) **postura de privacidade** — o que é coletado, cookieless/sem PII, DNT respeitado, sem banner de consentimento (FR-018)
-- [ ] T022 [P] Rodar validação do `quickstart.md` (montagem, gating, baseline duplo)
-- [ ] T023 Gate de qualidade final: `bun run lint` (zero erros/warnings), `bun run test:unit`, `bun run test:e2e`, `bun run build` (SC-006, FR-016)
+- [X] T021 [P] Atualizar `docs/observability.md`: (a) divisão de métricas — Web Vitals (Speed Insights) + page views (Analytics) centralizados na Vercel, Sentry só-erros com `tracesSampleRate=0` (FR-009); (b) **postura de privacidade** — o que é coletado, cookieless/sem PII, DNT respeitado, sem banner de consentimento (FR-018)
+- [X] T022 [P] Rodar validação do `quickstart.md` (montagem, gating, baseline duplo)
+- [X] T023 Gate de qualidade final: `bun run lint` (zero erros/warnings), `bun run test:unit`, `bun run test:e2e`, `bun run build` (SC-006, FR-016)
 
 ---
 

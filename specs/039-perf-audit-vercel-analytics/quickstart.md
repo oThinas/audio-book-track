@@ -90,6 +90,9 @@ VERCEL_ENV: z.enum(["production", "preview", "development"]).optional(),
 `__tests__/e2e/telemetry-gating.spec.ts` — no run E2E (sem `VERCEL_ENV=production`), nenhuma requisição a `/_vercel/insights` ou `/_vercel/speed-insights` deve ocorrer e nenhum `<script>` da Vercel deve estar no DOM:
 
 ```ts
+import { expect, test } from "./fixtures/app-server"; // não @playwright/test direto
+import { login } from "./helpers/auth";
+
 test("telemetry stays off in non-production", async ({ page }) => {
   const vercelRequests: string[] = [];
   page.on("request", (req) => {
@@ -128,34 +131,40 @@ bun add -d lighthouse chrome-launcher
 "diagnose": "bun run diagnose:seed && bun run diagnose:lighthouse && bun run diagnose:react"
 ```
 
-O `diagnose:seed` insere ≥1 livro com capítulos (via `createTestBook`) para auditar `/books`, `/books/:id` e o modal.
+O `diagnose:seed` insere ≥1 livro com capítulos (via `createTestBook`) e **exige que o admin exista** (rode `bun run db:seed` antes — o seed de diagnóstico não recria o admin). O Lighthouse loga em `localhost:3000` por padrão (override via `DIAGNOSE_BASE_URL`).
+
+> ⚠️ **`next start` roda em modo produção**, onde o schema de env exige `SENTRY_DSN` + `CRON_SECRET` — salvo em build phase ou com `E2E_TEST_MODE=1`. Daí as variáveis abaixo. O `diagnose:lighthouse` usa o Chromium do **Playwright** com `--remote-debugging-port` (o Lighthouse anexa à porta); `chrome-launcher` fica disponível como fallback.
 
 ### 3. Capturar o baseline **PRÉ-instrumentação**
 
-> Rodar **antes** da Parte A (ou a partir de um checkout sem a telemetria) para a foto limpa.
+> Foto limpa: telemetria off. Como o gating já renderiza `null` fora de produção, uma build normal não embarca a telemetria. `E2E_TEST_MODE=1` no `start` satisfaz o env de runtime **e** mantém a telemetria off.
 
 ```bash
 bun run build
-bun run start &        # next start (build de produção) em porta local
-bun run diagnose       # seed + lighthouse (mobile+desktop, login admin) + react-doctor
+E2E_TEST_MODE=1 bun run start &   # next start (produção) em :3000, telemetria off
+bun run diagnose                   # seed + lighthouse (mobile+desktop, login admin) + react-doctor
 ```
 
-Adicionar `.lighthouse/` ao `.gitignore`.
+`.lighthouse/` já está no `.gitignore`. Preserve os relatórios PRÉ antes do passo 4 (a build PÓS sobrescreve `.lighthouse/`).
 
 ### 4. Capturar o baseline **PÓS-instrumentação** (telemetria HABILITADA) e comparar
 
-Após a Parte A, repetir o passo 3 **com a telemetria ativa** — como o gating renderiza `null` fora de produção, force `VERCEL_ENV=production` na build/run local, senão o delta sai trivialmente 0:
+Repetir **com a telemetria ativa** — force `VERCEL_ENV=production` na build (senão o gating renderiza `null` e o delta sai 0). No `start`, forneça `SENTRY_DSN`/`CRON_SECRET` dummies **só no runtime** (não na build, para não embarcar o Sentry e poluir o delta):
 
 ```bash
 VERCEL_ENV=production bun run build
-VERCEL_ENV=production bun run start &
-bun run diagnose
+VERCEL_ENV=production \
+  SENTRY_DSN="https://0000000000000000000000000000abcd@o0.ingest.sentry.io/0" \
+  CRON_SECRET="diagnostic-cron-secret-placeholder-0123456789ABCDEF" \
+  bun run start &
+bun run diagnose:lighthouse
 ```
 
 Comparar com a PRÉ:
-- **CLS delta** deve ser `0`.
-- **first-load JS delta** < 5 kb gzipped.
-- carregamento da telemetria **não-bloqueante**.
+- **CLS delta** deve ser `0` (telemetria não renderiza DOM visível).
+- **first-load JS delta** < 5 kb gzipped. O `next build` com **Turbopack não imprime a tabela de tamanhos** — meça o chunk de cliente da telemetria direto: `grep -rl "_vercel/insights" .next/static/chunks` e `gzip -c <chunk> | wc -c`.
+- carregamento da telemetria **não-bloqueante** (script injetado client-side, async).
+- ⚠️ Localmente, **Best Practices cai para ~96** (`errors-in-console`): os scripts `/_vercel/*` dão 404 sem a edge da Vercel. Volta a 100 em produção real.
 
 ### 5. Curar o relatório
 
