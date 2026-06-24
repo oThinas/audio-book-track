@@ -24,8 +24,8 @@ Web app Next.js App Router, estrutura `src/` existente. Testes em `__tests__/uni
 
 **Purpose**: Habilitar a API experimental e de-risk imediato da coexistência com o React Compiler.
 
-- [ ] T001 Habilitar `experimental: { viewTransition: true }` em `next.config.ts`, preservando `reactCompiler: true` e o wrap condicional do Sentry (D1)
-- [ ] T002 Smoke de build inicial — rodar `bun run build` e confirmar que a flag + React Compiler compilam sem erro (gate de risco "duplamente experimental"; baseline de SC-008). Depende de T001
+- [X] T001 Habilitar `experimental: { viewTransition: true }` em `next.config.ts`, preservando `reactCompiler: true` e o wrap condicional do Sentry (D1)
+- [X] T002 Smoke de build inicial — rodar `bun run build` e confirmar que a flag + React Compiler compilam sem erro (gate de risco "duplamente experimental"; baseline de SC-008). Depende de T001
 
 **Checkpoint**: Flag ativa e build verde — implementação pode começar.
 
