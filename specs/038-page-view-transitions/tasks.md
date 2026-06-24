@@ -138,14 +138,14 @@ Web app Next.js App Router, estrutura `src/` existente. Testes em `__tests__/uni
 
 ### Tests for User Story 5 ⚠️ (escrever PRIMEIRO, devem FALHAR)
 
-- [ ] T027 [P] [US5] E2E de reorder morph em `__tests__/e2e/chapter-reorder-morph.spec.ts`: mover capítulo via ↑/↓ anima o reposicionamento; reduced-motion = instantâneo; ordem final persistida
+- [X] T027 [P] [US5] E2E de reorder morph em `__tests__/e2e/chapter-reorder-morph.spec.ts`: mover capítulo via ↑/↓ reposiciona e persiste (PUT 200 + ordem após reload); variante reduced-motion funciona instantânea. _Execução em T036._
 
 ### Implementation for User Story 5
 
-- [ ] T028 [US5] Spike D6 — validar coexistência do `transform` do `@dnd-kit` (durante o arraste, em `src/components/features/chapters/chapter-row.tsx`) com o morph do `<ViewTransition>` (assentamento pós-drop e botões ↑/↓); documentar conclusão em `research.md` (D6)
-- [ ] T029 [US5] Envolver o corpo da lista de capítulos em `<ViewTransition>` em `src/components/features/chapters/chapters-table.tsx`, preservando `key={chapter.id}` (D6)
-- [ ] T030 [US5] Envolver o update otimista de ordem (`apply`/`moveBy`) em `startTransition` em `src/components/features/chapters/hooks/use-chapters-reorder.ts` (D6)
-- [ ] T031 [US5] Se necessário, adicionar classe/keyframes de morph em `src/app/globals.css` (ou confirmar que o default cobre); reduced-motion já tratado por T017. Mesmo arquivo → sequencial
+- [X] T028 [US5] Spike D6 — conclusão: morph por linha (`<ViewTransition>` por `ChapterRow`) + `startTransition`; `@dnd-kit` mantém o arraste, o morph anima o commit (↑/↓ e pós-drop). Sem regressão funcional (lógica/persistência intactas). Qualidade visual do drag-drop a validar em navegador (T036); fallback documentado em `research.md` (D6)
+- [X] T029 [US5] Envolver **cada** `ChapterRow` em `<ViewTransition key={chapter.id}>` em `src/components/features/chapters/chapters-table.tsx` (a doc confirma: envolver só o container faria crossfade, não morfa linhas) (D6)
+- [X] T030 [US5] Envolver o update otimista de ordem (`apply` + rollback) em `startTransition` em `src/components/features/chapters/hooks/use-chapters-reorder.ts` (`moveBy` chama `apply`) (D6)
+- [X] T031 [US5] Confirmado: a animação default do browser para o grupo já morfa a posição — sem classe/keyframes custom; reduced-motion tratado por T017
 
 **Checkpoint**: Todas as user stories independentemente funcionais.
 

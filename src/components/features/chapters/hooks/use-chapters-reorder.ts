@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 
 import { apiFetch } from "@/lib/api/api-fetch";
 
@@ -59,7 +59,12 @@ export function useChaptersReorder<T extends ChapterRowEntity>({
     async (newOrderedIds: ReadonlyArray<string>): Promise<void> => {
       const previous = orderedChapters;
       const optimistic = reorderArray(previous, newOrderedIds);
-      setOrderedChapters(optimistic);
+      // startTransition lets the per-row <ViewTransition> morph each row to its
+      // new position (US5). The browser's default group animation handles the
+      // reposition; reduced-motion collapses it (globals.css).
+      startTransition(() => {
+        setOrderedChapters(optimistic);
+      });
       setIsSaving(true);
 
       const result = await apiFetch<{ data: { chaptersVersion: number } }>(
@@ -73,7 +78,9 @@ export function useChaptersReorder<T extends ChapterRowEntity>({
       setIsSaving(false);
 
       if (!result.ok) {
-        setOrderedChapters(previous);
+        startTransition(() => {
+          setOrderedChapters(previous);
+        });
         if (
           result.kind === "api-error" &&
           result.code === "BOOK_CHAPTERS_VERSION_CONFLICT" &&

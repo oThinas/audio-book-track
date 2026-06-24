@@ -121,6 +121,11 @@ Helper puro `resolveNavTransition(fromPath, toPath)` (em `src/lib/navigation/nav
 
 **RISCO / a validar no spike de D6**: conflito entre o `transform` do `@dnd-kit` (aplicado durante o arraste em `chapter-row.tsx`) e o morph do `<ViewTransition>` no commit do drop. O `@dnd-kit` cuida do movimento **durante** o arraste; o `<ViewTransition>` deve animar o **assentamento pós-drop** e os movimentos via botões ↑/↓. Validar que não há "duplo movimento" ou salto. Linhas já carregam classes de enter/exit da feature 037 (`ROW_ENTER_CLASS`/`ROW_EXIT_CLASS`); confirmar que coexistem com o morph (são gatilhos distintos: presença vs. reposicionamento).
 
+**Conclusão do spike (T028)** — implementado conforme o padrão documentado do React: **cada linha** envolta em `<ViewTransition key={chapter.id}>` (envolver só o container faria crossfade do todo, não morfa linhas — confirmado na doc) + update otimista (`apply`/`moveBy`) dentro de `startTransition`. O reposicionamento usa a **animação default do browser** para o grupo (morph de posição) — sem CSS custom (T031); reduced-motion já zera via T017.
+- **Coexistência com `@dnd-kit`**: o `@dnd-kit` controla o movimento **durante** o arraste (transform inline na `<TableRow>`); o morph do `<ViewTransition>` anima o **commit** (botões ↑/↓ — caminho limpo — e o assentamento pós-drop). Não há mudança na lógica de reorder nem na persistência (`expectedVersion`/409), então **não há regressão funcional** — apenas `view-transition-name` por linha + `startTransition` foram adicionados.
+- **A validar em navegador** (consolidado em T036/manual, DB indisponível nesta sessão): qualidade visual do drag-drop (possível "duplo movimento" entre o drop do dnd-kit e o morph) e quirks de `view-transition-name` em `display: table-row`.
+- **Fallback documentado** se o drag-drop ficar ruim: escopar o morph aos ↑/↓ (suprimir `view-transition-name` durante arraste ativo) ou remover o wrapper por linha — nenhum altera função. As classes de presença da 037 coexistem (gatilhos distintos).
+
 ---
 
 ## D7. Reduced motion e degradação graciosa
