@@ -320,3 +320,118 @@ html[data-primary-color="amber"] .dark {
     opacity: 1;
   }
 }
+
+/* Directional classes — vertical axis follows menu order, horizontal axis
+   follows route depth (list <-> detail). Only transform/opacity. */
+
+/* nav-down: leaving page slides up, entering page rises from below. */
+::view-transition-old(.nav-down) {
+  animation: vt-nav-down-out var(--vt-duration) var(--vt-ease) both;
+}
+::view-transition-new(.nav-down) {
+  animation: vt-nav-down-in var(--vt-duration) var(--vt-ease) both;
+}
+@keyframes vt-nav-down-out {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(calc(-1 * var(--vt-slide-offset)));
+    opacity: 0;
+  }
+}
+@keyframes vt-nav-down-in {
+  from {
+    transform: translateY(var(--vt-slide-offset));
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* nav-up: leaving page slides down, entering page drops from above. */
+::view-transition-old(.nav-up) {
+  animation: vt-nav-up-out var(--vt-duration) var(--vt-ease) both;
+}
+::view-transition-new(.nav-up) {
+  animation: vt-nav-up-in var(--vt-duration) var(--vt-ease) both;
+}
+@keyframes vt-nav-up-out {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(var(--vt-slide-offset));
+    opacity: 0;
+  }
+}
+@keyframes vt-nav-up-in {
+  from {
+    transform: translateY(calc(-1 * var(--vt-slide-offset)));
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* depth-forward: list -> detail. Leaving slides left, entering enters from right. */
+::view-transition-old(.depth-forward) {
+  animation: vt-depth-forward-out var(--vt-duration) var(--vt-ease) both;
+}
+::view-transition-new(.depth-forward) {
+  animation: vt-depth-forward-in var(--vt-duration) var(--vt-ease) both;
+}
+@keyframes vt-depth-forward-out {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(calc(-1 * var(--vt-slide-offset)));
+    opacity: 0;
+  }
+}
+@keyframes vt-depth-forward-in {
+  from {
+    transform: translateX(var(--vt-slide-offset));
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* depth-back: detail -> list. Leaving slides right, entering enters from left. */
+::view-transition-old(.depth-back) {
+  animation: vt-depth-back-out var(--vt-duration) var(--vt-ease) both;
+}
+::view-transition-new(.depth-back) {
+  animation: vt-depth-back-in var(--vt-duration) var(--vt-ease) both;
+}
+@keyframes vt-depth-back-out {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(var(--vt-slide-offset));
+    opacity: 0;
+  }
+}
+@keyframes vt-depth-back-in {
+  from {
+    transform: translateX(calc(-1 * var(--vt-slide-offset)));
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}

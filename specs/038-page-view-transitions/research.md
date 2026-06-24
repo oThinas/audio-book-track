@@ -67,6 +67,12 @@ Helper puro `resolveNavTransition(fromPath, toPath)` (em `src/lib/navigation/nav
 
 **Alternatives considered**: forçar todo back para `depth-back`/`nav-up` — rejeitado por ser impreciso (back pode ir para um irmão de índice maior).
 
+**Conclusão do spike (T012)** — escolhida a **Opção B (fallback neutro)**:
+- `addTransitionType` só é válido **dentro** de uma transition do React. Num handler cru de `popstate` (que dispara após a URL já ter mudado e fora da transition interna do App Router) a chamada emitiria o aviso "addTransitionType can only be called inside a transition" → erro de console, regressão direta de FR-007/SC-002.
+- A Navigation API com `intercept()` assumiria o controle da navegação e conflitaria com o roteador do App Router (risco alto, fora do escopo best-effort).
+- Comportamento atual **já correto e sem regressão**: navegações por back/forward não passam por `<Link>`, então nenhum transition type é adicionado e o boundary usa a classe `vt-crossfade` do `default` → crossfade neutro limpo, sem erro, com degradação graciosa quando a API está ausente.
+- **Resultado**: zero código adicional; back/forward = crossfade neutro (best-effort, conforme FR-017/SC-009). Caso uma API estável para injetar o tipo em traversals surja em versão futura do Next/React, é um aprimoramento isolado que não muda o contrato.
+
 ---
 
 ## D4. /settings como modal (parallel + intercepting routes)

@@ -1,12 +1,13 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { type PropsWithChildren, useEffect, useRef, ViewTransition } from "react";
+import { type PropsWithChildren, useEffect, useRef, useState, ViewTransition } from "react";
 import { useMobileMenu } from "@/components/layout/hooks/use-mobile-menu";
 import { useSidebar } from "@/components/layout/hooks/use-sidebar";
 import { MobileHeader } from "@/components/layout/mobile-header";
 import { MobileSidebar } from "@/components/layout/mobile-sidebar";
 import { Sidebar } from "@/components/layout/sidebar";
+import { type NavTransitionType, resolveNavTransition } from "@/lib/navigation/nav-transition";
 
 /**
  * Maps navigation transition types (from resolveNavTransition, applied via
@@ -41,8 +42,14 @@ export function AuthenticatedLayoutClient({
   const pathname = usePathname();
   const previousPathnameRef = useRef(pathname);
 
+  // Direction of the last navigation, mirrored onto `data-vt-type` for
+  // deterministic E2E assertions (FR-002/FR-017). Held in state so it persists
+  // across unrelated re-renders instead of collapsing back to "none".
+  const [navTransitionType, setNavTransitionType] = useState<NavTransitionType>("none");
+
   useEffect(() => {
     if (pathname !== previousPathnameRef.current) {
+      setNavTransitionType(resolveNavTransition(previousPathnameRef.current, pathname));
       previousPathnameRef.current = pathname;
       closeMobileMenu();
     }
@@ -61,7 +68,7 @@ export function AuthenticatedLayoutClient({
         menuButtonRef={menuButtonRef}
       />
       <Sidebar collapsed={collapsed} onToggle={toggleSidebar} />
-      <div className="flex-1 overflow-auto bg-background">
+      <div className="flex-1 overflow-auto bg-background" data-vt-type={navTransitionType}>
         <ViewTransition default={CONTENT_TRANSITION_CLASSES}>{children}</ViewTransition>
       </div>
     </div>

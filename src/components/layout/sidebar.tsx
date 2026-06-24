@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth/client";
 import { BOTTOM_ITEMS, NAV_ITEMS } from "@/lib/constants/navigation";
+import { resolveNavTransition } from "@/lib/navigation/nav-transition";
 import { cn } from "@/lib/utils";
 import { SidebarToggle } from "./sidebar-toggle";
 
@@ -64,6 +65,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
               <Link
                 key={item.href}
                 href={item.href}
+                transitionTypes={[resolveNavTransition(pathname, item.href)]}
                 className={cn(
                   "flex h-11 items-center gap-2.5 rounded-lg px-4 text-sm transition-colors",
                   active

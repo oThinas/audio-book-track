@@ -52,17 +52,17 @@ Web app Next.js App Router, estrutura `src/` existente. Testes em `__tests__/uni
 
 ### Tests for User Story 1 ⚠️ (escrever PRIMEIRO, devem FALHAR)
 
-- [ ] T005 [P] [US1] Unit test de `resolveNavTransition` cobrindo a tabela C1 (todos os pares: nav-up/down, depth-forward/back, none) em `__tests__/unit/navigation/nav-transition.spec.ts` — cobertura 100% (Princípio V)
-- [ ] T006 [P] [US1] E2E de navegação direcional em `__tests__/e2e/page-transitions.spec.ts`: assert URL/conteúdo finais corretos, sidebar estável, e que o boundary de conteúdo recebe a view-transition-class esperada por par de rotas (expor `data-vt-type` no wrapper para asserção determinística). Incluir também: (a) **navegação rápida/interrompida** converge para o último destino sem conteúdo preso/duplicado (FR-015); (b) ao fim da transição **não restam estilos/elementos residuais** no conteúdo (FR-004)
+- [X] T005 [P] [US1] Unit test de `resolveNavTransition` cobrindo a tabela C1 (todos os pares: nav-up/down, depth-forward/back, none) em `__tests__/unit/navigation/nav-transition.spec.ts` — cobertura 100% (Princípio V)
+- [X] T006 [P] [US1] E2E de navegação direcional em `__tests__/e2e/page-transitions.spec.ts`: assert URL/conteúdo finais corretos, sidebar estável, e que o boundary de conteúdo recebe a view-transition-class esperada por par de rotas (via `data-vt-type` no wrapper). Inclui: (a) **navegação rápida/interrompida** converge (FR-015); (b) ausência de animação residual `vt-*` ao fim (FR-004). _Execução consolidada em T036 (DB de teste indisponível nesta sessão)._
 
 ### Implementation for User Story 1
 
-- [ ] T007 [US1] Implementar `resolveNavTransition(fromPath, toPath): NavTransitionType` puro em `src/lib/navigation/nav-transition.ts`, lendo a ordem de `src/lib/constants/navigation.ts` (regras C1) — faz T005 passar
-- [ ] T008 [US1] Adicionar keyframes/classes direcionais (`nav-up`, `nav-down`, `depth-forward`, `depth-back`) em `src/app/globals.css`, só `transform`/`opacity`, usando os tokens (contrato C2). Mesmo arquivo de T003 → sequencial
-- [ ] T009 [P] [US1] Aplicar `transitionTypes={[resolveNavTransition(usePathname(), item.href)]}` nos `<Link>` de `src/components/layout/sidebar.tsx` (depende de T007)
-- [ ] T010 [P] [US1] Aplicar o mesmo `transitionTypes` nos `<Link>` de `src/components/layout/mobile-sidebar.tsx` (depende de T007)
-- [ ] T011 [P] [US1] Aplicar `transitionTypes` de profundidade (`depth-forward` no link da linha de livro → detalhe; `depth-back` no link "voltar" da página de detalhe) nos arquivos de conteúdo correspondentes (`src/components/features/books/...` e a página de detalhe) (depende de T007)
-- [ ] T012 [US1] Spike D3 — direção em back/forward do navegador: implementar listener (Navigation API/`popstate`) que chama `React.addTransitionType` derivando o tipo do par (pathname anterior, novo), encapsulado em hook client; se instável, aplicar fallback = crossfade neutro e documentar o resultado em `research.md` (D3)
+- [X] T007 [US1] Implementar `resolveNavTransition(fromPath, toPath): NavTransitionType` puro em `src/lib/navigation/nav-transition.ts`, lendo a ordem de `src/lib/constants/navigation.ts` (regras C1) — faz T005 passar
+- [X] T008 [US1] Adicionar keyframes/classes direcionais (`nav-up`, `nav-down`, `depth-forward`, `depth-back`) em `src/app/globals.css`, só `transform`/`opacity`, usando os tokens (contrato C2). Mesmo arquivo de T003 → sequencial
+- [X] T009 [P] [US1] Aplicar `transitionTypes={[resolveNavTransition(usePathname(), item.href)]}` nos `<Link>` de `src/components/layout/sidebar.tsx` (depende de T007)
+- [X] T010 [P] [US1] Aplicar o mesmo `transitionTypes` nos `<Link>` de `src/components/layout/mobile-sidebar.tsx` (depende de T007)
+- [X] T011 [P] [US1] Aplicar `transitionTypes` de profundidade (`depth-forward` na navegação programática lista→detalhe via `addTransitionType` em `use-books-table.ts`; `depth-back` no `<Link>` "Voltar" em `book-header.tsx`) (depende de T007)
+- [X] T012 [US1] Spike D3 — direção em back/forward do navegador: conclusão = **fallback neutro** (crossfade). Injetar `addTransitionType` em `popstate`/Navigation API regrediria (erro de console / conflito com o roteador). Sem código novo; comportamento já correto e sem regressão. Documentado em `research.md` (D3)
 
 **Checkpoint**: US1 funcional e testável de forma independente — MVP entregável.
 

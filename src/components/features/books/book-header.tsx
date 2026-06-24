@@ -48,6 +48,7 @@ export function BookHeader({
       <div className="flex items-center gap-2">
         <Link
           href="/books"
+          transitionTypes={["depth-back"]}
           data-testid="book-detail-back"
           className="-ml-2 inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
         >
