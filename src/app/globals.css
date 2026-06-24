@@ -287,3 +287,155 @@ html[data-primary-color="amber"] .dark {
     font-size: var(--font-size-base);
   }
 }
+
+/* === View Transitions (feature 038) === */
+/* Animation tokens — compositor-friendly only (transform/opacity). */
+:root {
+  --vt-duration: 350ms;
+  --vt-ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Contain each transition group to its own box so full-viewport slides stay
+   inside the content area and never bleed over the persistent sidebar. */
+::view-transition-group(*) {
+  overflow: clip;
+}
+
+/* Neutral crossfade — default for any navigation without a directional type. */
+::view-transition-old(.vt-crossfade) {
+  animation: vt-fade-out var(--vt-duration) var(--vt-ease) both;
+}
+::view-transition-new(.vt-crossfade) {
+  animation: vt-fade-in var(--vt-duration) var(--vt-ease) both;
+}
+
+@keyframes vt-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes vt-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Directional classes — full-viewport push (no fade), like a mobile scroll.
+   Both pages translate together: one leaves as the other enters, meeting edge
+   to edge with no gap. Vertical axis follows menu order; horizontal axis
+   follows route depth (list <-> detail). Compositor-friendly transform only. */
+
+/* nav-down: content scrolls up — new page rises from the bottom, old exits top. */
+::view-transition-old(.nav-down) {
+  animation: vt-slide-out-up var(--vt-duration) var(--vt-ease) both;
+}
+::view-transition-new(.nav-down) {
+  animation: vt-slide-in-up var(--vt-duration) var(--vt-ease) both;
+}
+
+/* nav-up: content scrolls down — new page drops from the top, old exits bottom. */
+::view-transition-old(.nav-up) {
+  animation: vt-slide-out-down var(--vt-duration) var(--vt-ease) both;
+}
+::view-transition-new(.nav-up) {
+  animation: vt-slide-in-down var(--vt-duration) var(--vt-ease) both;
+}
+
+/* depth-forward: list -> detail — content scrolls left, new enters from right. */
+::view-transition-old(.depth-forward) {
+  animation: vt-slide-out-left var(--vt-duration) var(--vt-ease) both;
+}
+::view-transition-new(.depth-forward) {
+  animation: vt-slide-in-left var(--vt-duration) var(--vt-ease) both;
+}
+
+/* depth-back: detail -> list — content scrolls right, new enters from left. */
+::view-transition-old(.depth-back) {
+  animation: vt-slide-out-right var(--vt-duration) var(--vt-ease) both;
+}
+::view-transition-new(.depth-back) {
+  animation: vt-slide-in-right var(--vt-duration) var(--vt-ease) both;
+}
+
+@keyframes vt-slide-out-up {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-100%);
+  }
+}
+@keyframes vt-slide-in-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes vt-slide-out-down {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+@keyframes vt-slide-in-down {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes vt-slide-out-left {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+@keyframes vt-slide-in-left {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@keyframes vt-slide-out-right {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+@keyframes vt-slide-in-right {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Reduced motion — collapse every view-transition animation to an instant
+   swap. Pseudo-elements aren't reachable by Tailwind utilities, so this raw
+   @media block is the correct path (D7, FR-006). */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}

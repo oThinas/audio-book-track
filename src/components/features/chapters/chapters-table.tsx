@@ -15,7 +15,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, ViewTransition } from "react";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -107,7 +107,9 @@ export function ChaptersTable({
       const next = [...currentIds];
       const [removed] = next.splice(fromIndex, 1);
       next.splice(toIndex, 0, removed);
-      void reorder.apply(next);
+      // Drag-and-drop keeps dnd-kit's own drop animation — opt out of the
+      // view-transition morph so the two don't compete (US5 review feedback).
+      void reorder.apply(next, { animate: false });
     },
     [reorder],
   );
@@ -200,7 +202,11 @@ export function ChaptersTable({
                 <TableHead className="w-56">Editor</TableHead>
                 <TableHead className="w-44">Prazo</TableHead>
                 <TableHead className="w-40 text-right">Horas editadas</TableHead>
-                {!isSelectionMode && <TableHead className="w-28 text-right">Ações</TableHead>}
+                {!isSelectionMode && (
+                  // Mobile shows 4 actions (↑ ↓ ✏ 🗑); w-28 clipped them past the
+                  // table edge. Desktop hides ↑/↓, so it stays compact (md:w-28).
+                  <TableHead className="w-40 text-right md:w-28">Ações</TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -222,7 +228,7 @@ export function ChaptersTable({
                 }
                 const chapter = row.original;
                 const orderedIndex = reorder.orderedChapters.findIndex((c) => c.id === chapter.id);
-                return (
+                const chapterRow = (
                   <ChapterRow
                     key={chapter.id}
                     chapter={chapter}
@@ -247,6 +253,14 @@ export function ChaptersTable({
                     onToggleSelected={onToggleSelected}
                     onMoveBy={(id, delta) => void reorder.moveBy(id, delta)}
                   />
+                );
+                // Per-row ViewTransition only when reordering is active (US5, D6):
+                // each row then morphs to its new position. Grouped views don't
+                // reorder, so wrapping there would add a needless crossfade.
+                return canReorder ? (
+                  <ViewTransition key={chapter.id}>{chapterRow}</ViewTransition>
+                ) : (
+                  chapterRow
                 );
               })}
               {chapters.length === 0 && (

@@ -7,6 +7,7 @@ import { type RefObject, useCallback, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth/client";
 import { BOTTOM_ITEMS, NAV_ITEMS } from "@/lib/constants/navigation";
+import { resolveNavTransition } from "@/lib/navigation/nav-transition";
 import { cn } from "@/lib/utils";
 
 interface MobileSidebarProps {
@@ -103,6 +104,7 @@ export function MobileSidebar({ isOpen, onClose, menuButtonRef }: MobileSidebarP
             <Link
               key={item.href}
               href={item.href}
+              transitionTypes={[resolveNavTransition(pathname, item.href)]}
               onClick={onClose}
               className={cn(
                 "flex h-11 items-center gap-2.5 rounded-lg px-4 text-sm transition-colors",
@@ -118,7 +120,9 @@ export function MobileSidebar({ isOpen, onClose, menuButtonRef }: MobileSidebarP
         })}
       </nav>
 
-      {/* Bottom section: settings + logout */}
+      {/* Bottom section: settings + logout. No transitionTypes here: /settings
+          opens as an intercepted modal (US4), so the content boundary doesn't
+          change and there's no page transition to type. */}
       <div className="flex flex-col gap-1 px-3">
         {BOTTOM_ITEMS.map((item) => {
           const active = pathname === item.href;

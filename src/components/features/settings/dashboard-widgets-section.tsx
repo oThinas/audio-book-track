@@ -57,6 +57,7 @@ export function DashboardWidgetsSection({ initialWidgets }: DashboardWidgetsSect
                 <li key={meta.key} className="flex items-start gap-3">
                   <Checkbox
                     id={`widget-${meta.key}`}
+                    aria-label={meta.titlePtBr}
                     checked={selected.has(meta.key)}
                     onCheckedChange={(checked) => toggle(meta.key, checked === true)}
                   />

@@ -8,7 +8,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { addTransitionType, startTransition, useCallback, useState } from "react";
 import type { BookSummaryRow } from "../books-table";
 
 export interface UseBooksTableArgs {
@@ -35,14 +35,25 @@ export function useBooksTable({ books, columns }: UseBooksTableArgs): UseBooksTa
     getSortedRowModel: getSortedRowModel(),
   });
 
-  const handleRowClick = useMemo(() => (id: string) => router.push(`/books/${id}`), [router]);
+  // List -> detail is always a depth-forward view transition. router.push is
+  // programmatic, so the type is registered via addTransitionType inside the
+  // navigation transition (the Link `transitionTypes` equivalent).
+  const navigateToDetail = useCallback(
+    (id: string) => {
+      startTransition(() => {
+        addTransitionType("depth-forward");
+        router.push(`/books/${id}`);
+      });
+    },
+    [router],
+  );
 
   function handleRowKeyDown(event: React.KeyboardEvent<HTMLTableRowElement>, id: string) {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
-      router.push(`/books/${id}`);
+      navigateToDetail(id);
     }
   }
 
-  return { table, handleRowClick, handleRowKeyDown };
+  return { table, handleRowClick: navigateToDetail, handleRowKeyDown };
 }
