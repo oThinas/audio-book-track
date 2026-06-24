@@ -28,10 +28,10 @@ Projeto único Next.js: `src/`, `__tests__/`, `scripts/`, `docs/` na raiz do rep
 
 **Purpose**: Instalar dependências e preparar comandos.
 
-- [ ] T001 Instalar dependências de runtime: `bun add @vercel/speed-insights @vercel/analytics` (atualiza `package.json` + lockfile)
-- [ ] T002 Instalar dependências de diagnóstico (dev): `bun add -d lighthouse chrome-launcher` (atualiza `package.json` + lockfile)
-- [ ] T003 [P] Adicionar `.lighthouse/` ao `.gitignore` (artefatos brutos não versionados)
-- [ ] T004 Adicionar scripts `diagnose`, `diagnose:lighthouse`, `diagnose:react` ao `package.json` (ver contracts/diagnostics-contract.md §C5)
+- [X] T001 Instalar dependências de runtime: `bun add @vercel/speed-insights @vercel/analytics` (atualiza `package.json` + lockfile)
+- [X] T002 Instalar dependências de diagnóstico (dev): `bun add -d lighthouse chrome-launcher` (atualiza `package.json` + lockfile)
+- [X] T003 [P] Adicionar `.lighthouse/` ao `.gitignore` (artefatos brutos não versionados)
+- [X] T004 Adicionar scripts `diagnose`, `diagnose:lighthouse`, `diagnose:react` ao `package.json` (ver contracts/diagnostics-contract.md §C5)
 
 ---
 
@@ -41,11 +41,11 @@ Projeto único Next.js: `src/`, `__tests__/`, `scripts/`, `docs/` na raiz do rep
 
 **⚠️ CRITICAL**: US1 e US2 não podem montar componentes da Vercel antes desta fase.
 
-- [ ] T005 [P] Adicionar `VERCEL_ENV: z.enum(["production", "preview", "development"]).optional()` ao `src/lib/env/schema.ts` (não participa do `superRefine`)
-- [ ] T006 [P] [TDD] Escrever teste unitário (RED) da tabela-verdade de `isTelemetryEnabled` em `__tests__/unit/telemetry/is-telemetry-enabled.spec.ts` (ver data-model.md §1: prod+¬E2E→true; preview/dev/undefined→false; `E2E_TEST_MODE=1`→false)
-- [ ] T007 Implementar helper puro `isTelemetryEnabled(env)` em `src/lib/telemetry/is-telemetry-enabled.ts` para passar T006 (sem I/O, sem leitura de `process.env`, sem mutação — contracts/telemetry-contract.md §C1)
-- [ ] T008 Criar wrapper Server Component `VercelTelemetry` em `src/components/layout/vercel-telemetry.tsx` (lê `process.env.VERCEL_ENV`/`E2E_TEST_MODE`, chama o helper, retorna `null` quando desabilitado; sem `use client` — §C2)
-- [ ] T009 Montar `<VercelTelemetry />` no `<body>` de `src/app/layout.tsx`, após `{children}` e `<Toaster />` (montagem única, cobre rotas públicas e autenticadas — §C3)
+- [X] T005 [P] Adicionar `VERCEL_ENV: z.enum(["production", "preview", "development"]).optional()` ao `src/lib/env/schema.ts` (não participa do `superRefine`)
+- [X] T006 [P] [TDD] Escrever teste unitário (RED) da tabela-verdade de `isTelemetryEnabled` em `__tests__/unit/telemetry/is-telemetry-enabled.spec.ts` (ver data-model.md §1: prod+¬E2E→true; preview/dev/undefined→false; `E2E_TEST_MODE=1`→false)
+- [X] T007 Implementar helper puro `isTelemetryEnabled(env)` em `src/lib/telemetry/is-telemetry-enabled.ts` para passar T006 (sem I/O, sem leitura de `process.env`, sem mutação — contracts/telemetry-contract.md §C1)
+- [X] T008 Criar wrapper Server Component `VercelTelemetry` em `src/components/layout/vercel-telemetry.tsx` (lê `process.env.VERCEL_ENV`/`E2E_TEST_MODE`, chama o helper, retorna `null` quando desabilitado; sem `use client` — §C2)
+- [X] T009 Montar `<VercelTelemetry />` no `<body>` de `src/app/layout.tsx`, após `{children}` e `<Toaster />` (montagem única, cobre rotas públicas e autenticadas — §C3)
 
 **Checkpoint**: Gating pronto e testado (unit). Wrapper monta `null` em qualquer ambiente até US1/US2 adicionarem componentes.
 

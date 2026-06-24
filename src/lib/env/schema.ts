@@ -7,6 +7,9 @@ export const envSchema = z
     BETTER_AUTH_SECRET: z.string().min(1, "BETTER_AUTH_SECRET is required"),
     BETTER_AUTH_URL: z.string().min(1, "BETTER_AUTH_URL is required"),
     NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+    // Injected by Vercel at runtime; absent in local dev/test/E2E. Drives
+    // telemetry gating only — never part of superRefine (must not block builds).
+    VERCEL_ENV: z.enum(["production", "preview", "development"]).optional(),
     // Observability (required in production; optional in dev/test)
     SENTRY_DSN: z.string().min(1).optional(),
     SENTRY_ORG: z.string().min(1).optional(),

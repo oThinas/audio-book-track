@@ -4,6 +4,7 @@ import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 
 import { NavigationProvider } from "@/components/features/auth/navigation-provider";
+import { VercelTelemetry } from "@/components/layout/vercel-telemetry";
 
 import "./globals.css";
 
@@ -48,6 +49,7 @@ export default function RootLayout({
           {children}
         </ThemeProvider>
         <Toaster richColors position="top-right" />
+        <VercelTelemetry />
       </body>
     </html>
   );
