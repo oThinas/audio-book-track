@@ -119,7 +119,7 @@ Após o deploy, navegar pelo app em produção e confirmar no painel da Vercel:
 ### 1. Instalar dependências de diagnóstico (dev)
 
 ```bash
-bun add -d lighthouse chrome-launcher
+bun add -d lighthouse
 ```
 
 ### 2. Adicionar scripts ao `package.json`
@@ -133,7 +133,7 @@ bun add -d lighthouse chrome-launcher
 
 O `diagnose:seed` insere ≥1 livro com capítulos (via `createTestBook`) e **exige que o admin exista** (rode `bun run db:seed` antes — o seed de diagnóstico não recria o admin). O Lighthouse loga em `localhost:3000` por padrão (override via `DIAGNOSE_BASE_URL`).
 
-> ⚠️ **`next start` roda em modo produção**, onde o schema de env exige `SENTRY_DSN` + `CRON_SECRET` — salvo em build phase ou com `E2E_TEST_MODE=1`. Daí as variáveis abaixo. O `diagnose:lighthouse` usa o Chromium do **Playwright** com `--remote-debugging-port` (o Lighthouse anexa à porta); `chrome-launcher` fica disponível como fallback.
+> ⚠️ **`next start` roda em modo produção**, onde o schema de env exige `SENTRY_DSN` + `CRON_SECRET` — salvo em build phase ou com `E2E_TEST_MODE=1`. Daí as variáveis abaixo. O `diagnose:lighthouse` usa o Chromium do **Playwright** com `--remote-debugging-port` (o Lighthouse anexa à porta) e encaminha o cookie de sessão via header `Cookie` nas rotas autenticadas.
 
 ### 3. Capturar o baseline **PRÉ-instrumentação**
 
