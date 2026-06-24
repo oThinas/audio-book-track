@@ -173,3 +173,69 @@ impacto em CLS e carrega de forma não-bloqueante.
 
 As correções dessas oportunidades ficam para entregas futuras (fora de escopo
 desta feature, por decisão da spec).
+
+---
+
+## 6. Backlog de correções (para entregas futuras)
+
+Cada item abaixo é escopável como um deliverável independente (`/speckit-specify`).
+Severidade: 🔴 alta · 🟡 média · 🟢 baixa. `file:line` extraídos dos artefatos
+brutos desta baseline (Lighthouse + React Doctor `--verbose`); reproduzível via
+`bun run diagnose` + `bunx react-doctor@latest --verbose`.
+
+### D1 — 🔴 Acessibilidade → A11y 100 nas páginas autenticadas
+
+Lighthouse A11y = 96 em `/dashboard`, `/books`, `/books/:id`. Auditorias que reprovam:
+
+| Auditoria Lighthouse | Páginas | Direção |
+|---|---|---|
+| `color-contrast` | dashboard, books, books-detail (mobile+desktop) | Ajustar tokens de contraste (texto/fundo) que não atingem 4.5:1 |
+| `label-content-name-mismatch` | dashboard, books-detail | Nome acessível deve conter o texto visível do controle |
+| `td-has-header` | books-detail | Associar `<td>` a headers na tabela de capítulos |
+
+React Doctor (a11y errors) complementa:
+- **Role missing required ARIA props** — `src/components/features/books/book-create-dialog.tsx:178`, `src/components/features/books/book-edit-dialog.tsx:158`.
+
+Verificação: `bun run diagnose:lighthouse` → A11y = 100; `@axe-core/playwright` verde.
+
+### D2 — 🔴 Performance & CLS do dashboard mobile
+
+Pior CWV da baseline: `/dashboard` mobile com **Perf 80, LCP ~3015 ms (> 2,5 s), CLS 0,276 (> 0,1)**.
+
+- **CLS**: 1 layout shift no contêiner de conteúdo principal (`main.flex-1 > div.flex`) — provavelmente widgets/charts (recharts) carregando assíncronos sem reserva de espaço. Direção: skeleton com **altura fixa** para os cards/charts do dashboard.
+- **JS não usado**: `unused-javascript` estima **~61 KiB** de economia no dashboard mobile. Direção: code-split/lazy dos charts; revisar imports do recharts.
+- **LCP ~3 s**: dominado pelo custo de JS acima (os insights de LCP-element passaram). Melhora junto com o split de JS.
+
+Verificação: dashboard mobile com CLS < 0,1, LCP < 2,5 s, Perf ≥ 90.
+
+### D3 — 🟡 LCP mobile de `/books/:id`
+
+`/books/:id` mobile LCP **~3018 ms (> 2,5 s)** (desktop saudável, 334 ms). Investigar custo de render/JS da página de detalhe no perfil mobile. Verificação: LCP < 2,5 s.
+
+### D4 — 🟡 Desbloquear o React Compiler (22 performance errors)
+
+O React Compiler não consegue auto-memoizar 22 pontos → otimização perdida. Dois grupos:
+
+- **"can't optimize this"** — ex.: `src/components/ui/chart.tsx:188,287`, `src/components/ui/field.tsx:195`, `src/app/(authenticated)/not-found.tsx:6`, `src/components/features/*/hooks/use-*.ts` e várias tabelas (`*-table.tsx`).
+- **"doesn't support this syntax" ×8** — `use-book-detail.ts:256`, `use-studio-inline-creator.ts:52`, `use-delete-{chapter,editor,narrator,studio}.ts`, `calendar.tsx:29-30`, `chapter-row-actions.tsx:26`, `page-loading.tsx:31,56`.
+
+Direção: ajustar os padrões que o compiler rejeita (refs/closures/sintaxe). Verificação: `bunx react-doctor@latest --verbose` sem perf errors dessa família.
+
+### D5 — 🟡 Bugs: estado sincronizado a prop dentro de effect (×3)
+
+`src/components/features/books/book-create-dialog.tsx:100`, `src/components/features/chapters/hooks/use-chapter-row.ts:41-42`, `src/components/layout/mobile-sidebar.tsx:68`. Anti-padrão que a própria constituição proíbe (derivar com `useMemo`, não `useEffect`). Direção: derivar/`key` em vez de sincronizar via effect.
+
+### D6 — 🟡 Segurança: side effect em GET handler
+
+`src/app/api/auth/clear-session/route.ts:4` — GET deve ser idempotente/sem efeito colateral. Direção: mover a limpeza de sessão para POST/DELETE. (Warnings correlatos: `src/lib/db/migrate.ts:105`, `drizzle-dashboard-repository.ts:208`.)
+
+### D7 — 🟢 SEO: robots.txt válido
+
+`robots-txt` reprovado em todas as páginas (SEO 91). Direção: adicionar `app/robots.ts` (ou `robots.txt`) válido. Verificação: SEO = 100.
+
+### D8 — 🟢 Cobertura Lighthouse do modal de configuração
+
+O snapshot do `@modal/(.)settings` não roda (exige a flow API do Lighthouse / Puppeteer). Direção: adicionar `puppeteer-core` conectando à mesma `--remote-debugging-port` e usar `flow.snapshot()` (ver nota em `scripts/diagnostics/lighthouse.ts`).
+
+> Warnings não itemizados (≈173): Manutenibilidade 99, Performance 32, Bugs 33,
+> Acessibilidade 6, Segurança 3. Lista completa: `bunx react-doctor@latest --verbose`.
