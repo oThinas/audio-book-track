@@ -76,11 +76,11 @@ Web app Next.js App Router, estrutura `src/` existente. Testes em `__tests__/uni
 
 ### Tests for User Story 2 ⚠️ (escrever PRIMEIRO, devem FALHAR)
 
-- [ ] T013 [P] [US2] E2E de handoff em `__tests__/e2e/skeleton-handoff.spec.ts`: sob throttle, o skeleton (`data-testid="page-loading-skeleton"`) transita suavemente para o conteúdo; rota sem `loading.tsx` (dashboard) não gera animação dupla
+- [X] T013 [P] [US2] E2E de handoff em `__tests__/e2e/skeleton-handoff.spec.ts`: payload diferido torna o skeleton (`data-testid="page-loading-skeleton"`) observável e ele transita para o conteúdo; rota sem `loading.tsx` (dashboard) não exibe skeleton. _Execução em T036 (DB de teste indisponível nesta sessão)._
 
 ### Implementation for User Story 2
 
-- [ ] T014 [US2] Verificar/garantir que o fallback de Suspense (`loading.tsx`) e o conteúdo resolvido residem dentro do mesmo boundary `<ViewTransition>` do slot de conteúdo; ajustar o mapeamento/`default` em `src/app/(authenticated)/layout-client.tsx` se necessário para o crossfade skeleton→conteúdo (D5). Mesmo arquivo de T004 → sequencial
+- [X] T014 [US2] Verificado: o fallback de Suspense (`loading.tsx`) e o conteúdo resolvido residem no mesmo boundary `<ViewTransition>` (ambos ocupam `{children}`). Nenhum ajuste necessário — o reveal sem tipo cai no `default: vt-crossfade`, dando o handoff em crossfade. Documentado em research.md (D5)
 
 **Checkpoint**: US1 + US2 funcionam independentemente.
 

@@ -106,6 +106,8 @@ Helper puro `resolveNavTransition(fromPath, toPath)` (em `src/lib/navigation/nav
 
 **Alternatives considered**: animar cada skeleton manualmente — rejeitado (Princípio IV); o boundary único já cobre.
 
+**Confirmação de implementação (T014)**: nenhuma mudança de código foi necessária. Tanto a navegação de rota quanto o reveal do Suspense são "update" do mesmo boundary persistente, distinguidos pelo transition type — a navegação adiciona um tipo (direcional, via `transitionTypes`/`addTransitionType`); o reveal skeleton→conteúdo não adiciona tipo, então usa a classe `vt-crossfade` da chave `default`. Resultado: entrada direcional do skeleton + handoff em crossfade, sem `update` explícito. Skeleton já expõe `data-testid="page-loading-skeleton"` (`LoadingBlock`).
+
 ---
 
 ## D6. Morph de reordenação de capítulos (US5)
