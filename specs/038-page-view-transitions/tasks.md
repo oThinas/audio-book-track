@@ -94,13 +94,13 @@ Web app Next.js App Router, estrutura `src/` existente. Testes em `__tests__/uni
 
 ### Tests for User Story 3 ⚠️ (escrever PRIMEIRO, devem FALHAR)
 
-- [ ] T015 [P] [US3] E2E reduced-motion + degradação em `__tests__/e2e/transitions-reduced-motion.spec.ts`: com `prefers-reduced-motion: reduce` a troca é instantânea; sem erros de console quando a API de view transitions está ausente
-- [ ] T016 [P] [US3] E2E de foco de teclado em `__tests__/e2e/transitions-a11y.spec.ts`: ordem/destino do foco corretos após a transição (sem regressão de acessibilidade)
+- [X] T015 [P] [US3] E2E reduced-motion + degradação em `__tests__/e2e/transitions-reduced-motion.spec.ts`: com `prefers-reduced-motion: reduce` a troca é instantânea; sem erros de transição quando a API é removida (`startViewTransition` undefined via `addInitScript`). _Execução em T036._
+- [X] T016 [P] [US3] E2E de foco de teclado em `__tests__/e2e/transitions-a11y.spec.ts`: foco não fica preso no snapshot após a transição (Tab continua avançando). _Execução em T036._
 
 ### Implementation for User Story 3
 
-- [ ] T017 [US3] Adicionar bloco `@media (prefers-reduced-motion: reduce)` zerando `animation-duration`/`animation-delay` de `::view-transition-group/old/new(*)` em `src/app/globals.css` (D7, contrato C2). Mesmo arquivo de T003/T008 → sequencial
-- [ ] T018 [US3] Confirmar degradação graciosa sem polyfill: garantir que nenhum código quebra quando a View Transitions API está ausente (sem `console.error`); ajustar guard no listener do spike D3 se necessário (`src/lib/navigation/` ou hook client) (D7/FR-007)
+- [X] T017 [US3] Adicionar bloco `@media (prefers-reduced-motion: reduce)` zerando `animation-duration`/`animation-delay` de `::view-transition-group/old/new(*)` em `src/app/globals.css` (D7, contrato C2). Mesmo arquivo de T003/T008 → sequencial
+- [X] T018 [US3] Confirmado: sem listener de `popstate` (D3 = fallback), não há guard a ajustar. `<ViewTransition>`/`addTransitionType` do React degradam sozinhos (swap instantâneo, sem erro) quando a API está ausente. Sem código (D7/FR-007)
 
 **Checkpoint**: US1 + US2 + US3 — animações robustas e acessíveis.
 

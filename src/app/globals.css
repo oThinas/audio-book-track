@@ -435,3 +435,15 @@ html[data-primary-color="amber"] .dark {
     opacity: 1;
   }
 }
+
+/* Reduced motion — collapse every view-transition animation to an instant
+   swap. Pseudo-elements aren't reachable by Tailwind utilities, so this raw
+   @media block is the correct path (D7, FR-006). */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
