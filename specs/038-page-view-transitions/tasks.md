@@ -159,7 +159,7 @@ Web app Next.js App Router, estrutura `src/` existente. Testes em `__tests__/uni
 - [X] T033 Smoke de build final — `bun run build` sem erros com toda a feature ativada (SC-008) ✅
 - [X] T034 [P] `futuras-features.md` — entrada da Fase B marcada como ✅ Implementada (038) (docs)
 - [X] T035 Code-review executado sobre o diff (`src/**`): 0 CRITICAL. Corrigidos os achados de maior valor — rollback do reorder volta a ser urgente (fora de `startTransition`); ViewTransition por linha só quando `canReorder`; exclusão de `transitionTypes` nos BOTTOM_ITEMS documentada (settings é modal)
-- [~] T036 Verificação final: `bun run lint` ✅ (0/0), `bun run test:unit` ✅ (1386), `bun run build` ✅. `bun run test:e2e` **pendente** — DB de teste indisponível nesta sessão (`bun run db:test:setup && bun run test:e2e` quando o Postgres de teste estiver de pé). Integration: N/A (sem DB)
+- [X] T036 Verificação final (DB de teste no ar): `bun run lint` ✅ (0/0), `bun run test:unit` ✅ (1386), `bun run test:integration` ✅ (327), `bun run test:e2e` ✅ (273/273), `bun run build` ✅. Correções durante a verificação: técnica do teste de skeleton (delay server-side) e a11y pré-existente dos toggles de Configurações (`aria-label`)
 - [X] T037 [P] `quickstart.md` validado: os 8 passos de habilitação estão implementados; itens de DoD que exigem navegador consolidam-se na execução E2E (T036)
 
 ---
