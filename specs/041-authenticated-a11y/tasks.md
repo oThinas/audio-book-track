@@ -25,8 +25,8 @@ auditoria específica (Lighthouse) + asserção dirigida.
 
 **Purpose**: pré-requisitos de código/infra para a verificação a11y.
 
-- [ ] T001 [P] Confirmar que `TableHead` em `src/components/ui/table.tsx` repassa `scope` e demais props ao `<th>` (ajustar o spread/forwardRef se não repassar) — pré-requisito do US3.
-- [ ] T002 [P] Garantir factory de livro + capítulos em `__tests__/helpers/factories.ts` (`createTestBook`/`createTestChapter`) para semear `/books/:id` na nova spec axe; adicionar se faltar (sem tocar `seed-test.ts`).
+- [X] T001 [P] Confirmar que `TableHead` em `src/components/ui/table.tsx` repassa `scope` e demais props ao `<th>` (ajustar o spread/forwardRef se não repassar) — pré-requisito do US3. **OK**: `TableHead` já faz `{...props}` no `<th>` (table.tsx:56-67); `scope` passa direto.
+- [X] T002 [P] Garantir factory de livro + capítulos em `__tests__/helpers/factories.ts` (`createTestBook`/`createTestChapter`) para semear `/books/:id` na nova spec axe; adicionar se faltar (sem tocar `seed-test.ts`). **OK**: `createTestBook`/`createTestChapter` já existem; a spec axe (T004) usa o seeding E2E via `helpers/seed.ts` (`seedBook`/`seedChapter`).
 
 ---
 
@@ -36,8 +36,8 @@ auditoria específica (Lighthouse) + asserção dirigida.
 
 **⚠️ CRITICAL**: nenhuma user story começa antes desta fase.
 
-- [ ] T003 Discovery-run: subir DB local, `bun run build && bun run start`, `bun run diagnose:seed`, `bun run diagnose:lighthouse`, `bun run diagnose:react`. Registrar em `specs/041-authenticated-a11y/research.md` (§R6) os elementos/página/tema/cor exatos que reprovam `color-contrast`, `label-content-name-mismatch`, `td-has-header`, e **cravar o valor final** de `--muted-foreground` (tema claro). Se aparecer contraste `serious` preso a cor primária, listar como achado adicional.
-- [ ] T004 Criar scaffold `__tests__/e2e/books-accessibility.spec.ts` cobrindo `/books` **e** `/books/:id`, semeando livro+capítulos via factory no `beforeEach` e chamando `checkAccessibility(page, label)` (10 combinações tema×cor). **Esperado RED** (contraste/label `serious`). Rede de regressão compartilhada por US1/US3/US4.
+- [X] T003 Discovery-run: subir DB local, `bun run build && E2E_TEST_MODE=1 bun run start`, `bun run diagnose:seed`, `bun run diagnose:lighthouse`, `bun run diagnose:react`. **FEITO** — registrado em research.md §R6. Baseline **A11y=96** (3 páginas, mobile+desktop). **Achado-chave**: contraste é mais amplo que a hipótese — 5 tokens (`--muted-foreground`→0.50, `--reviewing`/`--retake`→0.50, `--completed`→0.47, `--destructive`→0.46) + componente `paid` (`bg-primary text-primary-foreground`). `--editing` já passa. Combobox ARIA confirmado ×2 pelo react-doctor.
+- [X] T004 Criar scaffold `__tests__/e2e/books-accessibility.spec.ts` cobrindo `/books` **e** `/books/:id`, semeando livro+capítulos via `helpers/seed.ts` no `beforeEach` e chamando `checkAccessibility(page, label)` (10 combinações tema×cor). **FEITO**. Rede de regressão compartilhada por US1/US3/US4 (GREEN confirmado na Phase 7).
 
 **Checkpoint**: alvos exatos conhecidos + rede axe de `/books` no lugar (RED).
 

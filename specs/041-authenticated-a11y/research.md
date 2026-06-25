@@ -105,16 +105,64 @@ e2e/unit (rodar `bun run test:e2e`).
 **Alternativas rejeitadas**: enriquecer `aria-label` para conter o texto visível (nomes
 verbosos/dinâmicos; mais frágil).
 
-## R6 — Discovery-run (primeira task)
+## R6 — Discovery-run (primeira task) — EXECUTADO 2026-06-25
 
-**Decisão**: a 1ª task roda `bun run diagnose:lighthouse` + as specs axe e **enumera** os
-elementos/tokens exatos que reprovam (por página, tema e cor), produzindo a lista que ancora os
-testes RED. Se aparecer contraste `serious` preso a uma cor primária específica, corrigir
-também (sem desabilitar combinações).
-
-**Justificativa**: os `file:line` da baseline são hipóteses; o cálculo de contraste é indício
-forte mas não substitui o runtime (Lighthouse amostra pixels reais com fonte/tamanho). Ancora o
-TDD em evidência.
+**Decisão**: a 1ª task roda `bun run diagnose:lighthouse` + `diagnose:react` e **enumera** os
+elementos/tokens exatos que reprovam, produzindo a lista que ancora os testes RED. Se aparecer
+contraste `serious` preso a uma cor primária específica, corrigir também.
 
 **Pré-requisito de ambiente**: DB em `localhost:5432`, build de produção (`bun run build &&
-bun run start`) e sessão de admin semeada (`diagnose:seed`) — como na baseline 2026-06.
+E2E_TEST_MODE=1 bun run start`) e sessão de admin semeada (`diagnose:seed`). **Nota**: em
+`next start` (produção), o schema de env exige `SENTRY_DSN`/`CRON_SECRET`; usar `E2E_TEST_MODE=1`
+para pular essa exigência localmente (mesmo escape da suíte E2E) — não ativa o Sentry.
+
+### Resultado do runtime (baseline RED)
+
+`diagnose:lighthouse` → **A11y = 96** em `/dashboard`, `/books`, `/books/:id` (mobile + desktop);
+Performance/Boas Práticas/SEO sem regressão (Perf mobile dashboard 80 é pré-existente, fora do
+escopo D1). `diagnose:react` → **"Role missing required ARIA props ×2"** (combobox em
+`book-create-dialog.tsx:178` + `book-edit-dialog.tsx`).
+
+### Achado-chave: contraste é MAIS amplo que a hipótese (só `--muted-foreground`)
+
+As reprovações de `color-contrast` vêm do **padrão de badge de status** em
+[status-badge.tsx](../../src/components/features/books/status-badge.tsx)
+(`bg-<token>/15 text-<token>`) — texto na cor cheia do token sobre tint de 15% da mesma matiz —
+e do **token `--destructive`** (texto vermelho de destaque). Medições reais (tema claro, fonte
+~9pt normal):
+
+| Elemento | fg | bg | ratio | token (tema claro) |
+|---|---|---|---|---|
+| badge `pending` | `#737373` | `#f5f5f5` (muted sólido) | 4.34 | `--muted-foreground` 0.556 |
+| badge `reviewing` | `#bb4d00` | `#f5e4d9` (token/15) | 4.07 | `--reviewing` 0.555 |
+| badge `retake` | `#ca3500` | `#f7e1d9` | 4.16 | `--retake` 0.553 |
+| badge `completed` | `#007a55` | `#d9ebe6` | 4.34 | `--completed` 0.508 |
+| badge `paid` | `#205cfc` | `#dee7ff` | 4.25 | `--primary` (blue) |
+| badge dashboard + botão "Excluir capítulos" | `#e7000b` | `#fde6e7` | 4.00 | `--destructive` 0.577 |
+| badge `editing` | `#1447e6` | `#dce3fb` | 5.34 | `--editing` 0.488 — **JÁ PASSA** |
+
+### Valores cravados (tema claro `:root`; `.dark` inalterado — já passa)
+
+Apenas **escurecer L** (croma/matiz preservados), alvo ≥ 4.6:1 com margem (~5.0:1), via
+calculador oklch→sRGB→WCAG:
+
+| token | L: atual → novo |
+|---|---|
+| `--muted-foreground` | 0.556 → **0.50** |
+| `--reviewing` | 0.555 → **0.50** |
+| `--retake` | 0.553 → **0.50** |
+| `--completed` | 0.508 → **0.47** |
+| `--destructive` | 0.577 → **0.46** |
+| `--editing` | inalterado (5.34) |
+
+### `paid`/`--primary`: fix de COMPONENTE, não de token
+
+`STATUS_CLASSES.paid` usa `bg-primary/15 text-primary`, que reprova em **todas as 5 cores
+primárias** (blue 4.25, orange 2.46, green 2.15, red 3.10, amber 2.68). Escurecer `--primary`
+mudaria a cor de marca (selecionável pelo usuário, blast radius enorme) → **rejeitado**. Fix:
+trocar para `bg-primary text-primary-foreground` (pareamento sólido acessível, o mesmo dos botões
+primários, garantido nas 5 paletas). Visualmente, `paid` (estado terminal) passa a ter ênfase
+sólida — distinção desejável dos demais badges de tint suave.
+
+**Consequência para a spec**: US1 cresce de 1 token para **5 tokens + 1 componente**. Mantém a
+filosofia (token-level, tema claro, semântico) — apenas cobre o conjunto real medido.
