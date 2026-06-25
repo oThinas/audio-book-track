@@ -1,3 +1,5 @@
+import AxeBuilder from "@axe-core/playwright";
+
 import { expect, test } from "./fixtures/app-server";
 import { checkAccessibility } from "./helpers/accessibility";
 import { login } from "./helpers/auth";
@@ -68,5 +70,22 @@ test.describe("Accessibility: Books", () => {
     await expect(page.locator('[data-testid^="chapter-row-"]').first()).toBeVisible();
 
     await checkAccessibility(page, "books-detail");
+  });
+
+  // US3 (D1): td-has-header is a best-practice rule (moderate impact) outside the
+  // wcag2a/aa tag set the shared helper filters on, so assert it directly on the
+  // chapters table.
+  test("chapters table has no td-has-header violations", async ({ page, appServer }) => {
+    const { bookId } = await seedBookWithChapters(page, appServer.schemaName);
+
+    await page.goto(`/books/${bookId}`);
+    await expect(page.locator('[data-testid^="chapter-row-"]').first()).toBeVisible();
+
+    const results = await new AxeBuilder({ page })
+      .include('[data-slot="table"]')
+      .withRules(["td-has-header"])
+      .analyze();
+
+    expect(results.violations).toEqual([]);
   });
 });

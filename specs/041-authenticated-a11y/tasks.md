@@ -83,10 +83,10 @@ no aberto/fechado; axe sem `aria-valid-attr-value`.
 **Independent Test**: `td-has-header` (Lighthouse) passa; asserção dirigida (axe `runOnly:
 ['td-has-header']` na tabela) sem violação.
 
-- [ ] T012 [US3] (RED) Asserção dirigida `td-has-header` na tabela de capítulos (axe `include` no contêiner da tabela em `/books/:id`), adicionada a `books-accessibility.spec.ts` ou helper. Deve falhar hoje.
-- [ ] T013 [US3] `src/components/features/chapters/chapters-table.tsx`: `scope="col"` em todos os `<TableHead>` do cabeçalho; trocar `<TableHead aria-hidden="true" />` da coluna de arraste por header com `<span className="sr-only">Reordenar</span>`.
-- [ ] T014 [US3] `src/components/features/chapters/chapter-group-row.tsx`: garantir que as células do resumo ficam associadas aos headers de coluna (alinhamento posicional + `scope`), **mantendo** `role="button"` na linha de grupo.
-- [ ] T015 [US3] GREEN: asserção de T012 verde; `td-has-header` do Lighthouse passa no discovery re-run de `/books/:id`.
+- [X] T012 [US3] (RED) Asserção dirigida `td-has-header` (axe `include('[data-slot="table"]')` + `withRules(["td-has-header"])`) adicionada a `books-accessibility.spec.ts`. RED ancorado no discovery (Lighthouse flagou `td-has-header` em `/books/:id`). GREEN na Phase 7.
+- [X] T013 [US3] `src/components/features/chapters/chapters-table.tsx`: `scope="col"` em todos os `<TableHead>`; coluna de arraste trocada de `<TableHead aria-hidden="true" />` para header com `<span className="sr-only">Reordenar</span>` + `scope="col"`.
+- [X] T014 [US3] `chapter-group-row.tsx`: sem mudança necessária para `td-has-header` — só renderiza com agrupamento ativo (fora da view auditada); células não-vazias mapeiam posicionalmente aos headers `scope="col"` (T013), vazias têm `aria-hidden`; `role="button"` mantido (R4).
+- [ ] T015 [US3] GREEN: asserção T012 + `td-has-header` do Lighthouse em `/books/:id` — consolidado na **Phase 7**.
 
 **Checkpoint**: tabela semanticamente correta.
 
