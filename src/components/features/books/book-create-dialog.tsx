@@ -176,7 +176,9 @@ export function BookCreateDialog({
                             type="button"
                             variant="outline"
                             role="combobox"
+                            aria-haspopup="listbox"
                             aria-expanded={studioPickerOpen}
+                            aria-controls={studioPickerOpen ? "book-studio-listbox" : undefined}
                             aria-invalid={errors.studioId ? true : undefined}
                             disabled={isSubmitting}
                             data-testid="book-studio-trigger"
@@ -194,6 +196,7 @@ export function BookCreateDialog({
                         }
                       />
                       <PopoverContent
+                        id="book-studio-listbox"
                         className="w-[--radix-popover-trigger-width] p-0"
                         align="start"
                       >

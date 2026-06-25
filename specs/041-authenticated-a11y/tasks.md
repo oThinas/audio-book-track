@@ -67,10 +67,10 @@ required ARIA props"; sem nova violação axe.
 **Independent Test**: `react-doctor --verbose` sem o achado; asserção de DOM confirma atributos
 no aberto/fechado; axe sem `aria-valid-attr-value`.
 
-- [ ] T008 [P] [US2] (RED) Asserção de DOM dos atributos ARIA do combobox (estado aberto e fechado) para os diálogos de criar/editar livro — em `__tests__/e2e/` (alvo `book-studio-trigger` / `book-edit-studio-trigger`). Deve falhar hoje (faltam `aria-haspopup`/`aria-controls`).
-- [ ] T009 [US2] `src/components/features/books/book-create-dialog.tsx`: `id="book-studio-listbox"` no `PopoverContent`; no `Button` gatilho add `aria-haspopup="listbox"` e `aria-controls={studioPickerOpen ? "book-studio-listbox" : undefined}`.
-- [ ] T010 [US2] `src/components/features/books/book-edit-dialog.tsx`: idem com `id="book-edit-studio-listbox"`, atento ao ninho `TooltipTrigger → PopoverTrigger → Button` (sem IDs duplicados nem `aria-*` conflitante).
-- [ ] T011 [US2] GREEN: `bun run diagnose:react` → zero "Role missing required ARIA props"; rodar a asserção de T008 (verde) e confirmar axe sem `aria-valid-attr-value` novo; comportamento abrir/selecionar/fechar inalterado.
+- [X] T008 [P] [US2] (RED) Asserção de DOM dos atributos ARIA do combobox (aberto/fechado) — nova `__tests__/e2e/book-studio-combobox-a11y.spec.ts` (criar + editar). RED ancorado também no react-doctor (×2). GREEN na Phase 7.
+- [X] T009 [US2] `src/components/features/books/book-create-dialog.tsx`: `id="book-studio-listbox"` no `PopoverContent`; `Button` ganhou `aria-haspopup="listbox"` e `aria-controls={studioPickerOpen ? "book-studio-listbox" : undefined}`.
+- [X] T010 [US2] `src/components/features/books/book-edit-dialog.tsx`: idem com `id="book-edit-studio-listbox"` (ninho `TooltipTrigger → PopoverTrigger → Button` preservado; sem IDs duplicados).
+- [ ] T011 [US2] GREEN: `bun run diagnose:react` (zero "Role missing required ARIA props") + asserção T008 — consolidado na **Phase 7**.
 
 **Checkpoint**: combobox acessível nos dois diálogos.
 
