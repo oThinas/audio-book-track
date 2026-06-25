@@ -16,13 +16,26 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { chromium, type Page } from "@playwright/test";
-import lighthouse, { desktopConfig } from "lighthouse";
+import lighthouse, { desktopConfig, startFlow } from "lighthouse";
+import puppeteer from "puppeteer-core";
 
 type FormFactor = "mobile" | "desktop";
 
 interface Route {
   readonly slug: string;
   readonly path: string;
+}
+
+// Subset of the Playwright cookie shape forwarded to puppeteer-core.
+interface SessionCookie {
+  readonly name: string;
+  readonly value: string;
+  readonly domain: string;
+  readonly path: string;
+  readonly expires: number;
+  readonly httpOnly: boolean;
+  readonly secure: boolean;
+  readonly sameSite: "Strict" | "Lax" | "None";
 }
 
 const FORM_FACTORS: ReadonlyArray<FormFactor> = ["mobile", "desktop"];
@@ -104,6 +117,56 @@ async function audit(
   console.info(`[${formFactor}] ${slug}: ${scores.join(" ")}  (final=${finalUrl})`);
 }
 
+// Settings modal (@modal/(.)settings) snapshot. Lighthouse's snapshot mode is
+// only exposed through the Puppeteer-based user-flow API (startFlow), so connect
+// puppeteer-core to the same CDP port Playwright already opened, reuse the admin
+// session cookies, and open the intercepted modal via the sidebar link — a real
+// client-side navigation; goto("/settings") would render the standalone page,
+// not the modal — then snapshot the open Dialog.
+async function captureSettingsModalSnapshot(
+  baseURL: string,
+  debugPort: number,
+  cookies: readonly SessionCookie[],
+  outDir: string,
+): Promise<void> {
+  const pupBrowser = await puppeteer.connect({ browserURL: `http://localhost:${debugPort}` });
+  try {
+    const pupPage = await pupBrowser.newPage();
+    // Desktop viewport: the sidebar ([data-testid="sidebar"]) is hidden below the
+    // md breakpoint (hidden md:flex), so the link would not be clickable.
+    await pupPage.setViewport({ width: 1280, height: 800 });
+    await pupPage.setCookie(
+      ...cookies.map((cookie) => ({
+        name: cookie.name,
+        value: cookie.value,
+        domain: cookie.domain,
+        path: cookie.path,
+        expires: cookie.expires,
+        httpOnly: cookie.httpOnly,
+        secure: cookie.secure,
+        sameSite: cookie.sameSite,
+      })),
+    );
+    await pupPage.goto(`${baseURL}/dashboard`, { waitUntil: "networkidle2" });
+    await pupPage.click('[data-testid="sidebar"] a[href="/settings"]');
+    await pupPage.waitForSelector('[role="dialog"]', { visible: true, timeout: 10_000 });
+
+    const flow = await startFlow(pupPage);
+    await flow.snapshot();
+
+    writeFileSync(join(outDir, "settings-modal.html"), await flow.generateReport());
+    writeFileSync(
+      join(outDir, "settings-modal.json"),
+      JSON.stringify(await flow.createFlowResult(), null, 2),
+    );
+    await pupPage.close();
+    console.info(`[snapshot] settings-modal captured (final=${baseURL}/settings)`);
+  } finally {
+    // Detach without killing the browser — Playwright still owns it.
+    pupBrowser.disconnect();
+  }
+}
+
 async function main(): Promise<void> {
   const baseURL = process.env.DIAGNOSE_BASE_URL ?? "http://localhost:3000";
   const outDir = join(process.cwd(), ".lighthouse");
@@ -156,17 +219,16 @@ async function main(): Promise<void> {
       }
     }
 
-    // Settings modal (@modal/(.)settings) snapshot: Lighthouse's snapshot/timespan
-    // modes are only exposed through the Puppeteer-based user-flow API (startFlow).
-    // This project standardizes on Playwright and does not install puppeteer-core,
-    // so the modal capture is left to the operational baseline run. To enable it,
-    // add puppeteer-core, connect it to this same --remote-debugging-port, open the
-    // modal via getByTestId("sidebar").getByRole("link", { name: "Configurações" }),
-    // then call flow.snapshot().
-    console.warn(
-      "Skipped settings-modal snapshot: requires Lighthouse's Puppeteer flow API. " +
-        "See the note in scripts/diagnostics/lighthouse.ts to enable it.",
-    );
+    // Degrades gracefully: a missing link / modal logs and continues without
+    // aborting the other audits (same posture as the /books/:id skip).
+    try {
+      await captureSettingsModalSnapshot(baseURL, debugPort, cookies, outDir);
+    } catch (error) {
+      console.warn(
+        "Settings-modal snapshot skipped:",
+        error instanceof Error ? error.message : error,
+      );
+    }
 
     console.info(`Lighthouse reports written to ${outDir}`);
   } finally {

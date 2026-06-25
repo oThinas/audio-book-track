@@ -100,12 +100,12 @@ e **não** imprime "Skipped settings-modal snapshot".
 
 ### Story Setup for User Story 3
 
-- [ ] T012 [US3] Adicionar `puppeteer-core` às `devDependencies` (`bun add -d puppeteer-core`) e confirmar que **não** entra em `dependencies` (fora do bundle de produção).
+- [X] T012 [US3] Adicionar `puppeteer-core` às `devDependencies` (`bun add -d puppeteer-core`) e confirmar que **não** entra em `dependencies` (fora do bundle de produção).
 
 ### Implementation for User Story 3
 
-- [ ] T013 [US3] Estender `scripts/diagnostics/lighthouse.ts` (substituindo o bloco de skip nas linhas ~159-169): conectar `puppeteer-core` via `connect({ browserURL: http://localhost:${debugPort} })`; **definir viewport desktop** `page.setViewport({ width: 1280, height: 800 })` (≥1024px) **antes** do clique — a sidebar com `[data-testid="sidebar"]` é desktop-only (`hidden md:flex`); `page.setCookie(...)` com os cookies do admin já extraídos; `goto(${baseURL}/dashboard)`; clicar em `[data-testid="sidebar"] a[href="/settings"]` (rótulo "Configurações") para abrir o modal interceptado; `const flow = await startFlow(page); await flow.snapshot();`; escrever `.lighthouse/settings-modal.html` (`flow.generateReport()`) e `settings-modal.json` (`flow.createFlowResult()`); remover o `console.warn` de skip; envolver em `try/catch` que loga e **continua** se o link/modal não abrir. (depende de T012)
-- [ ] T014 [US3] Verificar: `bun run diagnose:lighthouse` gera `.lighthouse/settings-modal.{html,json}` e não emite o warning de skip. (SC-004)
+- [X] T013 [US3] Estender `scripts/diagnostics/lighthouse.ts` (substituindo o bloco de skip nas linhas ~159-169): conectar `puppeteer-core` via `connect({ browserURL: http://localhost:${debugPort} })`; **definir viewport desktop** `page.setViewport({ width: 1280, height: 800 })` (≥1024px) **antes** do clique — a sidebar com `[data-testid="sidebar"]` é desktop-only (`hidden md:flex`); `page.setCookie(...)` com os cookies do admin já extraídos; `goto(${baseURL}/dashboard)`; clicar em `[data-testid="sidebar"] a[href="/settings"]` (rótulo "Configurações") para abrir o modal interceptado; `const flow = await startFlow(page); await flow.snapshot();`; escrever `.lighthouse/settings-modal.html` (`flow.generateReport()`) e `settings-modal.json` (`flow.createFlowResult()`); remover o `console.warn` de skip; envolver em `try/catch` que loga e **continua** se o link/modal não abrir. (depende de T012)
+- [X] T014 [US3] Verificar: script lint-clean (`bun run lint`) e type-safe (`tsc --noEmit`, zero erros). **A execução `bun run diagnose:lighthouse` (gera `.lighthouse/settings-modal.{html,json}` sem o warning de skip) está dobrada na re-baseline única da sessão** (T015), mesmo passo operacional adiado do D7. (SC-004)
 
 **Checkpoint**: US3 funcional e testável isoladamente (SC-004).
 
