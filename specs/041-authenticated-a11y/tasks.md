@@ -50,9 +50,10 @@ auditoria específica (Lighthouse) + asserção dirigida.
 **Independent Test**: `color-contrast` (Lighthouse) passa em dashboard/books/books-detail; axe
 sem violação `serious` de contraste nas 10 combinações.
 
-- [ ] T005 [US1] Confirmar RED de `color-contrast`: a nova `books-accessibility.spec.ts` (T004) e/ou `accessibility.spec.ts` (dashboard) falham em contraste no estado atual (registrar evidência do discovery-run).
-- [ ] T006 [US1] Ajustar `--muted-foreground` no **tema claro** (`:root`) em `src/app/globals.css` para o valor cravado em T003 (≈ `oklch(0.50 0 0)`); **não** alterar o `.dark`.
-- [ ] T007 [US1] GREEN: rodar `bun run test:e2e -- books-accessibility accessibility` → contraste verde nos 2 temas; checar visualmente que o texto atenuado continua distinguível do primário; confirmar que as demais suítes axe (`/settings`, narrators/editors/studios) seguem verdes (blast radius do token global).
+- [X] T005 [US1] Confirmar RED de `color-contrast`: discovery-run (T003) mediu A11y=96 com violações de contraste enumeradas (badges de status + destructive) — evidência em research.md §R6.
+- [X] T006 [US1] Ajustar tokens do **tema claro** (`:root`) em `src/app/globals.css` (não alterar `.dark`): `--muted-foreground` 0.556→0.50, `--reviewing`/`--retake` →0.50, `--completed` →0.47, `--destructive` →0.46 (`--editing` mantido). **Escopo ampliado** vs. hipótese (5 tokens) conforme §R6. Verificado por calculador oklch→WCAG (4.96–5.51:1).
+- [X] T006b [US1] `src/components/features/books/status-badge.tsx`: `paid` de `bg-primary/15 text-primary` → `bg-primary text-primary-foreground` (token não corrige; `text-primary` reprova nas 5 paletas).
+- [ ] T007 [US1] GREEN: código aplicado; verificação completa (Lighthouse `color-contrast` verde + axe nas 10 combinações + demais suítes `*-accessibility` sem regressão) consolidada na **Phase 7** (T021/T022).
 
 **Checkpoint**: contraste resolvido; MVP entregável.
 

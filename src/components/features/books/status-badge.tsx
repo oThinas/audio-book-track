@@ -15,7 +15,10 @@ export const STATUS_CLASSES: Record<BookStatus, string> = {
   reviewing: "bg-reviewing/15 text-reviewing",
   retake: "bg-retake/15 text-retake",
   completed: "bg-completed/15 text-completed",
-  paid: "bg-primary/15 text-primary",
+  // A11y D1: solid primary pairing (not text-primary on a /15 tint, which fails
+  // contrast across all 5 primary palettes). `paid` is a terminal state, so the
+  // stronger solid emphasis is intentional.
+  paid: "bg-primary text-primary-foreground",
 };
 
 interface StatusBadgeProps {
