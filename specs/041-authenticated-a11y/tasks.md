@@ -113,10 +113,10 @@ no aberto/fechado; axe sem `aria-valid-attr-value`.
 
 **Purpose**: fechar a verificação e o gate de aceitação.
 
-- [ ] T021 `books-accessibility.spec.ts` 100% verde (10 combinações) e demais `*-accessibility.spec.ts` verdes.
-- [ ] T022 **Gate de aceitação (Lighthouse)**: re-rodar `bun run diagnose:lighthouse` → **A11y = 100** em `/dashboard`, `/books`, `/books/:id` (mobile **e** desktop); confirmar **sem regressão** de Performance/Boas Práticas/SEO vs. baseline 2026-06.
-- [ ] T023 Verificação final (antes do PR): `bun run lint`, `bun run test:unit`, `bun run test:integration`, `bun run test:e2e`, `bun run build`, `bun run diagnose:react`.
-- [ ] T024 [P] (opcional) Revisão a11y dedicada com o agente `ecc:a11y-architect` sobre os componentes tocados.
+- [X] T021 `books-accessibility.spec.ts` **3/3 verde** (10 combinações + `td-has-header`). Achado extra: a paleta **dark+red** sobrescrevia `--destructive` para `oklch(0.55 0.22 8)` (3.25:1 no botão "Excluir capítulos") — corrigido para `oklch(0.66 0.22 8)` (5.25:1), matiz h8 mantida (distinta do primary h22). Demais `*-accessibility` verdes.
+- [X] T022 **Gate de aceitação (Lighthouse)**: `bun run diagnose:lighthouse` → **A11y = 100** em `/dashboard`, `/books`, `/books/:id` (mobile **e** desktop). Sem regressão: Boas Práticas=100, SEO=100; Performance preservada (Perf 80 mobile dashboard é baseline pré-existente, fora do escopo D1).
+- [X] T023 Verificação final: `bun run lint` (0 erros), `test:unit` (1398), `test:integration` (327), `test:e2e` (verde; 2 flaky pré-existentes — `narrators-dark-mode`, `chapters-edit-inline:329` — passam no retry, sem relação com D1), `build` (ok), `diagnose:react` (0 erros de a11y; combobox ×2 resolvido).
+- [ ] T024 [P] (opcional) Revisão a11y dedicada com `ecc:a11y-architect` — não executada (gates objetivos verdes).
 
 ---
 

@@ -166,3 +166,14 @@ sólida — distinção desejável dos demais badges de tint suave.
 
 **Consequência para a spec**: US1 cresce de 1 token para **5 tokens + 1 componente**. Mantém a
 filosofia (token-level, tema claro, semântico) — apenas cobre o conjunto real medido.
+
+### Achado adicional na verificação axe (Phase 7): dark+red destructive
+
+A rede axe (`books-accessibility.spec.ts`, 10 combos) expôs uma reprovação **pré-existente** que
+o Lighthouse (só tema claro + primary azul) não pega: na paleta **dark+red**, `--destructive`
+era sobrescrito para `oklch(0.55 0.22 8)` — escuro demais; o botão "Excluir capítulos"
+(`bg-destructive/10 text-destructive`) dava **3.25:1** sobre o tint escuro. Corrigido para
+`oklch(0.66 0.22 8)` (**5.25:1**), **clareando** o L (texto sobre fundo escuro) e mantendo a
+matiz h8 — distinta do red primary (h22), preservando o teste `studios-primary-colors`
+("destructive stays visually distinct from primary"). Única alteração no tema escuro desta
+feature.
