@@ -53,16 +53,16 @@ verde; visitar `/login?reauth=1` com cookie remove os cookies de sessão e perma
 
 ### Tests for User Story 1 (TDD — escrever PRIMEIRO, devem FALHAR) ⚠️
 
-- [ ] T001 [P] [US1] Reescrever os testes do middleware em `__tests__/unit/proxy/proxy.spec.ts`: (a) `/login?reauth=1` com cookie → status 200, **sem** redirect, e `Set-Cookie` removendo `better-auth.session_token`/`session_data` (+ variantes `__Secure-`); (b) `/login?reauth=1` **sem** cookie → 200 renderiza `/login`; (c) `/login` com cookie **sem** `reauth` → 307 para `/dashboard` (bounce preservado); **remover** o teste "allow unauthenticated access to /api/auth/clear-session" (linha ~80). (RED)
-- [ ] T002 [P] [US1] Atualizar o helper de logout E2E em `__tests__/e2e/auth/logout.spec.ts` de `page.goto("/api/auth/clear-session")` para `page.goto("/login?reauth=1")`.
-- [ ] T003 [P] [US1] Atualizar o logout E2E em `__tests__/e2e/settings-preferences.spec.ts` (linha ~67) de `/api/auth/clear-session` para `/login?reauth=1`.
+- [X] T001 [P] [US1] Reescrever os testes do middleware em `__tests__/unit/proxy/proxy.spec.ts`: (a) `/login?reauth=1` com cookie → status 200, **sem** redirect, e `Set-Cookie` removendo `better-auth.session_token`/`session_data` (+ variantes `__Secure-`); (b) `/login?reauth=1` **sem** cookie → 200 renderiza `/login`; (c) `/login` com cookie **sem** `reauth` → 307 para `/dashboard` (bounce preservado); **remover** o teste "allow unauthenticated access to /api/auth/clear-session" (linha ~80). (RED)
+- [X] T002 [P] [US1] Atualizar o helper de logout E2E em `__tests__/e2e/auth/logout.spec.ts` de `page.goto("/api/auth/clear-session")` para `page.goto("/login?reauth=1")`.
+- [X] T003 [P] [US1] Atualizar o logout E2E em `__tests__/e2e/settings-preferences.spec.ts` (linha ~67) de `/api/auth/clear-session` para `/login?reauth=1`.
 
 ### Implementation for User Story 1
 
-- [ ] T004 [US1] Implementar a limpeza da sessão órfã em `src/proxy.ts`: adicionar, **antes** da regra "cookie + `/login` → `/dashboard`", um ramo que detecta `pathname === "/login"` + `request.nextUrl.searchParams.has("reauth")`, monta `NextResponse.next()`, apaga todos os cookies de sessão do better-auth via `response.cookies.delete({ name, path: "/" })` para `better-auth.session_token`, `better-auth.session_data` e as variantes `__Secure-`, e retorna. (depende de T001)
-- [ ] T005 [P] [US1] Trocar `redirect("/api/auth/clear-session")` por `redirect("/login?reauth=1")` em `src/app/(authenticated)/layout.tsx` (linha ~21).
-- [ ] T006 [P] [US1] Deletar o route handler GET `src/app/api/auth/clear-session/route.ts` e seu teste unit `__tests__/unit/api/auth/clear-session.spec.ts`.
-- [ ] T007 [US1] Verificar: `bun run test:unit` (proxy) verde; `bun run diagnose:react` (`react-doctor --verbose`) com **zero** "Side effect in GET handler"; `bun run test:e2e` (logout) verde. (depende de T002–T006)
+- [X] T004 [US1] Implementar a limpeza da sessão órfã em `src/proxy.ts`: adicionar, **antes** da regra "cookie + `/login` → `/dashboard`", um ramo que detecta `pathname === "/login"` + `request.nextUrl.searchParams.has("reauth")`, monta `NextResponse.next()`, apaga todos os cookies de sessão do better-auth via `response.cookies.delete({ name, path: "/" })` para `better-auth.session_token`, `better-auth.session_data` e as variantes `__Secure-`, e retorna. (depende de T001)
+- [X] T005 [P] [US1] Trocar `redirect("/api/auth/clear-session")` por `redirect("/login?reauth=1")` em `src/app/(authenticated)/layout.tsx` (linha ~21).
+- [X] T006 [P] [US1] Deletar o route handler GET `src/app/api/auth/clear-session/route.ts` e seu teste unit `__tests__/unit/api/auth/clear-session.spec.ts`.
+- [X] T007 [US1] Verificar: `bun run test:unit` (proxy) verde; `bun run diagnose:react` (`react-doctor --verbose`) com **zero** "Side effect in GET handler"; `bun run test:e2e` (logout) verde. (depende de T002–T006)
 
 **Checkpoint**: US1 funcional e testável isoladamente (SC-002, SC-003).
 
