@@ -15,7 +15,17 @@ function createRequest(path: string): NextRequest {
   return new NextRequest(new URL(path, "http://localhost:1197"));
 }
 
-describe("Route Protection (US2)", () => {
+// All better-auth session cookies cleared by the reauth branch: dev names plus
+// the production __Secure- prefixed variants (useSecureCookies defaults on) and
+// the cookieCache session_data cookie (cookieCache.enabled is true).
+const SESSION_COOKIE_NAMES = [
+  "better-auth.session_token",
+  "better-auth.session_data",
+  "__Secure-better-auth.session_token",
+  "__Secure-better-auth.session_data",
+];
+
+describe("Route Protection", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -77,15 +87,6 @@ describe("Route Protection (US2)", () => {
     expect(new URL(location).pathname).toBe("/login");
   });
 
-  it("should allow unauthenticated access to /api/auth/clear-session", () => {
-    mockedGetSessionCookie.mockReturnValue(null);
-
-    const response = proxy(createRequest("/api/auth/clear-session"));
-
-    expect(response.status).toBe(200);
-    expect(response.headers.get("location")).toBeNull();
-  });
-
   it("should allow authenticated access to nested protected routes", () => {
     mockedGetSessionCookie.mockReturnValue("session-token-value");
 
@@ -112,5 +113,46 @@ describe("Route Protection (US2)", () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get("location")).toBeNull();
+  });
+});
+
+describe("Orphan session cleanup (reauth)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should clear all session cookies and render /login on /login?reauth=1 with a stale cookie", () => {
+    mockedGetSessionCookie.mockReturnValue("stale-session-token");
+
+    const response = proxy(createRequest("/login?reauth=1"));
+
+    // Renders /login (no bounce to /dashboard) despite the lingering cookie.
+    expect(response.status).toBe(200);
+    expect(response.headers.get("location")).toBeNull();
+
+    for (const name of SESSION_COOKIE_NAMES) {
+      const cookie = response.cookies.get(name);
+      expect(cookie?.value).toBe("");
+      expect(cookie?.path).toBe("/");
+    }
+  });
+
+  it("should render /login on /login?reauth=1 without a cookie (still clears defensively)", () => {
+    mockedGetSessionCookie.mockReturnValue(null);
+
+    const response = proxy(createRequest("/login?reauth=1"));
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("location")).toBeNull();
+  });
+
+  it("should preserve the /login → /dashboard bounce when reauth is absent", () => {
+    mockedGetSessionCookie.mockReturnValue("session-token-value");
+
+    const response = proxy(createRequest("/login"));
+
+    expect(response.status).toBe(307);
+    const dashboardLocation = response.headers.get("location") ?? "";
+    expect(new URL(dashboardLocation).pathname).toBe("/dashboard");
   });
 });

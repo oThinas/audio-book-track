@@ -18,7 +18,7 @@ export default async function AuthenticatedLayout({
   });
 
   if (!session) {
-    redirect("/api/auth/clear-session");
+    redirect("/login?reauth=1");
   }
 
   const cookieStore = await cookies();

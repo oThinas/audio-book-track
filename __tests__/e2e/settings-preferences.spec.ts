@@ -64,7 +64,7 @@ test.describe("Settings Preferences (US4)", () => {
       expect(stored).toBe("green");
 
       // Logout first — authenticated users are redirected away from /login by middleware
-      await page.goto("/api/auth/clear-session");
+      await page.goto("/login?reauth=1");
       await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
 
       const attr = await page.locator("html").getAttribute("data-primary-color");

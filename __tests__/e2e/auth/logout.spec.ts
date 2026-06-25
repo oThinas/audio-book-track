@@ -2,10 +2,11 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "../fixtures/app-server";
 import { login } from "../helpers/auth";
 
-// Uses /api/auth/clear-session directly because authClient.signOut() fails
-// in the E2E environment (port 3100 vs BETTER_AUTH_URL on port 3000 = origin mismatch).
+// Uses /login?reauth=1 directly because authClient.signOut() fails in the E2E
+// environment (port 3100 vs BETTER_AUTH_URL on port 3000 = origin mismatch).
+// The middleware clears the session cookies and renders /login (no GET side effect).
 async function logout(page: Page) {
-  await page.goto("/api/auth/clear-session");
+  await page.goto("/login?reauth=1");
   await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
 }
 
