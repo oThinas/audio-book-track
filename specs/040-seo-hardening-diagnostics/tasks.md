@@ -78,13 +78,13 @@ Lighthouse SEO = 100 com `robots-txt` e `is-crawlable` aprovados.
 
 ### Tests for User Story 2 (TDD — escrever PRIMEIRO, devem FALHAR) ⚠️
 
-- [ ] T008 [P] [US2] Novo teste unit `__tests__/unit/app/robots.spec.ts`: o default export `robots()` retorna `{ rules: { userAgent: "*", allow: "/" } }` — sem `disallow` bloqueante e sem `sitemap`. (RED)
-- [ ] T009 [P] [US2] Novo teste E2E `__tests__/e2e/robots.spec.ts` (**sem** login): `GET /robots.txt` → status 200 e corpo contém `Allow: /` — confirma acessibilidade pública (FR-007) e conteúdo (FR-006). (RED)
+- [X] T008 [P] [US2] Novo teste unit `__tests__/unit/app/robots.spec.ts`: o default export `robots()` retorna `{ rules: { userAgent: "*", allow: "/" } }` — sem `disallow` bloqueante e sem `sitemap`. (RED)
+- [X] T009 [P] [US2] Novo teste E2E `__tests__/e2e/robots.spec.ts` (**sem** login): `GET /robots.txt` → status 200 e corpo contém `Allow: /` — confirma acessibilidade pública (FR-007) e conteúdo (FR-006). (RED)
 
 ### Implementation for User Story 2
 
-- [ ] T010 [US2] Criar `src/app/robots.ts` exportando `default function robots(): MetadataRoute.Robots` com `{ rules: { userAgent: "*", allow: "/" } }`. (depende de T008, T009)
-- [ ] T011 [US2] Verificar: `bun run test:unit` (robots) verde; `bun run test:e2e` (robots público) verde; `bun run diagnose:lighthouse` → `seo=100` nas páginas auditadas, com `robots-txt` e `is-crawlable` aprovados nos `.lighthouse/*.json`. (SC-001)
+- [X] T010 [US2] Criar `src/app/robots.ts` exportando `default function robots(): MetadataRoute.Robots` com `{ rules: { userAgent: "*", allow: "/" } }`. (depende de T008, T009)
+- [X] T011 [US2] Verificar: `bun run test:unit` (robots) verde; `bun run test:e2e` (robots público) verde. **`bun run diagnose:lighthouse` (seo=100, `robots-txt` + `is-crawlable` aprovados) adiado para a re-baseline única da sessão** (após D8), por decisão do usuário — evita uma corrida Lighthouse parcial/descartável só do D7. (SC-001)
 
 **Checkpoint**: US2 funcional e testável isoladamente (SC-001).
 
