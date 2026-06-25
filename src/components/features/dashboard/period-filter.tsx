@@ -69,7 +69,6 @@ export function PeriodFilter({ todayIso }: PeriodFilterProps) {
             size: "sm",
             className: "gap-2",
           })}
-          aria-label="Selecionar período customizado"
         >
           <CalendarIcon className="size-4" aria-hidden="true" />
           <span>{customLabel}</span>

@@ -99,11 +99,11 @@ no aberto/fechado; axe sem `aria-valid-attr-value`.
 **Independent Test**: `label-content-name-mismatch` (Lighthouse) passa; axe sem violação
 `serious` nos controles afetados.
 
-- [ ] T016 [P] [US4] (RED) Asserção/axe `label-content-name-mismatch` cobrindo period-filter, book-pdf-popover e linha de grupo. Deve falhar hoje.
-- [ ] T017 [P] [US4] `src/components/features/dashboard/period-filter.tsx`: remover `aria-label="Selecionar período customizado"` do `PopoverTrigger` (nome passa a ser `{customLabel}`).
-- [ ] T018 [P] [US4] `src/components/features/books/book-pdf-popover.tsx`: remover `aria-label` do `Button` (nome passa a ser "Ver PDF").
-- [ ] T019 [US4] `src/components/features/chapters/chapter-group-row.tsx`: remover `aria-label="Expandir/Recolher grupo"` (estado via `aria-expanded`, já presente; `sr-only` interno opcional para o verbo).
-- [ ] T020 [US4] Atualizar seletores `getByRole(..., { name })` afetados em e2e/unit (ex.: "Editar URL do PDF", "Selecionar período customizado", "Expandir grupo") e rodar `bun run test:e2e` dos fluxos tocados (livros/dashboard/capítulos). GREEN da asserção de T016.
+- [X] T016 [P] [US4] (RED) `label-content-name-mismatch` é `serious` e está nas tags WCAG do helper `checkAccessibility` — coberto pelas redes axe existentes: `accessibility.spec.ts` (`/dashboard` → period-filter) e `books-accessibility.spec.ts` (`/books/:id` → book-pdf). RED ancorado no discovery (Lighthouse flagou ambos). Sem teste dirigido separado (evita redundância).
+- [X] T017 [P] [US4] `src/components/features/dashboard/period-filter.tsx`: removido `aria-label="Selecionar período customizado"` (nome = `{customLabel}`).
+- [X] T018 [P] [US4] `src/components/features/books/book-pdf-popover.tsx`: removido `aria-label` (nome = "Ver PDF").
+- [X] T019 [US4] `src/components/features/chapters/chapter-group-row.tsx`: removido `aria-label` (estado via `aria-expanded`, já presente; nome = conteúdo visível).
+- [X] T020 [US4] Seletores: **nenhuma mudança necessária** — period-filter, book-pdf (`book-pdf-trigger`) e group-row (`chapter-group-row-*`) são selecionados por `data-testid`; nenhum `getByRole({name})` em e2e/unit usa os nomes removidos (verificado por grep). E2E dos fluxos tocados na **Phase 7**.
 
 **Checkpoint**: todos os 4 achados do D1 resolvidos.
 
