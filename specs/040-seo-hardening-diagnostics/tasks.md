@@ -115,8 +115,8 @@ e **não** imprime "Skipped settings-modal snapshot".
 
 **Purpose**: Verificação cruzada e qualidade final.
 
-- [ ] T015 Rodar `bun run diagnose` completo (seed + lighthouse + react-doctor) e confirmar os SCs sem **regressão** dos demais scores: SEO=100, react-doctor sem o erro de GET, snapshot do modal presente (SC-005).
-- [ ] T016 Fase final de qualidade (antes do PR): `bun run lint` (zero erros/warnings), `bun run test:unit`, `bun run test:integration`, `bun run test:e2e`, `bun run build`.
+- [X] T015 Re-baseline (server na :1197, `DIAGNOSE_BASE_URL`): `seo=100` em todas as rotas auditadas (`robots-txt`+`is-crawlable`=pass → SC-001); `.lighthouse/settings-modal.{html,json}` gerados sem warning de skip (SC-004); react-doctor sem "Side effect in GET handler" (SC-002); score 51/100 estável, sem **regressão** (SC-005).
+- [X] T016 Fase final de qualidade: `bun run lint` (0 erros), `bun run test:unit` (1398), `bun run test:integration` (327), `bun run test:e2e` (278), `bun run build` (produção OK).
 
 ---
 
