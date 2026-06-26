@@ -184,7 +184,7 @@ export function ChaptersTable({
             <TableHeader>
               <TableRow>
                 {isSelectionMode && (
-                  <TableHead className="w-12">
+                  <TableHead scope="col" className="w-12">
                     <Checkbox
                       checked={allNonPaidSelected}
                       indeterminate={!allNonPaidSelected && someSelected}
@@ -195,17 +195,38 @@ export function ChaptersTable({
                     />
                   </TableHead>
                 )}
-                {!isSelectionMode && canReorder && <TableHead className="w-8" aria-hidden="true" />}
-                <TableHead className="w-[56ch]">Título</TableHead>
-                <TableHead className="w-40">Status</TableHead>
-                <TableHead className="w-56">Narrador</TableHead>
-                <TableHead className="w-56">Editor</TableHead>
-                <TableHead className="w-44">Prazo</TableHead>
-                <TableHead className="w-40 text-right">Horas editadas</TableHead>
+                {!isSelectionMode && canReorder && (
+                  // Drag-handle column: a perceivable header (sr-only label + scope)
+                  // so its data cells aren't orphaned (td-has-header, US3). Was an
+                  // empty aria-hidden <th>, which removed it from the a11y tree.
+                  <TableHead scope="col" className="w-8">
+                    <span className="sr-only">Reordenar</span>
+                  </TableHead>
+                )}
+                <TableHead scope="col" className="w-[56ch]">
+                  Título
+                </TableHead>
+                <TableHead scope="col" className="w-40">
+                  Status
+                </TableHead>
+                <TableHead scope="col" className="w-56">
+                  Narrador
+                </TableHead>
+                <TableHead scope="col" className="w-56">
+                  Editor
+                </TableHead>
+                <TableHead scope="col" className="w-44">
+                  Prazo
+                </TableHead>
+                <TableHead scope="col" className="w-40 text-right">
+                  Horas editadas
+                </TableHead>
                 {!isSelectionMode && (
                   // Mobile shows 4 actions (↑ ↓ ✏ 🗑); w-28 clipped them past the
                   // table edge. Desktop hides ↑/↓, so it stays compact (md:w-28).
-                  <TableHead className="w-40 text-right md:w-28">Ações</TableHead>
+                  <TableHead scope="col" className="w-40 text-right md:w-28">
+                    Ações
+                  </TableHead>
                 )}
               </TableRow>
             </TableHeader>

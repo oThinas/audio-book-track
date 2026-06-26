@@ -26,7 +26,7 @@ test.describe("Narrators: dark mode", () => {
 
     await page.goto("/narrators");
     await expect(page.locator("html")).toHaveClass(/dark/);
-    await expect(page.getByTestId("narrators-scroll-area")).toBeVisible();
+    await expect(page.getByTestId("narrators-scroll-area").first()).toBeVisible();
 
     const row = page.getByTestId("narrator-row").first();
     await row.getByRole("button", { name: /editar dark mode subject/i }).click();

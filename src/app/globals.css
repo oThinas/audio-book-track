@@ -73,10 +73,14 @@
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
+  /* A11y D1: darkened 0.556 -> 0.50 so muted text and the `pending` status badge
+     (bg-muted) clear WCAG AA 4.5:1 on light muted surfaces. */
+  --muted-foreground: oklch(0.5 0 0);
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
+  /* A11y D1: darkened 0.577 -> 0.46 so destructive text on its /15 tint (and the
+     "Excluir capítulos" button / dashboard alert badge) clears 4.5:1. */
+  --destructive: oklch(0.46 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
@@ -101,10 +105,13 @@
   --sidebar-ring: oklch(0.546 0.245 264);
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
+  /* A11y D1: status badge text uses `text-<token>` on `bg-<token>/15`. `editing`
+     already clears 4.5:1; the others are darkened (L only — chroma/hue kept) so
+     the colored badge text reaches WCAG AA on its own light tint. */
   --editing: oklch(0.488 0.243 264.376);
-  --reviewing: oklch(0.555 0.163 48.998);
-  --retake: oklch(0.553 0.195 38.402);
-  --completed: oklch(0.508 0.118 165.612);
+  --reviewing: oklch(0.5 0.163 48.998);
+  --retake: oklch(0.5 0.195 38.402);
+  --completed: oklch(0.47 0.118 165.612);
 }
 
 .dark {
@@ -247,7 +254,9 @@ html[data-primary-color="red"] .dark {
   --primary: oklch(0.704 0.191 22);
   --primary-foreground: oklch(0.145 0 0);
   --ring: oklch(0.704 0.191 22);
-  --destructive: oklch(0.55 0.22 8);
+  /* A11y D1: lightened 0.55 -> 0.66 so destructive text on its dark /10 tint
+     clears 4.5:1 (was 3.25:1). Hue 8 stays distinct from the red primary (hue 22). */
+  --destructive: oklch(0.66 0.22 8);
   --sidebar: oklch(0.195 0.025 27);
   --sidebar-accent: oklch(0.255 0.03 27);
   --sidebar-primary: oklch(0.704 0.191 22);

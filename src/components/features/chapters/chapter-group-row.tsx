@@ -78,7 +78,6 @@ export function ChapterGroupRow({
       role="button"
       tabIndex={0}
       aria-expanded={isExpanded}
-      aria-label={isExpanded ? "Recolher grupo" : "Expandir grupo"}
       onClick={() => onToggle(row.id)}
       onKeyDown={handleKeyDown}
       className="cursor-pointer bg-muted/40 hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"

@@ -65,13 +65,7 @@ export function BookPdfPopover({
     <Popover open={isOpen} onOpenChange={handleOpenChange}>
       <PopoverTrigger
         render={
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            data-testid="book-pdf-trigger"
-            aria-label={pdfUrl ? "Editar URL do PDF" : "Adicionar URL do PDF"}
-          >
+          <Button type="button" variant="outline" size="sm" data-testid="book-pdf-trigger">
             <FileText aria-hidden="true" className="size-4" />
             Ver PDF
           </Button>

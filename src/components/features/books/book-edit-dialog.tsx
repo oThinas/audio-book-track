@@ -156,7 +156,11 @@ export function BookEditDialog({
                                   type="button"
                                   variant="outline"
                                   role="combobox"
+                                  aria-haspopup="listbox"
                                   aria-expanded={studioPickerOpen}
+                                  aria-controls={
+                                    studioPickerOpen ? "book-edit-studio-listbox" : undefined
+                                  }
                                   aria-invalid={errors.studioId ? true : undefined}
                                   disabled={isSubmitting || studioDisabled}
                                   data-testid="book-edit-studio-trigger"
@@ -181,6 +185,7 @@ export function BookEditDialog({
                           </TooltipContent>
                         )}
                         <PopoverContent
+                          id="book-edit-studio-listbox"
                           className="w-[--radix-popover-trigger-width] p-0"
                           align="start"
                         >

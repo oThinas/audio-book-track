@@ -26,7 +26,7 @@ test.describe("Editors: dark mode", () => {
 
     await page.goto("/editors");
     await expect(page.locator("html")).toHaveClass(/dark/);
-    await expect(page.getByTestId("editors-scroll-area")).toBeVisible();
+    await expect(page.getByTestId("editors-scroll-area").first()).toBeVisible();
 
     const row = page.getByTestId("editor-row").first();
     await row.getByRole("button", { name: /editar dark mode editor/i }).click();
