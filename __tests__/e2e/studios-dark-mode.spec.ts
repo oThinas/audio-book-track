@@ -26,7 +26,7 @@ test.describe("Studios: dark mode", () => {
 
     await page.goto("/studios");
     await expect(page.locator("html")).toHaveClass(/dark/);
-    await expect(page.getByTestId("studios-scroll-area")).toBeVisible();
+    await expect(page.getByTestId("studios-scroll-area").first()).toBeVisible();
 
     const row = page.getByTestId("studio-row").first();
     await row.getByRole("button", { name: /editar dark mode studio/i }).click();
