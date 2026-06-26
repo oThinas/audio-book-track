@@ -20,7 +20,8 @@ export default defineConfig({
     // Collapses the app's view transitions to 0s (globals.css honors
     // prefers-reduced-motion), so route-content double-mount windows don't race
     // post-navigation assertions. See narrators/editors/studios dark-mode specs.
-    reducedMotion: "reduce",
+    // `reducedMotion` lives under contextOptions in @playwright/test's typed `use`.
+    contextOptions: { reducedMotion: "reduce" },
   },
   projects: [{ name: "chromium", use: { browserName: "chromium" } }],
 });
