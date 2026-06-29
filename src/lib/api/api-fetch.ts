@@ -98,6 +98,12 @@ export async function apiFetch<T = unknown>(
   const { body, suppressToastFor, headers: _headers, ...rest } = options;
   const init: RequestInit = {
     ...rest,
+    // Never follow redirects on an API call. An auth/edge layer that bounces an
+    // unauthenticated request to /login (a 3xx) would otherwise be followed and
+    // re-issue the original method against the page route (→ 405), defeating the
+    // 401 handling below. "manual" surfaces the bounce so we can treat it as a
+    // session expiry instead.
+    redirect: "manual",
     headers: buildHeaders(options),
     body: body !== undefined ? JSON.stringify(body) : undefined,
   };
@@ -108,6 +114,16 @@ export async function apiFetch<T = unknown>(
   } catch {
     toast.error(errorCodes.NETWORK_ERROR.message);
     return { ok: false, kind: "network" };
+  }
+
+  // A redirect on an API call means an auth/edge layer bounced us (e.g. the proxy
+  // → /login for a missing session cookie). With redirect:"manual" the browser
+  // surfaces this as an opaque redirect (type "opaqueredirect", status 0); other
+  // runtimes expose the raw 3xx. Either way the session is gone — treat it like a 401.
+  if (response.type === "opaqueredirect" || (response.status >= 300 && response.status < 400)) {
+    dispatchSessionToast(errorCodes.UNAUTHORIZED.message);
+    navigateToLogin();
+    return { ok: false, kind: "session-expired" };
   }
 
   if (response.status === 204) {

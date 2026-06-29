@@ -96,14 +96,27 @@ describe("Route Protection", () => {
     expect(response.headers.get("location")).toBeNull();
   });
 
-  it("should redirect unauthenticated user from protected API route (/api/v1/books)", () => {
+  it("should NOT redirect unauthenticated API requests (route handler replies 401 JSON)", () => {
     mockedGetSessionCookie.mockReturnValue(null);
 
     const response = proxy(createRequest("/api/v1/books"));
 
-    expect(response.status).toBe(307);
-    const location = response.headers.get("location") ?? "";
-    expect(new URL(location).pathname).toBe("/login");
+    // The proxy must let /api/** fall through. A 307 here would be transparently
+    // followed by the browser fetch and re-issued against the /login page (→ 405
+    // in production), which the client cannot recognize as a session expiry.
+    // withApiErrorHandler returns a 401 JSON envelope instead, which the client
+    // already handles by redirecting to /login.
+    expect(response.status).toBe(200);
+    expect(response.headers.get("location")).toBeNull();
+  });
+
+  it("should NOT redirect an unauthenticated nested API mutation (/api/v1/chapters/:id)", () => {
+    mockedGetSessionCookie.mockReturnValue(null);
+
+    const response = proxy(createRequest("/api/v1/chapters/abc-123"));
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("location")).toBeNull();
   });
 
   it("should allow unauthenticated access to exact /api/auth route", () => {

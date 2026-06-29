@@ -23,6 +23,10 @@ function isPublicRoute(pathname: string): boolean {
   return PUBLIC_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`));
 }
 
+function isApiRoute(pathname: string): boolean {
+  return pathname === "/api" || pathname.startsWith("/api/");
+}
+
 // Optimistic cookie check for UX redirects only.
 // Each protected page/layout must validate the session server-side.
 export function proxy(request: NextRequest): NextResponse {
@@ -50,6 +54,14 @@ export function proxy(request: NextRequest): NextResponse {
 
   // Unauthenticated user on protected route → redirect to /login
   if (!sessionCookie && !isPublicRoute(pathname)) {
+    // API requests must receive their handler's JSON 401, never an HTML redirect.
+    // A browser fetch transparently follows the 307 and re-issues the original
+    // method against the /login page (→ 405 in production), which the client
+    // cannot recognize as a session expiry. Let /api/** fall through so
+    // withApiErrorHandler replies 401; the client redirects to /login on 401.
+    if (isApiRoute(pathname)) {
+      return NextResponse.next();
+    }
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
