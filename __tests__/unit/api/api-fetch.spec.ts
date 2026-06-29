@@ -348,6 +348,44 @@ describe("apiFetch — suppressToastFor escape hatch", () => {
   });
 });
 
+describe("apiFetch — auth redirect bounce treated as session-expired", () => {
+  it("passes redirect:manual to fetch so auth bounces are not followed silently", async () => {
+    vi.mocked(globalThis.fetch).mockResolvedValue(jsonResponse(200, { data: {} }));
+
+    await apiFetch("/api/v1/studios");
+
+    const call = vi.mocked(globalThis.fetch).mock.calls[0];
+    if (!call) throw new Error("fetch was not called");
+    expect((call[1] as RequestInit).redirect).toBe("manual");
+  });
+
+  it("opaque redirect (browser) → session-expired + warning toast + navigateToLogin", async () => {
+    // A browser fetch with redirect:"manual" surfaces a server 3xx as an opaque
+    // redirect: type "opaqueredirect", status 0. Shadow the prototype getter.
+    const res = new Response(null, { status: 200 });
+    Object.defineProperty(res, "type", { value: "opaqueredirect", configurable: true });
+    vi.mocked(globalThis.fetch).mockResolvedValue(res);
+
+    const result = await apiFetch("/api/v1/chapters/abc", {
+      method: "PATCH",
+      body: { editedSeconds: 1 },
+    });
+
+    expect(result).toEqual({ ok: false, kind: "session-expired" });
+    expect(toast.warning).toHaveBeenCalledWith("Sua sessão expirou. Faça login novamente.");
+    expect(navigateToLogin).toHaveBeenCalledTimes(1);
+  });
+
+  it("raw 3xx redirect (non-browser runtime) → session-expired", async () => {
+    vi.mocked(globalThis.fetch).mockResolvedValue(emptyResponse(307, { location: "/login" }));
+
+    const result = await apiFetch("/api/v1/chapters/abc", { method: "PATCH", body: {} });
+
+    expect(result).toEqual({ ok: false, kind: "session-expired" });
+    expect(navigateToLogin).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe("apiFetch — network failures", () => {
   it("rejected fetch → toast.error + network kind", async () => {
     vi.mocked(globalThis.fetch).mockRejectedValue(new TypeError("Failed to fetch"));
