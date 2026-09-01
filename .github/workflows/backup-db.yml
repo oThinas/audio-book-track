@@ -1,9 +1,14 @@
 name: Database Backup
 
 on:
-  schedule:
-    # 06:00 UTC = 03:00 America/Sao_Paulo (Brazil currently has no DST)
-    - cron: "0 6 * * *"
+  # No `schedule` trigger by design. GitHub disables scheduled workflows in a
+  # public repository after 60 days without repository activity, and workflow
+  # runs do not count as activity — a backup that runs green every day is
+  # disabled all the same. A workflow without the trigger has nothing to
+  # disable. The daily 06:37 UTC (03:37 America/Sao_Paulo, no DST) dispatch
+  # comes from the Cloudflare Worker in infra/backup-scheduler, which also
+  # avoids the multi-hour delays of GitHub's shared schedule queue.
+  # Its cron must stay in sync with monitor_config.schedule below.
   workflow_dispatch:
 
 # The pipeline never checks out the repo nor calls the GitHub API.
@@ -45,12 +50,33 @@ jobs:
     steps:
       # Pipeline per specs/030-weekly-db-backup/contracts/backup-workflow.md.
 
-      # Sentry Crons dead man's switch. Telemetry must never break the backup
-      # itself, hence "|| true" on this opening check-in.
+      # Sentry Crons dead man's switch. The monitor is upserted from here so
+      # its schedule can never drift from the dispatcher's cron — the two are
+      # kept in sync by hand, and this is the half that Sentry believes.
+      #
+      # checkin_margin only bounds how late a run may start; a run that never
+      # happens at all raises a missed check-in regardless, which is the
+      # failure mode this switch exists for. The current value is wider than a
+      # punctual dispatcher needs — see docs/backup.md before narrowing it.
+      #
+      # Telemetry must never break the backup itself, hence "|| true".
       - name: Sentry check-in (in_progress)
         env:
           SENTRY_CRON_URL: ${{ secrets.SENTRY_CRON_URL }}
-        run: curl -sf "${SENTRY_CRON_URL}?status=in_progress" || true
+        run: |
+          curl -sf -X POST "$SENTRY_CRON_URL" \
+            --header 'Content-Type: application/json' \
+            --data-raw '{
+              "status": "in_progress",
+              "monitor_config": {
+                "schedule": { "type": "crontab", "value": "37 6 * * *" },
+                "checkin_margin": 360,
+                "max_runtime": 30,
+                "timezone": "UTC",
+                "failure_issue_threshold": 1,
+                "recovery_threshold": 1
+              }
+            }' || true
 
       # Fails fast on misconfiguration BEFORE producing any artifact: pg_dump
       # requires Neon's direct connection string — the transaction pooler
