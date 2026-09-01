@@ -10,8 +10,9 @@
 
 | Item | Valor |
 |---|---|
-| **Cadência** | Diária — cron `0 6 * * *` UTC = **03:00 em Brasília** (sem DST no Brasil atualmente) |
-| **Mecanismo** | GitHub Actions agendado → `pg_dump --format=custom --compress=9` → upload para Cloudflare R2 |
+| **Cadência** | Diária — cron `37 6 * * *` UTC = **03:37 em Brasília** (sem DST no Brasil atualmente). Fora do topo da hora de propósito: o topo da hora é o slot mais disputado de qualquer fila de cron |
+| **Agendador** | **Cloudflare Worker** `audiobook-track-backup-scheduler` ([infra/backup-scheduler](../infra/backup-scheduler)) dispara o workflow via `workflow_dispatch` — ver Seção 4.1. O workflow **não** tem trigger `schedule` (Seção 7.4) |
+| **Mecanismo** | Worker dispara → GitHub Actions → `pg_dump --format=custom --compress=9` → upload para Cloudflare R2 |
 | **Destino** | Bucket R2 `audiobook-track-backups`, prefixo `backups/` |
 | **Nome do artefato** | `backups/audiobook-track-<UTC-timestamp>.dump` (ex: `audiobook-track-2026-06-04T06-00-12Z.dump`) |
 | **Retenção** | 90 dias (lifecycle do bucket) ≈ 90 dumps em rotação |
@@ -62,6 +63,45 @@ Repo → **Settings → Secrets and variables → Actions → Repository secrets
 | `SENTRY_CRON_URL` | URL de check-in do monitor `backup-db` (formato `https://o<org>.ingest.<region>.sentry.io/api/<project>/cron/backup-db/<key>/`) | Incluir a barra final |
 
 Nenhum desses valores pode aparecer em código, log ou nome de artefato.
+
+### 4.1. Agendador externo (Cloudflare Worker) — configuração única
+
+O Worker em [infra/backup-scheduler](../infra/backup-scheduler) é o único agendador do backup. Motivo arquitetural na Seção 7.4.
+
+**Passo 1 — PAT do GitHub.** GitHub → Settings → Developer settings → **Fine-grained personal access tokens** → Generate new token:
+
+| Campo | Valor |
+|---|---|
+| Repository access | **Only select repositories** → `audio-book-track` |
+| Permissions | **Actions: Read and write** (única permissão necessária) |
+| Expiration | O maior disponível — anotar a data e renovar antes (ver abaixo) |
+
+**Passo 2 — deploy do Worker**:
+
+```bash
+cd infra/backup-scheduler
+bun install
+bunx wrangler login            # uma vez por máquina
+bunx wrangler secret put GITHUB_PAT   # colar o token do Passo 1
+bunx wrangler deploy
+```
+
+**Passo 3 — validar** sem esperar o horário. O modo local não enxerga os secrets do Worker, então o PAT precisa estar em `.dev.vars` (arquivo **gitignorado** — este repositório é público, o PAT nunca pode ser commitado):
+
+```bash
+echo 'GITHUB_PAT=<token do Passo 1>' > .dev.vars   # confira: git check-ignore .dev.vars
+bunx wrangler dev --test-scheduled                  # em um terminal
+curl "http://localhost:8787/__scheduled?cron=37+6+*+*+*"   # em outro
+rm .dev.vars                                        # não deixar o token parado em disco
+```
+
+O dispatch dispara um backup **real**: o run aparece em `gh run list --workflow=backup-db.yml` em segundos. Falha de dispatch aparece no terminal do `wrangler dev`.
+
+O Worker não expõe URL pública (`workers_dev` e `preview_urls` desligados na config): cron é o único ponto de entrada e não há handler `fetch` por trás.
+
+⚠️ **O PAT expira.** É o único ponto de falha silenciosa do agendamento: PAT vencido = nenhum dispatch = nenhum backup. O dead man's switch cobre (missed check-in dentro da margem), mas renovar antes evita o incidente. Após renovar: `bunx wrangler secret put GITHUB_PAT` e um dispatch de teste.
+
+**Logs do Worker** (falhas de dispatch, retries): `cd infra/backup-scheduler && bunx wrangler tail`, ou Cloudflare → Workers → `audiobook-track-backup-scheduler` → Logs.
 
 ## 5. Restore manual em banco descartável (teste e investigação)
 
@@ -185,17 +225,21 @@ O monitor **`backup-db`** (Sentry → Monitors → Cron) vigia o agendamento e c
 | Campo | Valor |
 |---|---|
 | Slug | `backup-db` |
-| Schedule | `0 6 * * *` (crontab, UTC) |
-| Grace period (check-in margin) | 120 min |
+| Schedule | `37 6 * * *` (crontab, UTC) |
+| Grace period (check-in margin) | 360 min |
 | Max runtime | 30 min (o job tem `timeout-minutes: 15`) |
 | Failure tolerance | 1 (alerta no primeiro miss/error) |
 | Alertas | E-mail do owner da conta Sentry (operador único do projeto) — failure + missed check-in |
+
+⚠️ **Esta tabela é descritiva, não a fonte da verdade.** O monitor é criado/atualizado (upsert) pelo próprio workflow, no check-in `in_progress`, via `monitor_config` — assim o schedule do Sentry não pode divergir do cron do GitHub. Para alterar qualquer campo, editar o payload em [backup-db.yml](../.github/workflows/backup-db.yml) e esta tabela juntos; mudar pelo dashboard do Sentry é sobrescrito na execução seguinte.
+
+**Por que a margem é de 360 min**: execuções agendadas do GitHub Actions são best-effort e atrasam rotineiramente — de dezenas de minutos a várias horas. Uma margem menor que o atraso real alerta sobre latência do GitHub, não sobre backup quebrado, e treina o operador a ignorar o alerta. A margem limita apenas o quão tarde uma execução pode **começar**: um backup que não roda de jeito nenhum continua levantando missed check-in, que é o modo de falha para o qual o dead man's switch existe.
 
 ### 7.2. Semântica dos check-ins (espelha o workflow)
 
 | Check-in | Quando | Tolerância a falha do próprio curl |
 |---|---|---|
-| `in_progress` | Primeiro step do job | `\|\| true` — telemetria nunca derruba o backup |
+| `in_progress` (POST com `monitor_config`) | Primeiro step do job | `\|\| true` — telemetria nunca derruba o backup |
 | `ok` | Último step do caminho feliz (após restore verificado) | **Sem** `\|\| true` — sucesso que o Sentry não confirmou vira run vermelho para investigação |
 | `error` | Step `if: failure()` | `\|\| true` — já estamos no caminho de falha |
 
@@ -204,19 +248,33 @@ O monitor **`backup-db`** (Sentry → Monitors → Cron) vigia o agendamento e c
 | Alerta no Sentry | Causa provável | Ação |
 |---|---|---|
 | **Failed check-in** (`error`) | Qualquer step do pipeline falhou (guarda, dump, upload, verificação) | Abrir o run no Actions (`gh run list --workflow=backup-db.yml`), ler o step vermelho |
-| **Missed check-in** | Workflow não rodou: auto-disable por 60 dias de inatividade do repo, workflow removido/renomeado, GitHub indisponível | Ver 7.4 |
-| **Timeout** | Job passou de 30 min sem check-in final | Investigar travamento (rede R2/Neon); o `timeout-minutes: 15` do job deve ter matado antes |
+| **Missed check-in** | Workflow não rodou dentro da margem: auto-disable por 60 dias de inatividade do repo (ver 7.4), workflow removido/renomeado, GitHub indisponível, ou atraso da fila do GitHub acima de 360 min | Ver 7.4 |
 
-### 7.4. Reativação após auto-disable do GitHub
-
-Repos públicos têm scheduled workflows **desabilitados automaticamente após 60 dias sem atividade** (o GitHub envia e-mail de aviso; o Sentry alerta o missed check-in no dia seguinte):
+**Diagnóstico rápido de missed check-in que se auto-resolve**: se o alerta chega de manhã e o Sentry resolve sozinho horas depois, com o dump presente no R2, o backup está íntegro — foi a fila do GitHub que atrasou a execução além da margem. Confirmar comparando o horário agendado com o real:
 
 ```bash
-GITHUB_TOKEN='' gh workflow enable backup-db.yml
-GITHUB_TOKEN='' gh workflow run backup-db.yml   # backup imediato para cobrir o gap
+GITHUB_TOKEN='' gh run list --workflow=backup-db.yml --limit 30 \
+  --json createdAt,conclusion --jq '.[] | "\(.createdAt)  \(.conclusion)"'
 ```
 
-Conferir também o banner em Actions → Database Backup no GitHub.
+Atraso crescente ao longo de dias costuma preceder o auto-disable da Seção 7.4 — tratar como aviso, não como ruído.
+| **Timeout** | Job passou de 30 min sem check-in final | Investigar travamento (rede R2/Neon); o `timeout-minutes: 15` do job deve ter matado antes |
+
+### 7.4. Por que o agendamento não mora no GitHub Actions
+
+Em repositório público, o GitHub **desabilita automaticamente workflows com trigger `schedule` após 60 dias sem atividade no repositório** — e execução de workflow **não** conta como atividade: um backup que roda verde todos os dias é desabilitado do mesmo jeito, sem falhar nenhuma vez. O sintoma é o backup parar de existir em silêncio, coberto apenas pelo missed check-in do Sentry.
+
+O mecanismo mira o trigger `schedule`. Por isso `backup-db.yml` declara **somente `workflow_dispatch`** — sem `schedule` não há o que desabilitar — e o agendamento vem do Cloudflare Worker da Seção 4.1. Efeito colateral desejável: `workflow_dispatch` executa em segundos, enquanto a fila compartilhada de `schedule` do GitHub atrasa rotineiramente de dezenas de minutos a várias horas.
+
+**Consequência para a margem do monitor**: os 360 min da Seção 7.1 foram dimensionados para o atraso da fila do GitHub. Uma vez que o Worker acumule alguns dias de execuções pontuais, vale reduzir a margem (~60 min) para detectar falha mais cedo — editar `monitor_config.checkin_margin` no workflow e a tabela da Seção 7.1 juntos.
+
+**Se um dia o workflow aparecer como `disabled`** (desabilitado manualmente, ou regra futura do GitHub):
+
+```bash
+GITHUB_TOKEN='' gh workflow list --all | grep -i backup   # estado atual
+GITHUB_TOKEN='' gh workflow enable backup-db.yml
+GITHUB_TOKEN='' gh workflow run backup-db.yml             # backup imediato para cobrir o gap
+```
 
 ## 8. Retenção e monitoramento de cota
 

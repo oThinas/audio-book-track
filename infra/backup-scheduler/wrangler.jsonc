@@ -1,0 +1,24 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "audiobook-track-backup-scheduler",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-31",
+  // Cron is the only entry point: the Worker exports no fetch handler, so a
+  // public URL would be an internet-facing surface with nothing behind it.
+  "workers_dev": false,
+  "preview_urls": false,
+  "observability": {
+    "enabled": true
+  },
+  // UTC. Must stay in sync with monitor_config.schedule in backup-db.yml —
+  // the Sentry monitor is what notices a run that never happens.
+  "triggers": {
+    "crons": ["37 6 * * *"]
+  },
+  "vars": {
+    "GITHUB_REPOSITORY": "oThinas/audio-book-track",
+    "WORKFLOW_FILE": "backup-db.yml",
+    "WORKFLOW_REF": "main"
+  }
+  // GITHUB_PAT is a secret, never a var: wrangler secret put GITHUB_PAT
+}
